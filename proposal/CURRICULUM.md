@@ -794,14 +794,12 @@ The prepared data contain 309,529 training decisions (2017–2023) and 113,188 t
 
 ## 6. Final project
 
-Teams of three choose a topic from the list below, or propose their own of comparable scope. In the project charter (Session 4) each team chooses an emphasis. All projects share the same base; the emphasis determines what is built on it.
+Teams of three choose a topic from the list below, or propose their own of comparable scope. In the project charter (Session 4) each team chooses an emphasis.
 
-|  | Analytics emphasis | Machine learning emphasis |
-|---|---|---|
-| Shared base | Problem definition with a stakeholder; public data loaded and cleaned by a reproducible script; documented data quality; Git repository with reviewed pull requests and CI; presentation | Same |
-| Core of the project | Answers a decision question: SQL analysis, exploratory findings, statistical tests or an A/B-test design with uncertainty | Predicts an outcome: baseline, validated model, error analysis |
-| Delivery | Dashboard or automated report for the stakeholder | Deployed model service with a monitoring plan and a model card |
-| Typical roles | Data or business analyst | Data scientist, ML engineer |
+- **Analytics emphasis** (typical roles: data or business analyst): the project answers a decision question with exploratory findings, statistical tests or an A/B-test design, and delivers a dashboard or automated report for the stakeholder.
+- **Machine learning emphasis** (typical roles: data scientist, ML engineer): the project predicts an outcome with a validated model compared with a baseline, and delivers a deployed model service with a monitoring plan and a model card.
+
+Every project shares the same base: a problem defined with a stakeholder, public data loaded and cleaned by a reproducible script, documented data quality, a Git repository with reviewed pull requests and CI, and a presentation.
 
 ```mermaid
 flowchart LR
@@ -868,7 +866,7 @@ The list contains 17 topics on Berlin and German public data in four domains; mo
 | Problem definition | 10 % | Charter, presentation | A clear question and stakeholder; the metric and the baseline are justified by the decision the result supports |
 | Data | 20 % | Repository | Sources documented with origin and licence; loading and cleaning reproducible by a script that anyone can rerun from the raw data; quality checked, with every cleaning decision recorded |
 | Analysis or model | 25 % | Repository, presentation | Analytics: sound exploration and correct, well-chosen statistical methods. Machine learning: suitable models compared fairly with the baseline |
-| Uncertainty and validation | 15 % | Repository, questions | Analytics: confidence intervals, effect sizes and limitations. Machine learning: validation without leakage, error analysis and a held-out test |
+| Reliability of the results | 15 % | Repository, questions | Analytics: confidence intervals, effect sizes and stated limitations. Machine learning: validation without leakage, error analysis and a held-out test |
 | Delivery | 10 % | Live demonstration | Analytics: a dashboard or automated report the stakeholder can use. Machine learning: a deployed service with a monitoring plan and a model card |
 | Collaboration and presentation (per member) | 20 % | Pull requests, presentation, questions | Own reviewed pull requests with passing CI; a clear presented part; correct and confident answers to individual questions |
 
@@ -895,7 +893,7 @@ pie showData
   "Problem definition" : 10
   "Data" : 20
   "Analysis or model" : 25
-  "Uncertainty and validation" : 15
+  "Reliability of the results" : 15
   "Delivery" : 10
   "Collaboration and presentation" : 20
 ```
