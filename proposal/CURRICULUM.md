@@ -55,7 +55,7 @@ After completing the module, students are able to
 
 | # | Learning outcome | Sessions | Assessed in criterion |
 |---|---|---|---|
-| LO1 | write tested, well-structured Python code for data tasks and develop it in a team with Git, code review and continuous integration | S1–S2, used throughout | Collaboration and presentation |
+| LO1 | write well-structured Python code for data tasks, check it with automated tests, and develop it in a team using Git, code review and continuous integration | S1–S2, used throughout | Collaboration and presentation |
 | LO2 | load, query and prepare data from relational databases, APIs and larger files reproducibly, with SQL, pandas or Polars, and document its quality | S2–S4 | Data |
 | LO3 | describe and compare data with suitable statistical methods and charts and report results with their uncertainty | S5, S7 | Analysis or model; uncertainty and validation |
 | LO4 | build, validate and tune supervised and unsupervised models, from regression to tree-based models, without leakage | S6–S12 | Analysis or model; uncertainty and validation |
