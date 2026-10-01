@@ -17,9 +17,6 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Running case study | EU customs decisions (European Binding Tariff Information): predict the HS heading of a product from its description, with a leaderboard on a hidden, time-based test set |
 | Assessment | Final project with an analytics or machine learning emphasis, graded in its presentation (100 %) |
 
-> [!IMPORTANT]
-> Decisions needed: the subtitle and positioning, the single graded presentation as the method of examination, the teaching use of the course dataset and the leaderboard platform. See [Open points](#8-open-points-for-the-programme-director).
-
 ## Contents
 
 - [1. Overview](#1-overview)
@@ -29,7 +26,6 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 - [5. Running case study and leaderboard](#5-running-case-study-and-leaderboard)
 - [6. Final project](#6-final-project)
 - [7. Assessment](#7-assessment)
-- [8. Open points for the programme director](#8-open-points-for-the-programme-director)
 
 ## 1. Overview
 
@@ -903,15 +899,3 @@ pie showData
   "Delivery" : 10
   "Collaboration and presentation" : 20
 ```
-
-## 8. Open points for the programme director
-
-1. **Positioning and subtitle.** Approve *Data Analytics and Machine Learning in Python* as subtitle and semester 2 as the recommended semester; agree the boundaries with the coordinators of 1.2, 2.2 and 3.4.
-2. **Method of examination.** Approve the single graded project presentation in place of quiz 30 % / take-home coding assignment 40 % / oral examination 30 %, and announce it at the start of the semester.
-3. **Course dataset.** The EBTI data are published by the European Commission and may be reused with acknowledgement of the source; each student downloads them with a provided script. No further clearance is needed.
-4. **Leaderboard platform.** Codabench (hosted in France, pseudonymous registration) is recommended; a private Kaggle community competition is the alternative.
-5. **LLM API budget** for Sessions 14–15; the fallback is local models via Ollama.
-6. **Hybrid delivery.** The regulations describe MPMD as an on-campus programme; streaming should be confirmed.
-7. **GitHub organisation.** GitHub Classroom was retired in August 2026; the course uses a GitHub organisation with template repositories.
-8. **Teaching day.** A Monday, Tuesday or Friday slot gives 18 teaching weeks; a Wednesday or Thursday slot gives 17, in which case Session 12 becomes self-study.
-9. **Secondary dataset.** Confirm the teaching use of the IBM Telco churn sample data (published by IBM under Apache 2.0).

@@ -5,6 +5,6 @@ Proposal for the MPMD elective **WP 6 Statistical Programming: Data Analytics an
 | Document | Content |
 |---|---|
 | [PREMISE.md](PREMISE.md) | Part 1: the analysis behind the design: the module as defined, positioning in the MPMD curriculum, labour market, comparable courses, order of topics, choice of dataset and assessment format, resulting design decisions |
-| [CURRICULUM.md](CURRICULUM.md) | Part 2: the curriculum plan: learning outcomes, session overview and plans, running case study and leaderboard, final project, assessment, open points |
+| [CURRICULUM.md](CURRICULUM.md) | Part 2: the curriculum plan: learning outcomes, session overview and plans, running case study and leaderboard, final project, assessment |
 | [research/](research/) | Research notes behind the proposal (curriculum, labour market, comparable courses, teaching material, project data) |
 | [assets/](assets/) | Figures used in CURRICULUM.md (light and dark versions) |
