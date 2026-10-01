@@ -1,0 +1,76 @@
+# Sources
+
+Third-party material in this session, with its origin and licence. Keep the attribution when you reuse or share a file.
+
+## Workbooks
+
+| File | Covers | Source | Licence | Downloaded | Changes |
+|---|---|---|---|---|---|
+| [workbooks/01-train-test-and-cross-validation.ipynb](workbooks/01-train-test-and-cross-validation.ipynb) | Train/test split vs ShuffleSplit cross-validation, score variability | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_train_test.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-09-26 | Renamed from `inria-mooc_cv-train-test.ipynb`; content unchanged. Its image `../figures/shufflesplit_diagram.png` was missing and has been added to `figures/` (see below) |
+| [workbooks/02-model-validation.ipynb](workbooks/02-model-validation.ipynb) | Holdout, k-fold/LOO CV, bias-variance, validation & learning curves, grid search | [jakevdp/PythonDataScienceHandbook](https://raw.githubusercontent.com/jakevdp/PythonDataScienceHandbook/master/notebooks/05.03-Hyperparameters-and-Model-Validation.ipynb) | [MIT (code) / CC-BY-NC-ND 3.0 (text)](https://github.com/jakevdp/PythonDataScienceHandbook/blob/master/LICENSE-CODE) | 2026-09-26 | Renamed from `pdsh_05.03-model-validation.ipynb`; content unchanged (ND: must stay unchanged) |
+| [workbooks/03-cross-validation-splitters.ipynb](workbooks/03-cross-validation-splitters.ipynb) | Visualise KFold/Group/Stratified/TimeSeriesSplit indices | [scikit-learn example gallery 1.9](https://raw.githubusercontent.com/scikit-learn/scikit-learn.github.io/main/1.9/_downloads/49cd91d05440a1c88b074430761aeb76/plot_cv_indices.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-09-26 | Renamed from `sklearn_plot-cv-indices.ipynb`; content unchanged |
+| [workbooks/04-stratified-cross-validation.ipynb](workbooks/04-stratified-cross-validation.ipynb) | KFold vs StratifiedKFold | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_stratification.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-09-26 | Renamed from `inria-mooc_cv-stratification.ipynb`; content unchanged |
+| [workbooks/05-grouped-cross-validation.ipynb](workbooks/05-grouped-cross-validation.ipynb) | GroupKFold, samples that are not independent | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_grouping.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `cross_validation_grouping.ipynb`; content unchanged |
+| [workbooks/06-islp-resampling-lab.ipynb](workbooks/06-islp-resampling-lab.ipynb) | ISLP lab: validation set, LOOCV, k-fold CV, bootstrap | [intro-stat-learning/ISLP_labs](https://raw.githubusercontent.com/intro-stat-learning/ISLP_labs/main/Ch05-resample-lab.ipynb) | [BSD-2-Clause](https://github.com/intro-stat-learning/ISLP_labs/blob/main/LICENSE) | 2026-09-26 | Renamed from `05-islp-resampling-lab.ipynb` (originally `islp_ch05-resampling.ipynb`); content unchanged |
+| [workbooks/07-bootstrap-and-simulation.ipynb](workbooks/07-bootstrap-and-simulation.ipynb) | Monte Carlo simulation and bootstrap | [statsthinking21/statsthinking21-python](https://raw.githubusercontent.com/statsthinking21/statsthinking21-python/master/notebooks/07-ResamplingAndSimulation.ipynb) | [CC-BY-NC-4.0](https://github.com/statsthinking21/statsthinking21-python/blob/master/LICENSE.md) (non-commercial) | 2026-09-26 | Renamed from `06-bootstrap-and-simulation.ipynb` (originally `statsthinking21_07-resampling-simulation.ipynb`); content unchanged |
+| [workbooks/08-islp-ridge-lasso-lab.ipynb](workbooks/08-islp-ridge-lasso-lab.ipynb) | ISLP Lab 6: subset selection, ridge, lasso, PCR, PLS | [intro-stat-learning/ISLP_labs](https://raw.githubusercontent.com/intro-stat-learning/ISLP_labs/main/Ch06-varselect-lab.ipynb) | [BSD-2-Clause](https://github.com/intro-stat-learning/ISLP_labs/blob/main/LICENSE) | 2026-10-01 | Renamed from `Ch06-varselect-lab.ipynb`; content unchanged |
+| [workbooks/09-ridge-regularisation.ipynb](workbooks/09-ridge-regularisation.ipynb) | Ridge regression, scaling, RidgeCV | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/linear_models_regularization.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `linear_models_regularization.ipynb`; content unchanged |
+| [workbooks/10-validation-curve.ipynb](workbooks/10-validation-curve.ipynb) | Overfitting/underfitting, validation curve | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_validation_curve.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `cross_validation_validation_curve.ipynb`; content unchanged |
+| [workbooks/11-learning-curve.ipynb](workbooks/11-learning-curve.ipynb) | Learning curve, effect of sample size | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_learning_curve.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `cross_validation_learning_curve.ipynb`; content unchanged |
+| [workbooks/12-learning-curve-sklearn.ipynb](workbooks/12-learning-curve-sklearn.ipynb) | Learning curves and scalability | [scikit-learn example gallery 1.9](https://scikit-learn.org/1.9/_downloads/ca0bfe2435d9b3fffe21c713e63d3a6f/plot_learning_curve.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_learning_curve.ipynb`; content unchanged |
+| [workbooks/13-grid-search.ipynb](workbooks/13-grid-search.ipynb) | GridSearchCV in a pipeline | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/parameter_tuning_grid_search.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `parameter_tuning_grid_search.ipynb`; content unchanged |
+| [workbooks/14-randomized-search.ipynb](workbooks/14-randomized-search.ipynb) | RandomizedSearchCV, log-uniform distributions | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/parameter_tuning_randomized_search.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `parameter_tuning_randomized_search.ipynb`; content unchanged |
+| [workbooks/15-grid-search-custom-refit.ipynb](workbooks/15-grid-search-custom-refit.ipynb) | Grid search with several metrics and a custom refit strategy | [scikit-learn example gallery 1.9](https://scikit-learn.org/1.9/_downloads/f4a89bf823d814fee03a693df158d83a/plot_grid_search_digits.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_grid_search_digits.ipynb`; content unchanged |
+| [workbooks/16-data-leakage-feature-selection.ipynb](workbooks/16-data-leakage-feature-selection.ipynb) | Feature selection leakage, fix with a pipeline | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/feature_selection_sol_01.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `feature_selection_sol_01.ipynb`; content unchanged |
+| [workbooks/17-nested-cross-validation.ipynb](workbooks/17-nested-cross-validation.ipynb) | Nested cross-validation | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/cross_validation_nested.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-09-26 | Renamed from `07-nested-cross-validation.ipynb` (originally `inria-mooc_cv-nested.ipynb`); content unchanged |
+| [workbooks/18-nested-cv-sklearn.ipynb](workbooks/18-nested-cv-sklearn.ipynb) | Nested vs non-nested CV | [scikit-learn example gallery 1.9](https://raw.githubusercontent.com/scikit-learn/scikit-learn.github.io/main/1.9/_downloads/45916745bb89ca49be3a50aa80e65e3f/plot_nested_cross_validation_iris.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-09-26 | Renamed from `08-nested-cv-sklearn.ipynb` (originally `sklearn_plot-nested-cv-iris.ipynb`); content unchanged |
+
+## Data and figures used by the INRIA notebooks
+
+The INRIA notebooks read `../datasets/...` and `../figures/...` relative to `workbooks/`. These files are copied unchanged from the same repository.
+
+| File | Used by | Source | Licence | Downloaded |
+|---|---|---|---|---|
+| `datasets/adult-census.csv` (5.1 MB) | 13, 14 | [INRIA/scikit-learn-mooc datasets](https://github.com/INRIA/scikit-learn-mooc/tree/main/datasets); original: Becker & Kohavi (1996), UCI Adult | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/datasets/README.md) | 2026-10-01 (copied from Session 8) |
+| `datasets/ames_housing_no_missing.csv` | 09 | INRIA/scikit-learn-mooc; original: De Cock (2011) | Public domain (per the INRIA datasets README) | 2026-10-01 |
+| `figures/shufflesplit_diagram.png` | 01 | [INRIA/scikit-learn-mooc figures](https://github.com/INRIA/scikit-learn-mooc/tree/main/figures) | CC-BY-4.0 | 2026-10-01 |
+| `figures/cross_validation_train_test_diagram.png` | 13 | INRIA/scikit-learn-mooc figures | CC-BY-4.0 | 2026-10-01 |
+| `figures/grid_vs_random_search.svg`, `figures/randomized_search_results.csv` | 14 | INRIA/scikit-learn-mooc figures | CC-BY-4.0 | 2026-10-01 |
+
+Workbooks 10 and 11 download the California housing data with `fetch_california_housing` on first use. The INRIA notebook `cross_validation_time.ipynb` (time-series split on stock prices) was not added: its `financial-data` files carry no stated licence. Time-based validation is covered in theory page 01, workbook 03 and the case-study workbook.
+
+## Own material
+
+| File | Covers | Licence |
+|---|---|---|
+| [theory/01-splits-and-cross-validation.md](theory/01-splits-and-cross-validation.md), [theory/02-regularisation-and-tuning.md](theory/02-regularisation-and-tuning.md), [theory/03-leakage-and-final-test.md](theory/03-leakage-and-final-test.md) | Theory pages of the three blocks. Author: course team | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) and its PNGs (`cv_splits.png`, `validation_curve.png`, `learning_curve.png`) | Figures of the theory pages. Author: course team | CC-BY-4.0 |
+| [workbooks/19-case-study-validation.ipynb](workbooks/19-case-study-validation.ipynb) | Case study: CV with bootstrap CIs, tuning ridge and C, random vs time-based validation, leaking vs Pipeline workflow. Author: course team | CC-BY-4.0 |
+
+## Citations
+
+- Banko, M. & Brill, E. (2001). Scaling to very very large corpora for natural language disambiguation. *Proceedings of ACL 2001*, 26–33. https://aclanthology.org/P01-1005/
+- Becker, B. & Kohavi, R. (1996). Adult [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5XW20
+- Bergstra, J. & Bengio, Y. (2012). Random search for hyper-parameter optimization. *JMLR*, 13, 281–305. https://jmlr.org/papers/v13/bergstra12a.html
+- Cawley, G. C. & Talbot, N. L. C. (2010). On over-fitting in model selection and subsequent selection bias in performance evaluation. *JMLR*, 11, 2079–2107. https://jmlr.org/papers/v11/cawley10a.html
+- Collins, G. S., Reitsma, J. B., Altman, D. G. & Moons, K. G. M. (2015). Transparent reporting of a multivariable prediction model for individual prognosis or diagnosis (TRIPOD). *BMJ*, 350, g7594. https://doi.org/10.1136/bmj.g7594
+- De Cock, D. (2011). Ames, Iowa: Alternative to the Boston housing data. *Journal of Statistics Education*, 19(3). https://doi.org/10.1080/10691898.2011.11889627
+- Efron, B. (1979). Bootstrap methods: another look at the jackknife. *Annals of Statistics*, 7(1), 1–26. https://doi.org/10.1214/aos/1176344552
+- Feurer, M. et al. (2015). Efficient and robust automated machine learning. *NeurIPS 28*. https://papers.nips.cc/paper/5872-efficient-and-robust-automated-machine-learning
+- Hoerl, A. E. & Kennard, R. W. (1970). Ridge regression: biased estimation for nonorthogonal problems. *Technometrics*, 12(1), 55–67. https://doi.org/10.1080/00401706.1970.10488634
+- Hou, Y. et al. (2024). Bridging language and items for retrieval and recommendation (Amazon Reviews 2023). arXiv:2403.03952. https://arxiv.org/abs/2403.03952
+- INRIA (2024). *scikit-learn MOOC*. https://inria.github.io/scikit-learn-mooc/
+- James, G., Witten, D., Hastie, T., Tibshirani, R. & Taylor, J. (2023). *An Introduction to Statistical Learning with Applications in Python*. Springer. https://www.statlearning.com/
+- Kapoor, S. & Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns*, 4(9), 100804. https://doi.org/10.1016/j.patter.2023.100804
+- Kaufman, S., Rosset, S., Perlich, C. & Stitelman, O. (2012). Leakage in data mining: formulation, detection, and avoidance. *ACM TKDD*, 6(4), 15. https://doi.org/10.1145/2382577.2382579
+- Koehn, P. (2004). Statistical significance tests for machine translation evaluation. *Proceedings of EMNLP 2004*, 388–395. https://aclanthology.org/W04-3250/
+- Poldrack, R. A. (2023). *Statistical Thinking for the 21st Century* (Python companion). https://statsthinking21.github.io/statsthinking21-python/
+- Rajpurkar, P. et al. (2017). CheXNet: radiologist-level pneumonia detection on chest X-rays with deep learning. arXiv:1711.05225. https://arxiv.org/abs/1711.05225
+- Raschka, S. (2018). Model evaluation, model selection, and algorithm selection in machine learning. arXiv:1811.12808. https://arxiv.org/abs/1811.12808
+- Recht, B., Roelofs, R., Schmidt, L. & Shankar, V. (2019). Do ImageNet classifiers generalize to ImageNet? *ICML 2019*. https://arxiv.org/abs/1902.10811
+- scikit-learn developers (2025). *User guide: cross-validation, tuning hyperparameters, validation curves, common pitfalls*. https://scikit-learn.org/stable/user_guide.html
+- Tibshirani, R. (1996). Regression shrinkage and selection via the lasso. *Journal of the Royal Statistical Society B*, 58(1), 267–288. https://doi.org/10.1111/j.2517-6161.1996.tb02080.x
+- Varma, S. & Simon, R. (2006). Bias in error estimation when using cross-validation for model selection. *BMC Bioinformatics*, 7, 91. https://doi.org/10.1186/1471-2105-7-91
+- VanderPlas, J. (2016). *Python Data Science Handbook*. O'Reilly. https://jakevdp.github.io/PythonDataScienceHandbook/
+- Board of Governors of the Federal Reserve System (2011). *SR 11-7: Guidance on Model Risk Management*. https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
+- Zinkevich, M. (n.d.). *Rules of Machine Learning: Best Practices for ML Engineering*. Google for Developers. https://developers.google.com/machine-learning/guides/rules-of-ml

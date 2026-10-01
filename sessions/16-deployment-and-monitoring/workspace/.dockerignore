@@ -1,0 +1,13 @@
+.venv
+.git
+.github
+**/__pycache__
+.pytest_cache
+.ruff_cache
+tests
+solutions
+dashboard
+logs
+*.ipynb
+*.parquet
+.env

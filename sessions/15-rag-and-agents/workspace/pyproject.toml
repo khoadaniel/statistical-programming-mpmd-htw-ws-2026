@@ -1,0 +1,40 @@
+[project]
+name = "review-assistant"
+version = "0.1.0"
+description = "Retrieval-augmented generation and a small tool-calling agent over product reviews (Session 15)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "openai>=1.40",
+    "duckdb>=1.1",
+]
+
+[project.optional-dependencies]
+# real embeddings (downloads all-MiniLM-L6-v2, about 90 MB, on first use)
+embeddings = ["sentence-transformers>=3.0"]
+# the course path: PostgreSQL with the pgvector extension
+postgres = ["psycopg[binary]>=3.2", "pgvector>=0.3"]
+# loading the case-study parquet files
+data = ["pandas>=2.2", "pyarrow>=16"]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/review_assistant"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

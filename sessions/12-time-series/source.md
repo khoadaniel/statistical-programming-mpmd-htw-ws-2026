@@ -1,0 +1,49 @@
+# Sources
+
+Third-party material in this session, with its origin and licence. Keep the attribution when you reuse or share a file.
+
+## Workbooks
+
+| File | Covers | Source | Licence | Downloaded | Changes |
+|---|---|---|---|---|---|
+| [workbooks/01-stl-decomposition.ipynb](workbooks/01-stl-decomposition.ipynb) | STL decomposition, robust fitting, seasonal and trend smoothers (CO₂ data) | [statsmodels examples](https://raw.githubusercontent.com/statsmodels/statsmodels/main/examples/notebooks/stl_decomposition.ipynb) | [BSD-3-Clause](https://github.com/statsmodels/statsmodels/blob/main/LICENSE.txt) | 2026-10-01 | Renamed from `stl_decomposition.ipynb`; content unchanged |
+| [workbooks/02-statsforecast-quickstart.ipynb](workbooks/02-statsforecast-quickstart.ipynb) | StatsForecast quick start: data format, AutoARIMA, forecasts with intervals (air passengers) | [Nixtla/statsforecast](https://raw.githubusercontent.com/Nixtla/statsforecast/main/nbs/docs/getting-started/getting_Started_short.ipynb) | [Apache-2.0](https://github.com/Nixtla/statsforecast/blob/main/LICENSE) | 2026-10-01 | Renamed from `getting_Started_short.ipynb`; content unchanged |
+| [workbooks/03-exponential-smoothing.ipynb](workbooks/03-exponential-smoothing.ipynb) | Simple exponential smoothing, Holt, Holt–Winters, damped trends | [statsmodels examples](https://raw.githubusercontent.com/statsmodels/statsmodels/main/examples/notebooks/exponential_smoothing.ipynb) | [BSD-3-Clause](https://github.com/statsmodels/statsmodels/blob/main/LICENSE.txt) | 2026-10-01 | Renamed from `exponential_smoothing.ipynb`; content unchanged |
+| [workbooks/04-ets-models.ipynb](workbooks/04-ets-models.ipynb) | ETS state-space models with prediction intervals (`ETSModel`) | [statsmodels examples](https://raw.githubusercontent.com/statsmodels/statsmodels/main/examples/notebooks/ets.ipynb) | [BSD-3-Clause](https://github.com/statsmodels/statsmodels/blob/main/LICENSE.txt) | 2026-10-01 | Renamed from `ets.ipynb`; content unchanged |
+| [workbooks/05-arima.ipynb](workbooks/05-arima.ipynb) | ARIMA models in statsmodels: specification, trends, forecasting | [statsmodels examples](https://raw.githubusercontent.com/statsmodels/statsmodels/main/examples/notebooks/autoregressive_integrated_moving_average.ipynb) | [BSD-3-Clause](https://github.com/statsmodels/statsmodels/blob/main/LICENSE.txt) | 2026-10-01 | Renamed from `autoregressive_integrated_moving_average.ipynb`; content unchanged |
+| [workbooks/06-lagged-features-gradient-boosting.ipynb](workbooks/06-lagged-features-gradient-boosting.ipynb) | Lagged features with gradient boosting, quantile losses, `TimeSeriesSplit` (bike sharing, Polars) | [scikit-learn example gallery 1.9](https://raw.githubusercontent.com/scikit-learn/scikit-learn.github.io/main/1.9/_downloads/6953689dfdc5dd401dda89604bbdaefb/plot_time_series_lagged_features.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_time_series_lagged_features.ipynb`; content unchanged |
+| [workbooks/07-time-related-feature-engineering.ipynb](workbooks/07-time-related-feature-engineering.ipynb) | Calendar features: one-hot, cyclical (sine/cosine) and spline encodings | [scikit-learn example gallery 1.9](https://raw.githubusercontent.com/scikit-learn/scikit-learn.github.io/main/1.9/_downloads/7012baed63b9a27f121bae611b8285c2/plot_cyclical_feature_engineering.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_cyclical_feature_engineering.ipynb`; content unchanged |
+| [workbooks/08-statsforecast-cross-validation.ipynb](workbooks/08-statsforecast-cross-validation.ipynb) | Rolling-origin cross-validation of many series with StatsForecast (M4 hourly) | [Nixtla/statsforecast](https://raw.githubusercontent.com/Nixtla/statsforecast/main/nbs/docs/tutorials/CrossValidation.ipynb) | [Apache-2.0](https://github.com/Nixtla/statsforecast/blob/main/LICENSE) | 2026-10-01 | Renamed from `CrossValidation.ipynb`; content unchanged |
+| [workbooks/09-mlforecast-walkthrough.ipynb](workbooks/09-mlforecast-walkthrough.ipynb) | MLForecast end to end: lag features, target transforms, LightGBM, cross-validation, prediction intervals | [Nixtla/mlforecast](https://raw.githubusercontent.com/Nixtla/mlforecast/main/nbs/docs/getting-started/end_to_end_walkthrough.ipynb) | [Apache-2.0](https://github.com/Nixtla/mlforecast/blob/main/LICENSE) | 2026-10-01 | Renamed from `end_to_end_walkthrough.ipynb`. **Patched:** the 12 figure paths `../../figs/` (a folder of the Nixtla repository) replaced by `figs/`, and two lines added at the top of the first code cell (`import os; os.makedirs('figs', exist_ok=True)`) so that saving figures works next to the notebook |
+
+### Considered but not included
+
+- *Forecasting: Principles and Practice, the Pythonic Way* (Hyndman et al., 2026, https://otexts.com/fpppy/) is the main reading of this session. The website states no open licence (OTexts books are free to read online), and there is no official notebook repository; the book is therefore linked, not copied.
+
+## Own material
+
+| File | Covers | Licence |
+|---|---|---|
+| [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Trend, seasonality, autocorrelation; resampling; naive, seasonal naive, moving average | CC-BY-4.0, course team |
+| [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | Exponential smoothing, ETS prediction intervals, ARIMA outlook | CC-BY-4.0, course team |
+| [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features with gradient boosting, rolling-origin backtesting, MAE, MASE, coverage, recommendation | CC-BY-4.0, course team |
+| [theory/figures/](theory/figures/) (`make_figures.py` and 4 PNGs) | STL decomposition, ACF, baselines against actuals, ETS interval | CC-BY-4.0, course team |
+| [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb) | Practice of all three blocks: monthly review counts, baselines, ETS, lag model, backtest, recommendation, check against 2022 | CC-BY-4.0, course team |
+
+## Citations
+
+- Bank of England (2026). *Monetary Policy Report* (fan charts of the inflation projection). https://www.bankofengland.co.uk/monetary-policy-report/monetary-policy-report
+- Box, G. E. P., Jenkins, G. M., Reinsel, G. C. and Ljung, G. M. (2015). *Time Series Analysis: Forecasting and Control*, 5th ed. Wiley.
+- Cleveland, R. B., Cleveland, W. S., McRae, J. E. and Terpenning, I. (1990). STL: a seasonal-trend decomposition procedure based on loess. *Journal of Official Statistics*, 6(1), 3–73.
+- Gardner, E. S. (2006). Exponential smoothing: the state of the art, part II. *International Journal of Forecasting*, 22(4), 637–666. https://doi.org/10.1016/j.ijforecast.2006.03.005
+- Hyndman, R. J., Athanasopoulos, G., Garza, A., Challu, C., Mergenthaler, M. and Olivares, K. G. (2026). *Forecasting: Principles and Practice, the Pythonic Way*. OTexts: Melbourne, Australia. https://otexts.com/fpppy/
+- Hyndman, R. J. and Koehler, A. B. (2006). Another look at measures of forecast accuracy. *International Journal of Forecasting*, 22(4), 679–688. https://doi.org/10.1016/j.ijforecast.2006.03.001
+- Makridakis, S. and Hibon, M. (2000). The M3-competition: results, conclusions and implications. *International Journal of Forecasting*, 16(4), 451–476. https://doi.org/10.1016/S0169-2070(00)00057-1
+- Makridakis, S., Spiliotis, E. and Assimakopoulos, V. (2020). The M4 competition: 100,000 time series and 61 forecasting methods. *International Journal of Forecasting*, 36(1), 54–74. https://doi.org/10.1016/j.ijforecast.2019.04.014
+- Makridakis, S., Spiliotis, E. and Assimakopoulos, V. (2022). M5 accuracy competition: results, findings, and conclusions. *International Journal of Forecasting*, 38(4), 1346–1364. https://doi.org/10.1016/j.ijforecast.2021.11.013
+- Meese, R. A. and Rogoff, K. (1983). Empirical exchange rate models of the seventies: do they fit out of sample? *Journal of International Economics*, 14(1–2), 3–24. https://doi.org/10.1016/0022-1996(83)90017-X
+- Nixtla (2026). *StatsForecast* and *MLForecast* documentation. https://nixtlaverse.nixtla.io/
+- pandas developers (2026). *Time series / date functionality*. https://pandas.pydata.org/docs/user_guide/timeseries.html
+- scikit-learn developers (2026). *Time-related feature engineering* and *Lagged features for time series forecasting* (examples). https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html
+- Seabold, S. and Perktold, J. (2010). statsmodels: econometric and statistical modeling with Python. *Proceedings of the 9th Python in Science Conference*. https://www.statsmodels.org/
+- Hou, Y. et al. (2024). Bridging language and items for retrieval and recommendation (Amazon Reviews 2023). arXiv:2403.03952. https://arxiv.org/abs/2403.03952

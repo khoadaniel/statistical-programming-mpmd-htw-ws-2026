@@ -1,0 +1,23 @@
+# Runs ruff and the offline tests on every push and pull request.
+# GitHub reads workflows only from .github/workflows at the repository root: when this workspace
+# becomes (part of) your team repository, place the file there and adjust `working-directory`.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uvx ruff check .
+      - run: uv run pytest -q

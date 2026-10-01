@@ -1,0 +1,14 @@
+.DS_Store
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+.pytest_cache/
+.ruff_cache/
+catboost_info/
+*.duckdb
+*.egg-info/
+# case-study data are downloaded by each student and never committed
+case-study/data/
+submission*.csv
+# lecturer-only material kept outside the student repository
+proposal/

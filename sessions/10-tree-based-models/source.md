@@ -1,0 +1,72 @@
+# Sources
+
+Third-party material in this session, with its origin and licence. Keep the attribution when you reuse or share a file.
+
+## Workbooks
+
+| File | Covers | Source | Licence | Downloaded | Changes |
+|---|---|---|---|---|---|
+| [workbooks/01-trees-classification.ipynb](workbooks/01-trees-classification.ipynb) | Decision tree classifier and its decision boundary (penguins) | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/trees_classification.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `trees_classification.ipynb`; content unchanged |
+| [workbooks/02-tree-structure.ipynb](workbooks/02-tree-structure.ipynb) | Arrays of a fitted tree, decision path | [scikit-learn example gallery 1.9](https://scikit-learn.org/stable/_downloads/f7a387851c5762610f4e8197e52bbbca/plot_unveil_tree_structure.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_unveil_tree_structure.ipynb`; content unchanged |
+| [workbooks/03-trees-hyperparameters.ipynb](workbooks/03-trees-hyperparameters.ipynb) | max_depth and min_samples_leaf (penguins) | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/trees_hyperparameters.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `trees_hyperparameters.ipynb`; content unchanged |
+| [workbooks/04-cost-complexity-pruning.ipynb](workbooks/04-cost-complexity-pruning.ipynb) | Cost-complexity pruning path | [scikit-learn example gallery 1.9](https://scikit-learn.org/stable/_downloads/29998264311e172e4afe243096ca2c93/plot_cost_complexity_pruning.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_cost_complexity_pruning.ipynb`; content unchanged |
+| [workbooks/06-ensemble-bagging.ipynb](workbooks/06-ensemble-bagging.ipynb) | Bootstrap samples and bagging | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/ensemble_bagging.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `ensemble_bagging.ipynb`; content unchanged |
+| [workbooks/07-ensemble-random-forest.ipynb](workbooks/07-ensemble-random-forest.ipynb) | Random forests vs bagging (Adult census) | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/ensemble_random_forest.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `ensemble_random_forest.ipynb`; content unchanged |
+| [workbooks/08-ensemble-gradient-boosting.ipynb](workbooks/08-ensemble-gradient-boosting.ipynb) | Gradient boosting as fitting residuals | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/ensemble_gradient_boosting.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `ensemble_gradient_boosting.ipynb`; content unchanged |
+| [workbooks/09-hist-gradient-boosting.ipynb](workbooks/09-hist-gradient-boosting.ipynb) | Histogram-based gradient boosting | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/ensemble_hist_gradient_boosting.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `ensemble_hist_gradient_boosting.ipynb`; content unchanged |
+| [workbooks/10-gradient-boosting-early-stopping.ipynb](workbooks/10-gradient-boosting-early-stopping.ipynb) | Early stopping in gradient boosting | [scikit-learn example gallery 1.9](https://scikit-learn.org/stable/_downloads/8452fc8dfe9850cfdaa1b758e5a2748b/plot_gradient_boosting_early_stopping.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_gradient_boosting_early_stopping.ipynb`; content unchanged |
+| [workbooks/11-gradient-boosting-categorical.ipynb](workbooks/11-gradient-boosting-categorical.ipynb) | Native categorical support in HistGradientBoosting | [scikit-learn example gallery 1.9](https://scikit-learn.org/stable/_downloads/cd5de29451c4f8624f47d18def81839c/plot_gradient_boosting_categorical.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_gradient_boosting_categorical.ipynb`; content unchanged |
+| [workbooks/12-ensemble-hyperparameters.ipynb](workbooks/12-ensemble-hyperparameters.ipynb) | Hyperparameters of random forests and gradient boosting | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/ensemble_hyperparameters.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `ensemble_hyperparameters.ipynb`; content unchanged |
+| [workbooks/13-catboost-tutorial.ipynb](workbooks/13-catboost-tutorial.ipynb) | CatBoost Python tutorial (Titanic): categorical features, CV, early stopping, tuning | [catboost/tutorials](https://raw.githubusercontent.com/catboost/tutorials/master/python_tutorial.ipynb) | [Apache-2.0](https://github.com/catboost/tutorials/blob/master/LICENSE) | 2026-10-01 | Renamed from `python_tutorial.ipynb`; content unchanged |
+| [workbooks/14-islp-tree-based-methods-lab.ipynb](workbooks/14-islp-tree-based-methods-lab.ipynb) | ISLP Chapter 8 lab: trees, bagging, random forests, boosting, BART | [intro-stat-learning/ISLP_labs](https://raw.githubusercontent.com/intro-stat-learning/ISLP_labs/main/Ch08-baggboost-lab.ipynb) | [BSD-2-Clause](https://github.com/intro-stat-learning/ISLP_labs/blob/main/LICENSE) | 2026-10-01 | Renamed from `Ch08-baggboost-lab.ipynb`; content unchanged |
+| [workbooks/16-permutation-importance.ipynb](workbooks/16-permutation-importance.ipynb) | Permutation importance vs impurity importance (MDI) with random features | [scikit-learn example gallery 1.9](https://scikit-learn.org/stable/_downloads/f99bb35c32eb8028063a1428c3999b84/plot_permutation_importance.ipynb) | [BSD-3-Clause](https://github.com/scikit-learn/scikit-learn/blob/main/COPYING) | 2026-10-01 | Renamed from `plot_permutation_importance.ipynb`; content unchanged |
+| [workbooks/17-feature-importance.ipynb](workbooks/17-feature-importance.ipynb) | Feature importance: coefficients, MDI, permutation | [INRIA/scikit-learn-mooc](https://raw.githubusercontent.com/INRIA/scikit-learn-mooc/main/notebooks/dev_features_importance.ipynb) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) | 2026-10-01 | Renamed from `dev_features_importance.ipynb`; content unchanged |
+| [workbooks/18-shap-census-xgboost.ipynb](workbooks/18-shap-census-xgboost.ipynb) | SHAP values for XGBoost on census income | [shap/shap](https://raw.githubusercontent.com/shap/shap/master/notebooks/tabular_examples/tree_based_models/Census%20income%20classification%20with%20XGBoost.ipynb) | [MIT](https://github.com/shap/shap/blob/master/LICENSE) | 2026-10-01 | Renamed from `Census income classification with XGBoost.ipynb`; content unchanged |
+| [workbooks/19-shap-causal-caution.ipynb](workbooks/19-shap-causal-caution.ipynb) | Interpreting predictive models is not causal inference | [shap/shap](https://raw.githubusercontent.com/shap/shap/master/notebooks/overviews/Be%20careful%20when%20interpreting%20predictive%20models%20in%20search%20of%20causal%20insights.ipynb) | [MIT](https://github.com/shap/shap/blob/master/LICENSE) | 2026-10-01 | Renamed from `Be careful when interpreting predictive models in search of causal insights.ipynb`; content unchanged |
+
+## Datasets
+
+The INRIA MOOC notebooks read `../datasets/<file>.csv`; the files are copied unchanged into [datasets/](datasets/) so the notebooks run without modification.
+
+| File | Source | Licence | Downloaded |
+|---|---|---|---|
+| [datasets/penguins_classification.csv](datasets/penguins_classification.csv), [datasets/penguins_regression.csv](datasets/penguins_regression.csv) | [INRIA/scikit-learn-mooc datasets](https://github.com/INRIA/scikit-learn-mooc/tree/main/datasets), from palmerpenguins (Horst, Hill & Gorman, 2020) | [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-01 |
+| [datasets/adult-census.csv](datasets/adult-census.csv) (5.4 MB) | [INRIA/scikit-learn-mooc datasets](https://github.com/INRIA/scikit-learn-mooc/tree/main/datasets), from the UCI Adult dataset (Becker & Kohavi, 1996) | [CC-BY-4.0](https://archive.ics.uci.edu/dataset/2/adult) | 2026-10-01 |
+
+## Own material
+
+| File | Covers | Licence |
+|---|---|---|
+| [theory/01-decision-trees.md](theory/01-decision-trees.md), [theory/02-bagging-random-forests-and-boosting.md](theory/02-bagging-random-forests-and-boosting.md), [theory/03-xgboost-lightgbm-catboost.md](theory/03-xgboost-lightgbm-catboost.md), [theory/04-interpretation-and-model-comparison.md](theory/04-interpretation-and-model-comparison.md) | Theory pages | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG files | Depth-2 churn tree, depth vs training/CV accuracy, boosting stages | CC-BY-4.0 |
+| [workbooks/05-churn-decision-tree.ipynb](workbooks/05-churn-decision-tree.ipynb) | Practice 1: decision tree on the churn data. Author: course team | CC-BY-4.0 |
+| [workbooks/15-churn-gradient-boosting.ipynb](workbooks/15-churn-gradient-boosting.ipynb) | Practice 2: boosting libraries compared on the churn data. Author: course team | CC-BY-4.0 |
+| [workbooks/20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb) | Practice 3: leaderboard round L2. Author: course team | CC-BY-4.0 |
+
+## Citations
+
+- Akiba, T., Sano, S., Yanase, T., Ohta, T. & Koyama, M. (2019). Optuna: a next-generation hyperparameter optimization framework. *Proceedings of KDD 2019*, 2623–2631. https://doi.org/10.1145/3292500.3330701
+- Becker, B. & Kohavi, R. (1996). Adult [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5XW20
+- Belgiu, M. & Drăguţ, L. (2016). Random forest in remote sensing: a review of applications and future directions. *ISPRS Journal of Photogrammetry and Remote Sensing*, 114, 24–31. https://doi.org/10.1016/j.isprsjprs.2016.01.011
+- Bernardi, L., Mavridis, T. & Estevez, P. (2019). 150 successful machine learning models: 6 lessons learned at Booking.com. *Proceedings of KDD 2019*, 1743–1751. https://doi.org/10.1145/3292500.3330744
+- Board of Governors of the Federal Reserve System (2011). *SR 11-7: Guidance on Model Risk Management*. https://www.federalreserve.gov/supervisionreg/srletters/sr1107.htm
+- Breiman, L. (1996). Bagging predictors. *Machine Learning*, 24, 123–140. https://doi.org/10.1007/BF00058655
+- Breiman, L. (2001). Random forests. *Machine Learning*, 45, 5–32. https://doi.org/10.1023/A:1010933404324
+- Breiman, L., Friedman, J. H., Olshen, R. A. & Stone, C. J. (1984). *Classification and Regression Trees*. Wadsworth.
+- Burges, C. J. C. (2010). *From RankNet to LambdaRank to LambdaMART: an overview*. Microsoft Research Technical Report MSR-TR-2010-82.
+- Chen, T. & Guestrin, C. (2016). XGBoost: a scalable tree boosting system. *Proceedings of KDD 2016*, 785–794. https://doi.org/10.1145/2939672.2939785
+- Friedman, J. H. (2001). Greedy function approximation: a gradient boosting machine. *Annals of Statistics*, 29(5), 1189–1232. https://doi.org/10.1214/aos/1013203451
+- Grinsztajn, L., Oyallon, E. & Varoquaux, G. (2022). Why do tree-based models still outperform deep learning on typical tabular data? *NeurIPS Datasets and Benchmarks*. https://arxiv.org/abs/2207.08815
+- Horst, A. M., Hill, A. P. & Gorman, K. B. (2020). *palmerpenguins: Palmer Archipelago (Antarctica) penguin data*. R package version 0.1.0. https://allisonhorst.github.io/palmerpenguins/
+- James, G., Witten, D., Hastie, T., Tibshirani, R. & Taylor, J. (2023). *An Introduction to Statistical Learning with Applications in Python*. Springer. https://www.statlearning.com/
+- Ke, G. et al. (2017). LightGBM: a highly efficient gradient boosting decision tree. *NeurIPS 30*. https://papers.nips.cc/paper_files/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html
+- Lundberg, S. M. & Lee, S.-I. (2017). A unified approach to interpreting model predictions. *NeurIPS 30*. https://arxiv.org/abs/1705.07874
+- Lundberg, S. M. et al. (2018). Explainable machine-learning predictions for the prevention of hypoxaemia during surgery. *Nature Biomedical Engineering*, 2, 749–760. https://doi.org/10.1038/s41551-018-0304-0
+- Lundberg, S. M. et al. (2020). From local explanations to global understanding with explainable AI for trees. *Nature Machine Intelligence*, 2, 56–67. https://doi.org/10.1038/s42256-019-0138-9
+- Makridakis, S., Spiliotis, E. & Assimakopoulos, V. (2022). M5 accuracy competition: results, findings, and conclusions. *International Journal of Forecasting*, 38(4), 1346–1364. https://doi.org/10.1016/j.ijforecast.2021.11.013
+- Molnar, C. (2025). *Interpretable Machine Learning*, 3rd edition. https://christophm.github.io/interpretable-ml-book/
+- Prokhorenkova, L., Gusev, G., Vorobev, A., Dorogush, A. V. & Gulin, A. (2018). CatBoost: unbiased boosting with categorical features. *NeurIPS 31*. https://arxiv.org/abs/1706.09516
+- Shotton, J. et al. (2011). Real-time human pose recognition in parts from single depth images. *CVPR 2011*, 1297–1304. https://doi.org/10.1109/CVPR.2011.5995316
+- Stiell, I. G. et al. (1992). A study to develop clinical decision rules for the use of radiography in acute ankle injuries. *Annals of Emergency Medicine*, 21(4), 384–390. https://doi.org/10.1016/S0196-0644(05)82656-3
+- Strobl, C., Boulesteix, A.-L., Zeileis, A. & Hothorn, T. (2007). Bias in random forest variable importance measures: illustrations, sources and a solution. *BMC Bioinformatics*, 8, 25. https://doi.org/10.1186/1471-2105-8-25
+- Data: IBM Telco customer churn sample data, https://github.com/IBM/telco-customer-churn-on-icp4d (Apache-2.0 repository), read from GitHub at run time; Amazon Reviews 2023, Health and Personal Care (McAuley Lab), downloaded by each student, not redistributed.

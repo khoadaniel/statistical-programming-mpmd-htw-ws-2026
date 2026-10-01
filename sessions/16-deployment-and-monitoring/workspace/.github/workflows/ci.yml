@@ -1,0 +1,42 @@
+# Continuous integration: lint, tests and a container smoke test on every push and pull request.
+# GitHub reads workflows only from .github/workflows at the repository ROOT. When this workspace becomes
+# its own repository, this file is already in the right place; inside a larger repository, move it to the
+# root and set `working-directory` below to the folder of the service.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen                 # exactly the versions in uv.lock
+      - run: uv run ruff check .
+      - run: uv run pytest -q                 # a failing test stops the workflow here
+
+  container:
+    needs: test                               # only if the tests passed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - name: Tiny model for the smoke test (the real model is never built from data in CI)
+        run: uv run python -m sentiment_service.train --fixture --out models
+      - run: docker build -t sentiment-service:${{ github.sha }} .
+      - name: Smoke test the image
+        run: |
+          docker run -d -p 8000:8000 --name api sentiment-service:${{ github.sha }}
+          curl --retry 10 --retry-connrefused --fail http://localhost:8000/health
+          curl --fail -X POST http://localhost:8000/predict \
+               -H "Content-Type: application/json" -d '{"text": "Broke after two days."}'
+          docker stop api
