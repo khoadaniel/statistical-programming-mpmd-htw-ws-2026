@@ -1,6 +1,6 @@
 # Statistical Programming: Data Analytics and Machine Learning in Python
 
-**Course proposal · MPMD elective WP 6 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
+**Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
 
 The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on one established NLP dataset with a class leaderboard and applied in a team project with an analytics or a machine learning emphasis.
 
@@ -8,7 +8,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 
 | Item | Proposal |
 |---|---|
-| Module | Statistical Programming (elective WP 6), 5 ECTS; proposed subtitle *Data Analytics and Machine Learning in Python* |
+| Module | Statistical Programming (elective WP 5), 5 ECTS; proposed subtitle *Data Analytics and Machine Learning in Python* |
 | Recommended semester | Semester 2 (elective slot 2.4), alongside 2.2 Data Mining; semester 3 remains possible |
 | Teaching time | 54 UE in 18 weekly sessions of 3 UE (3 × 45 minutes with two 15-minute breaks) |
 | Workload | 5 ECTS = 135 h: 40.5 h contact time (54 UE) and about 94.5 h self-study and project work (about 5 h per week) |

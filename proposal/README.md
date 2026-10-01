@@ -1,6 +1,6 @@
-# Course proposal: Statistical Programming (MPMD WP 6)
+# Course proposal: Statistical Programming (MPMD WP 5)
 
-Proposal for the MPMD elective **WP 6 Statistical Programming: Data Analytics and Machine Learning in Python** at HTW Berlin, winter semester 2026/27, submitted to the programme director. The teaching material it describes is the rest of this repository (see the [main README](../README.md)).
+Proposal for the MPMD elective **WP 5 Statistical Programming: Data Analytics and Machine Learning in Python** at HTW Berlin, winter semester 2026/27, submitted to the programme director. The teaching material it describes is the rest of this repository (see the [main README](../README.md)).
 
 | Document | Content |
 |---|---|

@@ -1,6 +1,6 @@
 # Statistical Programming: premise of the course design
 
-**Course proposal · MPMD elective WP 6 · HTW Berlin · Winter semester 2026/27 · Part 1 of 2**
+**Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 1 of 2**
 
 This document sets out the analysis behind the course: the module as defined in the regulations, its position in the MPMD curriculum, the requirements of the labour market, comparable university courses, the order of topics in standard texts, the choice of dataset and of assessment format. Section 8 draws the design decisions. The resulting session plan is in Part 2, [CURRICULUM.md](CURRICULUM.md).
 
@@ -18,7 +18,7 @@ This document sets out the analysis behind the course: the module as defined in 
 
 ## 1. The module as defined
 
-Statistical Programming is elective WP 6 of the MPMD programme (5 ECTS, 4 WSH). The study and examination regulations define its purpose (AMBl. 15/2025, WP 6): students *implement statistical methods professionally in a suitable programming language and environment and distribute programming tasks within programming teams*.
+Statistical Programming is elective WP 5 of the MPMD programme (5 ECTS, 4 WSH). The study and examination regulations define its purpose (AMBl. 15/2025, WP 5): students *implement statistical methods professionally in a suitable programming language and environment and distribute programming tasks within programming teams*.
 
 The module description lists the topics that must be taught: well-structured programming in Python, databases, visualisation, teamwork with Git, a recap of basic statistics, robust regression, outlier detection, transformations and imputation, dimensionality reduction, cross-validation and bootstrap, hyperparameter search, tree packages (XGBoost, LightGBM, CatBoost), deployment and monitoring, churn prediction, NLP, embeddings and LLMs, retrieval-augmented generation and time series forecasting. The curriculum covers every topic; the mapping is in [Coverage of the module description](CURRICULUM.md#8-coverage-of-the-module-description).
 
@@ -26,15 +26,15 @@ The list is broad for 54 UE. The analysis in this document determines how the ti
 
 ## 2. Positioning in the MPMD curriculum
 
-Statistical Programming is elective WP 6 and can be taken in semester 2 or 3. Students take 2.2 Data Mining before or alongside it, and semester-3 students take 3.4 NLP and Neural Networks at the same time. The module does not repeat the theory of these modules; it adds the practical skills around them.
+Statistical Programming is elective WP 5 and can be taken in semester 2 or 3. Students take 2.2 Data Mining before or alongside it, and semester-3 students take 3.4 NLP and Neural Networks at the same time. The module does not repeat the theory of these modules; it adds the practical skills around them.
 
-|  | 1.2 Foundations | 2.2 Data Mining | WP 6 Statistical Programming | 3.4 NLP and Neural Networks |
+|  | 1.2 Foundations | 2.2 Data Mining | WP 5 Statistical Programming | 3.4 NLP and Neural Networks |
 |---|---|---|---|---|
 | Central question | How do we describe and test data? | Which methods exist, and how do they work? | **How do we turn data into reliable reports, tested findings and working models, in a team?** | How do we process language with neural networks? |
 | Focus | Statistics, scripts, charts | Algorithms, model building, case study | **SQL, data quality, reporting, inference and A/B tests; the ML workflow from regression to LLMs; validation, deployment; Git** | Text representations, NLP tasks, neural architectures |
-| Relation to WP 6 | Statistics recapped in applied form (Python, interpretation, A/B tests) | Algorithms used as tools and validated | — | Text treated as features and LLMs as components |
+| Relation to WP 5 | Statistics recapped in applied form (Python, interpretation, A/B tests) | Algorithms used as tools and validated | — | Text treated as features and LLMs as components |
 
-The regulations define the purpose of the module (AMBl. 15/2025, WP 6): students *implement statistical methods professionally in a suitable programming language and environment and distribute programming tasks within programming teams*. The design meets this through tested team code from Session 2 onwards and statistical methods at the core of both the analytics and the machine learning part.
+The regulations define the purpose of the module (AMBl. 15/2025, WP 5): students *implement statistical methods professionally in a suitable programming language and environment and distribute programming tasks within programming teams*. The design meets this through tested team code from Session 2 onwards and statistical methods at the core of both the analytics and the machine learning part.
 
 **Recommended semester: 2.** Taken alongside Data Mining, the module gives students the SQL, analysis and validation skills they need for 3.1 Lab, 3.4 and the thesis. Semester-3 entry remains possible; the only prerequisite is 1.2 Foundations.
 
@@ -43,18 +43,18 @@ The regulations define the purpose of the module (AMBl. 15/2025, WP 6): students
 <details open>
 <summary>Agreements proposed with other modules</summary>
 
-- **1.2 Foundations:** WP 6 recaps descriptive statistics, tests, contingency tables and correlation in applied form, in Python; the theory stays in 1.2.
-- **2.2 Data Mining:** WP 6 uses algorithms as tools and focuses on validation, features and deployment; their theory stays in 2.2.
-- **3.2 Big Data:** WP 6 applies database concepts in SQL and uses Polars for large tables on a single machine; database technology beyond relational databases, data warehousing and big-data technology (Hadoop, distributed processing) stay in 3.2.
-- **3.4 NLP and Neural Networks:** WP 6 uses text as features and pre-trained models and LLMs as components under evaluation; linguistic methods and neural networks stay in 3.4.
-- **3.3 Responsible Data Management in Practice and WP 4 Data Ethics:** WP 6 applies documentation (data card, model card) as engineering practice; governance, ethics and regulation, including the EU AI Act, stay in 3.3 and WP 4.
-- **WP 7 Current Topics in Data Science:** forecasting there focuses on financial markets; WP 6 covers general forecasting and its evaluation.
+- **1.2 Foundations:** WP 5 recaps descriptive statistics, tests, contingency tables and correlation in applied form, in Python; the theory stays in 1.2.
+- **2.2 Data Mining:** WP 5 uses algorithms as tools and focuses on validation, features and deployment; their theory stays in 2.2.
+- **3.2 Big Data:** WP 5 applies database concepts in SQL and uses Polars for large tables on a single machine; database technology beyond relational databases, data warehousing and big-data technology (Hadoop, distributed processing) stay in 3.2.
+- **3.4 NLP and Neural Networks:** WP 5 uses text as features and pre-trained models and LLMs as components under evaluation; linguistic methods and neural networks stay in 3.4.
+- **3.3 Responsible Data Management in Practice and WP 4 Data Ethics:** WP 5 applies documentation (data card, model card) as engineering practice; governance, ethics and regulation, including the EU AI Act, stay in 3.3 and WP 4.
+- **WP 7 Current Topics in Data Science:** forecasting there focuses on financial markets; WP 5 covers general forecasting and its evaluation.
 
 </details>
 
 ### 2.1 The MPMD curriculum 2026
 
-Modules of the curriculum from intake 2026 (MPMD website and study and examination regulations, AMBl. 15/2025). **CM** compulsory module, **EM** elective module, **WSH** weekly semester hours. Statistical Programming is elective WP 6 and can be taken as elective module 2.4 (semester 2) or 3.5 (semester 3). Module 3.1 is listed as an elective in the regulations and the curriculum table, but as compulsory on its module page.
+Modules of the curriculum from intake 2026 (MPMD website and study and examination regulations, AMBl. 15/2025). **CM** compulsory module, **EM** elective module, **WSH** weekly semester hours. Statistical Programming is elective WP 5 and can be taken as elective module 2.4 (semester 2) or 3.5 (semester 3). Module 3.1 is listed as an elective in the regulations and the curriculum table, but as compulsory on its module page.
 
 | Sem. | Module | Type | WSH | ECTS | Examination | Relevance to this module |
 |---|---|---|---|---|---|---|
@@ -71,9 +71,9 @@ Modules of the curriculum from intake 2026 (MPMD website and study and examinati
 | 3 | [3.4 Natural Language Processing (NLP) and Neural Networks](https://mpmd.htw-berlin.de/studying/natural-language-processing-nlp-and-neural-networks) | CM | 4 | 5 | To be announced | Machine learning for text, entity recognition, text classification, relation extraction, NLP metrics |
 | 4 | [4.1–4.2 Master's Thesis; Thesis Seminar and Final Oral Examination](https://mpmd.htw-berlin.de/studying/masters-thesis) | CM | 1 | 30 | Thesis; seminar and oral examination | Independent application of the methods |
 | 2/3 | [WP 4 Data Ethics and Responsible Data Science](https://mpmd.htw-berlin.de/studying/data-ethics-and-responsible-data-science) | EM | 4 | 5 | Projects 80 %, participation 20 % | Bias, explainability, AI risk, guardrails for AI systems |
-| 2/3 | **[WP 6 Statistical Programming (this module)](https://mpmd.htw-berlin.de/studying/statistical-programming)** | EM | 4 | 5 | Current: quiz 30 %, take-home coding assignment 40 %, oral examination 30 % | See this proposal |
+| 2/3 | **[WP 5 Statistical Programming (this module)](https://mpmd.htw-berlin.de/studying/statistical-programming)** | EM | 4 | 5 | Current: quiz 30 %, take-home coding assignment 40 %, oral examination 30 % | See this proposal |
 | 2/3 | [WP 7 Current Topics in Data Science](https://mpmd.htw-berlin.de/studying/current-topics-in-data-science-real-world-financial-market-problems) | EM | 4 | 5 | Three assignments 20/20/60 % | Python for financial data: visualisation, time series, machine learning, causal analysis (Bloomberg terminal) |
-| 2/3 | [WP 1–3, 5, 8 Negotiation; Group Facilitation; Technology Management; Managing International Projects; Current Topics in PM](https://mpmd.htw-berlin.de/studying) | EM | 2–4 | 5 | Various | — |
+| 2/3 | [WP 1–3, 6, 8 Negotiation; Group Facilitation; Technology Management; Managing International Projects; Current Topics in PM](https://mpmd.htw-berlin.de/studying) | EM | 2–4 | 5 | Various | — |
 
 ## 3. Labour-market requirements
 
