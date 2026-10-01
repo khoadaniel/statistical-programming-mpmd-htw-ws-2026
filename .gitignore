@@ -10,5 +10,3 @@ catboost_info/
 # case-study data are downloaded by each student and never committed
 case-study/data/
 submission*.csv
-# lecturer-only material kept outside the student repository
-proposal/

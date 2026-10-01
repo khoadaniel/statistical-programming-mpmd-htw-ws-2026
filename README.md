@@ -80,4 +80,5 @@ sessions/NN-<topic>/
   source.md        origin and licence of third-party material
 case-study/        data preparation and scoring for the running case study
 pyproject.toml     course environment (uv sync)
+proposal/          course proposal for the programme director (premise and curriculum plan)
 ```
