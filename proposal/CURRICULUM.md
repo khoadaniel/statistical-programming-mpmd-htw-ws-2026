@@ -2,7 +2,7 @@
 
 **Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
 
-The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on real datasets, EU customs decisions and Berlin Airbnb listings, with a class leaderboard.
+The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on real datasets: Berlin Airbnb listings for data work, statistics and tabular machine learning, and EU customs decisions for text and language models, with a class leaderboard.
 
 The analysis behind these decisions (curriculum, labour market, comparable courses, dataset and assessment) is in Part 1, [PREMISE.md](PREMISE.md).
 
@@ -14,7 +14,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Workload | 5 ECTS = 135 h: 40.5 h contact time (54 UE) and about 94.5 h self-study and project work (about 5 h per week) |
 | Participants | 22 students in seven teams (six of three, one of four) |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
-| Datasets | EU customs decisions (EBTI): predict the HS heading of a product from its description, with a leaderboard on a hidden, time-based test set; Inside Airbnb Berlin for the numeric topics; IBM Telco for churn |
+| Datasets | Inside Airbnb Berlin (Sessions 1–12) and the Open-Meteo weather API; IBM Telco for churn; EU customs decisions (EBTI) for the text and language-model sessions 13–16, with a leaderboard on a hidden, time-based test set |
 | Assessment | Final project with an analytics or machine learning emphasis, graded in its presentation (100 %) |
 
 ## Contents
@@ -47,7 +47,7 @@ flowchart LR
 - **Shared base (Sessions 1–4).** Every role needs Python, both for analysis in notebooks and for building applications (object-oriented programming, APIs), collaborative development with Git, SQL, Polars for large tables and the preparation of data.
 - **Analytics (Session 5).** Exploration and visualisation together with the statistics recap of the module description: descriptive statistics, tests, contingency tables and correlation, applied in Python. Correlation leads directly into regression, the first model of the next part.
 - **Machine learning (Sessions 6–16).** Built up from the simplest model to the most complex: linear and logistic regression, validation and tuning, classification and its evaluation metrics, feature engineering, tree-based models, unsupervised learning, forecasting, classical NLP, two sessions on large language models (from transformer and embedding models to RAG and agents) and deployment. The ML lifecycle is introduced at the start of this part.
-- **Real datasets and one project.** Methods are practised on EU customs decisions and Berlin Airbnb listings, with a class leaderboard from Session 8. Teams then apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation.
+- **Real datasets and one project.** Methods are practised on Berlin Airbnb listings and EU customs decisions, with a class leaderboard on the customs decisions from Session 13. Teams then apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation.
 
 ## 2. Module learning outcomes
 
@@ -126,7 +126,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Tabular data with pandas in a notebook
 - Tips for using AI coding assistants
 
-*Practice:* Case study: download the EBTI decisions with the provided script and answer five questions about them in a notebook
+*Practice:* Case study: download the Berlin Airbnb listings with the provided script and answer five questions about them in a notebook (how many listings, where, of what type, at what price, with how many reviews)
 
 **2:00–2:45**
 
@@ -136,7 +136,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - A first introduction to object-oriented programming (classes, objects, attributes, methods)
 - When to use a notebook and when an application
 
-*Practice:* Turn the notebook analysis into a module with a small class that loads and summarises the decisions
+*Practice:* Turn the notebook analysis into a module with a small class that loads and summarises the listings
 
 **Team project until the next session.** Teams of three are formed and shortlist three project topics.
 
@@ -159,16 +159,17 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Exceptions and error handling
 - Automated tests with pytest
 
-*Practice:* Write and test a class that validates and cleans the record of one BTI decision
+*Practice:* Write and test a class that validates and cleans one listing (price stored as text, coordinates inside Berlin, valid room type)
 
 **1:00–1:45**
 
+- Why analysts need APIs: data that change every day and are not offered as a file, such as weather for a demand forecast
 - What an API is and how web APIs work
 - HTTP requests and responses, JSON, authentication, pagination and rate limits
 - Requesting data with httpx
 - A minimal API of one's own with FastAPI (developed further in Session 16)
 
-*Practice:* Request records from a public open-data API, parse them into the validated class from the first block and test the parsing
+*Practice:* Does the weather explain how busy Berlin's Airbnb market is? Fetch daily Berlin weather from the Open-Meteo API, parse it into a validated class and test the parsing offline; the data are reused in the forecast of Session 12
 
 **2:00–2:45**
 
@@ -176,7 +177,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Pull requests and code review
 - Continuous integration with GitHub Actions (ruff and pytest on every pull request)
 
-*Practice:* Case study: contribute a tested module of simple features of the description of goods through a reviewed pull request; teams set up their repository with CI
+*Practice:* Case study: contribute a tested module of simple features of listing titles through a reviewed pull request; teams set up their repository with CI
 
 **Team project until the next session.** Team repository from the template, with branch protection and CI.
 
@@ -202,7 +203,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Aggregation with GROUP BY and HAVING
 - INNER and LEFT JOIN; NULL values in joins and aggregates
 
-*Practice:* Answer first questions about the decisions in SQL; decisions per country and year; join headings to their English names; find headings without any decision
+*Practice:* Answer first questions about the listings in SQL; listings and median price per district; join listings with their reviews and availability; find listings without any review
 
 **1:00–1:45**
 
@@ -211,7 +212,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Loading data reproducibly with an ingestion script and constraints
 - Documenting a dataset (data card)
 
-*Practice:* Case study: load decisions and nomenclature into PostgreSQL with the provided script; rank headings per country and year with a window function; write a short data card
+*Practice:* Case study: load listings, calendar and monthly reviews into PostgreSQL with the provided script; rank districts by price and compute running totals of reviews with window functions; write a short data card
 
 **2:00–2:45**
 
@@ -220,7 +221,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - The same query in SQL, pandas and Polars
 - Choosing a tool: SQL database, pandas or Polars, depending on data size and task
 
-*Practice:* Case study: run the same aggregation on the raw EBTI export (1.05 million decisions) in SQL, pandas and Polars and compare code, runtime and memory use
+*Practice:* Case study: run the same aggregation on the availability calendar (4.7 million rows) in SQL, pandas and Polars and compare code, runtime and memory use
 
 **Team project until the next session.** Identify the project's data sources and load a first extract into the team database.
 
@@ -242,7 +243,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Checks for types, ranges, duplicates and consistency
 - Validation rules as tests
 
-*Practice:* Write a data quality report for the BTI decisions
+*Practice:* Write a data quality report for the listings (prices stored as text, placeholder values, impossible minimum stays, names in the registration field, duplicates)
 
 **1:00–1:45**
 
@@ -388,7 +389,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Nested cross-validation
 - The final test on held-out data
 
-*Practice:* Demonstrate a leaking workflow on the EBTI decisions (the customs' justification as a feature), then fix it with a Pipeline and compare the scores
+*Practice:* Demonstrate two leaking workflows on the price model (preprocessing fitted outside the cross-validation; the same host in training and test), then fix them with a Pipeline and grouped folds and compare the scores
 
 **Team project until the next session.** Validation plan for the project model (machine learning teams); uncertainty of key results (analytics teams).
 
@@ -426,7 +427,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Decision thresholds from the costs of errors
 - Calibration of predicted probabilities
 
-*Practice:* Case study: first leaderboard submission (L1), a logistic regression on the simple text features of Session 2
+*Practice:* Case study: choose the churn threshold from the cost of a retention offer against the value of a lost customer, and check whether the predicted probabilities can be trusted
 
 **Team project until the next session.** Baseline and first validated model.
 
@@ -467,7 +468,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Resampling inside the cross-validation only, never on validation or test data
 - Pipelines with imbalanced-learn
 
-*Practice:* Case study: compare undersampling, oversampling, SMOTE, class weights and a tuned threshold for Telco churners, and look at the rare headings the EBTI classifier misses
+*Practice:* Case study: compare undersampling, oversampling, SMOTE, class weights and a tuned threshold for catching Telco churners
 
 **Team project until the next session.** Feature set for the project model, documented in the repository.
 
@@ -581,7 +582,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Rolling-origin backtesting
 - Forecast metrics: MAE and MASE
 
-*Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models and recommend one with its 12-month forecast and prediction interval
+*Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models, test whether the Berlin weather from Session 2 adds anything, and recommend one with its 12-month forecast and prediction interval
 
 **Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
 
@@ -608,15 +609,16 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **1:00–1:45**
 
-- TF-IDF and n-grams
-- Linear models for text classification
-- Per-class metrics
+- The EBTI task: predict the customs heading of a product from its description, in 23 languages
+- TF-IDF and n-grams; linear models for text classification
+- Metrics for more than 1,000 classes: accuracy and macro-F1, rare headings, validation by time
 
-*Practice:* Case study: second leaderboard submission (L2) with a TF-IDF classifier
+*Practice:* Case study: first leaderboard submission (L1) with a TF-IDF classifier
 
 **2:00–2:45**
 
 - Error analysis of text models
+- Leakage through the customs' justification, a text that exists only after the decision
 - The most informative n-grams per class
 - Dimensionality reduction with truncated SVD
 - Limits of word counts (word order, synonyms) as the motivation for language models
@@ -656,8 +658,9 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Applications of generative models: prompts, temperature, context window and costs
 - Zero-shot and few-shot classification with structured output
 - Comparison with a trained model on quality, cost, latency and data protection
+- Abstention: route unsure cases to a customs officer
 
-*Practice:* Case study: compare an LLM, choosing among ten candidate headings, with the trained classifier on 200 decisions
+*Practice:* Case study: compare an LLM, choosing among ten candidate headings, with the trained classifier on 200 decisions; second leaderboard submission (L2)
 
 **Team project until the next session.** Decide with evidence whether a language-model component improves the project.
 
@@ -773,28 +776,29 @@ The course works with three datasets. Each session uses the one that fits its to
 
 | Dataset | What it is | Used for |
 |---|---|---|
-| **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in more than 20 languages | Data handling, SQL, text, validation and leakage, classification, language models, deployment, the leaderboard |
-| **Inside Airbnb, Berlin** | About 12,800 Berlin listings with price, district, size, ratings and registration number, and the number of reviews per month since 2009 | Missing values and outliers, statistics, regression, features, tree-based models, clustering, time series |
-| **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification basics, trees, imbalance |
+| **Inside Airbnb, Berlin** | About 12,800 Berlin listings with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL and Polars, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
+| **Open-Meteo** (weather API) | Daily Berlin weather since 2016, fetched through a web API | Session 2 (working with APIs) and Session 12 (weather as a factor in demand) |
+| **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification metrics and thresholds, imbalance, trees, segments |
+| **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in 23 languages | Sessions 13–16: text classification, language models, retrieval, deployment, and the leaderboard |
 
 **Datasets by session**
 
 | Session | Dataset | Topic it supports |
 |---|---|---|
-| 1 | EBTI | First analysis in pandas; a class that loads and summarises the decisions |
-| 2 | EBTI, GovData API | A class that checks one decision; a small web API; simple text features added through a pull request |
-| 3 | EBTI | SQL queries across decisions and headings; Polars on the full export of 1.05 million decisions |
-| 4 | EBTI, Airbnb | Quality checks on the decisions; missing values, outliers and transformations on listing prices |
+| 1 | Airbnb | First analysis in pandas; a class that loads and summarises the listings |
+| 2 | Airbnb, Open-Meteo | A class that checks one listing; fetching Berlin weather from a web API; simple title features added through a pull request |
+| 3 | Airbnb | SQL across listings, calendar and reviews; Polars on the 4.7-million-row calendar |
+| 4 | Airbnb | Quality checks; missing values, outliers and transformations; a cleaned listings table |
 | 5 | Airbnb | Prices by district and room type: tests, effect sizes, contingency tables, a dashboard |
 | 6 | Airbnb, Telco | What drives nightly prices (linear, robust and quantile regression); churn with logistic regression |
-| 7 | EBTI, Airbnb | Validation by time and a leakage example (EBTI); regularisation and tuning of the price model (Airbnb) |
-| 8 | Telco, EBTI | Churn metrics and ROC curves; accuracy and macro-F1 for many headings, abstention, first leaderboard round |
-| 9 | Airbnb, Telco, EBTI | Building features for the price model and a leakage example; imbalanced classes in churn and in rare headings |
+| 7 | Airbnb | Validation for new hosts, regularisation and tuning of the price model, two leakage examples |
+| 8 | Telco | Classification metrics, ROC and PR curves, a threshold chosen from the costs of errors |
+| 9 | Airbnb, Telco | Features for the price model and leaking columns; imbalanced classes in churn |
 | 10 | Telco, Airbnb | Decision trees on churn; random forests, gradient boosting and their interpretation for price prediction |
-| 11 | Telco, Airbnb, EBTI | Customer segments in the churn data; kinds of Airbnb offers and implausible listings; decisions that may be misclassified |
-| 12 | Airbnb | Forecasting monthly demand, with seasons and the COVID break |
-| 13 | EBTI | Text classification with TF-IDF across languages, error analysis, second leaderboard round |
-| 14 | EBTI | Multilingual embeddings, search across languages, a language model choosing among candidate headings |
+| 11 | Telco, Airbnb | Customer segments; kinds of Airbnb offers and implausible listings |
+| 12 | Airbnb, Open-Meteo | Forecasting monthly demand, with seasons, the COVID break and the weather |
+| 13 | EBTI | Text classification across languages, metrics for many classes, leakage, first leaderboard round |
+| 14 | EBTI | Multilingual embeddings, search across languages, a language model choosing among candidate headings, abstention, second leaderboard round |
 | 15 | EBTI | A classification assistant that cites similar past decisions; an agent with tools |
 | 16 | EBTI | A service that suggests headings, drift and retraining, final leaderboard round |
 
@@ -805,7 +809,7 @@ The course works with three datasets. Each session uses the one that fits its to
 - **Task:** predict the heading of each test decision from its description, issuing country, language and date.
 - **Split:** decisions of 2024 form the public leaderboard, decisions of 2025–2026 the private leaderboard. Test decisions whose description repeats a training description are removed.
 - **Metric:** accuracy, with macro-F1 reported alongside. Reference values on the public leaderboard: always the most frequent heading 4 %; logistic regression on simple features 8 %; word TF-IDF with a linear model 81 % (50,000-decision sample) and 87 % (full training set); character TF-IDF 88 %. On the private years the same models score about three points lower, an effect of drift that Session 16 takes up.
-- **Rounds:** L1 simple features (Session 8), L2 TF-IDF models (13), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18.
+- **Rounds:** L1 TF-IDF models (Session 13), L2 embeddings or language models (14), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18.
 - **Platform:** Codabench (free, open source, operated by Université Paris-Saclay; submission of a CSV file; hidden solution; public and private leaderboard). Students register with a pseudonym; alternatively the lecturer submits on behalf of a team.
 
 > [!NOTE]

@@ -157,7 +157,7 @@ Two deliberate deviations: validation (Session 7) is taught before classificatio
 
 The curriculum uses one running case study so that every method is practised on the same data and compared on a common leaderboard. Selection criteria: real, openly reusable public-sector data; text and a label for a leaderboard; metadata for the statistics sessions; more than one table for SQL; a time dimension for validation, forecasting and drift.
 
-**Selected: European Binding Tariff Information (EBTI).** Customs authorities of the member states issue binding decisions on how a described product is classified in the customs tariff, and the European Commission publishes all of them. The course task is to predict the four-digit HS heading from the description of goods. An earlier draft used Amazon product reviews; EBTI was preferred because its reuse terms are clear, it is a European public-sector source, and the classification of goods is a real task in customs administrations and trade.
+**EBTI for the text and language-model sessions.** Customs authorities of the member states issue binding decisions on how a described product is classified in the customs tariff, and the European Commission publishes all of them. The course task is to predict the four-digit HS heading from the description of goods. An earlier draft used Amazon product reviews; EBTI was preferred because its reuse terms are clear, it is a European public-sector source, and the classification of goods is a real task in customs administrations and trade.
 
 **Pilot analysis.** The official full export was downloaded and the splits and reference models were computed:
 
@@ -167,7 +167,7 @@ The curriculum uses one running case study so that every method is practised on 
 - **A built-in drift example.** Scores fall by about three points from the public to the private test years; the United Kingdom stops issuing decisions after Brexit, and the HS revision of 2022 changed headings. Session 16 uses these to teach monitoring and retraining.
 - **Terms.** Reuse is permitted with acknowledgement of the source (Commission Decision 2011/833/EU); the holders of the decisions are not published. Each student downloads the data with a provided script.
 
-**Second dataset.** A pilot of all sessions on EBTI alone showed that the numeric topics (statistics, regression, tree-based models, clustering, time series) then rely on contrived questions. These sessions therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
+**Datasets per part of the course.** A pilot of all sessions on EBTI alone showed that every part outside text and language models then relies on contrived questions. Sessions 1–12 therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students, together with Berlin weather from the Open-Meteo API; EBTI is used in Sessions 13–16, where predicting the heading from a description is a natural text task. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
 
 ## 7. Choice of the assessment format
 
