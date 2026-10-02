@@ -4,7 +4,9 @@ Run from the repository root:
     uv run --with numpy --with matplotlib --with scikit-learn --with scipy \
         python sessions/11-unsupervised-learning/theory/figures/make_figures.py
 
-All figures use toy data or built-in scikit-learn data and a fixed random seed.
+The first four figures use toy data or built-in scikit-learn data; decision_map uses the
+case-study sample (case-study/data/train_sample.parquet, needs pandas and pyarrow).
+All use a fixed random seed.
 """
 
 from pathlib import Path
@@ -135,8 +137,41 @@ def pca_scree_biplot():
     save(fig, "pca_scree_biplot")
 
 
+
+def decision_map():
+    import pandas as pd
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.manifold import TSNE
+
+    root = Path(__file__).resolve().parents[4]
+    sample = pd.read_parquet(root / "case-study" / "data" / "train_sample.parquet")
+    furn = sample[sample["chapter"] == "94"].reset_index(drop=True)
+    X = TfidfVectorizer(min_df=3, sublinear_tf=True).fit_transform(furn["description"])
+    S = TruncatedSVD(50, random_state=0).fit_transform(X)
+    emb = TSNE(perplexity=30, init="pca", random_state=0).fit_transform(S)
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8))
+    palette = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#8e6bd1", "#898781"]
+    lang = furn["language"].where(furn["language"].isin(["de", "fr", "sv", "en"]), "other")
+    heading = furn["heading"].where(furn["heading"].isin(["9401", "9403", "9404", "9405"]), "other")
+    names = {"9401": "9401 seats", "9403": "9403 other furniture", "9404": "9404 mattresses, bedding",
+             "9405": "9405 lamps, light fittings", "other": "other"}
+    for ax, col, title, labels in [(axes[0], lang, "coloured by language", None),
+                                   (axes[1], heading, "coloured by heading", names)]:
+        for k, value in enumerate(sorted(col.unique(), key=lambda v: (v == "other", v))):
+            m = (col == value).to_numpy()
+            ax.scatter(emb[m, 0], emb[m, 1], s=4, color=palette[k] if value != "other" else "#c9c7c0",
+                       label=labels[value] if labels else value)
+        ax.set_title(f"Chapter 94 decisions, t-SNE of 50 SVD components: {title}", fontsize=9)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.legend(frameon=False, fontsize=8, markerscale=3, loc="best")
+    save(fig, "decision_map")
+
+
 if __name__ == "__main__":
     kmeans_iterations()
     elbow_silhouette()
     dendrogram_figure()
     pca_scree_biplot()
+    decision_map()

@@ -2,7 +2,7 @@
 
 A tested service on a laptop is still not available to its users. This page covers the three steps that get it there: packaging the service with all its dependencies in a **container**, releasing it automatically with **continuous delivery** in GitHub Actions, and **publishing** a dashboard or the API on a hosting platform. In this course we do not run servers in class for everyone; the workspace contains a Dockerfile and two workflows that you can read line by line and run in your own repository.
 
-The deployment pipeline of the sentiment service. Every arrow is automated except the two marked as decisions.
+The deployment pipeline of the tariff heading service. Every arrow is automated except the two marked as decisions.
 
 ```mermaid
 flowchart LR
@@ -78,17 +78,17 @@ USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["uvicorn", "sentiment_service.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "tariff_service.app:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 Build and run it (if Docker or Podman is installed):
 
 ```bash
 cd sessions/16-deployment-and-monitoring/workspace
-uv run python -m sentiment_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
-docker build -t sentiment-service:1.0.0 .
-docker run --rm -p 8000:8000 sentiment-service:1.0.0     # then open http://localhost:8000/docs
-docker images sentiment-service                           # size of the image
+uv run python -m tariff_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
+docker build -t tariff-service:1.0.0 .
+docker run --rm -p 8000:8000 tariff-service:1.0.0     # then open http://localhost:8000/docs
+docker images tariff-service                           # size of the image
 ```
 
 Any program can then use the service. A client in Python:
@@ -97,9 +97,11 @@ Any program can then use the service. A client in Python:
 # requires the running container (docker run ... above)
 import httpx
 
-r = httpx.post("http://localhost:8000/predict", json={"title": "Stopped working",
-                                                      "text": "Broke after two days. Waste of money."})
-print(r.status_code, r.json())   # 200 {'label': 'neg', 'probabilities': {...}, 'model_version': '1.0.0'}
+r = httpx.post("http://localhost:8000/predict",
+               json={"description": "Masque de protection à usage unique, en non-tissé de polypropylène",
+                     "language": "fr"})
+print(r.status_code, r.json()["heading"], [t["heading"] for t in r.json()["top"]])
+# 200, then the top heading and the three suggestions, e.g. 6307 ['6307', ...]
 ```
 
 ### In practice
@@ -194,7 +196,7 @@ jobs:
 The release itself, from the command line with the GitHub CLI:
 
 ```bash
-uv run python -m sentiment_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
+uv run python -m tariff_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
 git tag v1.0.0 && git push origin v1.0.0
 gh release create v1.0.0 models/model.joblib models/metadata.json --title "Model 1.0.0" --notes-file MODEL_CARD.md
 ```
@@ -252,7 +254,7 @@ flowchart TD
 
 ### Why it matters
 
-A model that nobody can use has no effect. For a project manager, choosing where and how results are published is a decision about cost, maintenance and data protection: a public free tier is fine for reviews of a public dataset, not for customer data.
+A model that nobody can use has no effect. For a project manager, choosing where and how results are published is a decision about cost, maintenance and data protection: a public free tier is fine for a demo on published BTI decisions, not for pending requests, which contain confidential business information.
 
 ### How it works in Python
 
@@ -266,18 +268,19 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from sentiment_service.model import load_model, review_text
+from tariff_service.model import decision_text, load_model, top_k
 
 @st.cache_resource                      # load once per server process
 def get_model():
     return load_model(Path(os.environ.get("MODEL_DIR", "models")))
 
 pipe, meta = get_model()
-st.title("Review sentiment")
-st.caption(f"Model {meta['model_version']} · validation macro-F1 {meta['validation']['macro_f1']}")
-text = st.text_area("Review", "Broke after two days. Waste of money.")
-proba = pipe.predict_proba([review_text("", text)])[0]
-st.bar_chart(pd.DataFrame({"probability": proba}, index=pipe.classes_))
+st.title("Tariff heading suggestion")
+st.caption(f"Model {meta['model_version']} · validation accuracy {meta['validation']['accuracy']}")
+text = st.text_area("Description of goods", "Masque de protection à usage unique, en non-tissé")
+ranked = top_k(pipe, [decision_text(text)], k=3)[0]          # [(heading, score), ...]
+st.dataframe(pd.DataFrame([{"heading": h, "score": sc, "text": meta["headings"].get(h, "")}
+                           for h, sc in ranked]))
 ```
 
 To publish it on Streamlit Community Cloud: push the repository to GitHub (public), sign in at [share.streamlit.io](https://share.streamlit.io/) with GitHub, choose the repository and the file `dashboard/streamlit_app.py`, and add the dependencies in a `requirements.txt` next to the app or in `pyproject.toml`. The model files must be reachable: commit a small model (a few MB), or download it from the GitHub release at start-up.
@@ -297,7 +300,7 @@ To publish it on Streamlit Community Cloud: push the repository to GitHub (publi
 2. What is the difference between continuous integration, continuous delivery and continuous deployment?
 3. Why is the model file attached to a GitHub release instead of being committed to the repository?
 4. The CD workflow stops with "metadata version 1.1.0 != tag". What went wrong in the release, and how do you fix it?
-5. Your team's dashboard shows predictions for reviews that contain customer names. Which publishing option do you choose, and why?
+5. Your team's dashboard classifies pending BTI requests that customs officers paste into it. Which publishing option do you choose, and why?
 
 ## Further reading
 

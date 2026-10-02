@@ -13,7 +13,7 @@ flowchart LR
   C -- "HTTP request<br/>GET /package_search?q=baum" --> S
   S -- "HTTP response<br/>200, JSON" --> C
   subgraph own["Your own API (FastAPI)"]
-    F["POST /reviews/validate"]
+    F["POST /decisions/validate"]
   end
   U["Other programs,<br/>a dashboard"] -- request --> F
 ```
@@ -232,7 +232,7 @@ With the workspace class, the whole search is one call (run from the repository 
 import sys
 
 sys.path.insert(0, "sessions/02-software-engineering/workspace/src")
-from reviewtools.opendata import OpenDataClient
+from btitools.opendata import OpenDataClient
 
 # requires internet access
 with OpenDataClient() as client:                  # Berlin datasets on GovData, no key needed
@@ -258,23 +258,23 @@ The workbook [03-case-study-open-data-api.ipynb](../workbooks/03-case-study-open
 
 ### Concept
 
-**FastAPI** is a Python library for building web APIs. A function becomes an endpoint with a **decorator** such as `@app.get("/health")`. Function parameters become **path parameters** (`/labels/{rating}`), **query parameters** (`/features?text=...`) or the request **body**; their type hints are used to convert and validate the input automatically (with the library pydantic) and to generate interactive documentation at `/docs` (OpenAPI). Returned dictionaries are sent as JSON.
+**FastAPI** is a Python library for building web APIs. A function becomes an endpoint with a **decorator** such as `@app.get("/health")`. Function parameters become **path parameters** (`/headings/{heading}`), **query parameters** (`/features?text=...`) or the request **body**; their type hints are used to convert and validate the input automatically (with the library pydantic) and to generate interactive documentation at `/docs` (OpenAPI). Returned dictionaries are sent as JSON.
 
-A web **server** such as **uvicorn** runs the app and listens for requests: `uv run uvicorn reviewtools.api:app --reload`. In tests, `fastapi.testclient.TestClient(app)` calls the app directly, without a server.
+A web **server** such as **uvicorn** runs the app and listens for requests: `uv run uvicorn btitools.api:app --reload`. In tests, `fastapi.testclient.TestClient(app)` calls the app directly, without a server.
 
 ```mermaid
 sequenceDiagram
   participant T as TestClient or browser
   participant F as FastAPI app
-  participant R as ReviewRecord
-  T->>F: POST /reviews/validate {"rating": "2", ...}
-  F->>R: ReviewRecord.from_dict(body)
+  participant R as DecisionRecord
+  T->>F: POST /decisions/validate {"heading": "9503", ...}
+  F->>R: DecisionRecord.from_dict(body)
   alt valid
     R-->>F: cleaned record
-    F-->>T: 200 {"rating": 2, "label": "neg", ...}
+    F-->>T: 200 {"heading": "9503", "chapter": "95", ...}
   else invalid
-    R-->>F: raise ValidationError("rating", ...)
-    F-->>T: 422 {"detail": {"field": "rating", ...}}
+    R-->>F: raise ValidationError("heading", ...)
+    F-->>T: 422 {"detail": {"field": "heading", ...}}
   end
 ```
 
@@ -290,7 +290,8 @@ from typing import Annotated
 from fastapi import FastAPI, HTTPException, Path
 from fastapi.testclient import TestClient
 
-app = FastAPI(title="Mini review API")
+app = FastAPI(title="Mini tariff API")
+HEADINGS = {"9503": "Toys, scale models, puzzles", "6404": "Footwear with textile uppers"}
 
 
 @app.get("/health")
@@ -298,27 +299,31 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/labels/{rating}")
-def label(rating: Annotated[int, Path(ge=1, le=5)]) -> dict[str, object]:
-    return {"rating": rating, "label": "neg" if rating <= 2 else "neu" if rating == 3 else "pos"}
+@app.get("/headings/{heading}")
+def heading(heading: Annotated[str, Path(pattern=r"^\d{4}$")]) -> dict[str, str]:
+    if heading not in HEADINGS:
+        raise HTTPException(status_code=404, detail=f"unknown heading {heading}")
+    return {"heading": heading, "chapter": heading[:2], "description": HEADINGS[heading]}
 
 
-@app.post("/reviews")
-def submit(review: dict) -> dict[str, object]:
-    if not str(review.get("text", "")).strip():
-        raise HTTPException(status_code=422, detail="text must not be empty")
-    return {"accepted": True, "n_words": len(review["text"].split())}
+@app.post("/decisions")
+def submit(decision: dict) -> dict[str, object]:
+    if not str(decision.get("description", "")).strip():
+        raise HTTPException(status_code=422, detail="description must not be empty")
+    return {"accepted": True, "n_words": len(decision["description"].split())}
 
 
 client = TestClient(app)                          # no server needed
 print(client.get("/health").json())               # {'status': 'ok'}
-print(client.get("/labels/2").json())             # {'rating': 2, 'label': 'neg'}
-print(client.get("/labels/9").status_code)        # 422: rejected by Path(ge=1, le=5)
-print(client.post("/reviews", json={"text": "Works well"}).json())   # {'accepted': True, 'n_words': 2}
-print(client.post("/reviews", json={"text": " "}).status_code)       # 422
+print(client.get("/headings/9503").json())
+# {'heading': '9503', 'chapter': '95', 'description': 'Toys, scale models, puzzles'}
+print(client.get("/headings/1234").status_code)   # 404: well-formed, but not known
+print(client.get("/headings/95").status_code)     # 422: rejected by the pattern of four digits
+print(client.post("/decisions", json={"description": "Plush toy"}).json())   # {'accepted': True, 'n_words': 2}
+print(client.post("/decisions", json={"description": " "}).status_code)      # 422
 ```
 
-Run this example with `uv run --with fastapi --with httpx python example.py`. The workspace app in `src/reviewtools/api.py` has the endpoints `/health`, `/labels`, `/labels/{rating}`, `POST /reviews/validate` and `/features`; its tests are in `tests/test_api.py`.
+Run this example with `uv run --with fastapi --with httpx python example.py`. The workspace app in `src/btitools/api.py` has the endpoints `/health`, `/headings`, `/headings/{heading}` (from a small extract of the nomenclature), `POST /decisions/validate` and `/features`; its tests are in `tests/test_api.py`.
 
 ### In practice
 
@@ -338,7 +343,7 @@ Work in the [workspace](../workspace/README.md), exercises 3 to 5:
 1. Request `package_search` with httpx in a Python console and inspect status, headers and the JSON structure.
 2. Read `DatasetRecord.from_ckan` and `tests/test_opendata.py`: which broken inputs are tested, and how does `MockTransport` replace the server?
 3. Implement pagination in `OpenDataClient.iter_datasets` and activate its test.
-4. Start the FastAPI app, try `/docs`, and add a test for a review without `text`.
+4. Start the FastAPI app, try `/docs`, and add a test for a decision without `description`.
 
 ## Check your understanding
 
@@ -346,7 +351,7 @@ Work in the [workspace](../workspace/README.md), exercises 3 to 5:
 2. An API returns `429` with `Retry-After: 30`. What should a client do, and what should it not do?
 3. A search reports `count = 57`; the page size is 25. Which values of `start` are requested?
 4. Why do the workspace tests use `httpx.MockTransport` instead of the real portal?
-5. In the FastAPI app, where does the validation of a review happen, and what does the client receive when it fails?
+5. In the FastAPI app, where does the validation of a decision happen, and what does the client receive when it fails? Why does `/headings/1234` answer 404 but `/headings/95` 422?
 
 ## Further reading
 

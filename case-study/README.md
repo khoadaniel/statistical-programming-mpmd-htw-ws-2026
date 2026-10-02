@@ -4,7 +4,7 @@ Every product that crosses the EU border is classified in the customs nomenclatu
 
 **Task of the course:** predict the four-digit **HS heading** of a decision (for example `6404`, footwear with textile uppers) from its description of goods.
 
-The descriptions are written in the language of the issuing country: about 57 % German, 16 % French, and the rest in 20 other EU languages. Each training decision also has English keywords, which help you read a decision you cannot read in its original language.
+The descriptions are written in the language of the issuing country: about 57 % German, 16 % French, and the rest in more than 20 other EU languages. Each training decision also has English keywords, which help you read a decision you cannot read in its original language.
 
 ## Tables
 
@@ -64,7 +64,7 @@ The leaderboard is not graded. Decisions can be looked up in the public EBTI dat
 - **Leakage through the justification.** `classification_justification` explains the decision and names the heading in most cases. It exists only in the training data, because it is written after classification. Never use it as a model input; Session 9 uses it as an example of a feature that is not available at prediction time. The same holds for `keywords`, `cn_code`, `status` and the end dates.
 - **Quoted codes.** Some descriptions quote the tariff text of their own code. Numbers that repeat the decision's own code are replaced by `<CODE>` in all tables.
 - **Changing nomenclature.** The HS nomenclature is revised every five years (latest: 2022). Some headings were created, split or deleted, which changes the labels over time (Session 16).
-- **Data quality.** Dates contain typing errors (end dates before start dates, start dates far in the future); Session 4 deals with them.
+- **Data quality.** Annulled decisions carry the placeholder end date 1900-01-01, the raw export contains a few impossible start dates (years such as 2055 or 2200), some descriptions are database templates or test entries, and a few headings no longer exist in HS 2022; Session 4 deals with them.
 
 ## Sources and terms of use
 

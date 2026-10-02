@@ -17,7 +17,7 @@
 - [The prediction API with FastAPI and pydantic](theory/01-from-notebook-to-service.md#the-prediction-api-with-fastapi-and-pydantic), building on Session 2
 - [Tests for the service](theory/01-from-notebook-to-service.md#tests-for-the-service)
 
-*Practice:* Build and test version 1 of the sentiment service → [`workspace/`](workspace/README.md), exercises 1–2
+*Practice:* Build and test version 1 of the tariff heading service (top-3 headings with scores and English texts) → [`workspace/`](workspace/README.md), exercises 1–2
 
 **1:00–1:45 · Containers and continuous delivery** ([theory](theory/02-containers-and-continuous-delivery.md))
 
@@ -33,7 +33,7 @@
 - [Retraining triggers and versioning](theory/03-monitoring-and-maintenance.md#retraining-triggers-and-versioning)
 - [Documenting a model in a model card](theory/03-monitoring-and-maintenance.md#documenting-a-model-in-a-model-card)
 
-*Practice:* Case study: the 2022 labels are released as feedback data; detect the shift (negative share 19 % → 26 %), retrain and make the final leaderboard submission, ranked on the 2023 reviews → [`01-case-study-drift-and-retraining.ipynb`](workbooks/01-case-study-drift-and-retraining.ipynb), then workspace exercises 4–5
+*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no GB decisions after Brexit, chapter 85 from 14 % to 12 %, a few headings never seen), compare retraining candidates, retrain and make the final leaderboard submission (L4), ranked on the 2025–2026 decisions → [`01-case-study-drift-and-retraining.ipynb`](workbooks/01-case-study-drift-and-retraining.ipynb), then workspace exercises 4–5
 
 ## Materials
 
@@ -41,12 +41,12 @@
 |---|---|---|---|
 | [theory/01-from-notebook-to-service.md](theory/01-from-notebook-to-service.md) | Saving pipelines (joblib, skops), versioning, pinned dependencies, FastAPI and pydantic, tests | 1 | core |
 | [theory/02-containers-and-continuous-delivery.md](theory/02-containers-and-continuous-delivery.md) | Docker, GitHub Actions CI/CD, publishing a dashboard | 2 | core |
-| [theory/03-monitoring-and-maintenance.md](theory/03-monitoring-and-maintenance.md) | KS test, PSI, prediction drift, label shift, retraining, model card | 3 | core |
-| [workspace/](workspace/README.md) | Complete sentiment service: train script, FastAPI app, tests, Dockerfile, `ci.yml`, `cd.yml`, drift module, model card template, dashboard | 1–3 | core |
+| [theory/03-monitoring-and-maintenance.md](theory/03-monitoring-and-maintenance.md) | KS test, PSI, prediction drift, label shift, nomenclature change, retraining, model card | 3 | core |
+| [workspace/](workspace/README.md) | Complete tariff heading service (package `tariff_service`): train script, FastAPI app, tests, Dockerfile, `ci.yml`, `cd.yml`, drift module, model card template, dashboard | 1–3 | core |
 | [workspace/MODEL_CARD.md](workspace/MODEL_CARD.md) | Model card template (Mitchell et al. 2019) | 3 | core |
-| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Own: drift detection, label shift, retraining candidates, v2, leaderboard round L4 | 3 | core |
+| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Own: input and prediction drift, label shift with the 2024 feedback, accuracy by language, retraining candidates, v2, leaderboard round L4 | 3 | core |
 | [workbooks/02-evidently-data-drift-report.ipynb](workbooks/02-evidently-data-drift-report.ipynb) | Evidently: data drift and data summary reports on a tabular dataset | 3 | optional |
-| [workbooks/make_feedback_2022.py](workbooks/make_feedback_2022.py) | Lecturer only: writes `case-study/data/feedback_2022.csv` from the hidden solution | 3 | lecturer |
+| [workbooks/make_feedback_2024.py](workbooks/make_feedback_2024.py) | Lecturer only: writes `case-study/data/feedback_2024.csv` (labels of the 2024 decisions) from the hidden solution | 3 | lecturer |
 
 Sources and licences: [source.md](source.md).
 
@@ -54,7 +54,7 @@ Sources and licences: [source.md](source.md).
 
 **Preparation.** Re-read the FastAPI and CI parts of Session 2. Run `cd workspace && uv sync && uv run pytest -q` once, so that all packages are installed before class. Docker Desktop (or Podman) is useful but not required: the tests and the notebook do not need it.
 
-**Lecturer.** Before block 3, run `uv run --with pandas --with pyarrow python sessions/16-deployment-and-monitoring/workbooks/make_feedback_2022.py` and share `case-study/data/feedback_2022.csv` (labels of the 2022 reviews only) with the students.
+**Lecturer.** Before block 3, run `uv run python sessions/16-deployment-and-monitoring/workbooks/make_feedback_2024.py` and share `case-study/data/feedback_2024.csv` (labels of the 40,369 decisions of 2024 only, columns `id,heading`) with the students. `--out PATH` writes the file elsewhere.
 
 **Team project until the next session.** Release: dashboard or deployed model, repository and documentation complete.
 
@@ -76,4 +76,4 @@ The notebook runs from the repository root:
 uv run --with jupyterlab --with pandas --with pyarrow --with scikit-learn --with scipy --with matplotlib jupyter lab
 ```
 
-It writes `models_v2/` and `submission_L4.csv` next to itself; do not commit them. The Evidently notebook needs `--with evidently` and downloads the Adult dataset from OpenML.
+It writes `submission_L4.csv` next to itself (do not commit it) and reads the feedback file from `case-study/data/feedback_2024.csv` or from the path in `FEEDBACK_PATH`. Run time about two minutes. The Evidently notebook needs `--with evidently` and downloads the Adult dataset from OpenML.

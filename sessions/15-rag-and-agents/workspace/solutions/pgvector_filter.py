@@ -1,17 +1,17 @@
-"""Exercise 1: metadata filter in SQL (replace PgVectorStore.search in src/review_assistant/store.py)."""
+"""Exercise 1: metadata filter in SQL (replace PgVectorStore.search in src/bti_assistant/store.py)."""
 
 import numpy as np
 
-from review_assistant.store import Hit
+from bti_assistant.store import Hit
 
 
-def search(self, vector: np.ndarray, k: int = 5, parent_asin: str | None = None) -> list[Hit]:
+def search(self, vector: np.ndarray, k: int = 5, chapter: str | None = None) -> list[Hit]:
     q = np.asarray(vector, dtype=np.float32)
     where, params = "", [q]
-    if parent_asin is not None:
-        where, params = "WHERE parent_asin = %s", [q, parent_asin]
+    if chapter is not None:
+        where, params = "WHERE left(heading, 2) = %s", [q, chapter]
     rows = self.con.execute(
-        f"""SELECT chunk_id, doc_id, text, 1 - (embedding <=> %s) AS score, parent_asin
+        f"""SELECT chunk_id, doc_id, text, 1 - (embedding <=> %s) AS score, heading
             FROM {self.table}
             {where}
             ORDER BY embedding <=> %s

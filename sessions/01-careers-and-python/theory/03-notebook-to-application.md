@@ -240,7 +240,7 @@ class Decision:
 
 d = Decision(heading="9503", description="Plush toy in the shape of a bear")   # an instance
 print(d)               # Decision(heading='9503', description='Plush toy in the shape of a bear')
-print(d.heading, d.chapter(), d.n_words())       # 9503 95 7
+print(d.heading, d.chapter(), d.n_words())       # 9503 95 8
 
 decisions = [Decision("3926", "Storage box of plastics"), Decision("0901", "Roasted coffee"), d]
 print([x.chapter() for x in decisions])          # ['39', '09', '95']

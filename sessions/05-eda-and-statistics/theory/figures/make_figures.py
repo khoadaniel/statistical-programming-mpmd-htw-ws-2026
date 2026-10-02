@@ -34,73 +34,76 @@ plt.rcParams.update({
 
 
 def load_sample() -> pd.DataFrame:
-    reviews = pd.read_parquet(DATA / "train_sample.parquet")
-    reviews["n_words"] = reviews["text"].str.split().str.len()
-    reviews["year"] = reviews["date"].dt.year
-    return reviews
+    decisions = pd.read_parquet(DATA / "train_sample.parquet")
+    decisions["n_chars"] = decisions["description"].str.len()
+    decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
+    return decisions
 
 
-def fig_skewed_distribution(reviews: pd.DataFrame) -> None:
-    """Mean versus median on a right-skewed variable (words per review)."""
-    words = reviews["n_words"].clip(lower=1)
+def fig_skewed_distribution(decisions: pd.DataFrame) -> None:
+    """Mean versus median on a right-skewed variable (characters per description)."""
+    chars = decisions["n_chars"]
     fig, (lin, log) = plt.subplots(1, 2, figsize=(10, 3.6), layout="constrained")
-    lin.hist(words.clip(upper=300), bins=60, color=GREY, edgecolor="white", linewidth=0.5)
+    lin.hist(chars.clip(upper=3000), bins=60, color=GREY, edgecolor="white", linewidth=0.5)
     for ax in (lin, log):
-        ax.axvline(words.mean(), color=ORANGE, lw=2)
-        ax.axvline(words.median(), color=BLUE, lw=2)
-    lin.text(words.mean() + 4, lin.get_ylim()[1] * 0.9, f"mean {words.mean():.0f}", color=ORANGE)
-    lin.text(words.median() + 4, lin.get_ylim()[1] * 0.75, f"median {words.median():.0f}",
-             color=BLUE)
-    lin.set(xlabel="words per review (values above 300 shown at 300)", ylabel="reviews",
-            title="Linear axis: a long right tail")
-    # integer-aligned bin edges avoid empty bins for the short (1-3 word) reviews
-    bins = np.unique(np.round(np.logspace(0, np.log10(words.max()), 22))) + 0.5
-    bins = np.concatenate([[0.5], bins])
-    log.hist(words, bins=bins, color=GREY, edgecolor="white", linewidth=0.5)
+        ax.axvline(chars.mean(), color=ORANGE, lw=2)
+        ax.axvline(chars.median(), color=BLUE, lw=2)
+    lin.text(chars.mean() + 40, lin.get_ylim()[1] * 0.9, f"mean {chars.mean():.0f}", color=ORANGE)
+    lin.text(chars.median() - 40, lin.get_ylim()[1] * 0.75, f"median {chars.median():.0f}",
+             color=BLUE, ha="right")
+    lin.set(xlabel="characters per description (values above 3,000 shown at 3,000)",
+            ylabel="decisions", title="Linear axis: a long right tail")
+    bins = np.logspace(np.log10(chars.min()), np.log10(chars.max()), 45)
+    log.hist(chars, bins=bins, color=GREY, edgecolor="white", linewidth=0.5)
     log.set_xscale("log")
-    log.set(xlabel="words per review (log scale)", ylabel="reviews",
+    log.set(xlabel="characters per description (log scale)", ylabel="decisions",
             title="Log axis: the shape becomes readable")
-    fig.suptitle("The mean (35) is pulled into the tail; the median (20) is not",
-                 x=0.01, ha="left", fontsize=12)
+    fig.suptitle(f"The mean ({chars.mean():.0f}) is pulled into the tail; "
+                 f"the median ({chars.median():.0f}) is not", x=0.01, ha="left", fontsize=12)
     fig.savefig(OUT / "skewed-distribution.png")
     plt.close(fig)
 
 
-def fig_good_vs_poor(reviews: pd.DataFrame) -> None:
-    """The same data as a poorly designed and a well-designed chart."""
-    yearly = reviews.query("year >= 2014").groupby("year")["rating"].agg(
-        avg="mean", share_neg=lambda r: (r <= 2).mean())
+def fig_good_vs_poor() -> None:
+    """The same data as a poorly designed and a well-designed chart (decisions per year)."""
+    counts = pd.read_parquet(DATA / "monthly_counts.parquet")
+    counts["year"] = counts["month"].dt.year
+    counts = counts[counts["year"].between(2015, 2025)]
+    counts["uk"] = counts["issuing_country"].eq("GB")
+    yearly = counts.pivot_table(index="year", columns="uk", values="n_decisions", aggfunc="sum",
+                                fill_value=0)
+    total = yearly.sum(axis=1)
     fig, (bad, good) = plt.subplots(1, 2, figsize=(11, 3.9), layout="constrained")
 
     # poor: truncated axis, rainbow colours, no units, title that says nothing
-    colours = plt.cm.rainbow(np.linspace(0, 1, len(yearly)))
-    bad.bar(yearly.index, yearly["avg"], color=colours)
-    bad.set_ylim(3.85, 4.22)
-    bad.set_title("Ratings")
+    colours = plt.cm.rainbow(np.linspace(0, 1, len(total)))
+    bad.bar(total.index, total, color=colours)
+    bad.set_ylim(38000, 52500)
+    bad.set_title("Decisions")
     bad.spines[["top", "right"]].set_visible(True)
     bad.grid(True, color="0.6")
-    bad.text(0.02, -0.2, "Poor: bars start at 3.85, rainbow colours, no units, vague title",
+    bad.text(0.02, -0.2, "Poor: bars start at 38,000, rainbow colours, no units, vague title",
              transform=bad.transAxes, color=ORANGE, fontsize=9)
 
-    # good: the measure the reader cares about, full axis, one colour, finding as title
-    good.plot(yearly.index, yearly["share_neg"], marker="o", ms=6, lw=2, color=ORANGE)
-    good.set_ylim(0, 0.3)
-    good.yaxis.set_major_formatter("{x:.0%}")
-    good.set(ylabel="share of 1–2 star reviews",
-             title="Negative reviews rose from 16 % (2014) to 23 % (2021)")
-    for year in (2014, 2021):
-        value = yearly.loc[year, "share_neg"]
-        good.annotate(f"{value:.1%}", (year, value), textcoords="offset points",
-                      xytext=(0, 8), ha="center")
+    # good: full axis, colour for one distinction, finding as title
+    good.bar(yearly.index, yearly[False], color=GREY, label="other countries")
+    good.bar(yearly.index, yearly[True], bottom=yearly[False], color=ORANGE,
+             label="United Kingdom")
+    good.yaxis.set_major_formatter("{x:,.0f}")
+    fall = total[2017] - total[2021]
+    good.set(ylabel="decisions per year (start of validity)",
+             title=f"Decisions fell by a fifth from 2017 to 2021;\n"
+                   f"a third of the fall ({yearly.loc[2017, True]:,} of {fall:,}) is the UK leaving")
+    good.legend(frameon=False, loc="lower left", fontsize=9)
     good.grid(axis="y", color="0.9")
-    good.text(0.02, -0.2, "Better: full axis from 0, one colour, labelled values, finding as title",
+    good.text(0.02, -0.2, "Better: full axis from 0, one highlight colour, finding as title",
               transform=good.transAxes, color=BLUE, fontsize=9)
     fig.savefig(OUT / "good-vs-poor-chart.png")
     plt.close(fig)
 
 
 def fig_simpsons_paradox() -> None:
-    """Simpson's paradox: Berkeley admissions 1973 and verified purchases by year."""
+    """Simpson's paradox (Berkeley 1973) and milder confounding by language in the case study."""
     # UC Berkeley graduate admissions, six largest departments (Bickel et al. 1975;
     # R dataset UCBAdmissions): (admitted, applied)
     berkeley = pd.DataFrame(
@@ -111,12 +114,9 @@ def fig_simpsons_paradox() -> None:
     overall = {g: sum(a for a, _ in berkeley[g]) / sum(n for _, n in berkeley[g])
                for g in ("men", "women")}
 
-    reviews = pd.read_parquet(DATA / "train.parquet", columns=["rating", "verified_purchase",
-                                                               "date"])
-    reviews = reviews[reviews["date"].dt.year >= 2012]
-    by_year = reviews.groupby([reviews["date"].dt.year, "verified_purchase"])["rating"].mean()
-    by_year = by_year.unstack()
-    pooled = reviews.groupby("verified_purchase")["rating"].mean()
+    decisions = load_sample().dropna(subset=["keywords"])
+    decisions = decisions[decisions["language"].isin(["de", "fr", "en"])]
+    decisions["log_chars"] = np.log10(decisions["n_chars"])
 
     fig, (left, right) = plt.subplots(1, 2, figsize=(11, 4), layout="constrained",
                                       gridspec_kw={"width_ratios": [1, 1.5]})
@@ -133,23 +133,31 @@ def fig_simpsons_paradox() -> None:
              title="Berkeley 1973: women ahead in 4 of 6\ndepartments, behind overall")
     left.legend(frameon=False, loc="upper right")
 
-    years = by_year.index.to_numpy()
-    right.plot(years, by_year[True], color=BLUE, marker="o", lw=2, label="verified")
-    right.plot(years, by_year[False], color=ORANGE, marker="s", lw=2, ls="--",
-               label="not verified")
-    right.axhline(pooled[True], color=BLUE, lw=1, ls=":",
-                  label=f"all years pooled: verified {pooled[True]:.3f}")
-    right.axhline(pooled[False], color=ORANGE, lw=1, ls=":",
-                  label=f"all years pooled: not verified {pooled[False]:.3f}")
-    right.set(xlabel="year of review", ylabel="mean star rating", ylim=(3.6, 4.6),
-              title="Reviews: verified purchases rate higher in 8 of 10 years,\n"
-                    "lower when pooled (unverified reviews cluster in 2015–2016)")
-    right.legend(frameon=False, loc="upper right", fontsize=8.5)
+    colours = {"de": BLUE, "fr": ORANGE, "en": GREEN}
+    names = {"de": "German", "fr": "French", "en": "English"}
+    edges = np.arange(1.0, 3.81, 0.2)
+    for lang, g in decisions.groupby("language"):
+        bins = pd.cut(g["log_chars"], edges)
+        means = g.groupby(bins, observed=True)[["log_chars", "n_keywords"]].mean()
+        means = means[g.groupby(bins, observed=True).size() >= 30]
+        right.scatter(means["log_chars"], means["n_keywords"], color=colours[lang], s=22, zorder=3)
+        b1, b0 = np.polyfit(g["log_chars"], g["n_keywords"], 1)
+        grid = np.array([g["log_chars"].quantile(0.02), g["log_chars"].quantile(0.98)])
+        right.plot(grid, b0 + b1 * grid, color=colours[lang], lw=2,
+                   label=f"{names[lang]}: slope {b1:.1f}")
+    b1, b0 = np.polyfit(decisions["log_chars"], decisions["n_keywords"], 1)
+    grid = np.array([2.0, 3.4])
+    right.plot(grid, b0 + b1 * grid, color="black", lw=2, ls="--",
+               label=f"three languages pooled: slope {b1:.1f}")
+    right.set(xlabel="log10(characters in description)", ylabel="mean number of keywords",
+              title="Case study: German and French slopes are steeper than\n"
+                    "the pooled slope (long German texts, few extra keywords)")
+    right.legend(frameon=False, loc="upper left", fontsize=8.5)
     fig.savefig(OUT / "simpsons-paradox.png")
     plt.close(fig)
 
 
-def fig_regression_line(reviews: pd.DataFrame) -> None:
+def fig_regression_line(decisions: pd.DataFrame) -> None:
     """From a scatter plot to the least-squares line, with residuals."""
     rng = np.random.default_rng(5)
     x = rng.uniform(0, 10, 30)
@@ -169,21 +177,23 @@ def fig_regression_line(reviews: pd.DataFrame) -> None:
              title=f"Least squares: r = {r:.2f}, slope = r · s_y / s_x = {b1:.2f}")
     left.legend(frameon=False, fontsize=8.5, loc="upper left")
 
-    sub = reviews.sample(4000, random_state=1)
-    lx = np.log1p(sub["n_words"])
-    ly = np.log1p(sub["helpful_vote"])
-    jitter = rng.uniform(-0.08, 0.08, len(sub))
-    right.scatter(lx, ly + jitter, s=4, alpha=0.25, color=GREY, label="review (jittered)")
-    bins = pd.cut(lx, np.arange(0, 8.5, 0.5))
+    sub = decisions.dropna(subset=["n_keywords"]).sample(4000, random_state=1)
+    lx = np.log(sub["n_chars"])
+    ly = sub["n_keywords"]
+    jitter = rng.uniform(-0.3, 0.3, len(sub))
+    right.scatter(lx, ly + jitter, s=4, alpha=0.25, color=GREY, label="decision (jittered)")
+    bins = pd.cut(lx, np.arange(2, 9.5, 0.5))
     means = pd.DataFrame({"x": lx, "y": ly}).groupby(bins, observed=True).mean()
     right.plot(means["x"], means["y"], color=BLUE, marker="o", lw=0, ms=6,
                label="mean per length bin")
-    c1, c0 = np.polyfit(lx, ly, 1)
+    full = decisions.dropna(subset=["n_keywords"])
+    c1, c0 = np.polyfit(np.log(full["n_chars"]), full["n_keywords"], 1)   # all 50,000, as on the page
     grid = np.linspace(lx.min(), lx.max(), 2)
     right.plot(grid, c0 + c1 * grid, color=ORANGE, lw=2, label=f"OLS line, slope {c1:.2f}")
-    rr = np.corrcoef(lx, ly)[0, 1]
-    right.set(xlabel="log(1 + words)", ylabel="log(1 + helpful votes)",
-              title=f"Case study: longer reviews get more votes (r = {rr:.2f})")
+    rr = np.corrcoef(np.log(full["n_chars"]), full["n_keywords"])[0, 1]
+    right.set(xlabel="log(characters in description)", ylabel="number of keywords",
+              ylim=(0, 20),
+              title=f"Case study: longer descriptions, more keywords (r = {rr:.2f})")
     right.legend(frameon=False, fontsize=8.5, loc="upper left")
     fig.savefig(OUT / "regression-line.png")
     plt.close(fig)
@@ -192,7 +202,7 @@ def fig_regression_line(reviews: pd.DataFrame) -> None:
 if __name__ == "__main__":
     sample = load_sample()
     fig_skewed_distribution(sample)
-    fig_good_vs_poor(sample)
+    fig_good_vs_poor()
     fig_simpsons_paradox()
     fig_regression_line(sample)
     for png in sorted(OUT.glob("*.png")):

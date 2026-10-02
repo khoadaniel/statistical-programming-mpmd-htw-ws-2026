@@ -1,6 +1,6 @@
-# Container image of the sentiment service.
-#   build: docker build -t sentiment-service:1.0.0 .
-#   run:   docker run --rm -p 8000:8000 sentiment-service:1.0.0      (docs at http://localhost:8000/docs)
+# Container image of the tariff heading service.
+#   build: docker build -t tariff-service:1.0.0 .
+#   run:   docker run --rm -p 8000:8000 tariff-service:1.0.0      (docs at http://localhost:8000/docs)
 # The model files must be in models/ before the build (train.py, or download them from a release).
 FROM python:3.12-slim
 
@@ -25,4 +25,4 @@ USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["uvicorn", "sentiment_service.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "tariff_service.app:app", "--host", "0.0.0.0", "--port", "8000"]

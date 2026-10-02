@@ -1,6 +1,6 @@
 # Object-oriented programming, errors and tests
 
-This page covers the first block of Session 2. Session 1 introduced classes, objects, attributes and methods. Here we use them in practice: how classes are combined (composition and inheritance), how dataclasses remove boilerplate, how type hints and docstrings document a contract, how exceptions report broken contracts, and how automated tests with pytest check that the code keeps its promises. The running example is a class that validates and cleans one review record, `ReviewRecord`, in the [workspace](../workspace/README.md).
+This page covers the first block of Session 2. Session 1 introduced classes, objects, attributes and methods. Here we use them in practice: how classes are combined (composition and inheritance), how dataclasses remove boilerplate, how type hints and docstrings document a contract, how exceptions report broken contracts, and how automated tests with pytest check that the code keeps its promises. The running example is a class that validates and cleans the record of one Binding Tariff Information (BTI) decision of the course case study, `DecisionRecord`, in the [workspace](../workspace/README.md).
 
 ```mermaid
 flowchart LR
@@ -18,11 +18,11 @@ flowchart LR
 A **class** bundles data (**attributes**) and behaviour (**methods**). Two ways of building larger classes from smaller ones:
 
 - **Composition** ("has a"): an object holds other objects as attributes and delegates work to them. A `FeatureSet` *has* a list of features; the open-data client of the workspace *has* an HTTP client.
-- **Inheritance** ("is a"): a **subclass** takes over all attributes and methods of its **base class** (or parent) and adds or replaces some. `ExclamationCount` *is a* `Feature`. Replacing a method of the parent is called **overriding**. Code that works with `Feature` objects works with every subclass: this is **polymorphism**.
+- **Inheritance** ("is a"): a **subclass** takes over all attributes and methods of its **base class** (or parent) and adds or replaces some. `DigitCount` *is a* `Feature`. Replacing a method of the parent is called **overriding**. Code that works with `Feature` objects works with every subclass: this is **polymorphism**.
 
 A **dataclass** is a class whose main purpose is to hold data. The decorator `@dataclass` reads the annotated class attributes (the **fields**) and writes `__init__`, `__repr__` and `__eq__` automatically. The special method `__post_init__` runs right after `__init__` and is the place to check and clean the fields. `frozen=True` makes the objects read-only.
 
-A small example by hand: `FeatureSet([WordCount(), ExclamationCount()])` applied to `"Great!! Works"` asks each feature in turn: two words, two exclamation marks, so the result is `{"n_words": 2, "n_exclamations": 2}`.
+A small example by hand: `FeatureSet([WordCount(), DigitCount()])` applied to the description `"Plush toy, 30 cm"` asks each feature in turn: four words, two digits, so the result is `{"n_words": 4, "n_digits": 2}`.
 
 ```mermaid
 classDiagram
@@ -34,7 +34,7 @@ classDiagram
   class WordCount {
     +compute(text) int
   }
-  class ExclamationCount {
+  class DigitCount {
     +compute(text) int
   }
   class FeatureSet {
@@ -42,7 +42,7 @@ classDiagram
     +transform(text) dict
   }
   Feature <|-- WordCount : inherits
-  Feature <|-- ExclamationCount : inherits
+  Feature <|-- DigitCount : inherits
   FeatureSet o-- Feature : has many
 ```
 
@@ -74,11 +74,11 @@ class WordCount(Feature):                  # inheritance: WordCount is a Feature
         return len(text.split())
 
 
-class ExclamationCount(Feature):
-    name = "n_exclamations"
+class DigitCount(Feature):
+    name = "n_digits"
 
     def compute(self, text: str) -> int:
-        return text.count("!")
+        return sum(c in "0123456789" for c in text)
 
 
 @dataclass
@@ -89,8 +89,8 @@ class FeatureSet:                          # composition: a FeatureSet has featu
         return {f.name: f.compute(text) for f in self.features}   # polymorphism
 
 
-features = FeatureSet([WordCount(), ExclamationCount()])
-print(features.transform("Great!! Works"))     # {'n_words': 2, 'n_exclamations': 2}
+features = FeatureSet([WordCount(), DigitCount()])
+print(features.transform("Plush toy, 30 cm"))  # {'n_words': 4, 'n_digits': 2}
 print(isinstance(WordCount(), Feature))        # True
 try:
     Feature()                                  # an abstract class cannot be instantiated
@@ -99,20 +99,20 @@ except TypeError as err:
 
 
 @dataclass
-class Review:
+class Decision:
     """A dataclass: __init__, __repr__ and __eq__ are generated from the fields."""
 
-    review_id: str
-    rating: int
-    text: str = ""
+    bti_reference: str
+    heading: str
+    description: str = ""
 
     def __post_init__(self) -> None:           # runs after the generated __init__
-        self.text = " ".join(self.text.split())
+        self.description = " ".join(self.description.split())
 
 
-r = Review("r1", 5, "  Works   well ")
-print(r)                                       # Review(review_id='r1', rating=5, text='Works well')
-print(r == Review("r1", 5, "Works well"))      # True: fields are compared
+d = Decision("DE1", "9503", "  Plush   toy ")
+print(d)                                       # Decision(bti_reference='DE1', heading='9503', description='Plush toy')
+print(d == Decision("DE1", "9503", "Plush toy"))   # True: fields are compared
 ```
 
 ### In practice
@@ -124,7 +124,7 @@ print(r == Review("r1", 5, "Works well"))      # True: fields are compared
 > A mutable default such as `features: list = []` in a dataclass raises `ValueError` (in a normal function default it would be silently shared between all calls). Use `field(default_factory=list)`.
 
 > [!TIP]
-> Before you write a subclass, ask whether "B is an A" is true in the domain. A `ReviewTable` *has* reviews; it is not a kind of review. When in doubt, use composition.
+> Before you write a subclass, ask whether "B is an A" is true in the domain. A `DecisionTable` *has* decisions; it is not a kind of decision. When in doubt, use composition.
 
 The workbooks [01-classes-and-objects.ipynb](../workbooks/01-classes-and-objects.ipynb) (composition, equivalence, copying) and [02-inheritance.ipynb](../workbooks/02-inheritance.ipynb) (*Think Python*) practise both patterns with exercises.
 
@@ -144,11 +144,11 @@ Hints and docstrings tell a teammate (and an AI assistant) how to call the code 
 ### How it works in Python
 
 ```python
-def share_with(texts: list[str], char: str = "!") -> float | None:
+def share_with(texts: list[str], char: str = "%") -> float | None:
     """Share of texts that contain ``char``.
 
     Args:
-        texts: review texts.
+        texts: descriptions of goods.
         char: the character to look for.
 
     Returns:
@@ -159,12 +159,12 @@ def share_with(texts: list[str], char: str = "!") -> float | None:
     return sum(char in t for t in texts) / len(texts)
 
 
-print(share_with(["Great!", "ok"]))            # 0.5
+print(share_with(["100 % cotton", "Plush toy"]))   # 0.5
 print(share_with([]))                          # None
 print(share_with.__annotations__["return"])    # float | None
 print(share_with.__doc__.splitlines()[0])      # Share of texts that contain ``char``.
 try:
-    share_with(["Great!"], char=5)             # the hint says str; Python does not stop the call
+    share_with(["100 % cotton"], char=5)       # the hint says str; Python does not stop the call
 except TypeError as err:
     print("TypeError:", err)                   # TypeError: 'in <string>' requires string as left operand, not int
 ```
@@ -184,7 +184,7 @@ uvx ty check src/          # or: uvx mypy src/
 > `from __future__ import annotations` at the top of a module (used in the workspace) stores hints as text and allows the newer syntax such as `str | None` on older Python versions.
 
 > [!CAUTION]
-> A hint is a promise, not a check. `rating: int` does not stop someone from passing `"4"`. Values that come from outside (files, forms, APIs) must be checked explicitly, which is the job of the validation in `__post_init__`.
+> A hint is a promise, not a check. `heading: str` does not stop someone from passing the integer `901`, which has already lost the leading zero of `"0901"`. Values that come from outside (files, forms, APIs) must be checked explicitly, which is the job of the validation in `__post_init__`.
 
 ## Exceptions and error handling
 
@@ -194,7 +194,7 @@ An **exception** is Python's signal that an operation cannot be completed. Built
 
 - `raise ValueError("message")` signals a broken contract deliberately.
 - `try: … except ValueError as err: …` **handles** an expected exception; `else:` runs if no exception occurred; `finally:` always runs (for example to close a file).
-- Exceptions are classes and form a hierarchy. Defining your own subclasses, such as `ValidationError(ReviewToolsError, ValueError)`, lets callers catch exactly what they can handle.
+- Exceptions are classes and form a hierarchy. Defining your own subclasses, such as `ValidationError(BtiToolsError, ValueError)`, lets callers catch exactly what they can handle.
 - `raise NewError(...) from err` keeps the original cause in the traceback.
 
 Two styles: *Look before you leap* (LBYL) checks first (`if key in d:`); *Easier to ask forgiveness than permission* (EAFP) tries and handles the exception. Python code often uses EAFP for conversions such as `int(value)`.
@@ -216,11 +216,14 @@ A clear error at the place where the problem occurs saves hours compared with a 
 ### How it works in Python
 
 ```python
-class ReviewToolsError(Exception):
+from datetime import date, datetime
+
+
+class BtiToolsError(Exception):
     """Base class of the package's errors."""
 
 
-class ValidationError(ReviewToolsError, ValueError):
+class ValidationError(BtiToolsError, ValueError):
     """A record breaks a rule; also a ValueError for callers that expect one."""
 
     def __init__(self, field: str, message: str) -> None:
@@ -228,28 +231,29 @@ class ValidationError(ReviewToolsError, ValueError):
         super().__init__(f"{field}: {message}")
 
 
-def parse_rating(value: object) -> int:
+def parse_start_date(value: object) -> date:
+    """Parse a date in the format of the EBTI export, day first: 10/05/2023."""
     try:
-        rating = int(value)                      # EAFP: try the conversion
-    except (TypeError, ValueError) as err:
-        raise ValidationError("rating", f"not a number: {value!r}") from err
-    if not 1 <= rating <= 5:
-        raise ValidationError("rating", f"must lie between 1 and 5, got {rating}")
-    return rating
+        parsed = datetime.strptime(str(value).strip(), "%d/%m/%Y").date()   # EAFP
+    except ValueError as err:
+        raise ValidationError("start_date", f"expected dd/mm/yyyy, got {value!r}") from err
+    if not 1990 <= parsed.year <= 2035:
+        raise ValidationError("start_date", f"implausible year {parsed.year}")
+    return parsed
 
 
 good, bad = [], []
-for raw in ["4", "five", 7, None, 2]:
+for raw in ["10/05/2023", "2023-05-10", "31/02/2023", "15/06/2200", "01/12/2022"]:
     try:
-        rating = parse_rating(raw)
+        start = parse_start_date(raw)
     except ValidationError as err:               # handle only the error we expect
         bad.append((err.field, str(err)))
     else:
-        good.append(rating)
+        good.append(start.isoformat())
 
-print(good)        # [4, 2]
-print(bad[0])      # ('rating', "rating: not a number: 'five'")
-print(len(bad))    # 3
+print(good)        # ['2023-05-10', '2022-12-01']
+print(bad[0])      # ('start_date', "start_date: expected dd/mm/yyyy, got '2023-05-10'")
+print(bad[2])      # ('start_date', 'start_date: implausible year 2200')
 ```
 
 ### In practice
@@ -272,7 +276,7 @@ A **unit test** is a small function that calls the code with a known input and a
 - `with pytest.raises(ValidationError):` checks that the code raises the expected exception.
 - `@pytest.mark.skip` skips a test (the workspace uses it for exercises).
 
-Good tests are **small** (one behaviour each), **independent** (no shared state, any order), **fast** and **deterministic** (no network, no randomness without a seed). They cover normal cases, **edge cases** (empty text, rating 1 and 5) and invalid input.
+Good tests are **small** (one behaviour each), **independent** (no shared state, any order), **fast** and **deterministic** (no network, no randomness without a seed). They cover normal cases, **edge cases** (empty text, the first and the last chapter, a heading with a leading zero) and invalid input.
 
 ```mermaid
 stateDiagram-v2
@@ -290,43 +294,43 @@ Tests turn "it worked when I tried it" into a check that runs on every change, o
 
 ### How it works in Python
 
-Save as `test_rating.py` and run `uv run --with pytest pytest -q test_rating.py`, or run the file directly with Python (the last two lines start pytest):
+Save as `test_chapter.py` and run `uv run --with pytest pytest -q test_chapter.py`, or run the file directly with Python (the last two lines start pytest):
 
 ```python
 import pytest
 
 
-def to_label(rating: int) -> str:
-    if not 1 <= rating <= 5:
-        raise ValueError(f"rating must lie between 1 and 5, got {rating}")
-    return "neg" if rating <= 2 else "neu" if rating == 3 else "pos"
+def chapter_of(heading: str) -> str:
+    if not (isinstance(heading, str) and len(heading) == 4 and heading.isdigit()):
+        raise ValueError(f"expected a four-digit heading, got {heading!r}")
+    return heading[:2]
 
 
 @pytest.fixture
-def ratings() -> list[int]:
-    return [5, 4, 1, 3, 2]
+def headings() -> list[str]:
+    return ["9503", "3926", "0901", "6307", "8517"]
 
 
-def test_labels_of_fixture(ratings):
-    assert [to_label(r) for r in ratings] == ["pos", "pos", "neg", "neu", "neg"]
+def test_chapters_of_fixture(headings):
+    assert [chapter_of(h) for h in headings] == ["95", "39", "09", "63", "85"]
 
 
-@pytest.mark.parametrize(("rating", "expected"), [(1, "neg"), (2, "neg"), (3, "neu"), (5, "pos")])
-def test_boundaries(rating, expected):
-    assert to_label(rating) == expected
+@pytest.mark.parametrize(("heading", "expected"), [("0101", "01"), ("0901", "09"), ("9706", "97")])
+def test_boundaries(heading, expected):
+    assert chapter_of(heading) == expected
 
 
-@pytest.mark.parametrize("rating", [0, 6, -1])
-def test_out_of_range_raises(rating):
-    with pytest.raises(ValueError, match="between 1 and 5"):
-        to_label(rating)
+@pytest.mark.parametrize("heading", ["950", "95031", "toys", 9503])
+def test_malformed_heading_raises(heading):
+    with pytest.raises(ValueError, match="four-digit"):
+        chapter_of(heading)
 
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))   # 8 passed
 ```
 
-In the workspace, tests live in `tests/` and import the package: `from reviewtools import ReviewRecord`. Run them with `uv run pytest -q` in the workspace folder.
+In the workspace, tests live in `tests/` and import the package: `from btitools import DecisionRecord`. Run them with `uv run pytest -q` in the workspace folder.
 
 ### In practice
 
@@ -339,37 +343,40 @@ In the workspace, tests live in `tests/` and import the package: `from reviewtoo
 > [!TIP]
 > When you fix a bug, first write a test that reproduces it. The test fails, you fix the code, the test passes, and the bug can never come back unnoticed (a **regression test**).
 
-## Practice: a class that validates and cleans a review record
+## Practice: a class that validates and cleans a decision record
 
 Work in the [workspace](../workspace/README.md), exercises 1 and 2:
 
-1. Read `src/reviewtools/records.py`: which fields does `ReviewRecord` have, which rules does `__post_init__` apply, and what does `from_dict` add?
+1. Read `src/btitools/records.py`: which fields does `DecisionRecord` have, which rules does `__post_init__` apply (reference present, two-letter country code, EU language code, plausible start date, non-empty description, four-digit heading), and what does `from_dict` add?
 2. Run `uv run pytest -q tests/test_records.py` and read one parametrized test.
-3. Complete the TODO: `helpful_vote` must be a whole number ≥ 0. Activate `test_helpful_vote_rules`.
+3. Complete the TODO: `end_date` is optional, but if present it must be a valid date that does not lie before `start_date`. Activate `test_end_date_rules`.
 4. Add two tests of your own for rules that are not yet tested.
 
 ```python
 import sys
 
 sys.path.insert(0, "sessions/02-software-engineering/workspace/src")   # uv run in the workspace does this
-from reviewtools import ReviewRecord, ValidationError
+from btitools import DecisionRecord, ValidationError
 
-record = ReviewRecord.from_dict({"review_id": " r42 ", "rating": "2", "text": "Stopped  working"})
-print(record)          # ReviewRecord(review_id='r42', rating=2, text='Stopped working', title='', helpful_vote=0, verified_purchase=False)
-print(record.label)    # neg
+raw = {"bti_reference": " DE42 ", "issuing_country": "de", "language": "DE",
+       "start_date": "10/05/2023", "description": "Plüschtier,  30 cm ", "heading": "9503"}
+record = DecisionRecord.from_dict(raw)
+print(record.bti_reference, record.issuing_country, record.language, record.start_date)
+# DE42 DE de 2023-05-10
+print(record.description, "|", record.chapter)   # Plüschtier, 30 cm | 95
 try:
-    ReviewRecord.from_dict({"review_id": "r43", "rating": 9, "text": "?"})
+    DecisionRecord.from_dict({**raw, "heading": 901})
 except ValidationError as err:
-    print(err.field, "|", err)   # rating | rating: must lie between 1 and 5, got 9
+    print(err.field, "|", err)   # heading | heading: expected text, got int
 ```
 
 ## Check your understanding
 
 1. The open-data client holds an `httpx.Client` as an attribute. Is this composition or inheritance, and why does it make testing easier?
 2. What does `@dataclass` generate, and what is `__post_init__` for?
-3. A function has the hint `rating: int`. What happens when it is called with `"4"`?
-4. Why does `ValidationError` inherit from both `ReviewToolsError` and `ValueError`?
-5. Name three kinds of cases a good set of tests for `parse_rating` should contain.
+3. A function has the hint `heading: str`. What happens when it is called with the integer `901`?
+4. Why does `ValidationError` inherit from both `BtiToolsError` and `ValueError`?
+5. Name three kinds of cases a good set of tests for `parse_start_date` should contain.
 
 ## Further reading
 

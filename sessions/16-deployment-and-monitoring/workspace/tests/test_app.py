@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-NEGATIVE = {"text": "Broke after two days. Waste of money."}
+BOOTS = {"description": "Damenstiefel mit Oberteil aus Rindleder und Laufsohle aus Gummi", "language": "de"}
 
 
 def test_health_reports_the_model_version(client):
@@ -14,31 +14,39 @@ def test_health_reports_the_model_version(client):
 
 
 def test_predict_contract(client):
-    r = client.post("/predict", json=NEGATIVE)
+    r = client.post("/predict", json=BOOTS)
     assert r.status_code == 200
     body = r.json()
-    assert set(body) == {"label", "probabilities", "model_version"}
-    assert body["label"] in {"neg", "neu", "pos"}
-    assert set(body["probabilities"]) == {"neg", "neu", "pos"}
-    assert abs(sum(body["probabilities"].values()) - 1) < 0.01
-    assert body["label"] == max(body["probabilities"], key=body["probabilities"].get)
+    assert set(body) == {"heading", "top", "model_version"}
+    assert len(body["top"]) == 3 and body["heading"] == body["top"][0]["heading"]
+    scores = [t["score"] for t in body["top"]]
+    assert scores == sorted(scores, reverse=True)          # margins of the linear SVM, best first
+    assert all(len(t["heading"]) == 4 and t["heading"].isdigit() for t in body["top"])
+    assert body["top"][0]["heading_description"].startswith(("Footwear", "Textiles", "Tricycles"))
 
 
-@pytest.mark.parametrize("text, label", [
-    ("Broke after two days. Waste of money.", "neg"),
-    ("Excellent product, works great and I love it.", "pos"),
+@pytest.mark.parametrize("text, heading", [
+    ("Damenstiefel mit Oberteil aus Rindleder und Laufsohle aus Gummi", "6403"),
+    ("Voiture jouet en matière plastique pour enfants", "9503"),
+    ("Disposable face mask made of nonwoven fabric", "6307"),
 ])
-def test_obvious_reviews_get_the_obvious_label(client, text, label):  # behavioural test
-    assert client.post("/predict", json={"text": text}).json()["label"] == label
+def test_obvious_descriptions_get_the_obvious_heading(client, text, heading):  # behavioural test
+    assert client.post("/predict", json={"description": text}).json()["heading"] == heading
+
+
+def test_the_right_heading_is_at_least_in_the_top_three(client):
+    top = client.post("/predict", json={"description": "Hausschuhe aus Textil"}).json()["top"]
+    assert "6404" in [t["heading"] for t in top]
 
 
 @pytest.mark.parametrize("payload", [
-    {"text": ""},                         # empty text
-    {"text": "   "},                      # only spaces
-    {"review": "Great product"},          # wrong field name
-    {"text": 42},                         # wrong type
-    {"text": "ok", "rating": 5},          # unknown field
-    {"text": "x" * 10_001},               # too long
+    {"description": ""},                               # empty description
+    {"description": "   "},                            # only spaces
+    {"text": "Schuhe"},                                # wrong field name
+    {"description": 42},                               # wrong type
+    {"description": "Schuhe", "heading": "6403"},      # unknown field (the label is never an input)
+    {"description": "Schuhe", "language": "deu"},      # language must have two letters
+    {"description": "x" * 20_001},                     # too long
 ])
 def test_invalid_input_is_rejected_with_422(client, payload):
     r = client.post("/predict", json=payload)
@@ -48,21 +56,19 @@ def test_invalid_input_is_rejected_with_422(client, payload):
 
 def test_metadata_endpoint(client):
     meta = client.get("/metadata").json()
-    assert meta["model_version"] == "0.0.0-test"
-    assert meta["classes"] == ["neg", "neu", "pos"]
-    assert "macro_f1" in meta["validation"]
+    assert meta["model_version"] == "0.0.0-test" and meta["n_classes"] == 4
+    assert {"accuracy", "top3_accuracy"} <= set(meta["validation"])
 
 
 def test_openapi_documents_the_schemas(client):
     schema = client.get("/openapi.json").json()
     assert "/predict" in schema["paths"]
-    assert {"ReviewIn", "PredictionOut"} <= set(schema["components"]["schemas"])
+    assert {"DecisionIn", "PredictionOut", "HeadingScore"} <= set(schema["components"]["schemas"])
 
 
 def test_predictions_are_logged_without_the_text(client, tmp_path):
-    client.post("/predict", json=NEGATIVE)
-    lines = (tmp_path / "predictions.jsonl").read_text().splitlines()
-    record = json.loads(lines[-1])
-    assert record["model_version"] == "0.0.0-test" and record["label"] in {"neg", "neu", "pos"}
-    assert record["text_length"] == len(NEGATIVE["text"])
-    assert "text" not in record
+    client.post("/predict", json=BOOTS)
+    record = json.loads((tmp_path / "predictions.jsonl").read_text().splitlines()[-1])
+    assert record["model_version"] == "0.0.0-test" and record["heading"] == "6403"
+    assert record["text_length"] == len(BOOTS["description"]) and record["language"] == "de"
+    assert "description" not in record and "text" not in record

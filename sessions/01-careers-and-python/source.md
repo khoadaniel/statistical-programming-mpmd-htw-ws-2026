@@ -33,9 +33,9 @@ The files `workbooks/data/state-*.csv` belong to workbook 10 and come from the s
 | [theory/01-data-careers.md](theory/01-data-careers.md) | Data roles, skills, entry routes, course organisation | CC-BY-4.0, course team |
 | [theory/02-python-for-analysis.md](theory/02-python-for-analysis.md) | uv, Jupyter, VS Code, Python refresher, pandas, AI assistants | CC-BY-4.0, course team |
 | [theory/03-notebook-to-application.md](theory/03-notebook-to-application.md) | Scripts, modules, packages, project structure, first OOP | CC-BY-4.0, course team |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py), [text_length_by_label.png](theory/figures/text_length_by_label.png) | Figure of review length by label (case-study data) | CC-BY-4.0, course team |
-| [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb) | Case study practice of block 2: five questions about the reviews | CC-BY-4.0, course team |
-| [workspace/](workspace/README.md) | Package `reviewtools` (`ReviewTable`), tests, exercises, reference solution | CC-BY-4.0 (text), MIT (code), course team |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py), [description_length_by_language.png](theory/figures/description_length_by_language.png) | Figure of description length by language (case-study data) | CC-BY-4.0, course team |
+| [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb) | Case study practice of block 2: five questions about the BTI decisions (per year and country, languages, top headings with names, description length, valid share) | CC-BY-4.0, course team |
+| [workspace/](workspace/README.md) | Package `btitools` (`DecisionTable`), tests, exercises, reference solution | CC-BY-4.0 (text), MIT (code), course team |
 
 Code examples in the theory pages adapt the verified examples of the earlier course notes.
 
@@ -44,10 +44,10 @@ Code examples in the theory pages adapt the verified examples of the earlier cou
 - Beauchemin, M. (2017). *The Rise of the Data Engineer*. freeCodeCamp. https://www.freecodecamp.org/news/the-rise-of-the-data-engineer-91be18f1e603/
 - Bitkom (2026, 3 September). *IT-Fachkräftemangel in den letzten drei Jahren halbiert*. https://www.bitkom.org/Presse/Presseinformation/IT-Fachkraeftemangel-in-den-letzten-drei-Jahren-halbiert
 - Data Berlin (2026). *Skills in Berlin data and AI job advertisements* (accessed 2026-09-24). https://databerlin.net/skills
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (course data; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Downey, A. B. (2024). *Think Python*, 3rd edition. O'Reilly. https://allendowney.github.io/ThinkPython/
 - Grewal, E. (2018). *One Data Science Job Doesn't Fit All*. https://www.linkedin.com/pulse/one-data-science-job-doesnt-fit-all-elena-grewal/
 - Grus, J. (2018). *I don't like notebooks*. Talk at JupyterCon 2018. https://docs.google.com/presentation/d/1n2RlMdmv1p25Xy5thJUhkKGvjtV-dkAIsUXP-AL4ffI/
-- Hou, Y., Li, J., He, Z., Yan, A., Chen, X., & McAuley, J. (2024). *Bridging Language and Items for Retrieval and Recommendation*. arXiv:2403.03952. https://arxiv.org/abs/2403.03952
 - Indeed Hiring Lab (2026, 23 September). *Berufseinstieg: Stellenangebot sinkt*. https://hiringlab.indeed.com/de/blog/2026/09/23/berufseinstieg-stellenangebot-sinkt-ausbildungssystem-bietet-einen-anker/
 - LinkedIn (2026). *Jobs on the Rise 2026*. https://www.linkedin.com/pulse/linkedin-jobs-rise-2026-fastest-growing-roles-europe-gabvc
 - McKinney, W. (2022). *Python for Data Analysis*, 3rd edition. O'Reilly. https://wesmckinney.com/book/
@@ -56,4 +56,6 @@ Code examples in the theory pages adapt the verified examples of the earlier cou
 - swyx (2023). *The Rise of the AI Engineer*. Latent Space. https://www.latent.space/p/ai-engineer
 - VanderPlas, J. (2016). *A Whirlwind Tour of Python*. O'Reilly. https://jakevdp.github.io/WhirlwindTourOfPython/
 - VanderPlas, J. (2016). *Python Data Science Handbook*. O'Reilly. https://jakevdp.github.io/PythonDataScienceHandbook/
+- Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - Wilson, G., Bryan, J., Cranston, K., Kitzes, J., Nederbragt, L., & Teal, T. K. (2017). Good enough practices in scientific computing. *PLOS Computational Biology*, 13(6), e1005510. https://doi.org/10.1371/journal.pcbi.1005510
+- World Customs Organization (2026). *What is the Harmonized System (HS)?* https://www.wcoomd.org/en/topics/nomenclature/overview/what-is-the-harmonized-system.aspx

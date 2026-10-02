@@ -1,6 +1,6 @@
 import pytest
 
-from review_assistant.chunking import chunk_documents, chunk_words
+from bti_assistant.chunking import chunk_documents, chunk_words
 
 
 def test_windows_have_the_right_length_and_overlap():

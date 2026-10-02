@@ -33,9 +33,9 @@ The INRIA notebooks read `../datasets/...` and `../figures/...` relative to `wor
 | File | Covers | Licence |
 |---|---|---|
 | [theory/01-pipelines-and-knn.md](theory/01-pipelines-and-knn.md), [theory/02-classification-metrics.md](theory/02-classification-metrics.md), [theory/03-thresholds-calibration-leaderboard.md](theory/03-thresholds-calibration-leaderboard.md) | Theory pages of the three blocks. Author: course team | CC-BY-4.0 |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) and its PNGs (`confusion_matrix.png`, `roc_pr_curves.png`, `knn_boundaries.png`, `calibration_curve.png`) | Figures of the theory pages (Telco data). Author: course team | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) and its PNGs (`confusion_matrix.png`, `roc_pr_curves.png`, `knn_boundaries.png`, `calibration_curve.png`, `coverage_accuracy.png`) | Figures of the theory pages (Telco data; EBTI case-study sample for `coverage_accuracy.png`). Author: course team | CC-BY-4.0 |
 | [workbooks/05-case-study-churn-pipelines.ipynb](workbooks/05-case-study-churn-pipelines.ipynb) | Telco pipeline; churn rule vs k-NN vs logistic regression; confusion matrices, ROC and PR curves. Author: course team | CC-BY-4.0 |
-| [workbooks/13-case-study-leaderboard-l1.ipynb](workbooks/13-case-study-leaderboard-l1.ipynb) | Leaderboard round L1: seven simple text features, logistic regression, time-based validation, `submission.csv`. Author: course team | CC-BY-4.0 |
+| [workbooks/13-case-study-leaderboard-l1.ipynb](workbooks/13-case-study-leaderboard-l1.ipynb) | Leaderboard round L1 on the EBTI decisions: simple description features (Session 2) + language and country, logistic regression, time-based validation, `submission.csv` with `id,heading`. Author: course team | CC-BY-4.0 |
 
 ## Citations
 
@@ -43,7 +43,8 @@ The INRIA notebooks read `../datasets/...` and `../figures/...` relative to `wor
 - Elkan, C. (2001). The foundations of cost-sensitive learning. *Proceedings of IJCAI 2001*, 973–978. https://cseweb.ucsd.edu/~elkan/rescale.pdf
 - Google for Developers (2025). *Machine Learning Crash Course: Classification*. https://developers.google.com/machine-learning/crash-course/classification
 - Hanley, J. A. & McNeil, B. J. (1982). The meaning and use of the area under a receiver operating characteristic (ROC) curve. *Radiology*, 143(1), 29–36. https://doi.org/10.1148/radiology.143.1.7063747
-- Hou, Y. et al. (2024). Bridging language and items for retrieval and recommendation (Amazon Reviews 2023). arXiv:2403.03952. https://arxiv.org/abs/2403.03952
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- Frictionless Data / datasets (2026). *Harmonized System nomenclature (HS 2022)*, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - IBM (2019). *Telco customer churn sample data*. https://github.com/IBM/telco-customer-churn-on-icp4d
 - INRIA (2024). *scikit-learn MOOC*. https://inria.github.io/scikit-learn-mooc/
 - James, G., Witten, D., Hastie, T., Tibshirani, R. & Taylor, J. (2023). *An Introduction to Statistical Learning with Applications in Python*. Springer. https://www.statlearning.com/

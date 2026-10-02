@@ -26,13 +26,13 @@ The pgvector extension itself is released under the [PostgreSQL Licence](https:/
 | [theory/01-retrieval-augmented-generation.md](theory/01-retrieval-augmented-generation.md) | Block 1 theory | CC-BY-4.0, course team |
 | [theory/02-evaluating-and-improving-rag.md](theory/02-evaluating-and-improving-rag.md) | Block 2 theory | CC-BY-4.0, course team |
 | [theory/03-agents-and-guardrails.md](theory/03-agents-and-guardrails.md) | Block 3 theory | CC-BY-4.0, course team |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py), `recall-at-k.png`, `embedding-map.png` | Figures (case-study data, all-MiniLM-L6-v2) | CC-BY-4.0, course team |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py), `recall-at-k.png`, `embedding-map.png` | Figures (EBTI case-study data, multilingual-e5-small, ms-marco cross-encoder) | CC-BY-4.0, course team |
 | [workbooks/01-case-study-semantic-search-postgres.ipynb](workbooks/01-case-study-semantic-search-postgres.ipynb) | Practice block 1 | Author: course team, licence CC-BY-4.0 |
-| [workbooks/04-case-study-rag-evaluation.ipynb](workbooks/04-case-study-rag-evaluation.ipynb) | Practice block 2; ten labelled questions (relevance judgements by the course team) | Author: course team, licence CC-BY-4.0 |
+| [workbooks/04-case-study-rag-evaluation.ipynb](workbooks/04-case-study-rag-evaluation.ipynb) | Practice block 2; ten labelled requests (decisions of 2022–2023 with their headings) and 500 more | Author: course team, licence CC-BY-4.0 |
 | [workbooks/10-case-study-agent.ipynb](workbooks/10-case-study-agent.ipynb) | Practice block 3 | Author: course team, licence CC-BY-4.0 |
-| [workspace/](workspace/README.md) | Package `review_assistant` with tests, exercises and solutions | Code: MIT; text: CC-BY-4.0, course team |
+| [workspace/](workspace/README.md) | Package `bti_assistant` with tests, exercises and solutions | Code: MIT; text: CC-BY-4.0, course team |
 
-Parts of the theory pages and the first five labelled questions reuse the earlier course notes (course team).
+Parts of the theory pages reuse the earlier course notes (course team). Models used at run time (not stored here): `intfloat/multilingual-e5-small` (MIT), `cross-encoder/ms-marco-MiniLM-L-6-v2` (Apache-2.0).
 
 ## Citations
 - Anthropic (2024). *Building effective agents*. https://www.anthropic.com/engineering/building-effective-agents
@@ -40,7 +40,8 @@ Parts of the theory pages and the first five labelled questions reuse the earlie
 - Cormack, G. V., Clarke, C. L. A. and Büttcher, S. (2009). Reciprocal rank fusion outperforms Condorcet and individual rank learning methods. *SIGIR 2009*. https://doi.org/10.1145/1571941.1572114
 - Es, S., James, J., Espinosa-Anke, L. and Schockaert, S. (2024). RAGAs: Automated evaluation of retrieval augmented generation. *EACL 2024 System Demonstrations*. https://arxiv.org/abs/2309.15217
 - Greshake, K., Abdelnabi, S., Mishra, S., Endres, C., Holz, T. and Fritz, M. (2023). Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection. *AISec 2023*. https://arxiv.org/abs/2302.12173
-- Hou, Y., Li, J., He, Z., Yan, A., Chen, X. and McAuley, J. (2024). Bridging language and items for retrieval and recommendation. https://arxiv.org/abs/2403.03952 (case-study data)
+- European Commission. *European Binding Tariff Information (EBTI)* database, full export (case-study data). Reuse with acknowledgement under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- datasets/harmonized-system: *Harmonized System nomenclature (HS 2022)*, ODC-PDDL. https://github.com/datasets/harmonized-system
 - Husain, H. (2024). *Your AI Product Needs Evals*. https://hamel.dev/blog/posts/evals/
 - Kane, A. and contributors. *pgvector* (README). https://github.com/pgvector/pgvector
 - Lewis, P. et al. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. *NeurIPS 2020*. https://arxiv.org/abs/2005.11401
@@ -50,6 +51,7 @@ Parts of the theory pages and the first five labelled questions reuse the earlie
 - Nigam, P. et al. (2019). Semantic product search. *KDD 2019*. https://arxiv.org/abs/1907.00937
 - OWASP Foundation (2025). *OWASP Top 10 for LLM Applications*. https://genai.owasp.org/llm-top-10/
 - Reimers, N. and Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. *EMNLP 2019*. https://arxiv.org/abs/1908.10084
+- Wang, L., Yang, N., Huang, X., Yang, L., Majumder, R. and Wei, F. (2024). Multilingual E5 text embeddings: a technical report. arXiv:2402.05672. https://arxiv.org/abs/2402.05672
 - Robertson, S. and Zaragoza, H. (2009). The probabilistic relevance framework: BM25 and beyond. *Foundations and Trends in Information Retrieval* 3(4). https://doi.org/10.1561/1500000019
 - Thakur, N., Reimers, N., Rücklé, A., Srivastava, A. and Gurevych, I. (2021). BEIR: A heterogeneous benchmark for zero-shot evaluation of information retrieval models. *NeurIPS Datasets and Benchmarks*. https://arxiv.org/abs/2104.08663
 - Yao, S. et al. (2023). ReAct: Synergizing reasoning and acting in language models. *ICLR 2023*. https://arxiv.org/abs/2210.03629

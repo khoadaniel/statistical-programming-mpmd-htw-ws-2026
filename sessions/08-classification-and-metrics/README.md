@@ -26,7 +26,7 @@ Theory: [01-pipelines-and-knn.md](theory/01-pipelines-and-knn.md)
 
 Theory: [02-classification-metrics.md](theory/02-classification-metrics.md)
 
-- [Confusion matrix and accuracy](theory/02-classification-metrics.md#confusion-matrix-and-accuracy); [precision, recall and F1](theory/02-classification-metrics.md#precision-recall-and-f1); [macro-F1](theory/02-classification-metrics.md#macro-f1-for-several-classes)
+- [Confusion matrix and accuracy](theory/02-classification-metrics.md#confusion-matrix-and-accuracy); [precision, recall and F1](theory/02-classification-metrics.md#precision-recall-and-f1); [macro-F1](theory/02-classification-metrics.md#macro-f1-for-several-classes); [many classes: per-class metrics, neighbouring headings, top-k accuracy](theory/02-classification-metrics.md#many-classes-per-class-metrics-neighbouring-headings-and-top-k-accuracy)
 - [The ROC curve and AUC](theory/02-classification-metrics.md#the-roc-curve-and-auc)
 - [The precision–recall curve](theory/02-classification-metrics.md#the-precisionrecall-curve)
 
@@ -36,19 +36,19 @@ Theory: [02-classification-metrics.md](theory/02-classification-metrics.md)
 
 Theory: [03-thresholds-calibration-leaderboard.md](theory/03-thresholds-calibration-leaderboard.md)
 
-- [Decision thresholds from the costs of errors](theory/03-thresholds-calibration-leaderboard.md#decision-thresholds-from-the-costs-of-errors)
+- [Decision thresholds from the costs of errors](theory/03-thresholds-calibration-leaderboard.md#decision-thresholds-from-the-costs-of-errors); with many classes: [abstention, routing uncertain decisions to a human](theory/03-thresholds-calibration-leaderboard.md#abstention-routing-uncertain-decisions-to-a-human)
 - [Calibration of predicted probabilities](theory/03-thresholds-calibration-leaderboard.md#calibration-of-predicted-probabilities)
 - [The first leaderboard submission](theory/03-thresholds-calibration-leaderboard.md#the-first-leaderboard-submission-round-l1)
 
-*Practice:* Case study: first leaderboard submission, a logistic regression on the simple text features of Session 2 ([leaderboard workbook](workbooks/13-case-study-leaderboard-l1.ipynb)).
+*Practice:* Case study: first leaderboard submission, a logistic regression on the simple description features of Session 2 plus language and country, validated by time, predicting the HS heading of the EBTI test decisions ([leaderboard workbook](workbooks/13-case-study-leaderboard-l1.ipynb)).
 
 ## Materials
 
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-pipelines-and-knn.md](theory/01-pipelines-and-knn.md) | Baselines, encoding, scaling, Pipeline and ColumnTransformer, k-NN and decision boundaries | 1 | core |
-| [theory/02-classification-metrics.md](theory/02-classification-metrics.md) | Confusion matrix, precision, recall, F1, macro-F1, ROC/AUC, precision–recall curve | 2 | core |
-| [theory/03-thresholds-calibration-leaderboard.md](theory/03-thresholds-calibration-leaderboard.md) | Cost-based thresholds, TunedThresholdClassifierCV, calibration, leaderboard L1 | 3 | core |
+| [theory/02-classification-metrics.md](theory/02-classification-metrics.md) | Confusion matrix, precision, recall, F1, macro-F1, per-class results and top-k accuracy for 1,000+ headings, ROC/AUC, precision–recall curve | 2 | core |
+| [theory/03-thresholds-calibration-leaderboard.md](theory/03-thresholds-calibration-leaderboard.md) | Cost-based thresholds, TunedThresholdClassifierCV, abstention (coverage–accuracy), calibration, leaderboard L1 | 3 | core |
 | [workbooks/01-categorical-encoding.ipynb](workbooks/01-categorical-encoding.ipynb) | INRIA: OrdinalEncoder and OneHotEncoder on the adult census data | 1 | core |
 | [workbooks/02-scaling-in-pipelines.ipynb](workbooks/02-scaling-in-pipelines.ipynb) | INRIA: StandardScaler, fit/transform, pipelines, cross_validate | 1 | core |
 | [workbooks/03-column-transformer.ipynb](workbooks/03-column-transformer.ipynb) | INRIA: ColumnTransformer for mixed numeric and categorical data | 1 | core |
@@ -61,13 +61,13 @@ Theory: [03-thresholds-calibration-leaderboard.md](theory/03-thresholds-calibrat
 | [workbooks/10-tuned-decision-threshold.ipynb](workbooks/10-tuned-decision-threshold.ipynb) | scikit-learn: TunedThresholdClassifierCV on the diabetes (Pima) data | 3 | core |
 | [workbooks/11-cost-sensitive-learning.ipynb](workbooks/11-cost-sensitive-learning.ipynb) | scikit-learn: cost-sensitive thresholds on credit and fraud data (large download) | 3 | optional |
 | [workbooks/12-calibration-curve.ipynb](workbooks/12-calibration-curve.ipynb) | scikit-learn: calibration curves, Brier score, sigmoid and isotonic calibration | 3 | core |
-| [workbooks/13-case-study-leaderboard-l1.ipynb](workbooks/13-case-study-leaderboard-l1.ipynb) | Own: seven simple features + logistic regression, time-based validation, `submission.csv` | 3 | core |
+| [workbooks/13-case-study-leaderboard-l1.ipynb](workbooks/13-case-study-leaderboard-l1.ipynb) | Own: simple description features + language and country, logistic regression, time-based validation, `submission.csv` (`id,heading`) for the EBTI test set | 3 | core |
 
 The INRIA notebooks read data from `datasets/` and images from `figures/` in this folder (paths `../datasets/` and `../figures/` relative to `workbooks/`); see [source.md](source.md).
 
 ## Before and after the session
 
-**Before.** Re-run your Session 6 logistic regression for Telco churn. Make sure `case-study/data/train.parquet` and `test.parquet` exist (`uv run --with pandas --with pyarrow python case-study/prepare_data.py`). Read the leaderboard rules in [case-study/README.md](../../case-study/README.md).
+**Before.** Re-run your Session 6 logistic regression for Telco churn. Make sure `case-study/data/train_sample.parquet` and `test.parquet` exist (`uv run python case-study/prepare_data.py`). Read the leaderboard rules in [case-study/README.md](../../case-study/README.md).
 
 **Team project until the next session.** Baseline and first validated model: a majority or rule baseline, one model in a pipeline, and cross-validated scores with the metric that fits the project question.
 
@@ -79,7 +79,7 @@ The INRIA notebooks read data from `datasets/` and images from `figures/` in thi
 
 ## Setup
 
-The theory code and all workbooks run in the course environment (pandas, pyarrow, scikit-learn ≥ 1.5 for `TunedThresholdClassifierCV`, matplotlib). Workbook 02 also uses `seaborn`. Workbooks 10–12 download data from OpenML on first use; workbook 11 loads the credit-card fraud data (OpenML 1597, about 285,000 rows), which takes a while.
+The theory code and all workbooks run in the course environment (pandas, pyarrow, scikit-learn ≥ 1.5 for `TunedThresholdClassifierCV`, matplotlib). Workbook 02 also uses `seaborn`. Theory pages 02 and 03, one figure and the leaderboard workbook read the EBTI case-study data in `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Workbooks 10–12 download data from OpenML on first use; workbook 11 loads the credit-card fraud data (OpenML 1597, about 285,000 rows), which takes a while.
 
 Run from the repository root:
 
@@ -91,12 +91,11 @@ uv run --with jupyterlab --with pandas --with pyarrow --with scikit-learn --with
 Score a leaderboard submission (lecturer, who holds the hidden labels):
 
 ```bash
-uv run --with pandas --with scikit-learn python case-study/score.py submission.csv
+uv run python case-study/score.py submission.csv
 ```
 
 To regenerate the figures of the theory pages:
 
 ```bash
-uv run --with pandas --with scikit-learn --with matplotlib \
-    python sessions/08-classification-and-metrics/theory/figures/make_figures.py
+uv run python sessions/08-classification-and-metrics/theory/figures/make_figures.py
 ```

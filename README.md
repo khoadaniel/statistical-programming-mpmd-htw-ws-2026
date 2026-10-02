@@ -35,7 +35,7 @@ Each session folder contains a **README** (plan, materials, preparation), **theo
 
 ## Running case study and leaderboard
 
-All sessions use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. Your task is to predict the four-digit HS heading of a decision from its description of goods, written in one of 22 EU languages. From Session 8 your team submits predictions to an ungraded class leaderboard, scored on decisions from 2024–2026 that you have not seen. Details, download and scoring: [case-study/README.md](case-study/README.md).
+All sessions use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. Your task is to predict the four-digit HS heading of a decision from its description of goods, written in one of more than 20 EU languages. From Session 8 your team submits predictions to an ungraded class leaderboard, scored on decisions from 2024–2026 that you have not seen. Details, download and scoring: [case-study/README.md](case-study/README.md).
 
 ## Final project
 

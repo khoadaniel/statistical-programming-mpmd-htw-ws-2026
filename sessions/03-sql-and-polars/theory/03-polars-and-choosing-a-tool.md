@@ -5,7 +5,7 @@ This page covers the third block. pandas is the default table library in Python 
 ```mermaid
 flowchart LR
     subgraph Eager["pandas: eager"]
-        A1["read all columns"] --> A2["merge"] --> A3["new columns"] --> A4["groupby"]
+        A1["read all columns"] --> A2["new columns"] --> A3["groupby"] --> A4["filter groups"]
     end
     subgraph Lazy["Polars: lazy"]
         B1["scan: build a plan"] --> B2["optimise plan"] --> B3["collect: run in parallel"]
@@ -20,9 +20,9 @@ Three properties of pandas matter when data grow:
 
 1. **Memory.** A DataFrame lives completely in main memory (RAM). Intermediate results, such as the table after a `merge` or a new column, are additional copies. A common rule of thumb from the pandas author Wes McKinney was that pandas needed 5 to 10 times as much RAM as the size of the dataset. Text columns are especially costly: before pandas 3.0, each string was a separate Python object.
 2. **Single-threaded execution.** Most pandas operations use one processor core, even when the laptop has 8 or 16.
-3. **Eager evaluation.** Each line is executed immediately and completely. When you read a Parquet file with 11 columns and later use 4, pandas has already read all 11, unless you said so with `columns=`. pandas cannot look ahead at what you will do with the result.
+3. **Eager evaluation.** Each line is executed immediately and completely. When you read a file with 14 columns and later use 3, pandas has already read all 14, unless you said so with `columns=`. pandas cannot look ahead at what you will do with the result.
 
-A worked example with the case-study data: `train.parquet` is 72 MB on disk (compressed). In memory the reviews take about 140 MB in pandas 3. A pipeline that merges, adds three columns and groups reaches a peak of about 455 MB above the starting point of the Python process: more than six times the file size.
+A worked example with the case-study data: `train.parquet` is 147 MB on disk (compressed). In memory the 309,529 decisions take about 560 MB in pandas 2.3, almost four times the file size, because four of the 14 columns are long texts. The raw export of the European Commission, 1,051,034 decisions in CSV files of 1.2 GB, takes about 2.1 GB as a pandas DataFrame, and the aggregation of [workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb) reached a peak of about 2.3 GB above the starting point of the Python process.
 
 ### Why it matters
 
@@ -33,15 +33,15 @@ The limits rarely matter for tens of thousands of rows. They matter when a team 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train.parquet")
-print(f"{reviews.memory_usage(deep=True).sum() / 1e6:.0f} MB in memory")      # 140 MB in memory
-print(reviews.memory_usage(deep=True).sort_values(ascending=False).head(3).div(1e6).round(0))
-# text       85.0   <- the free-text column dominates
-# title      13.0
-# user_id     9.0   (exact values depend on the pandas version)
+decisions = pd.read_parquet("case-study/data/train.parquet")
+print(f"{decisions.memory_usage(deep=True).sum() / 1e6:.0f} MB in memory")     # 557 MB in memory
+print(decisions.memory_usage(deep=True).sort_values(ascending=False).head(3).div(1e6).round(0))
+# description                     257.0   <- the free-text columns dominate
+# classification_justification    125.0
+# keywords                         39.0   (exact values depend on the pandas version)
 
-small = pd.read_parquet("case-study/data/train.parquet", columns=["parent_asin", "rating", "date"])
-print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns")  # 15 MB with three columns
+small = pd.read_parquet("case-study/data/train.parquet", columns=["issuing_country", "heading", "start_date"])
+print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns")  # 35 MB with three columns
 ```
 
 ### In practice
@@ -59,7 +59,7 @@ print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns") 
 
 **Polars** is a DataFrame library written in Rust with a Python interface (first released in 2020 by Ritchie Vink). It stores data in the **Apache Arrow** columnar format: each column is a contiguous block of memory, which is fast to scan and easy to share with other tools.
 
-**Expressions.** In Polars you describe *what* to compute with expressions such as `pl.col("rating").mean()`, and pass them to methods such as `select`, `with_columns`, `filter`, `group_by(...).agg(...)`. An expression is a recipe, not a result; Polars can run many expressions in parallel on several cores.
+**Expressions.** In Polars you describe *what* to compute with expressions such as `pl.col("heading").n_unique()`, and pass them to methods such as `select`, `with_columns`, `filter`, `group_by(...).agg(...)`. An expression is a recipe, not a result; Polars can run many expressions in parallel on several cores.
 
 | Task | pandas | Polars |
 |---|---|---|
@@ -81,7 +81,7 @@ print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns") 
 flowchart TB
     Q["Your query:<br/>scan, filter, group_by, agg"] --> P["Logical plan"]
     P --> O{"Optimiser"}
-    O -->|"projection pushdown"| C["read 4 of 11 columns"]
+    O -->|"projection pushdown"| C["read 4 of 14 columns"]
     O -->|"predicate pushdown"| R["skip rows while reading"]
     C --> X["Physical plan<br/>(parallel)"]
     R --> X
@@ -106,22 +106,22 @@ import polars as pl
 
 lf = pl.scan_parquet("case-study/data/train.parquet")        # LazyFrame: nothing read yet
 query = (
-    lf.filter(pl.col("verified_purchase"))
-      .group_by(pl.col("date").dt.year().alias("year"))
+    lf.filter(pl.col("language") == "de")
+      .group_by(pl.col("start_date").dt.year().alias("year"))
       .agg(n=pl.len(),
-           avg_rating=pl.col("rating").mean(),
-           share_neg=(pl.col("label") == "neg").mean())
+           n_headings=pl.col("heading").n_unique(),
+           median_chars=pl.col("description").str.len_chars().median())
       .sort("year")
 )
-print(query.explain())          # optimised plan: note "PROJECT 4/11 COLUMNS" and the pushed-down filter
+print(query.explain())          # optimised plan: note "PROJECT 4/14 COLUMNS" and the pushed-down SELECTION
 result = query.collect()        # now the work is done, on all cores
 print(result.tail(3))
-# ┌──────┬───────┬────────────┬───────────┐
-# │ year ┆ n     ┆ avg_rating ┆ share_neg │
-# │ 2019 ┆ 54031 ┆ 4.081842   ┆ 0.18569   │
-# │ 2020 ┆ 70229 ┆ 3.948426   ┆ 0.219083  │
-# │ 2021 ┆ 62090 ┆ 3.884361   ┆ 0.234547  │
-# └──────┴───────┴────────────┴───────────┘
+# ┌──────┬───────┬────────────┬──────────────┐
+# │ year ┆ n     ┆ n_headings ┆ median_chars │
+# │ 2021 ┆ 23849 ┆ 743        ┆ 750.0        │
+# │ 2022 ┆ 22953 ┆ 721        ┆ 766.0        │
+# │ 2023 ┆ 25851 ┆ 764        ┆ 759.0        │
+# └──────┴───────┴────────────┴──────────────┘
 
 streamed = query.collect(engine="streaming")   # batch-wise; same result
 print(streamed.equals(result))                 # True
@@ -132,20 +132,23 @@ Expressions compose. Several aggregations per group, a conditional column and a 
 ```python
 import polars as pl
 
-reviews = pl.read_parquet("case-study/data/train_sample.parquet")
+decisions = pl.read_parquet("case-study/data/train_sample.parquet")
 out = (
-    reviews.with_columns(
-        n_words=pl.col("text").str.split(" ").list.len(),
-        helpful=pl.when(pl.col("helpful_vote") > 0).then(pl.lit("yes")).otherwise(pl.lit("no")),
-        product_mean=pl.col("rating").mean().over("parent_asin"),   # window expression
+    decisions.with_columns(
+        n_words=pl.col("description").str.split(" ").list.len(),
+        has_code=pl.when(pl.col("description").str.contains("<CODE>", literal=True))
+                   .then(pl.lit("yes")).otherwise(pl.lit("no")),
+        heading_size=pl.len().over("heading"),          # window expression: decisions per heading
     )
-    .group_by("label", "helpful")
-    .agg(n=pl.len(), median_words=pl.col("n_words").median())
-    .sort("label", "helpful")
+    .filter(pl.col("language").is_in(["de", "fr"]))
+    .group_by("language", "has_code")
+    .agg(n=pl.len(), median_words=pl.col("n_words").median(),
+         median_heading_size=pl.col("heading_size").median())
+    .sort("language", "has_code")
 )
 print(out)
-# 6 rows: for each label, reviews with helpful votes are longer
-# neg: median 20 words without votes, 34 with votes; pos: 15 against 35
+# 4 rows: 3,231 German descriptions quote their own code (<CODE>), but only 3 French ones;
+# French descriptions are about half as long in words (median 43 against 95)
 ```
 
 ### In practice
@@ -158,7 +161,7 @@ print(out)
 > Python functions inside Polars (`map_elements`, `map_batches` with a lambda) run row by row in Python, on one core, and the optimiser cannot see inside them. They are as slow as `apply` in pandas. Look for a built-in expression first (`str.*`, `dt.*`, `list.*`, `when/then`).
 
 > [!CAUTION]
-> Polars and pandas differ in details that change results: Polars has no index, `group_by` does not keep the group order unless `maintain_order=True`, missing values are `null` (not `NaN`), and string functions may treat special characters differently (see the U+00A0 example in workbook 14). Compare results when you port code.
+> Polars and pandas differ in details that change results: Polars has no index, `group_by` does not keep the group order unless `maintain_order=True`, missing values are `null` (not `NaN`), and empty text fields may be read as `""` by one tool and as missing by another (see the `INVALIDATION_REASON` example in workbook 14). Compare results when you port code.
 
 ## The same query in SQL, pandas and Polars
 
@@ -168,7 +171,7 @@ SQL, pandas and Polars describe the same operations with different words. Knowin
 
 | Operation | SQL | pandas | Polars |
 |---|---|---|---|
-| read | `FROM reviews` | `pd.read_parquet` | `pl.scan_parquet` |
+| read | `FROM decisions` | `pd.read_parquet` | `pl.scan_parquet` |
 | filter rows | `WHERE` | boolean mask, `query` | `filter` |
 | join | `LEFT JOIN ... USING` | `merge(how="left")` | `join(how="left")` |
 | group and aggregate | `GROUP BY` + `AVG(...)` | `groupby(...).agg(...)` | `group_by(...).agg(...)` |
@@ -182,51 +185,49 @@ Teams rarely use one tool only. Data are extracted with SQL, prepared in pandas 
 
 ### How it works in Python
 
-The practice question: per store and year, the number of reviews and the average rating, for store-years with at least 500 reviews.
+The question: per issuing country and start year, the number of decisions and the average length of the description, for country-years with at least 500 decisions.
 
 ```python
 import duckdb
 import pandas as pd
 import polars as pl
 
-TRAIN, PRODUCTS = "case-study/data/train.parquet", "case-study/data/products.parquet"
+TRAIN = "case-study/data/train.parquet"
 
-# 1. SQL (DuckDB on the files)
+# 1. SQL (DuckDB on the file)
 sql = duckdb.sql(f"""
-    SELECT p.store, EXTRACT(YEAR FROM r.date)::int AS year, COUNT(*) AS n, AVG(r.rating) AS avg_rating
-    FROM '{TRAIN}' AS r LEFT JOIN '{PRODUCTS}' AS p USING (parent_asin)
-    GROUP BY p.store, year
+    SELECT issuing_country, EXTRACT(YEAR FROM start_date)::int AS year,
+           COUNT(*) AS n, AVG(length(description)) AS avg_chars
+    FROM '{TRAIN}'
+    GROUP BY issuing_country, year
     HAVING COUNT(*) >= 500
 """).pl()
 
 # 2. pandas
-r = pd.read_parquet(TRAIN, columns=["parent_asin", "rating", "date"])
-p = pd.read_parquet(PRODUCTS, columns=["parent_asin", "store"])
-pdf = (r.merge(p, on="parent_asin", how="left", validate="many_to_one")
-        .assign(year=lambda d: d["date"].dt.year)
-        .groupby(["store", "year"], dropna=False, as_index=False)
-        .agg(n=("rating", "size"), avg_rating=("rating", "mean"))
+r = pd.read_parquet(TRAIN, columns=["issuing_country", "start_date", "description"])
+pdf = (r.assign(year=r["start_date"].dt.year, n_chars=r["description"].str.len())
+        .groupby(["issuing_country", "year"], as_index=False)
+        .agg(n=("n_chars", "size"), avg_chars=("n_chars", "mean"))
         .query("n >= 500"))
 
 # 3. Polars (lazy)
 plf = (pl.scan_parquet(TRAIN)
-         .join(pl.scan_parquet(PRODUCTS).select("parent_asin", "store"), on="parent_asin", how="left")
-         .group_by("store", pl.col("date").dt.year().alias("year"))
-         .agg(n=pl.len(), avg_rating=pl.col("rating").mean())
+         .group_by("issuing_country", pl.col("start_date").dt.year().alias("year"))
+         .agg(n=pl.len(), avg_chars=pl.col("description").str.len_chars().mean())
          .filter(pl.col("n") >= 500)
          .collect())
 
-print(len(sql), len(pdf), len(plf))                      # 21 21 21
+print(len(sql), len(pdf), len(plf))                      # 74 74 74
 print(sorted(sql["n"].to_list()) == sorted(plf["n"].to_list()) == sorted(pdf["n"].tolist()))  # True
-print(plf.filter(pl.col("store").is_null()).sort("year").head(3))
-# the NULL store (products without a store name) forms its own group, every year
+print(plf.filter(pl.col("issuing_country") == "GB").sort("year"))
+# GB appears for 2017-2020 only: after Brexit, British decisions are no longer EU decisions
 ```
 
-Measured on the full training data in [workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb), with word counts and a text search added to the query:
+The case-study notebook runs a larger version of this query, with distinct headings and the share of invalidated decisions, on the **raw export**: 1,051,034 decisions in 23 CSV files of together 1.2 GB ([workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb)).
 
-![Runtime and peak memory of the same aggregation in DuckDB, pandas and Polars](figures/pandas-polars-benchmark.png)
+![Runtime and peak memory of the same aggregation on the raw EBTI export in DuckDB, pandas and Polars](figures/pandas-polars-benchmark.png)
 
-On a recent laptop (Apple silicon, 18 cores), Polars in lazy mode took about half the time of pandas and streaming about a seventh; peak memory above the baseline fell from about 455 MB (pandas) to about 220–280 MB (Polars lazy and streaming) and 90 MB (DuckDB). DuckDB used the least memory but was the slowest here, mostly because of the regular-expression word split; on plain counts and averages it is usually among the fastest. The absolute numbers will differ on your machine; at 434,373 rows every tool finishes within about a second. The differences grow with the data.
+On the course team's laptop (Apple silicon), pandas needed about 9.5 seconds, mostly to parse all 15 text columns; Polars in lazy mode needed about 0.2 seconds, a factor of about 50, because it parses only the 5 columns the query uses and works on all cores. DuckDB took about 0.4 seconds although its CSV reader had to run on one thread (the descriptions contain line breaks inside quoted fields). Memory told a different story: the peak resident memory was about 2.1 to 2.4 GB above the baseline for pandas *and* for every Polars version, and about 1.3 GB for DuckDB. Lazy and streaming execution did not lower the peak here; one likely reason is that Polars maps the CSV files into memory, and mapped pages count as resident memory. The absolute numbers will differ on your machine; the honest summary is "much faster, not smaller".
 
 ### In practice
 
@@ -279,11 +280,11 @@ import duckdb
 import polars as pl
 
 lf = pl.scan_parquet("case-study/data/train.parquet")
-by_year = lf.group_by(pl.col("date").dt.year().alias("year")).agg(n=pl.len()).sort("year").collect()
+by_year = lf.group_by(pl.col("start_date").dt.year().alias("year")).agg(n=pl.len()).sort("year").collect()
 
 pdf = by_year.to_pandas()          # Polars -> pandas (for statsmodels, seaborn, ...)
 back = pl.from_pandas(pdf)         # pandas -> Polars
-print(duckdb.sql("SELECT MAX(n) AS peak FROM by_year").fetchone())   # (75904,): DuckDB reads the Polars frame
+print(duckdb.sql("SELECT MAX(n) AS peak FROM by_year").fetchone())   # (51482,): DuckDB reads the Polars frame
 ```
 
 ### In practice
@@ -300,7 +301,7 @@ print(duckdb.sql("SELECT MAX(n) AS peak FROM by_year").fetchone())   # (75904,):
 1. Name the three limits of pandas discussed on this page and one way to reduce each within pandas.
 2. What is the difference between `pl.read_parquet` and `pl.scan_parquet`? When does Polars read the data in each case?
 3. What do projection pushdown and predicate pushdown do? Find both in the output of `explain()` for a query of your own.
-4. The pandas and Polars versions of the store-year query return different numbers of rows. What is the most likely reason?
+4. In workbook 14, the rule `INVALIDATION_REASON IS NOT NULL` gives 100 % invalidated decisions in Polars but plausible shares in pandas and DuckDB. Why, and how do you write a rule that all three tools evaluate the same way?
 5. Your project data are 30 CSV files of 2 GB each from a public portal, updated monthly. Sketch a tool chain and justify each choice.
 
 ## Further reading

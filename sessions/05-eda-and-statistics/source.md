@@ -34,23 +34,24 @@ On 2026-10-01 the workbooks were renumbered into teaching order (old 03–09 bec
 
 | File | Covers | Licence |
 |---|---|---|
-| [workbooks/18-case-study-verified-purchases-and-helpful-votes.ipynb](workbooks/18-case-study-verified-purchases-and-helpful-votes.ipynb) | Case study for all three practice tasks: distributions, chart redesign, t-test/Mann–Whitney, chi-square and Cramér's V, correlation, confounding by year | Author: course team, licence CC-BY-4.0 |
-| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Minimal Streamlit dashboard for a product manager | Author: course team, licence CC-BY-4.0 |
+| [workbooks/18-case-study-ebti-exploration.ipynb](workbooks/18-case-study-ebti-exploration.ipynb) | Case study (EBTI decisions) for all three practice tasks: variable types, languages and long tail of headings, chart redesign, German vs French description length (t-test/Mann–Whitney, effect sizes), country × section and language × chapter 85 (chi-square, Cramér's V), length vs keywords, confounding by language | Author: course team, licence CC-BY-4.0 |
+| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of EBTI decisions per month by issuing country and chapter | Author: course team, licence CC-BY-4.0 |
 | [theory/](theory/) (four pages) and [theory/figures/make_figures.py](theory/figures/make_figures.py) with its PNGs | Theory pages and figures | Author: course team, licence CC-BY-4.0 |
 
-The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`). All other figures use the course case-study data.
+The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`) in its left panel. All other figures and panels use the course case-study data (EBTI decisions). On 2026-10-02 the case-study material was reworked from the Amazon reviews to the EBTI decisions.
 
 ## Citations
 
 - Bickel, P. J., Hammel, E. A., & O'Connell, J. W. (1975). Sex bias in graduate admissions: Data from Berkeley. *Science*, 187(4175), 398–404. https://doi.org/10.1126/science.187.4175.398
 - Charig, C. R., Webb, D. R., Payne, S. R., & Wickham, J. E. (1986). Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy. *BMJ*, 292(6524), 879–882. https://doi.org/10.1136/bmj.292.6524.879
 - Cleveland, W. S., & McGill, R. (1984). Graphical perception. *Journal of the American Statistical Association*, 79(387), 531–554. https://doi.org/10.1080/01621459.1984.10478080
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Downey, A. B. (2025). *Think Stats: Exploratory Data Analysis in Python* (3rd ed.). O'Reilly. https://allendowney.github.io/ThinkStats/
+- Frictionless Data / datasets (2026). *Harmonized System nomenclature (HS 2022)*, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - Galton, F. (1886). Regression towards mediocrity in hereditary stature. *Journal of the Anthropological Institute*, 15, 246–263.
 - Government Analysis Function (2023). *Data visualisation: charts*. https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-charts/
 - Haslwanter, T. (2022). *An Introduction to Statistics with Python* (2nd ed.). Springer. Code: https://github.com/thomas-haslwanter/statsintro_python
 - Healy, K. (2018). *Data Visualization: A Practical Introduction*. Princeton University Press. https://socviz.co/
-- Hou, Y., Li, J., He, Z., Yan, A., Chen, X., & McAuley, J. (2024). Bridging language and items for retrieval and recommendation. arXiv:2403.03952 (Amazon Reviews 2023). https://amazon-reviews-2023.github.io/
 - Kohavi, R., Tang, D., & Xu, Y. (2020). *Trustworthy Online Controlled Experiments*. Cambridge University Press.
 - Matejka, J., & Fitzmaurice, G. (2017). Same stats, different graphs. *Proceedings of CHI 2017*.
 - Microsoft (2021). *Data Science for Beginners*. https://github.com/microsoft/Data-Science-For-Beginners

@@ -19,7 +19,7 @@ This is a workspace session: you work in one small project, [workspace/](workspa
 - [Type hints and docstrings](theory/01-oop-errors-and-tests.md#type-hints-and-docstrings)
 - [Exceptions and error handling](theory/01-oop-errors-and-tests.md#exceptions-and-error-handling)
 - [Automated tests with pytest](theory/01-oop-errors-and-tests.md#automated-tests-with-pytest)
-- *Practice:* write and test a class that validates and cleans a review record (`ReviewRecord`, workspace exercises 1–2)
+- *Practice:* write and test a class that validates and cleans the record of one BTI decision (`DecisionRecord`, workspace exercises 1–2)
 
 **1:00–1:45 · Web APIs** ([theory](theory/02-web-apis.md))
 
@@ -34,7 +34,7 @@ This is a workspace session: you work in one small project, [workspace/](workspa
 - [Git and GitHub: commits, branches, merging and merge conflicts](theory/03-git-github-and-ci.md#git-and-github-commits-branches-merging-and-merge-conflicts), with a [step-by-step merge-conflict exercise](theory/03-git-github-and-ci.md#exercise-a-merge-conflict-step-by-step)
 - [Pull requests and code review](theory/03-git-github-and-ci.md#pull-requests-and-code-review)
 - [Continuous integration with GitHub Actions (ruff and pytest on every pull request)](theory/03-git-github-and-ci.md#continuous-integration-with-github-actions)
-- *Practice:* case study: contribute a tested module of simple text features (`text_features.py`) through a reviewed pull request; teams set up their repository with CI (workspace exercises 6–8)
+- *Practice:* case study: contribute a tested module of simple features of the description of goods (`text_features.py`: digits, upper-case share) through a reviewed pull request; teams set up their repository with CI (workspace exercises 6–8)
 
 ## Materials
 
@@ -43,7 +43,7 @@ This is a workspace session: you work in one small project, [workspace/](workspa
 | [theory/01-oop-errors-and-tests.md](theory/01-oop-errors-and-tests.md) | Composition, inheritance, dataclasses; type hints, docstrings; exceptions; pytest | 1 | core |
 | [theory/02-web-apis.md](theory/02-web-apis.md) | HTTP, JSON, authentication, pagination, rate limits; httpx and MockTransport; FastAPI | 2 | core |
 | [theory/03-git-github-and-ci.md](theory/03-git-github-and-ci.md) | Commits, branches, merges, conflicts (exercise); pull requests, review; GitHub Actions | 3 | core |
-| [workspace/](workspace/README.md) | Project `reviewtools`: `ReviewRecord`, `OpenDataClient`, FastAPI app, `text_features.py` stub, tests, `ci.yml`, solutions | 1–3 | core (practice) |
+| [workspace/](workspace/README.md) | Project `btitools`: `DecisionRecord`, `OpenDataClient`, FastAPI app (`/headings/{heading}`, `POST /decisions/validate`), `text_features.py` stub, tests, `ci.yml`, solutions | 1–3 | core (practice) |
 | [workbooks/01-classes-and-objects.ipynb](workbooks/01-classes-and-objects.ipynb) | Objects inside objects (composition), equivalence and identity, deep copy, polymorphism (*Think Python*) | 1 | optional |
 | [workbooks/02-inheritance.ipynb](workbooks/02-inheritance.ipynb) | Parent and child classes, specialisation (*Think Python*) | 1 | optional |
 | [workbooks/03-case-study-open-data-api.ipynb](workbooks/03-case-study-open-data-api.ipynb) | Live request, pagination, parsing into `DatasetRecord`, a test with MockTransport (own) | 2 | core |
@@ -73,7 +73,7 @@ The workspace is its own uv project with `httpx`, `fastapi` and `uvicorn`, and `
 ```bash
 cd sessions/02-software-engineering/workspace
 uv run pytest -q
-uv run uvicorn reviewtools.api:app --reload      # optional: local server, stop with Ctrl+C
+uv run uvicorn btitools.api:app --reload         # optional: local server, stop with Ctrl+C
 ```
 
 The workbooks need `httpx` and `pandas`; the *Think Python* workbooks download two helper files and use `matplotlib`:

@@ -26,10 +26,10 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | Block 2: MCAR/MAR/MNAR, simple/KNN/iterative imputation, missing-value indicators, IQR/z-score/MAD | CC-BY-4.0 |
 | [theory/03-multivariate-outliers-transformations-pipeline.md](theory/03-multivariate-outliers-transformations-pipeline.md) | Block 3: Mahalanobis distance (classical and MCD), log/Box–Cox/Yeo–Johnson/scaling, documented cleaning pipeline | CC-BY-4.0 |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `missingness-pattern.png`, `univariate-outliers.png`, `box-cox-before-after.png`, `mahalanobis-ellipses.png` | CC-BY-4.0 |
-| [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | Practice block 1: data quality report for the review data; checks as code; pandera schema | CC-BY-4.0 |
-| [workbooks/quality/test_review_quality.py](workbooks/quality/test_review_quality.py) | Validation rules as pytest tests (raw data, known problems as `xfail`, cleaned table) | CC-BY-4.0 |
-| [workbooks/08-case-study-missing-prices.ipynb](workbooks/08-case-study-missing-prices.ipynb) | Practice block 2: missing prices vs popularity, chi-square test, missingness model; imputation compared on hidden values; IQR/z/MAD on prices | CC-BY-4.0 |
-| [workbooks/14-case-study-cleaned-review-table.ipynb](workbooks/14-case-study-cleaned-review-table.ipynb) | Practice block 3: cleaned review table with a cleaning log (Box–Cox, Yeo–Johnson, MAD and robust Mahalanobis flags, product join) | CC-BY-4.0 |
+| [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | Practice block 1: data quality report for the BTI decisions and the raw export; checks as code; pandera schema | CC-BY-4.0 |
+| [workbooks/quality/test_bti_quality.py](workbooks/quality/test_bti_quality.py) | Validation rules as pytest tests (training table, known problems as `xfail`, cleaned table) | CC-BY-4.0 |
+| [workbooks/08-case-study-missing-keywords.ipynb](workbooks/08-case-study-missing-keywords.ipynb) | Practice block 2: missing keywords vs country and year, chi-square test, missingness model; structural missingness of the invalidation reason; imputation compared on hidden values; IQR/z/MAD on description length and validity duration | CC-BY-4.0 |
+| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | Practice block 3: cleaned decision table with a cleaning log (placeholder dates, text normalisation, flags for codes, renewals and languages, Box–Cox, MAD and robust Mahalanobis flags) | CC-BY-4.0 |
 
 Author of own material: course team.
 
@@ -53,4 +53,6 @@ Author of own material: course team.
 - Kuhn, M., & Johnson, K. (2019). *Feature Engineering and Selection*. CRC Press. https://feat.engineering/
 - VanderPlas, J. (2016). *Python Data Science Handbook*. O'Reilly. https://jakevdp.github.io/PythonDataScienceHandbook/
 - Downey, A. B. *Think Stats* (3rd ed.). O'Reilly. https://allendowney.github.io/ThinkStats/
-- Hou, Y., Li, J., He, Z., Yan, A., Chen, X., & McAuley, J. (2024). Bridging language and items for retrieval and recommendation. arXiv:2403.03952 (course dataset).
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (course dataset; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- European Commission, DG TAXUD (2025). *Administrative guidance on the Binding Tariff Information process* (invalidation codes). https://taxation-customs.ec.europa.eu/document/download/3301552d-3dfd-422b-b6ca-06212d3dd821_en?filename=bti_guidance_en.pdf
+- Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0 (course dataset). https://github.com/datasets/harmonized-system

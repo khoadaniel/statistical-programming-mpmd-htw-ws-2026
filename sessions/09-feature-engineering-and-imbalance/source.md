@@ -21,10 +21,10 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | File | Covers | Licence |
 |---|---|---|
 | [theory/01-dates-interactions-and-categories.md](theory/01-dates-interactions-and-categories.md), [theory/02-aggregates-leakage-and-text-statistics.md](theory/02-aggregates-leakage-and-text-statistics.md), [theory/03-class-imbalance.md](theory/03-class-imbalance.md) | Theory pages of the three blocks | CC-BY-4.0 |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG files | Cyclical month encoding, SMOTE illustration, effect of resampling on neutral precision and recall | CC-BY-4.0 |
-| [workbooks/05-case-study-review-features.ipynb](workbooks/05-case-study-review-features.ipynb) | Practice 1: date, interaction and target-encoded store features. Author: course team | CC-BY-4.0 |
-| [workbooks/06-case-study-product-rating-leakage.ipynb](workbooks/06-case-study-product-rating-leakage.ipynb) | Practice 2: leaking product rating and its past-only replacement. Author: course team | CC-BY-4.0 |
-| [workbooks/12-case-study-imbalance.ipynb](workbooks/12-case-study-imbalance.ipynb) | Practice 3: imbalance strategies for the neutral class. Author: course team | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG files | Cyclical month encoding, SMOTE illustration, effect of resampling on the footwear headings (BTI decisions, chapter 64) | CC-BY-4.0 |
+| [workbooks/05-case-study-decision-features.ipynb](workbooks/05-case-study-decision-features.ipynb) | Practice 1: date, interaction and target-encoded first-word features of BTI decisions. Author: course team | CC-BY-4.0 |
+| [workbooks/06-case-study-justification-leakage.ipynb](workbooks/06-case-study-justification-leakage.ipynb) | Practice 2: the justification leak and past-only description lookups. Author: course team | CC-BY-4.0 |
+| [workbooks/12-case-study-imbalance.ipynb](workbooks/12-case-study-imbalance.ipynb) | Practice 3: imbalance strategies for rare headings (long tail and footwear task). Author: course team | CC-BY-4.0 |
 
 ## Citations
 
@@ -34,10 +34,8 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - Dal Pozzolo, A., Caelen, O., Johnson, R. A. & Bontempi, G. (2015). Calibrating probability with undersampling for unbalanced classification. *IEEE Symposium Series on Computational Intelligence*. https://doi.org/10.1109/SSCI.2015.33
 - Elor, Y. & Averbuch-Elor, H. (2022). To SMOTE, or not to SMOTE? arXiv:2201.08528. https://arxiv.org/abs/2201.08528
 - Galli, S. (2021). Feature-engine: a Python package for feature engineering for machine learning. *Journal of Open Source Software*, 6(65), 3642. https://doi.org/10.21105/joss.03642
-- Ghose, A. & Ipeirotis, P. G. (2011). Estimating the helpfulness and economic impact of product reviews. *IEEE Transactions on Knowledge and Data Engineering*, 23(10), 1498–1512. https://doi.org/10.1109/TKDE.2010.188
 - He, X. et al. (2014). Practical lessons from predicting clicks on ads at Facebook. *Proceedings of ADKDD 2014*. https://doi.org/10.1145/2648584.2648589
 - Hermann, J. & Del Balso, M. (2017). *Meet Michelangelo: Uber's machine learning platform*. Uber Engineering blog. https://www.uber.com/blog/michelangelo-machine-learning-platform/
-- Hou, Y. et al. (2024). Bridging language and items for retrieval and recommendation. arXiv:2403.03952. https://arxiv.org/abs/2403.03952
 - Kapoor, S. & Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns*, 4(9), 100804. https://doi.org/10.1016/j.patter.2023.100804
 - Kaufman, S., Rosset, S., Perlich, C. & Stitelman, O. (2012). Leakage in data mining: formulation, detection, and avoidance. *ACM TKDD*, 6(4), 15. https://doi.org/10.1145/2382577.2382579
 - King, G. & Zeng, L. (2001). Logistic regression in rare events data. *Political Analysis*, 9(2), 137–163. https://doi.org/10.1093/oxfordjournals.pan.a004868
@@ -45,11 +43,11 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - Lemaître, G., Nogueira, F. & Aridas, C. K. (2017). Imbalanced-learn: a Python toolbox to tackle the curse of imbalanced datasets in machine learning. *JMLR*, 18(17), 1–5. https://jmlr.org/papers/v18/16-365.html
 - Makridakis, S., Spiliotis, E. & Assimakopoulos, V. (2022). M5 accuracy competition: results, findings, and conclusions. *International Journal of Forecasting*, 38(4), 1346–1364. https://doi.org/10.1016/j.ijforecast.2021.11.013
 - Micci-Barreca, D. (2001). A preprocessing scheme for high-cardinality categorical attributes in classification and prediction problems. *ACM SIGKDD Explorations*, 3(1), 27–32. https://doi.org/10.1145/507533.507538
-- Mudambi, S. M. & Schuff, D. (2010). What makes a helpful online review? A study of customer reviews on Amazon.com. *MIS Quarterly*, 34(1), 185–200. https://doi.org/10.2307/20721420
 - Pargent, F., Pfisterer, F., Thomas, J. & Bischl, B. (2022). Regularized target encoding outperforms traditional methods in supervised machine learning with high cardinality features. *Computational Statistics*, 37, 2671–2692. https://doi.org/10.1007/s00180-022-01207-6
 - Prokhorenkova, L. et al. (2018). CatBoost: unbiased boosting with categorical features. *NeurIPS 31*. https://arxiv.org/abs/1706.09516
 - Rendle, S. (2010). Factorization machines. *IEEE International Conference on Data Mining*, 995–1000. https://doi.org/10.1109/ICDM.2010.127
 - Rosset, S., Perlich, C., Świrszcz, G., Melville, P. & Liu, Y. (2010). Medical data mining: insights from winning two competitions. *Data Mining and Knowledge Discovery*, 20, 439–468. https://doi.org/10.1007/s10618-009-0158-x
 - Santos, M. S., Soares, J. P., Abreu, P. H., Araújo, H. & Santos, J. (2018). Cross-validation for imbalanced datasets: avoiding overoptimistic and overfitting approaches. *IEEE Computational Intelligence Magazine*, 13(4), 59–76. https://doi.org/10.1109/MCI.2018.2866730
 - van den Goorbergh, R., van Smeden, M., Timmerman, D. & Van Calster, B. (2022). The harm of class imbalance corrections for risk prediction models. *JAMIA*, 29(9), 1525–1534. https://doi.org/10.1093/jamia/ocac093
-- Data: Amazon Reviews 2023, Health and Personal Care (McAuley Lab, UC San Diego), downloaded by each student with `case-study/prepare_data.py`; not redistributed.
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export, retrieved by each student with `case-study/prepare_data.py`; reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- World Customs Organization (2022). *Harmonized System nomenclature, 2022 edition* (English headings via the datasets/harmonized-system repository, ODC-PDDL). https://github.com/datasets/harmonized-system

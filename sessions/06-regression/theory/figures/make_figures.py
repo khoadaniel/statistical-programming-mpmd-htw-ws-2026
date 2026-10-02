@@ -35,16 +35,21 @@ plt.rcParams.update({
 
 
 def fig_residuals() -> None:
-    """Residual-versus-fitted plots: a good fit and the helpful-votes model."""
+    """Residual-versus-fitted plots: a good fit and the description-length model."""
     rng = np.random.default_rng(0)
     x = rng.uniform(0, 10, 300)
     y = 2 + 0.8 * x + rng.normal(0, 1, 300)
     lin = LinearRegression().fit(x.reshape(-1, 1), y)
     fitted = lin.predict(x.reshape(-1, 1))
 
-    reviews = pd.read_parquet(DATA / "train_sample.parquet")
-    lx = np.log1p(reviews["text"].str.split().str.len()).to_frame("log_words")
-    ly = np.log1p(reviews["helpful_vote"])
+    decisions = pd.read_parquet(DATA / "train_sample.parquet")
+    nomenclature = pd.read_parquet(DATA / "nomenclature.parquet")
+    decisions = decisions.merge(nomenclature[["heading", "section"]], on="heading")
+    top = decisions["language"].value_counts().index[:8]
+    decisions["language"] = decisions["language"].where(decisions["language"].isin(top), "other")
+    decisions["year"] = decisions["start_date"].dt.year - 2017
+    lx = pd.get_dummies(decisions[["year", "language", "section"]], drop_first=True, dtype=float)
+    ly = np.log(decisions["description"].str.len())
     model = LinearRegression().fit(lx, ly)
     f2 = model.predict(lx)
     res2 = ly - f2
@@ -57,11 +62,10 @@ def fig_residuals() -> None:
              title="Good: a structureless band around zero")
     right.scatter(f2[keep], res2.iloc[keep], s=5, alpha=0.3, color=GREY)
     right.axhline(0, color="black", lw=1)
-    right.annotate("reviews with 0 votes form a\nfalling line: the model cannot\n"
-                   "predict below zero votes", xy=(0.9, -0.85), xytext=(0.62, 2.6),
-                   arrowprops={"arrowstyle": "->"}, fontsize=9)
-    right.set(xlabel="fitted log(1 + helpful votes)", ylabel="residual",
-              title="Case study: structure and a long upper tail")
+    right.annotate("descriptions much shorter\nthan expected: a long\nlower tail", xy=(6.08, -3.1),
+                   xytext=(5.15, -3.4), arrowprops={"arrowstyle": "->"}, fontsize=9)
+    right.set(xlabel="fitted log(characters)", ylabel="residual",
+              title="Case study: centred on zero, but a long lower tail")
     fig.savefig(OUT / "residual-plot.png")
     plt.close(fig)
 

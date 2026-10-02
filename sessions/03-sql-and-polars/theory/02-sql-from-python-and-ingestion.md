@@ -20,30 +20,30 @@ A **common table expression** (CTE), written `WITH name AS (SELECT ...)`, gives 
 
 A **window function** computes a value for each row from a set of related rows, the **window**, without collapsing them into one row. This is the difference from `GROUP BY`, which returns one row per group. The window is defined after `OVER`:
 
-- `PARTITION BY year` restricts the window to rows of the same year (like a group);
+- `PARTITION BY issuing_country, year` restricts the window to rows of the same country and year (like a group);
 - `ORDER BY n DESC` sorts the rows inside the window;
 - the function decides what is computed: `RANK()` numbers the rows (ties share a rank and leave a gap), `DENSE_RANK()` numbers without gaps, `ROW_NUMBER()` numbers without ties, `SUM(n) OVER (ORDER BY year)` is a **running total**, and `LAG(n)` returns the value of the previous row.
 
 Window functions are evaluated after `WHERE`, `GROUP BY` and `HAVING`. A filter on their result, such as "rank 1 only", must therefore be placed one query level higher, typically in the next CTE or in the outer query.
 
-A worked example by hand. Counts of reviews per product and year:
+A worked example by hand. Counts of decisions per heading for one country and two years:
 
-| year | product | n | `RANK() OVER (PARTITION BY year ORDER BY n DESC)` | `DENSE_RANK()` |
+| year | heading | n | `RANK() OVER (PARTITION BY year ORDER BY n DESC)` | `DENSE_RANK()` |
 |---|---|---|---|---|
-| 2020 | A | 80 | 1 | 1 |
-| 2020 | B | 80 | 1 | 1 |
-| 2020 | C | 50 | 3 | 2 |
-| 2021 | A | 90 | 1 | 1 |
-| 2021 | C | 60 | 2 | 2 |
+| 2020 | 9503 | 80 | 1 | 1 |
+| 2020 | 3926 | 80 | 1 | 1 |
+| 2020 | 6307 | 50 | 3 | 2 |
+| 2021 | 6307 | 90 | 1 | 1 |
+| 2021 | 3926 | 60 | 2 | 2 |
 
-The rank restarts in each year (partition). A and B tie in 2020; `RANK` then skips to 3, `DENSE_RANK` continues with 2.
+The rank restarts in each year (partition). 9503 and 3926 tie in 2020; `RANK` then skips to 3, `DENSE_RANK` continues with 2.
 
 ```mermaid
 flowchart TB
-    T["reviews<br/>434,373 rows"] --> G["CTE per_year:<br/>GROUP BY year, product"]
-    G --> W["CTE ranked:<br/>RANK() OVER (PARTITION BY year<br/>ORDER BY n DESC)"]
-    W --> F["outer query:<br/>WHERE rnk &lt;= 3"]
-    F --> J["JOIN products<br/>for title and store"]
+    T["decisions<br/>309,529 rows"] --> G["CTE per_year:<br/>GROUP BY country, year, heading"]
+    G --> W["CTE ranked:<br/>RANK() OVER (PARTITION BY<br/>country, year ORDER BY n DESC)"]
+    W --> F["outer query:<br/>WHERE rnk = 1"]
+    F --> J["LEFT JOIN nomenclature<br/>for the English name"]
 ```
 
 ### Why it matters
@@ -52,79 +52,93 @@ Rankings within groups, running totals, changes against the previous period and 
 
 ### How it works in Python
 
-The practice query ranks products by reviews per year (also in [`workbooks/sql/03-rank-products-per-year.sql`](../workbooks/sql/03-rank-products-per-year.sql)):
+The practice query ranks headings by the number of decisions per issuing country and year (also in [`workbooks/sql/03-rank-headings-per-country-year.sql`](../workbooks/sql/03-rank-headings-per-country-year.sql)):
 
 ```sql
-WITH per_year AS (                    -- step 1: one row per year and product
-    SELECT EXTRACT(YEAR FROM date)::int AS year, parent_asin, COUNT(*) AS n
-    FROM reviews
-    GROUP BY year, parent_asin
-), ranked AS (                        -- step 2: rank inside each year
-    SELECT *, RANK() OVER (PARTITION BY year ORDER BY n DESC) AS rnk
+WITH per_year AS (                    -- step 1: one row per country, year and heading
+    SELECT issuing_country, EXTRACT(YEAR FROM start_date)::int AS year, heading, COUNT(*) AS n
+    FROM decisions
+    GROUP BY issuing_country, year, heading
+), ranked AS (                        -- step 2: rank inside each country and year
+    SELECT *, RANK() OVER (PARTITION BY issuing_country, year ORDER BY n DESC) AS rnk
     FROM per_year
 )
-SELECT r.year, r.n, LEFT(p.title, 30) AS top_product
+SELECT r.issuing_country, r.year, r.heading, r.n, LEFT(n.heading_description, 35) AS heading_description
 FROM ranked AS r
-JOIN products AS p USING (parent_asin)
-WHERE r.rnk = 1 AND r.year >= 2019    -- filter on the window result one level up
-ORDER BY r.year;
--- 2019 | 526 | Nerdwax Stop Slipping Glasses
--- 2020 | 824 | Buttonsmith Black Adult Cotton
--- 2021 | 946 | JUNP Hydration Electrolyte Pow
+LEFT JOIN nomenclature AS n ON n.heading = r.heading
+WHERE r.rnk = 1 AND r.issuing_country IN ('DE', 'FR') AND r.year >= 2019   -- filter one level up
+ORDER BY r.issuing_country, r.year;
+-- DE | 2019 | 3926 | 1083 | Articles of plastics and articles o
+-- DE | 2020 | 9503 |  894 | Tricycles, scooters, pedal cars and
+-- DE | 2021 | 6307 |  852 | Textiles; made up articles n.e.c. i
+-- DE | 2022 | 6307 |  860 | Textiles; made up articles n.e.c. i
+-- DE | 2023 | 3926 |  964 | Articles of plastics and articles o
+-- FR | 2019 | 2106 |  264 | Food preparations not elsewhere spe
+-- FR | 2020 | 3926 |  317 | Articles of plastics and articles o
+-- FR | 2021 | 3926 |  341 | Articles of plastics and articles o
+-- FR | 2022 | 9405 |  315 | Luminaires and light fittings; incl
+-- FR | 2023 | 3926 |  250 | Articles of plastics and articles o
 ```
 
-Running totals and year-over-year changes:
+Running totals and month-over-month changes, here on the table `monthly_counts` (decisions per month, issuing country and chapter, 2004–2026) for chapter 63 (made-up textile articles, including face masks) in the first half of 2020:
 
 ```python
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW monthly_counts AS SELECT * FROM 'case-study/data/monthly_counts.parquet'")
 print(con.sql("""
-    WITH yearly AS (
-        SELECT EXTRACT(YEAR FROM date)::int AS year, COUNT(*) AS n
-        FROM reviews GROUP BY year
+    WITH monthly AS (
+        SELECT month::date AS month, SUM(n_decisions) AS n
+        FROM monthly_counts
+        WHERE chapter = '63' AND month BETWEEN '2020-01-01' AND '2020-06-01'
+        GROUP BY month
     )
-    SELECT year, n,
-           SUM(n) OVER (ORDER BY year)                              AS running_total,
-           n - LAG(n) OVER (ORDER BY year)                          AS change,
-           ROUND(AVG(n) OVER (ORDER BY year ROWS 2 PRECEDING))      AS moving_avg_3y
-    FROM yearly
-    ORDER BY year DESC
-    LIMIT 3
+    SELECT month, n,
+           SUM(n) OVER (ORDER BY month)                         AS running_total,
+           n - LAG(n) OVER (ORDER BY month)                     AS change,
+           ROUND(AVG(n) OVER (ORDER BY month ROWS 2 PRECEDING)) AS moving_avg_3m
+    FROM monthly
+    ORDER BY month
 """).df())
-#    year      n  running_total  change  moving_avg_3y
-# 0  2021  68456       434373.0   -7448        67318.0
-# 1  2020  75904       365917.0   18310        61787.0
-# 2  2019  57594       290013.0    5732        55523.0
+#         month      n  running_total  change  moving_avg_3m
+# 0  2020-01-01  104.0          104.0     NaN          104.0
+# 1  2020-02-01  136.0          240.0    32.0          120.0
+# 2  2020-03-01  186.0          426.0    50.0          142.0
+# 3  2020-04-01  100.0          526.0   -86.0          141.0
+# 4  2020-05-01   91.0          617.0    -9.0          126.0
+# 5  2020-06-01  105.0          722.0    14.0           99.0
 ```
 
-![Reviews per year with the running total and the year-over-year change computed by window functions](figures/reviews-per-year-window.png)
+`LAG` has no previous row for January, so the change is `NULL` (shown as `NaN` in pandas). The moving average uses fewer than three months at the start.
+
+![Decisions per start year 2004-2025 with the year-over-year change computed by a window function](figures/decisions-per-year-window.png)
 
 The same window logic in pandas, for comparison: `cumsum()` is a running `SUM`, `diff()` is `n - LAG(n)`, and `groupby(...).rank(method="min", ascending=False)` is `RANK() OVER (PARTITION BY ...)`.
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train.parquet", columns=["parent_asin", "date"])
-per_year = (reviews.assign(year=reviews["date"].dt.year)
-            .groupby(["year", "parent_asin"]).size().rename("n").reset_index())
-per_year["rnk"] = per_year.groupby("year")["n"].rank(method="min", ascending=False)
-print(per_year.query("rnk == 1 and year >= 2019")[["year", "parent_asin", "n"]].to_string(index=False))
-# year parent_asin   n
-# 2019  B00O0CK2UM 526
-# 2020  B08K2MYBZY 824
-# 2021  B0CB33QW6H 946
+decisions = pd.read_parquet("case-study/data/train.parquet", columns=["issuing_country", "start_date", "heading"])
+per_year = (decisions.assign(year=decisions["start_date"].dt.year)
+            .groupby(["issuing_country", "year", "heading"]).size().rename("n").reset_index())
+per_year["rnk"] = per_year.groupby(["issuing_country", "year"])["n"].rank(method="min", ascending=False)
+print(per_year.query("rnk == 1 and issuing_country == 'DE' and year >= 2021")
+      [["year", "heading", "n"]].to_string(index=False))
+# year heading   n
+# 2021    6307 852
+# 2022    6307 860
+# 2023    3926 964
 ```
 
 ### In practice
 
-- **E-commerce reporting** lists the top products per category and month; Amazon's own "Best Sellers" pages are rankings within categories that are recomputed regularly.
+- **Trade statistics** are often published as rankings, for example the most important import goods of a country per year; each such list is a ranking within a partition (country, year).
 - **Finance teams** compute month-over-month growth and cumulative revenue with `LAG` and running sums for management reports.
 - **Health-services research** with claims data uses `LAG` over the admissions of each patient to measure the time to readmission, the basis of readmission indicators such as those of the US Hospital Readmissions Reduction Program.
 
 > [!WARNING]
-> `RANK`, `DENSE_RANK` and `ROW_NUMBER` differ only when there are ties, so a bug may go unnoticed for a long time. Decide explicitly how ties should be handled, and add a second sort key (for example `ORDER BY n DESC, parent_asin`) when you need a reproducible order.
+> `RANK`, `DENSE_RANK` and `ROW_NUMBER` differ only when there are ties, so a bug may go unnoticed for a long time. Decide explicitly how ties should be handled, and add a second sort key (for example `ORDER BY n DESC, heading`) when you need a reproducible order.
 
 > [!CAUTION]
 > `WHERE RANK() OVER (...) = 1` is an error: `WHERE` is evaluated before window functions. Compute the rank in a CTE and filter in the next step.
@@ -140,7 +154,7 @@ postgresql+psycopg://course:course@localhost:5432/course
 └─dialect─┘ └driver┘ └user┘ └pw─┘ └─host──┘ └port┘└─db─┘
 ```
 
-`pandas.read_sql(query, engine)` runs a query and returns a DataFrame; `DataFrame.to_sql(name, engine)` writes a DataFrame into a table. Values that change between runs are passed as **bound parameters**: in `text("... WHERE date >= :start")` the placeholder `:start` is filled from `params={"start": "2019-01-01"}`. The driver sends the values separately from the SQL text, so they can never be interpreted as SQL.
+`pandas.read_sql(query, engine)` runs a query and returns a DataFrame; `DataFrame.to_sql(name, engine)` writes a DataFrame into a table. Values that change between runs are passed as **bound parameters**: in `text("... WHERE start_date >= :start")` the placeholder `:start` is filled from `params={"start": "2021-01-01"}`. The driver sends the values separately from the SQL text, so they can never be interpreted as SQL.
 
 ```mermaid
 sequenceDiagram
@@ -155,7 +169,7 @@ sequenceDiagram
 
 ### Why it matters
 
-The database does the filtering, joining and aggregation on all rows; Python receives a small result for plotting and modelling. Parameters protect against **SQL injection**, an attack in which text entered by a user changes the meaning of a query. With string formatting, a "product id" such as `x' OR '1'='1` would return every row.
+The database does the filtering, joining and aggregation on all rows; Python receives a small result for plotting and modelling. Parameters protect against **SQL injection**, an attack in which text entered by a user changes the meaning of a query. With string formatting, a "country code" such as `x' OR '1'='1` would return every row.
 
 ### How it works in Python
 
@@ -170,13 +184,14 @@ from sqlalchemy import create_engine, text
 
 engine = create_engine(os.environ["DATABASE_URL"])   # never hard-code passwords
 query = text("""
-    SELECT EXTRACT(YEAR FROM date)::int AS year, COUNT(*) AS n_reviews, AVG(rating) AS avg_rating
-    FROM reviews
-    WHERE verified_purchase = :verified AND date >= :start
+    SELECT EXTRACT(YEAR FROM start_date)::int AS year, COUNT(*) AS n_decisions,
+           COUNT(DISTINCT heading) AS n_headings
+    FROM decisions
+    WHERE issuing_country = :country AND start_date >= :start
     GROUP BY year ORDER BY year
 """)
-yearly = pd.read_sql(query, engine, params={"verified": True, "start": "2019-01-01"})
-print(yearly.round(2))   # 2019: 54031, 4.08 | 2020: 70229, 3.95 | 2021: 62090, 3.88
+yearly = pd.read_sql(query, engine, params={"country": "FR", "start": "2021-01-01"})
+print(yearly)   # 2021: 7843, 579 | 2022: 6995, 564 | 2023: 7133, 585
 ```
 
 The same code runs against DuckDB through the `duckdb-engine` dialect, which is how the case-study notebook works without a server:
@@ -191,23 +206,24 @@ from sqlalchemy import create_engine, text
 db = Path(tempfile.mkdtemp()) / "course.duckdb"
 engine = create_engine(f"duckdb:///{db}")
 with engine.begin() as con:   # begin(): one transaction, committed at the end
-    con.exec_driver_sql("CREATE TABLE reviews AS SELECT * FROM 'case-study/data/train.parquet'")
+    con.exec_driver_sql("CREATE TABLE decisions AS SELECT * FROM 'case-study/data/train.parquet'")
 
 yearly = pd.read_sql(text("""
-    SELECT EXTRACT(YEAR FROM date)::int AS year, COUNT(*) AS n_reviews, AVG(rating) AS avg_rating
-    FROM reviews
-    WHERE verified_purchase = :verified AND date >= :start
+    SELECT EXTRACT(YEAR FROM start_date)::int AS year, COUNT(*) AS n_decisions,
+           COUNT(DISTINCT heading) AS n_headings
+    FROM decisions
+    WHERE issuing_country = :country AND start_date >= :start
     GROUP BY year ORDER BY year
-"""), engine, params={"verified": True, "start": "2019-01-01"})
-print(yearly.round(2))
-#    year  n_reviews  avg_rating
-# 0  2019      54031        4.08
-# 1  2020      70229        3.95
-# 2  2021      62090        3.88
+"""), engine, params={"country": "FR", "start": "2021-01-01"})
+print(yearly)
+#    year  n_decisions  n_headings
+# 0  2021         7843         579
+# 1  2022         6995         564
+# 2  2023         7133         585
 
 with engine.connect() as con:    # a single value, without pandas
-    n = con.execute(text("SELECT COUNT(*) FROM reviews WHERE rating = :r"), {"r": 3}).scalar_one()
-print(n)                                                             # 32482
+    n = con.execute(text("SELECT COUNT(*) FROM decisions WHERE heading = :h"), {"h": "9503"}).scalar_one()
+print(n)                                                             # 8883
 ```
 
 ### In practice
@@ -217,7 +233,7 @@ print(n)                                                             # 32482
 - **SQL injection** is part of the "Injection" category of the OWASP Top 10 web application security risks; the 2008 breach of the card processor Heartland Payment Systems, one of the largest of its time, started with an SQL injection.
 
 > [!CAUTION]
-> Never build SQL with f-strings from values that come from users, files or the web: `f"... WHERE parent_asin = '{asin}'"`. Use bound parameters. Table and column names cannot be parameters; if they must vary, check them against a fixed list.
+> Never build SQL with f-strings from values that come from users, files or the web: `f"... WHERE heading = '{heading}'"`. Use bound parameters. Table and column names cannot be parameters; if they must vary, check them against a fixed list.
 
 > [!TIP]
 > `pd.read_sql` loads the whole result into memory. For large results, aggregate in SQL first, or read in pieces with `chunksize=` and process each piece.
@@ -229,18 +245,18 @@ print(n)                                                             # 32482
 **Ingestion** is the step that brings data from their source into your database. It is **reproducible** if running the same script on the same source always gives the same tables, without manual steps in between. A good ingestion script:
 
 1. downloads or reads the raw data from a documented source;
-2. applies the same transformations every time (in the case study: hashing user ids, removing duplicates, splitting by date);
+2. applies the same transformations every time (in the case study: parsing the dates, deriving the heading from the code, masking quoted codes, splitting by date);
 3. creates the tables with **keys and constraints**, so that invalid rows are rejected;
-4. loads parent tables before child tables (products before reviews), because the foreign key requires the parent row to exist;
+4. loads parent tables before child tables (the nomenclature before the decisions), because the foreign key requires the parent row to exist;
 5. checks the result: row counts against the source, and no rejected rows.
 
-The case-study script `case-study/prepare_data.py` does steps 1, 2 and 4 and can write the tables to PostgreSQL with `--postgres`. Because `pandas.to_sql` creates tables without keys, the keys are added afterwards with [`workbooks/sql/02-add-constraints.sql`](../workbooks/sql/02-add-constraints.sql); alternatively, the case-study notebook creates the schema first with [`01-schema.sql`](../workbooks/sql/01-schema.sql) and then loads the rows.
+The case-study script `case-study/prepare_data.py` does steps 1 and 2 and can write the tables `decisions`, `decisions_test` and `nomenclature` to PostgreSQL with `--postgres`. Because `pandas.to_sql` creates tables without keys, the keys are added afterwards with [`workbooks/sql/02-add-constraints.sql`](../workbooks/sql/02-add-constraints.sql); alternatively, the case-study notebook creates the schema first with [`01-schema.sql`](../workbooks/sql/01-schema.sql) and then loads the rows.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Downloaded: download raw files
     Downloaded --> Built: build tables (dedupe, split)
-    Built --> Loaded: load products, then reviews
+    Built --> Loaded: load nomenclature, then decisions
     Loaded --> Constrained: add keys and checks
     Constrained --> Verified: counts match, no errors
     Loaded --> Failed: constraint violated
@@ -261,38 +277,46 @@ docker run --name course-db -e POSTGRES_USER=course -e POSTGRES_PASSWORD=course 
     -e POSTGRES_DB=course -p 5432:5432 -d postgres:17
 export DATABASE_URL=postgresql+psycopg://course:course@localhost:5432/course
 
-uv run --with pandas --with pyarrow --with sqlalchemy --with "psycopg[binary]" \
-    python case-study/prepare_data.py --postgres $DATABASE_URL
+uv run python case-study/prepare_data.py --postgres $DATABASE_URL   # several minutes
 psql $DATABASE_URL -f sessions/03-sql-and-polars/workbooks/sql/02-add-constraints.sql   # or from Python
 ```
 
 > [!NOTE]
 > `psql` expects a plain `postgresql://` URL; for psql, write `postgresql://course:course@localhost:5432/course`. SQLAlchemy needs the `+psycopg` part to choose the driver.
 
-The core of a schema-first loader, here with DuckDB so that it runs anywhere. The constraint rejects an invalid row, and the error message names the rule:
+The core of a schema-first loader, here with DuckDB so that it runs anywhere. The foreign key rejects the decisions of the deleted heading 8803 (see [block 1](01-relational-model-and-sql.md#how-it-works-in-python)), and the error message names the offending key:
 
 ```python
 import duckdb
 
 con = duckdb.connect()
 con.execute("""
-    CREATE TABLE products (parent_asin TEXT PRIMARY KEY, title TEXT NOT NULL, price DOUBLE CHECK (price > 0));
-    CREATE TABLE reviews (
-        review_id   TEXT PRIMARY KEY,
-        parent_asin TEXT NOT NULL REFERENCES products (parent_asin),
-        rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5)
+    CREATE TABLE nomenclature (
+        heading             TEXT PRIMARY KEY CHECK (length(heading) = 4),
+        heading_description TEXT NOT NULL
+    );
+    CREATE TABLE decisions (
+        bti_reference TEXT PRIMARY KEY,
+        heading       TEXT NOT NULL REFERENCES nomenclature (heading),
+        language      TEXT NOT NULL CHECK (length(language) = 2),
+        start_date    DATE NOT NULL
     );
 """)
-con.execute("INSERT INTO products SELECT parent_asin, title, price FROM 'case-study/data/products.parquet'")
-con.execute("INSERT INTO reviews SELECT review_id, parent_asin, rating FROM 'case-study/data/train.parquet'")
-print(con.sql("SELECT (SELECT COUNT(*) FROM products), (SELECT COUNT(*) FROM reviews)").fetchone())
-# (60274, 434373): the counts match the source files
-
+con.execute("INSERT INTO nomenclature SELECT heading, heading_description FROM 'case-study/data/nomenclature.parquet'")
 try:
-    con.execute("INSERT INTO reviews VALUES ('r999999', 'B000050FEQ', 6)")
+    con.execute("""INSERT INTO decisions
+                   SELECT bti_reference, heading, language, start_date FROM 'case-study/data/train.parquet'""")
 except duckdb.ConstraintException as e:
     print(str(e).splitlines()[0])
-# Constraint Error: CHECK constraint failed on table reviews with expression CHECK((rating BETWEEN 1 AND 5))
+# Constraint Error: Violates foreign key constraint because key "heading: 8803" does not exist in the referenced table
+print(con.sql("SELECT COUNT(*) FROM decisions").fetchone())   # (0,): the whole statement was rolled back
+
+# a decision, documented in the data card: load only decisions with a known heading
+con.execute("""INSERT INTO decisions
+               SELECT bti_reference, heading, language, start_date FROM 'case-study/data/train.parquet'
+               WHERE heading IN (SELECT heading FROM nomenclature)""")
+print(con.sql("SELECT (SELECT COUNT(*) FROM nomenclature), (SELECT COUNT(*) FROM decisions)").fetchone())
+# (1229, 309478): 51 decisions fewer than in the file, and we know exactly which ones
 ```
 
 ### In practice
@@ -340,7 +364,7 @@ mindmap
     Limitations
 ```
 
-Some facts can be computed (row counts, date range, shares of missing values, label distribution); others need judgement (who is under-represented, which questions the data cannot answer). For the review data, a limitation is **selection**: only customers who chose to write a review are represented, and very satisfied and very dissatisfied customers write reviews more often than others.
+Some facts can be computed (row counts, date range, shares of missing values, label distribution); others need judgement (who is under-represented, which questions the data cannot answer). For the BTI decisions, a limitation is **selection**: a decision exists only where a trader was unsure enough to ask for one, so products whose classification is obvious (live animals, ores) are almost absent, while toys, plastics articles and food preparations are frequent. A second limitation is the **changing nomenclature**: the 2022 revision deleted and created headings.
 
 ### Why it matters
 
@@ -354,26 +378,28 @@ The computed part of the card comes from a few queries:
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
-con.execute("CREATE VIEW products AS SELECT * FROM 'case-study/data/products.parquet'")
+con.execute("CREATE VIEW decisions AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW decisions_test AS SELECT * FROM 'case-study/data/test.parquet'")
 facts = con.sql("""
-    SELECT COUNT(*) AS n_reviews,
-           COUNT(DISTINCT parent_asin) AS n_products_reviewed,
-           MIN(date)::date AS first_review, MAX(date)::date AS last_review,
-           ROUND(AVG(verified_purchase::int), 3) AS share_verified,
-           ROUND(AVG((label = 'neu')::int), 3) AS share_neutral,
-           (SELECT ROUND(AVG((price IS NULL)::int), 3) FROM products) AS share_price_missing
-    FROM reviews
+    SELECT COUNT(*) AS n_decisions,
+           COUNT(DISTINCT heading) AS n_headings,
+           MIN(start_date)::date AS first_start, MAX(start_date)::date AS last_start,
+           ROUND(AVG((language = 'de')::int), 3) AS share_german,
+           ROUND(AVG((status = 'VALID')::int), 3) AS share_valid,
+           ROUND(AVG((keywords IS NULL)::int), 4) AS share_keywords_missing,
+           (SELECT COUNT(*) FROM decisions_test) AS n_test_decisions
+    FROM decisions
 """).df().T
 print(facts)
-#                                        0
-# n_reviews                434373
-# n_products_reviewed       55359
-# first_review         2001-02-05 00:00:00
-# last_review          2021-12-31 00:00:00
-# share_verified            0.906
-# share_neutral             0.075
-# share_price_missing       0.825
+#                                           0
+# n_decisions                          309529
+# n_headings                             1114
+# first_start             2017-01-01 00:00:00
+# last_start              2023-12-31 00:00:00
+# share_german                          0.572
+# share_valid                            0.03
+# share_keywords_missing               0.0041
+# n_test_decisions                     113188
 ```
 
 ### In practice
@@ -383,14 +409,14 @@ print(facts)
 - **Public open-data portals**, for example GovData in Germany, publish metadata following the DCAT-AP standard: source, licence, update frequency and contact for every dataset.
 
 > [!IMPORTANT]
-> The review data have no stated licence from the McAuley Lab, and the course does not redistribute them (see `case-study/README.md`). A data card must record such terms; "found on the internet" is not a licence.
+> The EBTI data may be reused with acknowledgement of the source under the Commission's reuse policy (Commission Decision 2011/833/EU); the HS nomenclature table is in the public domain (ODC-PDDL). A data card must record such terms; "found on the internet" is not a licence.
 
 ## Check your understanding
 
-1. Rewrite "top three products per year by number of reviews" as two CTEs and an outer query. In which step does the window function appear, and in which step the filter?
+1. Rewrite "top three headings per year by number of decisions" as two CTEs and an outer query. In which step does the window function appear, and in which step the filter?
 2. When do `RANK()` and `ROW_NUMBER()` give different results?
-3. Why is `text("... WHERE store = :store")` with `params={"store": s}` safer than an f-string?
-4. The script writes the tables with `to_sql(if_exists="replace")`. What is missing afterwards, and how do you add it?
+3. Why is `text("... WHERE issuing_country = :country")` with `params={"country": c}` safer than an f-string?
+4. The script writes the tables with `to_sql(if_exists="replace")`. What is missing afterwards, and why can the foreign key from `decisions` to `nomenclature` not simply be added?
 5. Name two facts of a data card that can be computed by a query and two that need human judgement.
 
 ## Further reading

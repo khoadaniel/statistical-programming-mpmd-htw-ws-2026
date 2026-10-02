@@ -2,7 +2,7 @@
 # released model and push it to the GitHub container registry (ghcr.io/<owner>/<repo>:1.0.0).
 #
 # Release procedure:
-#   1. train:   uv run python -m sentiment_service.train --data ... --version 1.0.0
+#   1. train:   uv run python -m tariff_service.train --data ... --version 1.0.0
 #   2. release: gh release create v1.0.0 models/model.joblib models/metadata.json --notes "model card: ..."
 #   3. the tag triggers this workflow; the image is then pulled by the hosting platform.
 # The model files are attached to the release because the training data may not be redistributed and

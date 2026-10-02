@@ -101,8 +101,9 @@ print(y.groupby(y.index.year).sum().loc[[2010, 2015, 2020, 2025]].to_dict())
 # {2010: 42717, 2015: 44184, 2020: 39194, 2025: 43408}
 
 # data quality: start dates in the future (typing errors and decisions not yet valid)
-print(counts.loc[counts["month"] > "2026-09-01"].groupby("month")["n_decisions"].sum().to_dict())
-# {... 2026-10-01: 67, 2026-11-01: 11, 2026-12-01: 3, 2027-01-01: 1, 2055-11-01: 1, 2200-07-01: 1}
+future = counts.loc[counts["month"] > "2026-09-01"].groupby("month")["n_decisions"].sum()
+print(future.rename(lambda d: d.strftime("%Y-%m")).to_dict())
+# {'2026-10': 67, '2026-11': 11, '2026-12': 3, '2027-01': 1, '2055-11': 1, '2200-07': 1}
 
 # a definition change: the United Kingdom stops after 2020
 gb = counts[counts["issuing_country"] == "GB"].groupby(counts["month"].dt.year)["n_decisions"].sum()

@@ -6,8 +6,8 @@ import httpx
 import pytest
 from conftest import ckan_package, ckan_response
 
-from reviewtools.errors import APIError, RateLimitError, ValidationError
-from reviewtools.opendata import DatasetRecord, OpenDataClient
+from btitools.errors import APIError, RateLimitError, ValidationError
+from btitools.opendata import DatasetRecord, OpenDataClient
 
 
 def make_client(handler, **kwargs) -> OpenDataClient:

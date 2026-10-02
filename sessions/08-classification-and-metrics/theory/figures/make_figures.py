@@ -1,9 +1,9 @@
 """Make the figures of the Session 8 theory pages.
 
 Run from the repository root:
-    uv run --with pandas --with scikit-learn --with matplotlib \
-        python sessions/08-classification-and-metrics/theory/figures/make_figures.py
-Deterministic: fixed seeds and the IBM Telco churn sample (downloaded).
+    uv run python sessions/08-classification-and-metrics/theory/figures/make_figures.py
+Deterministic: fixed seeds, the IBM Telco churn sample (downloaded) and the EBTI case-study
+sample in case-study/data/ (coverage_accuracy.png).
 """
 
 from pathlib import Path
@@ -19,8 +19,13 @@ from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (ConfusionMatrixDisplay, average_precision_score, precision_recall_curve,
-                             roc_auc_score, roc_curve)
+from sklearn.metrics import (
+    ConfusionMatrixDisplay,
+    average_precision_score,
+    precision_recall_curve,
+    roc_auc_score,
+    roc_curve,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
@@ -153,7 +158,38 @@ def calibration():
     save(fig, "calibration_curve.png")
 
 
+def coverage_accuracy():
+    """Abstention on the EBTI decisions: accept a predicted heading only above a confidence threshold."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import SGDClassifier
+
+    decisions = pd.read_parquet(Path("case-study/data/train_sample.parquet"))
+    past = decisions["start_date"].dt.year <= 2021
+    clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                        SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
+    clf.fit(decisions.loc[past, "description"], decisions.loc[past, "heading"])
+    proba = clf.predict_proba(decisions.loc[~past, "description"])
+    correct = clf.classes_[proba.argmax(axis=1)] == decisions.loc[~past, "heading"].to_numpy()
+    conf = proba.max(axis=1)
+    ts = np.linspace(0, 0.95, 96)              # above 0.95 almost no case is left
+    cov = np.array([(conf >= t).mean() for t in ts])
+    acc = np.array([correct[conf >= t].mean() for t in ts])
+    fig, ax = plt.subplots(figsize=(6.8, 4.2))
+    ax.plot(cov, acc, color=BLUE, lw=2.5)
+    for t in (0.0, 0.3, 0.5, 0.7, 0.9):
+        k = conf >= t
+        ax.plot(k.mean(), correct[k].mean(), "o", color=ORANGE, ms=6)
+        ax.annotate(f"t = {t:.1f}", (k.mean(), correct[k].mean()), (8, -14), textcoords="offset points",
+                    color=INK, fontsize=9)
+    ax.set(xlabel="coverage: share of decisions the model decides itself",
+           ylabel="accuracy on the decided cases", xlim=(0, 1.02), ylim=(0.7, 1.01))
+    ax.set_title("Abstention: TF-IDF heading classifier, EBTI 2022–2023\n"
+                 "(trained on 2017–2021 of the 50,000-decision sample)", color=INK, loc="left")
+    save(fig, "coverage_accuracy.png")
+
+
 if __name__ == "__main__":
+    coverage_accuracy()
     confusion()
     roc_pr()
     knn_boundaries()

@@ -1,10 +1,11 @@
 """Make the figures of the Session 12 theory pages.
 
-Run from the repository root (needs case-study/data/train.parquet):
+Run from the repository root (needs case-study/data/monthly_counts.parquet):
     uv run --with pandas --with pyarrow --with matplotlib --with statsmodels \
         python sessions/12-time-series/theory/figures/make_figures.py
 
-The series is the number of reviews per calendar month, January 2012 to December 2021.
+The series is the number of BTI decisions of the EU member states (without GB) per month,
+January 2010 to September 2026.
 """
 
 import warnings
@@ -28,11 +29,12 @@ plt.rcParams.update({
     "axes.titlesize": 11, "axes.grid": True, "grid.color": "#e6e5e0", "grid.linewidth": 0.6,
 })
 
-reviews = pd.read_parquet("case-study/data/train.parquet", columns=["date"])
-y = reviews.set_index("date").resample("MS").size()["2012":"2021"].rename("reviews")
+counts = pd.read_parquet("case-study/data/monthly_counts.parquet")
+y = (counts[counts["issuing_country"] != "GB"].groupby("month")["n_decisions"].sum()
+     ["2010":"2026-09"].rename("decisions"))
 y.index.freq = "MS"
 log_y = np.log(y)
-train, test = y[:"2020"], y["2021"]
+train, test = y[:"2025-09"], y["2025-10":]
 
 
 def save(fig, name):
@@ -44,7 +46,7 @@ def save(fig, name):
 
 def decomposition():
     stl = STL(log_y, period=12, robust=True).fit()
-    parts = [("observed: log(reviews per month)", log_y), ("trend", stl.trend),
+    parts = [("observed: log(decisions per month)", log_y), ("trend", stl.trend),
              ("seasonal", stl.seasonal), ("remainder", stl.resid)]
     fig, axes = plt.subplots(4, 1, figsize=(10, 7), sharex=True)
     for ax, (title, s), colour in zip(axes, parts, [INK, SERIES[0], SERIES[1], SERIES[2]]):
@@ -53,16 +55,16 @@ def decomposition():
         else:
             ax.plot(s.index, s, color=colour, lw=1.8)
         ax.set_title(title, loc="left", fontsize=10)
-    fig.suptitle("STL decomposition of monthly review counts (log scale, period 12)", color=INK)
+    fig.suptitle("STL decomposition of monthly BTI decision counts (log scale, period 12)", color=INK)
     save(fig, "decomposition")
 
 
 def acf_figure():
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.5), sharey=True)
     plot_acf(y, lags=24, ax=a1, color=SERIES[0], vlines_kwargs={"colors": SERIES[0]})
-    a1.set(title="ACF of the counts: the trend dominates", xlabel="lag (months)")
+    a1.set(title="ACF of the counts: weak persistence", xlabel="lag (months)")
     plot_acf(log_y.diff().dropna(), lags=24, ax=a2, color=SERIES[1], vlines_kwargs={"colors": SERIES[1]})
-    a2.set(title="ACF of monthly growth (diff of log): peak at lag 12", xlabel="lag (months)")
+    a2.set(title="ACF of monthly growth (diff of log): lag 1 negative, lag 12 positive", xlabel="lag (months)")
     save(fig, "acf")
 
 
@@ -71,12 +73,12 @@ def baselines():
     snaive = pd.Series(train.iloc[-12:].to_numpy(), index=test.index)
     moving = pd.Series(train.iloc[-3:].mean(), index=test.index)
     fig, ax = plt.subplots(figsize=(10.5, 3.9))
-    ax.plot(y["2018":].index, y["2018":], color=INK, lw=2, label="actual")
+    ax.plot(y["2021":].index, y["2021":], color=INK, lw=2, label="actual")
     for (name, f), colour in zip({"naive": naive, "seasonal naive": snaive, "moving average (3)": moving}.items(), SERIES):
         ax.plot(f.index, f, color=colour, lw=2, ls="--", label=name)
     ax.axvline(test.index[0], color=MUTED, lw=1, ls=":")
-    ax.text(test.index[0], ax.get_ylim()[1] * 0.98, " hold-out 2021", va="top", color=INK, fontsize=9)
-    ax.set(title="Baseline forecasts for 2021 against the actual counts", ylabel="reviews per month")
+    ax.text(test.index[0], ax.get_ylim()[1] * 0.98, " hold-out Oct 2025 to Sep 2026", va="top", color=INK, fontsize=9)
+    ax.set(title="Baseline forecasts for the hold-out year against the actual counts", ylabel="decisions per month")
     ax.legend(frameon=False, ncol=2, loc="upper left")
     save(fig, "baselines")
 
@@ -86,12 +88,12 @@ def interval():
                    seasonal="add", seasonal_periods=12).fit(disp=False)
     frame = np.exp(fit.get_prediction(start=test.index[0], end=test.index[-1]).summary_frame(alpha=0.05))
     fig, ax = plt.subplots(figsize=(10.5, 3.9))
-    ax.plot(y["2018":].index, y["2018":], color=INK, lw=2, label="actual")
+    ax.plot(y["2021":].index, y["2021":], color=INK, lw=2, label="actual")
     ax.fill_between(frame.index, frame["pi_lower"], frame["pi_upper"], color=SERIES[0], alpha=0.18,
                     label="95 % prediction interval")
     ax.plot(frame.index, frame["mean"], color=SERIES[0], lw=2, ls="--", label="ETS point forecast")
-    ax.set(title="Damped exponential smoothing (ETS on log counts): the interval widens with the horizon",
-           ylabel="reviews per month")
+    ax.set(title="Damped exponential smoothing (ETS on log counts) with its 95 % prediction interval",
+           ylabel="decisions per month")
     ax.legend(frameon=False, loc="upper left")
     save(fig, "ets_interval")
 

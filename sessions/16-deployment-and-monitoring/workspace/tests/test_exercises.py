@@ -2,27 +2,27 @@
 
 import pytest
 
-from sentiment_service.drift import oov_rate
+from tariff_service.drift import oov_rate
 
 exercise = pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="exercise not solved yet")
 
 
 @exercise
 def test_exercise2_batch_prediction(client):
-    reviews = [{"text": "Broke after two days. Waste of money."}, {"text": "Love it! Works perfectly."}]
-    r = client.post("/predict/batch", json={"reviews": reviews})
+    decisions = [{"description": "Damenstiefel mit Oberteil aus Rindleder"},
+                 {"description": "Voiture jouet en matière plastique"}]
+    r = client.post("/predict/batch", json={"decisions": decisions})
     assert r.status_code == 200
-    labels = [p["label"] for p in r.json()["predictions"]]
-    assert labels == ["neg", "pos"]
+    assert [p["heading"] for p in r.json()["predictions"]] == ["6403", "9503"]
 
 
 def test_exercise2_batch_validation(client):  # validation works already: pydantic runs before the TODO
-    assert client.post("/predict/batch", json={"reviews": []}).status_code == 422
+    assert client.post("/predict/batch", json={"decisions": []}).status_code == 422
 
 
 @exercise
 def test_exercise4_oov_rate():
-    vocab = {"great", "product", "works"}
-    assert oov_rate(["Great product, works!"], vocab) == 0.0
-    assert oov_rate(["Great gadget", "a b"], vocab) == 0.5      # single letters are not tokens
+    vocab = {"schuhe", "aus", "leder"}
+    assert oov_rate(["Schuhe aus Leder!"], vocab) == 0.0
+    assert oov_rate(["Schuhe aus Textil", "a b"], vocab) == pytest.approx(1 / 3)   # single letters are not tokens
     assert oov_rate([""], vocab) == 0.0

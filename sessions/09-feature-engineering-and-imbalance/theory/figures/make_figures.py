@@ -4,7 +4,7 @@ Run from the repository root:
     uv run python sessions/09-feature-engineering-and-imbalance/theory/figures/make_figures.py
 
 Deterministic (seeded). The third figure needs the case-study sample
-(case-study/data/train_sample.parquet).
+(case-study/data/train_sample.parquet): footwear decisions of chapter 64.
 """
 
 from pathlib import Path
@@ -90,28 +90,24 @@ def resampling_precision_recall():
     from imblearn.over_sampling import SMOTE, RandomOverSampler
     from imblearn.pipeline import make_pipeline
     from imblearn.under_sampling import RandomUnderSampler
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import precision_recall_fscore_support
+    from sklearn.metrics import accuracy_score, precision_recall_fscore_support
     from sklearn.model_selection import StratifiedKFold, cross_val_predict
     from sklearn.preprocessing import StandardScaler
 
     root = OUT.parents[3]
-    reviews = pd.read_parquet(root / "case-study/data/train_sample.parquet")
-    text = reviews["text"].fillna("")
-    neg = r"\b(?:not|no|never|don't|doesn't|didn't|isn't|wasn't|won't|can't)\b"
-    X = pd.DataFrame({
-        "log_chars": np.log1p(text.str.len()), "n_exclaim": text.str.count("!"),
-        "n_question": text.str.count(r"\?"), "n_negations": text.str.lower().str.count(neg),
-        "upper_share": text.str.count(r"[A-Z]") / text.str.len().clip(lower=1),
-        "title_words": reviews["title"].fillna("").str.split().str.len(),
-        "verified": reviews["verified_purchase"].astype(int),
-        "log_helpful": np.log1p(reviews["helpful_vote"]), "n_images": reviews["n_images"],
-    })
-    y = reviews["label"]
+    decisions = pd.read_parquet(root / "case-study/data/train_sample.parquet")
+    shoes = decisions[decisions["chapter"] == "64"].reset_index(drop=True)   # footwear task, 6 headings
+    y = shoes["heading"]
+    tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), min_df=3, sublinear_tf=True)
+    X = pd.DataFrame(TruncatedSVD(50, random_state=0).fit_transform(tfidf.fit_transform(shoes["description"])),
+                     columns=[f"svd{i}" for i in range(50)])
     cv = StratifiedKFold(5, shuffle=True, random_state=0)
 
     def lr(cw=None):
-        return LogisticRegression(max_iter=1000, class_weight=cw)
+        return LogisticRegression(max_iter=2000, class_weight=cw)
 
     candidates = {
         "no correction": make_pipeline(StandardScaler(), lr()),
@@ -120,28 +116,28 @@ def resampling_precision_recall():
         "SMOTE": make_pipeline(StandardScaler(), SMOTE(random_state=0), lr()),
         "class weights": make_pipeline(StandardScaler(), lr("balanced")),
     }
+    labels = sorted(y.unique())
     rows = []
     for name, model in candidates.items():
         pred = cross_val_predict(model, X, y, cv=cv)
-        p, r, f, _ = precision_recall_fscore_support(y, pred, labels=["neg", "neu", "pos"],
-                                                     zero_division=0)
-        rows.append((name, p[1], r[1], f[1], f.mean()))
-    res = pd.DataFrame(rows, columns=["method", "precision", "recall", "f1", "macro_f1"])
+        p, r, f, _ = precision_recall_fscore_support(y, pred, labels=labels, zero_division=0)
+        rows.append((name, accuracy_score(y, pred), f.mean(), p[labels.index("6406")], r[labels.index("6406")]))
+    res = pd.DataFrame(rows, columns=["method", "accuracy", "macro_f1", "precision", "recall"])
 
     fig, ax = plt.subplots(figsize=(9, 4.6))
     x = np.arange(len(res))
     width = 0.2
-    series = [("precision", "neutral precision", BLUE), ("recall", "neutral recall", ORANGE),
-              ("f1", "neutral F1", AQUA), ("macro_f1", "macro-F1 (3 classes)", YELLOW)]
+    series = [("accuracy", "accuracy (6 headings)", BLUE), ("macro_f1", "macro-F1 (6 headings)", YELLOW),
+              ("precision", "precision of 6406", AQUA), ("recall", "recall of 6406", ORANGE)]
     for k, (col, label, color) in enumerate(series):
         bars = ax.bar(x + (k - 1.5) * width, res[col], width - 0.02, color=color, label=label)
         for b, v in zip(bars, res[col]):
             ax.text(b.get_x() + b.get_width() / 2, v + 0.01, f"{v:.2f}", ha="center", va="bottom",
-                    fontsize=8, color=MUTED)
+                    fontsize=7, color=MUTED)
     ax.set_xticks(x, res["method"])
-    ax.set_ylim(0, 0.55)
+    ax.set_ylim(0, 1.08)
     ax.set_ylabel("score (5-fold cross-validation)")
-    ax.set_title("Imbalance corrections trade neutral precision for recall (logistic regression)",
+    ax.set_title("Footwear headings: corrections raise recall of the rare heading 6406 but lower macro-F1",
                  fontsize=11, color=INK)
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)

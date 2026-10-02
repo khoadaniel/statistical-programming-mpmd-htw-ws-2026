@@ -1,80 +1,123 @@
-"""Tests of ReviewRecord: valid input is cleaned, invalid input raises ValidationError."""
+"""Tests of DecisionRecord: valid input is cleaned, invalid input raises ValidationError."""
+
+from datetime import date
 
 import pytest
 
-from reviewtools import ReviewRecord, ReviewToolsError, ValidationError, to_label
+from btitools import BtiToolsError, DecisionRecord, ValidationError, chapter_of
+
+
+def make(**changes):
+    """A valid record with some fields replaced."""
+    fields = {
+        "bti_reference": "FR1",
+        "issuing_country": "FR",
+        "language": "fr",
+        "start_date": "2023-01-02",
+        "description": "Sac à main",
+        "heading": "4202",
+    }
+    return DecisionRecord(**{**fields, **changes})
 
 
 @pytest.mark.parametrize(
-    ("rating", "expected"),
-    [(1, "neg"), (2, "neg"), (3, "neu"), (4, "pos"), (5, "pos")],
+    ("heading", "expected"),
+    [("0101", "01"), ("0901", "09"), ("9503", "95"), ("9706", "97")],
 )
-def test_to_label(rating, expected):
-    assert to_label(rating) == expected
+def test_chapter_of(heading, expected):
+    assert chapter_of(heading) == expected
 
 
-def test_from_dict_cleans_values(raw_review):
-    record = ReviewRecord.from_dict(raw_review)
-    assert record.review_id == "r000042"
-    assert record.rating == 2
-    assert record.title == "Disappointed"
-    assert record.text == "Stopped working after two weeks."
-    assert record.verified_purchase is True
-    assert record.label == "neg"
+def test_from_dict_cleans_values(raw_decision):
+    record = DecisionRecord.from_dict(raw_decision)
+    assert record.bti_reference == "DE0001/23-1"
+    assert record.issuing_country == "DE"
+    assert record.language == "de"
+    assert record.start_date == date(2023, 5, 10)
+    assert record.description == "Plüschtier in Form eines Bären, Höhe 30 cm"
+    assert record.keywords == "TOYS, PLUSH"
+    assert record.chapter == "95"
 
 
-def test_to_dict_contains_label(raw_review):
-    data = ReviewRecord.from_dict(raw_review).to_dict()
-    assert data["label"] == "neg"
-    assert "unused_column" not in data
+def test_to_dict_is_json_ready(raw_decision):
+    data = DecisionRecord.from_dict(raw_decision).to_dict()
+    assert data["start_date"] == "2023-05-10"
+    assert data["chapter"] == "95"
+    assert "classification_justification" not in data
 
 
-@pytest.mark.parametrize("rating", [4, 4.0, "4", " 4 "])
-def test_rating_accepts_whole_numbers(rating):
-    assert ReviewRecord("r1", rating, "ok").rating == 4
+@pytest.mark.parametrize("heading", ["9503", " 9503 ", "95.03", "0901"])
+def test_heading_accepts_four_digits(heading):
+    assert make(heading=heading).heading in {"9503", "0901"}
 
 
-@pytest.mark.parametrize("rating", [0, 6, 4.5, "four", "", True, None])
-def test_rating_rejects_invalid_values(rating):
+@pytest.mark.parametrize("heading", [901, 9503, "950", "95031", "toys", "", None])
+def test_heading_rejects_invalid_values(heading):
     with pytest.raises(ValidationError) as excinfo:
-        ReviewRecord("r1", rating, "ok")
-    assert excinfo.value.field == "rating"
+        make(heading=heading)
+    assert excinfo.value.field == "heading"
+
+
+@pytest.mark.parametrize("country", ["DEU", "D", "1A", ""])
+def test_country_must_be_two_letters(country):
+    with pytest.raises(ValidationError, match="issuing_country"):
+        make(issuing_country=country)
+
+
+@pytest.mark.parametrize("language", ["xx", "german", "", "en-GB"])
+def test_language_must_be_an_eu_language(language):
+    with pytest.raises(ValidationError, match="language"):
+        make(language=language)
+
+
+@pytest.mark.parametrize("start", ["2023-01-02", "02/01/2023", date(2023, 1, 2), " 02/01/2023 "])
+def test_start_date_formats(start):
+    assert make(start_date=start).start_date == date(2023, 1, 2)
+
+
+@pytest.mark.parametrize("start", ["31/02/2023", "2023/01/02", "01/01/2200", "", 20230102])
+def test_start_date_rejects_impossible_values(start):
+    with pytest.raises(ValidationError, match="start_date"):
+        make(start_date=start)
 
 
 @pytest.mark.parametrize("text", ["", "   ", "\n\t"])
-def test_empty_text_is_rejected(text):
-    with pytest.raises(ValidationError, match="text: must not be empty"):
-        ReviewRecord("r1", 5, text)
+def test_empty_description_is_rejected(text):
+    with pytest.raises(ValidationError, match="description: must not be empty"):
+        make(description=text)
 
 
-def test_missing_required_key_is_reported(raw_review):
-    del raw_review["rating"]
-    with pytest.raises(ValidationError, match="rating: is missing"):
-        ReviewRecord.from_dict(raw_review)
+def test_missing_required_key_is_reported(raw_decision):
+    del raw_decision["heading"]
+    with pytest.raises(ValidationError, match="heading: is missing"):
+        DecisionRecord.from_dict(raw_decision)
 
 
 def test_validation_error_is_part_of_the_hierarchy():
     # a caller can catch the package's base class or the built-in ValueError
-    with pytest.raises(ReviewToolsError):
-        ReviewRecord("r1", 9, "ok")
+    with pytest.raises(BtiToolsError):
+        make(heading="95")
     with pytest.raises(ValueError):
-        ReviewRecord("r1", 9, "ok")
+        make(heading="95")
 
 
-@pytest.mark.parametrize("value", ["maybe", 2, None])
-def test_verified_purchase_rejects_unclear_values(value):
-    with pytest.raises(ValidationError, match="verified_purchase"):
-        ReviewRecord("r1", 5, "ok", verified_purchase=value)
-
-
-@pytest.mark.skip(reason="exercise 1: delete this line when helpful_vote is validated")
+@pytest.mark.skip(reason="exercise 1: delete this line when end_date is validated")
 @pytest.mark.parametrize(
-    ("value", "valid"),
-    [(0, True), (3, True), ("3", True), (-1, False), (2.5, False), ("many", False), (True, False)],
+    ("end", "valid"),
+    [
+        (None, True),
+        ("2026-01-01", True),
+        ("01/01/2026", True),
+        ("2023-01-02", True),  # same day as the start: allowed
+        ("2022-12-31", False),  # before the start: not a valid period
+        ("31/13/2025", False),
+        ("2300-01-01", False),
+    ],
 )
-def test_helpful_vote_rules(value, valid):
+def test_end_date_rules(end, valid):
     if valid:
-        assert ReviewRecord("r1", 5, "ok", helpful_vote=value).helpful_vote == int(value)
+        record = make(end_date=end)
+        assert record.end_date is None or record.end_date >= record.start_date
     else:
-        with pytest.raises(ValidationError, match="helpful_vote"):
-            ReviewRecord("r1", 5, "ok", helpful_vote=value)
+        with pytest.raises(ValidationError, match="end_date"):
+            make(end_date=end)

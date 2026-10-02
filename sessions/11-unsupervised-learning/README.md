@@ -24,15 +24,16 @@
 - [Hierarchical clustering and dendrograms](theory/02-hierarchical-dbscan-and-evaluation.md#hierarchical-clustering-and-dendrograms)
 - [Density-based clustering (DBSCAN)](theory/02-hierarchical-dbscan-and-evaluation.md#density-based-clustering-dbscan)
 - [Evaluating and interpreting clusters (silhouette, stability, cluster profiles)](theory/02-hierarchical-dbscan-and-evaluation.md#evaluating-and-interpreting-clusters)
-- *Practice:* compare k-means, hierarchical clustering and DBSCAN on product-level features → Part A of [workbooks/24-case-study-product-clusters.ipynb](workbooks/24-case-study-product-clusters.ipynb)
+- *Practice:* compare k-means, hierarchical clustering and DBSCAN on the BTI decisions of one chapter (description and keyword representations) → Part A of [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb)
 
 **2:00–2:45 · Dimensionality reduction, anomalies and unsupervised features** ([theory/03](theory/03-dimensionality-reduction.md), [theory/04](theory/04-anomaly-detection-and-unsupervised-features.md))
 
 - [Principal component analysis (explained variance, loadings)](theory/03-dimensionality-reduction.md#principal-component-analysis-explained-variance-and-loadings)
 - [t-SNE and UMAP for visualisation](theory/03-dimensionality-reduction.md#t-sne-and-umap-for-visualisation)
+- [A map of decisions: truncated SVD and t-SNE on text](theory/03-dimensionality-reduction.md#a-map-of-decisions-truncated-svd-and-t-sne-on-text)
 - [Model-based anomaly detection with Isolation Forest and LOF, continuing the outliers of Session 4](theory/04-anomaly-detection-and-unsupervised-features.md#model-based-anomaly-detection-isolation-forest-and-local-outlier-factor)
 - [Clusters and components as features](theory/04-anomaly-detection-and-unsupervised-features.md#clusters-and-components-as-features)
-- *Practice:* case study: cluster products by their review statistics, visualise them with PCA and test whether cluster membership improves the tree-based model of Session 10 → Part B of [workbooks/24-case-study-product-clusters.ipynb](workbooks/24-case-study-product-clusters.ipynb)
+- *Practice:* case study: cluster the decisions of one chapter, map them with truncated SVD and t-SNE, rank decisions far from their heading's centroid and test whether cluster features improve the tree-based model of Session 10 → Part B of [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb)
 
 ## Materials
 
@@ -65,13 +66,13 @@
 | [workbooks/21-isolation-forest.ipynb](workbooks/21-isolation-forest.ipynb) | Isolation Forest decision boundary and path lengths | 3 | core |
 | [workbooks/22-local-outlier-factor.ipynb](workbooks/22-local-outlier-factor.ipynb) | Local outlier factor scores | 3 | core |
 | [workbooks/23-outlier-detection-benchmark.ipynb](workbooks/23-outlier-detection-benchmark.ipynb) | Isolation Forest and LOF on real benchmark data | 3 | optional |
-| [workbooks/24-case-study-product-clusters.ipynb](workbooks/24-case-study-product-clusters.ipynb) | **Practice 2 and 3:** product clusters, PCA, cluster feature in a model (own) | 2, 3 | core |
+| [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb) | **Practice 2 and 3:** clusters of chapter-94 decisions, t-SNE map, heading-centroid anomalies, cluster features in a model (own) | 2, 3 | core |
 
 Sources and licences: [source.md](source.md). Workbooks 01, 13 and 15 have a non-commercial, no-derivatives text licence (CC-BY-NC-ND): use them unchanged.
 
 ## Before and after the session
 
-**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure `case-study/data/train.parquet` exists (see [case-study/README.md](../../case-study/README.md)).
+**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure `case-study/data/train_sample.parquet` exists (see [case-study/README.md](../../case-study/README.md)).
 
 **Team project until the next session.** Segmentation or anomaly detection where it supports the project.
 
@@ -88,5 +89,5 @@ Everything except workbook 19 runs in the course environment (`uv sync` in the r
 
 - Workbook 19 (ISLP lab) needs the `ISLP` package: `uv run --with ISLP jupyter lab`.
 - The Telco data are read from GitHub, and some scikit-learn examples download datasets (`fetch_openml`, `fetch_lfw_people`, `fetch_kddcup99`): an internet connection is needed the first time.
-- Workbook 24 reads `case-study/data/train.parquet` and finds the repository root by itself.
+- Workbook 24 reads `case-study/data/train_sample.parquet` and `nomenclature.parquet` and finds the repository root by itself; it runs in under a minute.
 - To regenerate the figures: `uv run python sessions/11-unsupervised-learning/theory/figures/make_figures.py` from the repository root.

@@ -47,22 +47,22 @@ print(cross_val_score(LogisticRegression(), X_sel, y_noise, cv=5).mean().round(2
 leak_free = make_pipeline(SelectKBest(f_classif, k=20), LogisticRegression())
 print(cross_val_score(leak_free, X_noise, y_noise, cv=5).mean().round(2))               # 0.51
 
-# the same mistake on 1,000 real reviews: word counts, keep the 100 words most related to the label
-rev = pd.read_parquet("case-study/data/train_sample.parquet").sort_values("date", ignore_index=True)
-small = rev.sample(1000, random_state=0)
-text = small["title"].fillna("") + " " + small["text"].fillna("")
+# the same mistake on 1,000 real decisions of the 20 most frequent headings:
+# word counts, keep the 100 words most related to the heading
+dec = pd.read_parquet("case-study/data/train_sample.parquet").sort_values("start_date", ignore_index=True)
+small = dec[dec["heading"].isin(dec["heading"].value_counts().index[:20])].sample(1000, random_state=0)
 skf = StratifiedKFold(5, shuffle=True, random_state=0)
-clf = LogisticRegression(max_iter=2000, class_weight="balanced")
+clf = LogisticRegression(max_iter=2000)
 
-counts = CountVectorizer(min_df=2).fit_transform(text)                     # vocabulary from all rows
-leaky = SelectKBest(chi2, k=100).fit_transform(counts, small["label"])     # selection uses all labels
-print(cross_val_score(clf, leaky, small["label"], cv=skf, scoring="f1_macro").mean().round(3))   # 0.643
+counts = CountVectorizer(min_df=2).fit_transform(small["description"])     # vocabulary from all rows
+leaky = SelectKBest(chi2, k=100).fit_transform(counts, small["heading"])    # selection uses all labels
+print(cross_val_score(clf, leaky, small["heading"], cv=skf).mean().round(3))                 # 0.664
 
 pipe = make_pipeline(CountVectorizer(min_df=2), SelectKBest(chi2, k=100), clf)
-print(cross_val_score(pipe, text, small["label"], cv=skf, scoring="f1_macro").mean().round(3))   # 0.575
+print(cross_val_score(pipe, small["description"], small["heading"], cv=skf).mean().round(3))  # 0.654
 ```
 
-On real reviews the leaking workflow overstates macro-F1 by almost seven points. The INRIA workbook [16-data-leakage-feature-selection.ipynb](../workbooks/16-data-leakage-feature-selection.ipynb) walks through the same mistake step by step.
+On the real decisions the leaking workflow overstates accuracy by only one point (0.664 against 0.654): the words that separate the headings carry real signal, so selecting them with all rows adds little. The noise example shows the other extreme. You cannot know in advance on which side your data lie, which is why the pipeline is the rule, not an option. The INRIA workbook [16-data-leakage-feature-selection.ipynb](../workbooks/16-data-leakage-feature-selection.ipynb) walks through the same mistake step by step.
 
 **In practice.**
 - Kapoor and Narayanan (2023) traced a series of over-optimistic results in civil-war prediction to leakage, including imputation fitted on the full dataset; after correction, the complex models did not beat a logistic regression.
@@ -75,45 +75,46 @@ On real reviews the leaking workflow overstates macro-F1 by almost seven points.
 
 **Concept.** **Target leakage** means that a feature contains information about the target that will not be available when the model is used. Typical sources:
 
-- a feature *computed from the target*, for example an average rating that includes the rating of the review being predicted;
+- a feature *computed from the target*, for example a customer's average rating that includes the rating being predicted;
 - a feature *recorded after the event*, for example "reason for cancellation" in a churn table, or "antibiotic prescribed" when predicting an infection;
 - an identifier or timestamp that happens to correlate with the label in the collected data.
 
 The model learns the shortcut, cross-validation confirms it (the shortcut is present in every fold), and the model fails in use, where the shortcut is missing.
 
-**Why it matters.** No splitter can detect target leakage: the leak is inside the rows. It can only be found by asking, for every feature, *"would I know this value at the moment of prediction?"* The case study has a real example. The product table contains `train_avg_rating`, the mean star rating of the product over the training period. For a training review, this mean includes the review's own rating. For a test review from 2022, it does not.
+**Why it matters.** No splitter can detect target leakage: the leak is inside the rows. It can only be found by asking, for every feature, *"would I know this value at the moment of prediction?"* The case study has a real example. Each training decision contains `classification_justification`, the text in which customs explain their classification. It names the heading in about 70 % of the decisions ("... is to be classified under heading 6404 ..."). It is written during or after the classification, so a new request does not have it, and the test set does not contain it. The same holds for `keywords` and `cn_code`.
 
-**How it works in Python.** Add `train_avg_rating` to the seven simple text features:
+**How it works in Python.** Append the justification to the description and validate as usual, inside the training years. Then apply the model where it will be used: to new decisions that have only a description.
 
 ```python
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import TimeSeriesSplit, train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def simple_features(d):
-    t = d["title"].fillna("") + " " + d["text"].fillna("")
-    return pd.DataFrame({
-        "log_len": np.log1p(t.str.len()), "n_excl": t.str.count("!"), "n_quest": t.str.count(r"\?"),
-        "n_neg": t.str.lower().str.count(r"\b(?:not|no|never|don't|didn't|doesn't|waste|return)\b"),
-        "verified": d["verified_purchase"].astype(int), "log_helpful": np.log1p(d["helpful_vote"]),
-        "n_images": d["n_images"]})
+text_model = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                           SGDClassifier(alpha=1e-5, random_state=0, n_jobs=-1))
+with_just = dec["description"] + " " + dec["classification_justification"].fillna("")
+past = (dec["start_date"].dt.year <= 2021).to_numpy()            # development: 2017-2021
+tr, va = train_test_split(np.flatnonzero(past), test_size=0.2, random_state=0)
+new = np.flatnonzero(~past)                                       # 2022-2023: description only
 
-prod = pd.read_parquet("case-study/data/products.parquet", columns=["parent_asin", "train_avg_rating"])
-d = rev.merge(prod, on="parent_asin", how="left")
-Xs, yr = simple_features(d), d["label"]
-l1 = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000, class_weight="balanced"))
-
-print(cross_val_score(l1, Xs, yr, cv=skf, scoring="f1_macro").mean().round(3))                 # 0.485
-X_leak = Xs.assign(avg_rating=d["train_avg_rating"])
-print(cross_val_score(l1, X_leak, yr, cv=skf, scoring="f1_macro").mean().round(3))             # 0.524
-print(cross_val_score(l1, X_leak, yr, cv=TimeSeriesSplit(5), scoring="f1_macro").mean().round(3))  # 0.522
+for name, X in [("description only", dec["description"]), ("+ justification", with_just)]:
+    text_model.fit(X.iloc[tr], dec["heading"].iloc[tr])
+    val = accuracy_score(dec["heading"].iloc[va], text_model.predict(X.iloc[va]))
+    use = accuracy_score(dec["heading"].iloc[new], text_model.predict(dec["description"].iloc[new]))
+    print(f"{name:17s} validation {val:.3f}   in use (2022-2023, description only) {use:.3f}")
+# description only  validation 0.799   in use (2022-2023, description only) 0.753
+# + justification   validation 0.958   in use (2022-2023, description only) 0.705
 ```
 
-Both random and time-based cross-validation report an improvement of almost four points, because the leak is present in every training review. In a trial run of the leaderboard (see the case-study README), a model with this feature scored 0.55 in time-based CV but only 0.41 on the 2022 test reviews, *worse* than without it. Session 9 builds the leak-free version: the mean rating of *earlier* reviews of the same product.
+Validation reports a jump from 0.80 to 0.96, because the leak is present in every validation decision as well. In use, where only the description exists, the leaking model is *worse* than the honest one (0.705 against 0.753): it has learned to rely on a text that is missing. Session 9 returns to features that are not available at prediction time.
 
 **In practice.**
 - KDD Cup 2008 (breast cancer detection): the patient identifier was predictive of the label because of how the data had been assembled; Kaufman et al. (2012) use it as a textbook case of leakage.
 - Hospital data: a feature such as "antibiotic prescribed" or "chest X-ray ordered" can reveal the diagnosis a model is supposed to predict, because it is recorded after the doctor suspected it.
 - Churn data: fields like "reason for leaving" or "contract end date" are filled only for customers who have already left.
+- Customs data: the classification justification, the keywords and the full CN code of a BTI decision are written by the authority that decides the heading, so none of them exists when a new request arrives.
 
 > [!WARNING]
 > A suspiciously large jump in validation score from one new feature is a warning sign, not a success. Check when and how that feature is recorded before you celebrate.
@@ -141,19 +142,19 @@ sequenceDiagram
 **How it works in Python.** Steps are named automatically by `make_pipeline` (lower-case class names), which is how a search addresses their hyperparameters:
 
 ```python
-from sklearn.impute import SimpleImputer
+text_pipe = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                          SGDClassifier(alpha=1e-5, random_state=0, n_jobs=-1))
+print(list(text_pipe.named_steps))      # ['tfidfvectorizer', 'sgdclassifier']
 
-l1_pipe = make_pipeline(SimpleImputer(strategy="median"), StandardScaler(),
-                        LogisticRegression(max_iter=1000, class_weight="balanced"))
-print(list(l1_pipe.named_steps))      # ['simpleimputer', 'standardscaler', 'logisticregression']
-
-l1_pipe.fit(Xs.iloc[:40000], yr.iloc[:40000])          # every step learns from these rows only
-print(l1_pipe.named_steps["standardscaler"].mean_[:3].round(2))   # [4.84 0.65 0.04]: means of log_len, n_excl, n_quest
-print(round(l1_pipe.score(Xs.iloc[40000:], yr.iloc[40000:]), 3))  # 0.658: accuracy on the newest 10,000 reviews
+text_pipe.fit(dec["description"].iloc[tr], dec["heading"].iloc[tr])     # every step learns from these rows only
+print(len(text_pipe.named_steps["tfidfvectorizer"].vocabulary_))        # 68232 words, from the training rows only
+print(round(text_pipe.score(dec["description"].iloc[new], dec["heading"].iloc[new]), 3))   # 0.753: accuracy on 2022-2023
 ```
 
+Words that occur only in the 2022–2023 decisions are not in the vocabulary, exactly as at prediction time. A vectoriser fitted on all rows would have seen them.
+
 > [!TIP]
-> If a step needs the target or learns anything from the data, it belongs in the pipeline. If it is a fixed rule that looks at one row at a time (for example `np.log1p` of a count, or the length of a text), it can be applied before splitting.
+> If a step needs the target or learns anything from the data (a vocabulary, IDF weights, means), it belongs in the pipeline. If it is a fixed rule that looks at one row at a time (for example `np.log` of a length, or the number of digits in a description), it can be applied before splitting.
 
 **In practice.**
 - Production machine learning systems serialise the fitted pipeline (for example with `joblib` or `skops`) rather than the model alone, so that the serving code cannot apply different preprocessing; this "training–serving skew" is a known source of failures described in Google's *Rules of Machine Learning* (Zinkevich).
@@ -223,32 +224,29 @@ With 7,043 customers and five settings, the nested estimate (0.8452) is almost t
 
 **Why it matters.** The final test protects against all forms of selection on the development data at once, including choices you did not notice you were making. A clear gap between validation and test scores is itself a finding: it points to leakage, drift or an unsuitable validation scheme.
 
-**How it works in Python.** Development data: reviews up to 2020; test: reviews of 2021. Tune `C` with a time-based split on the development data, then evaluate once:
+**How it works in Python.** Development data: decisions of 2017–2021; test: decisions of 2022–2023. Tune the regularisation `alpha` of the text classifier with a time-based split on the development data, then evaluate once:
 
 ```python
 from sklearn.metrics import f1_score
 
-dev, test = d[d["date"] < "2021-01-01"], d[d["date"] >= "2021-01-01"]
-X_dev, y_dev = simple_features(dev), dev["label"]
-X_test, y_test = simple_features(test), test["label"]
-print(len(dev), len(test))                           # 42112 7888
+dev, test = dec[past], dec[~past]
+print(len(dev), len(test))                           # 36801 13199
 
-search = GridSearchCV(l1, {"logisticregression__C": [0.01, 0.1, 1, 10]},
-                      cv=TimeSeriesSplit(5), scoring="f1_macro")
-search.fit(X_dev, y_dev)                              # refits the best C on all development data
-print(search.best_params_, round(search.best_score_, 3))   # {'logisticregression__C': 0.01} 0.487
+search = GridSearchCV(text_pipe, {"sgdclassifier__alpha": [1e-6, 1e-5, 1e-4]},
+                      cv=TimeSeriesSplit(3), scoring="accuracy")
+search.fit(dev["description"], dev["heading"])        # refits the best alpha on all development data
+print(search.best_params_, round(search.best_score_, 3))   # {'sgdclassifier__alpha': 1e-05} 0.694
 
-y_pred = search.predict(X_test)                       # the one and only look at the test set
-print(round(f1_score(y_test, y_pred, average="macro"), 3))  # 0.488
+y_pred = search.predict(test["description"])          # the one and only look at the test set
+y_test = test["heading"].to_numpy()
+print(round(accuracy_score(y_test, y_pred), 3), round(f1_score(y_test, y_pred, average="macro"), 3))   # 0.768 0.511
 
 rng = np.random.default_rng(0)
-yt = y_test.to_numpy()
-boot = [f1_score(yt[i], y_pred[i], average="macro")
-        for i in (rng.integers(0, len(yt), len(yt)) for _ in range(500))]
-print(np.percentile(boot, [2.5, 97.5]).round(3))      # [0.476 0.5  ]
+boot = [accuracy_score(y_test[i], y_pred[i]) for i in (rng.integers(0, len(y_test), len(y_test)) for _ in range(500))]
+print(np.percentile(boot, [2.5, 97.5]).round(3))      # [0.76  0.775]
 ```
 
-Validation (0.487) and test (0.488) agree within the interval: the validation scheme imitates the use well. The leaderboard from Session 8 is the course's shared held-out test: you submit predictions, you never see the labels.
+The test accuracy (0.768) is *higher* than the validation score (0.694). This is not a contradiction: in `TimeSeriesSplit(3)` the first fold trains on only a quarter of the development data, so the cross-validated score underestimates a model trained on all of it. The validation score served its purpose (choosing `alpha`); the test score with its interval is the number to report. The leaderboard from Session 8 is the course's shared held-out test: you submit predictions, you never see the labels.
 
 **In practice.**
 - Regulated industries require independent validation on held-out data before a model is approved; in banking, model risk guidance such as the US Federal Reserve's SR 11-7 asks for outcome analysis and back-testing by a function independent of the developers.
@@ -260,10 +258,10 @@ Validation (0.487) and test (0.488) agree within the interval: the validation sc
 ## Check your understanding
 
 1. Why does fitting a `StandardScaler` on all rows usually matter little, while fitting `SelectKBest` on all rows can matter a lot?
-2. Give one example of target leakage in a churn table and one in the review data. How would you detect them?
+2. Give one example of target leakage in a churn table and one in the EBTI data. How would you detect them?
 3. What exactly happens to a `Pipeline` in each split of `cross_val_score`?
 4. In nested cross-validation, which loop chooses the hyperparameters and which loop produces the number you report?
-5. Your time-based validation gives macro-F1 0.55, the leaderboard gives 0.41. List three possible explanations.
+5. Your random cross-validation gives accuracy 0.96, the leaderboard gives 0.71. List three possible explanations.
 
 ## Further reading
 

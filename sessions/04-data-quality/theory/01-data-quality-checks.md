@@ -1,6 +1,6 @@
 # Data quality: dimensions, checks and validation rules as tests
 
-This page covers the first block of the session. Before any analysis, we need to know whether the data can be trusted: are values missing, out of range, duplicated or contradictory? We first name the **dimensions** of data quality, then write **checks** for types, ranges, duplicates and consistency as code, and finally turn the checks into **validation rules** that run automatically as tests. The practice task is a data quality report for the review data ([workbook 03](../workbooks/03-case-study-quality-report.ipynb)).
+This page covers the first block of the session. Before any analysis, we need to know whether the data can be trusted: are values missing, out of range, duplicated or contradictory? We first name the **dimensions** of data quality, then write **checks** for types, ranges, duplicates and consistency as code, and finally turn the checks into **validation rules** that run automatically as tests. The practice task is a data quality report for the BTI decisions of the case study ([workbook 03](../workbooks/03-case-study-quality-report.ipynb)).
 
 ```mermaid
 flowchart LR
@@ -19,33 +19,33 @@ flowchart LR
 
 **Data quality** describes how well data fit their intended use. The same dataset can be good enough for one question and useless for another. Six **dimensions** are commonly used to structure the assessment (they appear, with small variations, in ISO/IEC 25012 and in the guidance of statistical offices such as the European Statistical System):
 
-| Dimension | Question | Example in the review data |
+| Dimension | Question | Example in the BTI decisions |
 |---|---|---|
-| **Completeness** | Are required values present? | price missing for 82.5 % of products |
-| **Validity** | Do values have the right type, format and range? | rating must be an integer from 1 to 5 |
-| **Uniqueness** | Is each real-world entity recorded once? | 602 extra reviews by the same user for the same product |
-| **Consistency** | Do related values agree, within and across tables? | `label` must match `rating`; `train_n_reviews` must equal the number of reviews |
-| **Accuracy** | Do values describe reality correctly? | is the price the actual selling price? (needs an external source) |
-| **Timeliness** | Are data recent enough for the question? | reviews end in December 2021 |
+| **Completeness** | Are required values present? | keywords missing for 0.4 % of decisions; 510 end dates are the placeholder 1900-01-01 |
+| **Validity** | Do values have the right type, format and range? | a heading has four digits; 1,040 CN codes have only 4 or 6 instead of 8 |
+| **Uniqueness** | Is each real-world entity recorded once? | 14,175 descriptions repeat an earlier one (ignoring case and spaces), mostly renewals |
+| **Consistency** | Do related values agree, within and across tables? | the CN code starts with the heading; a valid decision has no invalidation reason; the heading exists in the nomenclature (51 decisions fail) |
+| **Accuracy** | Do values describe reality correctly? | is the heading the correct classification? Customs later invalidated 4,487 training decisions as incorrectly classified (code 64) |
+| **Timeliness** | Are data recent enough for the question? | training decisions end in December 2023; the nomenclature is the 2022 version |
 
-A worked example by hand. Five rows of a product table:
+A worked example by hand. Five rows of a decision table (invented references):
 
-| parent_asin | price | store | n_reviews |
-|---|---|---|---|
-| A1 | 12.99 | VitaCo | 3 |
-| A2 | | VitaCo | 1 |
-| A3 | −4.00 | | 2 |
-| A1 | 12.99 | VitaCo | 3 |
-| A4 | 9.50 | PillBox | 0 |
+| bti_reference | heading | cn_code | language | end_date |
+|---|---|---|---|---|
+| DE-1 | 9503 | 95030075 | de | 2026-05-09 |
+| DE-2 | 9503 | | de | 2026-06-01 |
+| FR-1 | 6403 | 64041990 | fr | 2025-01-31 |
+| DE-1 | 9503 | 95030075 | de | 2026-05-09 |
+| PL-1 | 3926 | 39261000 | PL | 1900-01-01 |
 
-Completeness: price missing in 1 of 5 rows (20 %), store in 1 of 5. Validity: −4.00 is not a valid price. Uniqueness: A1 appears twice. Consistency: if the review table has 2 reviews for A4, `n_reviews = 0` contradicts it.
+Completeness: the CN code is missing in 1 of 5 rows (20 %), and the end date 1900-01-01 is a hidden missing value. Validity: `PL` is not a lower-case language code. Uniqueness: DE-1 appears twice. Consistency: FR-1 has heading 6403, but its CN code starts with 6404.
 
 ```mermaid
 mindmap
   root((Data quality))
     Completeness
       NULL values
-      hidden missing: "", "n/a", 0
+      hidden missing: "", "n/a", 1900-01-01
     Validity
       types
       ranges
@@ -69,29 +69,25 @@ Naming the dimension tells you how to look for a problem and what to do about it
 
 ### How it works in Python
 
-A first overview of completeness, including *hidden* missing values (empty strings), for the products:
+A first overview of completeness, including *hidden* missing values (empty strings and placeholder dates), for the training decisions:
 
 ```python
 import pandas as pd
 
-products = pd.read_parquet("case-study/data/products.parquet")
+decisions = pd.read_parquet("case-study/data/train.parquet")
 overview = pd.DataFrame({
-    "null": products.isna().mean(),
-    "empty_string": products.apply(lambda s: s.eq("").mean() if s.dtype == "str" else 0.0),
-}).round(3)
-print(overview[overview.sum(axis=1) > 0].sort_values("null", ascending=False))
-#                    null  empty_string
-# price             0.825         0.000
-# train_avg_rating  0.082         0.000
-# train_n_reviews   0.082         0.000
-# store             0.039         0.000
-# details           0.016         0.000
-# features          0.000         0.741
-# description       0.000         0.707
-# categories        0.000         1.000
+    "null": decisions.isna().mean(),
+    "empty_string": decisions.apply(lambda s: s.eq("").mean() if s.dtype == object else 0.0),
+}).round(4)
+print(overview[overview.sum(axis=1) > 0])
+#                        null  empty_string
+# invalidation_reason  0.8539           0.0
+# keywords             0.0041           0.0
+print(decisions["end_date"].dt.year.value_counts().sort_index().head(3).to_dict())
+# {1900: 510, 2017: 1192, 2018: 2081}: 510 decisions "end" in 1900
 ```
 
-`categories` has no NULL values, yet it is empty for every product: `isna()` alone would report it as complete.
+`end_date` has no NULL values, yet 510 of its values are not dates of the real world: `isna()` alone would report the column as complete. The 85 % missing invalidation reasons are a different case: a decision that is still valid or ran its normal three years has no reason. Such **structural missingness** is not a defect, but it must be documented, and it must not be imputed.
 
 ### In practice
 
@@ -108,83 +104,73 @@ print(overview[overview.sum(axis=1) > 0].sort_values("null", ascending=False))
 
 A **check** is a rule that every row (or the table as a whole) should satisfy, written so that a program can evaluate it. Four groups of checks cover most problems:
 
-- **Type checks**: each column has the expected data type (integer, text, date, boolean). A rating stored as text (`"5"`) or a date stored as a number of milliseconds signals a loading problem.
-- **Range and domain checks**: values lie in an allowed range (`1 ≤ rating ≤ 5`, `price > 0`, dates within the collection period) or come from an allowed set (`label ∈ {neg, neu, pos}`).
-- **Uniqueness checks**: keys are unique (`review_id`), and real-world entities are not recorded twice (the same user reviewing the same product twice). Exact duplicate rows, duplicate keys and *near* duplicates (same content, different id) are different problems.
-- **Consistency checks**: rules that relate columns (`label` follows from `rating`) or tables (every `reviews.parent_asin` exists in `products`; the stored `train_avg_rating` equals the mean rating of the product's reviews).
+- **Type checks**: each column has the expected data type (integer, text, date, boolean). A heading stored as a number (`901` instead of `"0901"`) or a date stored as text (`"05/06/2023"`) signals a loading problem.
+- **Range and domain checks**: values lie in an allowed range (start dates within the collection period, end date not before the start date) or come from an allowed set (`status ∈ {VALID, INVALID}`), and codes follow their format (four digits for a heading).
+- **Uniqueness checks**: keys are unique (`bti_reference`), and real-world entities are not recorded twice. Exact duplicate rows, duplicate keys and *near* duplicates (same content, different id: a renewed decision with the same description) are different problems.
+- **Consistency checks**: rules that relate columns (`chapter` is the first two digits of `heading`; a valid decision has no invalidation reason) or tables (every `decisions.heading` exists in `nomenclature`).
 
 Each finding gets a **severity**: *critical* (a key or hard rule is broken; the data cannot be used as they are), *major* (many rows or a central variable; must be handled before analysis), *minor* (document it; handle it when it matters).
 
 ### Why it matters
 
-Checks written as code can be rerun after every data update, reviewed by colleagues and compared over time. A check that produces a count ("602 rows fail") is more useful than one that only says "fail": the count tells you whether the problem is an exception or a pattern.
+Checks written as code can be rerun after every data update, reviewed by colleagues and compared over time. A check that produces a count ("510 rows fail") is more useful than one that only says "fail": the count tells you whether the problem is an exception or a pattern.
 
 ### How it works in Python
 
-Checks on the reviews, each returning the number of failing rows:
+Checks on the decisions, each returning the number of failing rows:
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train.parquet")
-products = pd.read_parquet("case-study/data/products.parquet")
-expected_label = pd.cut(reviews["rating"], [0, 2, 3, 5], labels=["neg", "neu", "pos"]).astype(str)
+decisions = pd.read_parquet("case-study/data/train.parquet")
+nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
 
 checks = {
-    # type
-    "rating is an integer":            int(reviews["rating"].dtype.kind != "i"),
-    # range and domain
-    "rating outside 1..5":             (~reviews["rating"].between(1, 5)).sum(),
-    "helpful_vote negative":           reviews["helpful_vote"].lt(0).sum(),
-    "date outside 2001-2021":          (~reviews["date"].between("2001-01-01", "2021-12-31 23:59:59")).sum(),
-    "text empty":                      reviews["text"].str.strip().eq("").sum(),
+    # validity: formats and ranges
+    "heading not four digits":             (~decisions["heading"].str.fullmatch(r"\d{4}")).sum(),
+    "CN code not eight digits":            (~decisions["cn_code"].str.fullmatch(r"\d{8}")).sum(),
+    "start date outside 2017-2023":        (~decisions["start_date"].between("2017-01-01", "2023-12-31")).sum(),
+    "end date before start date":          (decisions["end_date"] < decisions["start_date"]).sum(),
+    "description shorter than 20":         decisions["description"].str.len().lt(20).sum(),
     # uniqueness
-    "review_id duplicated":            reviews["review_id"].duplicated().sum(),
-    "same user and product again":     reviews.duplicated(["user_id", "parent_asin"]).sum(),
-    "text duplicated":                 reviews["text"].duplicated().sum(),
+    "bti_reference duplicated":            decisions["bti_reference"].duplicated().sum(),
+    "description duplicated":              decisions["description"].duplicated().sum(),
     # consistency
-    "label does not match rating":     reviews["label"].ne(expected_label).sum(),
-    "product unknown (foreign key)":   (~reviews["parent_asin"].isin(products["parent_asin"])).sum(),
+    "CN code does not start with heading": (decisions["cn_code"].str[:4] != decisions["heading"]).sum(),
+    "valid, but invalidation reason":      (decisions["status"].eq("VALID") & decisions["invalidation_reason"].notna()).sum(),
+    "heading unknown (foreign key)":       (~decisions["heading"].isin(nomenclature["heading"])).sum(),
 }
 print(pd.Series(checks, name="n_failed").to_string())
-# rating is an integer                 0
-# rating outside 1..5                  0
-# helpful_vote negative                0
-# date outside 2001-2021               0
-# text empty                          95
-# review_id duplicated                 0
-# same user and product again        602
-# text duplicated                  30859
-# label does not match rating          0
-# product unknown (foreign key)        0
+# heading not four digits                    0
+# CN code not eight digits                1040
+# start date outside 2017-2023               0
+# end date before start date               510
+# description shorter than 20               69
+# bti_reference duplicated                   0
+# description duplicated                 11556
+# CN code does not start with heading        0
+# valid, but invalidation reason             0
+# heading unknown (foreign key)             51
 ```
 
-The duplicated texts are mostly short and generic. Whether they are a problem depends on the question:
+A count is the start of an investigation, not its end. The 510 decisions that "end before they start" turn out to be one pattern:
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train.parquet", columns=["text"])
-print(reviews["text"].value_counts().head(4).to_string())
-# text
-# Good             938
-# Great product    863
-# Great            832
-# Works great      575
+decisions = pd.read_parquet("case-study/data/train.parquet")
+early = decisions["end_date"] < decisions["start_date"]
+print(decisions.loc[early, ["end_date", "invalidation_reason"]].value_counts().to_string())
+# end_date    invalidation_reason
+# 1900-01-01  55                     510
+counts = decisions["description"].value_counts()
+print(counts.head(3).rename(lambda t: t[:45].replace("\n", " ")).to_string())
+# SQL{DECODE(NVL([NEU],0), 1, NVL('[WARENBESCHR    63
+# Wendeschneidplatten  - nicht gefasste und unt    38
+# Antragsangaben: Hundefutter in Aufmachung für    34
 ```
 
-A consistency check across tables: is the stored product rating the mean of its reviews?
-
-```python
-import numpy as np
-import pandas as pd
-
-reviews = pd.read_parquet("case-study/data/train.parquet", columns=["parent_asin", "rating"])
-products = pd.read_parquet("case-study/data/products.parquet")
-recomputed = reviews.groupby("parent_asin")["rating"].mean().rename("recomputed")
-joined = products.set_index("parent_asin").join(recomputed, how="inner")
-print(len(joined), np.isclose(joined["train_avg_rating"], joined["recomputed"]).all())   # 55359 True
-```
+All of them are annulled decisions (invalidation code 55 in the Commission's BTI guidance) with the placeholder end date 1900-01-01: not typing errors but a convention of the database, so the right treatment is "set to missing", not "correct the year". The most frequent description is not a description at all but the text of a database template; with small variants it appears in 73 German decisions of 2017–2020, under 35 different headings. The next ones are renewals: the same product, decided again.
 
 ### In practice
 
@@ -196,7 +182,7 @@ print(len(joined), np.isclose(joined["train_avg_rating"], joined["recomputed"]).
 > Do not "fix" a failing check by changing the data by hand in a spreadsheet. Every correction belongs in the cleaning code, with a reason (block 3). Otherwise the next data update brings the problem back and nobody knows why the numbers changed.
 
 > [!TIP]
-> Severity depends on the question. 95 empty review texts are irrelevant for an analysis of ratings over time, but they matter for text classification. Record the finding once and decide per use.
+> Severity depends on the question. 73 template descriptions are irrelevant for counting decisions per country, but they matter for text classification. Record the finding once and decide per use.
 
 ## Validation rules as tests
 
@@ -214,7 +200,7 @@ sequenceDiagram
     participant L as Loading script
     participant V as Validation (pytest / pandera)
     participant A as Analysis
-    L->>V: new reviews table
+    L->>V: new decisions table
     V->>V: run all rules
     alt all rules pass
         V-->>A: table released
@@ -231,7 +217,7 @@ Data change: a new download, a new year, a changed export format. Tests catch th
 
 ### How it works in Python
 
-Rules as pytest tests (excerpt from [`workbooks/quality/test_review_quality.py`](../workbooks/quality/test_review_quality.py)). Run them with `uv run --with pytest pytest sessions/04-data-quality/workbooks/quality -v`:
+Rules as pytest tests (excerpt from [`workbooks/quality/test_bti_quality.py`](../workbooks/quality/test_bti_quality.py)). Run them with `uv run --with pytest pytest sessions/04-data-quality/workbooks/quality -v`:
 
 ```python
 import pandas as pd
@@ -239,53 +225,59 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def reviews():
+def decisions():
     return pd.read_parquet("case-study/data/train.parquet")
 
 
-def test_review_id_is_primary_key(reviews):
-    assert reviews["review_id"].is_unique
+def test_bti_reference_is_primary_key(decisions):
+    assert decisions["bti_reference"].is_unique
 
 
-def test_rating_range(reviews):
-    assert reviews["rating"].between(1, 5).all()
+def test_cn_code_starts_with_heading(decisions):
+    assert (decisions["cn_code"].str[:4] == decisions["heading"]).all()
 
 
-@pytest.mark.xfail(strict=True, reason="known: 95 reviews have an empty text")
-def test_raw_text_not_empty(reviews):
-    assert reviews["text"].str.strip().ne("").all()
+@pytest.mark.xfail(strict=True, reason="known: 510 annulled decisions carry the placeholder end date 1900-01-01")
+def test_raw_end_not_before_start(decisions):
+    assert (decisions["end_date"] >= decisions["start_date"]).all()
 
 # pytest output: ..x  (2 passed, 1 xfailed)
 ```
 
-The same rules as a pandera schema; `lazy=True` collects all failures instead of stopping at the first:
+The same kind of rules as a pandera schema; `lazy=True` collects all failures instead of stopping at the first:
 
 ```python
-# requires pandera: uv run --with pandera python ...
+# pandera is part of the course environment (otherwise: uv run --with pandera python ...)
 import pandas as pd
 import pandera.pandas as pa
 
-reviews = pd.read_parquet("case-study/data/train.parquet")
+decisions = pd.read_parquet("case-study/data/train.parquet")
 schema = pa.DataFrameSchema(
     {
-        "review_id": pa.Column(str, unique=True),
-        "rating": pa.Column(int, pa.Check.in_range(1, 5)),
-        "text": pa.Column(str, pa.Check(lambda s: s.str.strip().str.len() > 0, error="text is empty")),
-        "label": pa.Column(str, pa.Check.isin(["neg", "neu", "pos"])),
-        "helpful_vote": pa.Column(int, pa.Check.ge(0)),
+        "bti_reference": pa.Column(str, unique=True),
+        "heading": pa.Column(str, pa.Check.str_matches(r"^\d{4}$")),
+        "cn_code": pa.Column(str, pa.Check.str_matches(r"^\d{8}$")),
+        "status": pa.Column(str, pa.Check.isin(["VALID", "INVALID"])),
+        "description": pa.Column(str, pa.Check(lambda s: ~s.str.upper().str.contains("SQL{", regex=False),
+                                               error="database template")),
+        "end_date": pa.Column("datetime64[ns]", pa.Check.ge(pd.Timestamp("2017-01-01"))),
     },
-    unique=["user_id", "parent_asin"],   # one review per user and product
+    unique=["description", "heading", "issuing_country", "start_date"],   # the same decision twice?
 )
 try:
-    schema.validate(reviews, lazy=True)
+    schema.validate(decisions, lazy=True)
 except pa.errors.SchemaErrors as err:
     print(err.failure_cases.groupby(["column", "check"]).size())
-# parent_asin  multiple_fields_uniqueness    1139
-# text         text is empty                   95
-# user_id      multiple_fields_uniqueness    1139
+# cn_code          str_matches('^\d{8}$')                            1040
+# description      database template                                   73
+#                  multiple_fields_uniqueness                       11151
+# end_date         greater_than_or_equal_to(2017-01-01 00:00:00)      510
+# heading          multiple_fields_uniqueness                       11151
+# issuing_country  multiple_fields_uniqueness                       11151
+# start_date       multiple_fields_uniqueness                       11151
 ```
 
-The uniqueness rule reports 1,139 rows: all rows involved in a repeated user–product pair (537 pairs), not only the 602 extra rows.
+The uniqueness rule reports 11,151 rows: all rows involved in 3,959 groups of decisions with the same description, heading, country and start date, not only the 7,192 "extra" rows that `duplicated()` counts. Such groups are typically one product filed in several variants (colours, sizes) on the same day.
 
 ### In practice
 
@@ -301,11 +293,11 @@ The uniqueness rule reports 1,139 rows: all rows involved in a repeated user–p
 
 ## Check your understanding
 
-1. Assign each finding to a dimension: (a) 74 % of products have an empty feature list; (b) the same user reviewed the same product twice on the same day; (c) a product's `train_n_reviews` differs from the number of its reviews; (d) reviews end in 2021 but the question concerns 2024.
-2. Why does `products["categories"].isna().mean()` return 0, although the column contains no information?
-3. Write a range check and a consistency check for the `date` column of the reviews.
+1. Assign each finding to a dimension: (a) 1,273 decisions have no keywords; (b) the same description was decided twice on the same day by the same country; (c) a decision's chapter differs from the first two digits of its heading; (d) the training decisions end in 2023 but the model must classify decisions of 2025.
+2. Why does `decisions["end_date"].isna().mean()` return 0, although 510 end dates carry no information?
+3. Write a range check and a consistency check for the `start_date` column of the decisions.
 4. What is the difference between a check that fails and a test marked `xfail`? When is `xfail` appropriate?
-5. pandera reports 1,139 failing rows for the user–product uniqueness rule, while `duplicated()` counts 602. Explain the difference.
+5. pandera reports 11,151 failing rows for the four-column uniqueness rule, while `duplicated()` counts 7,192. Explain the difference.
 
 ## Further reading
 

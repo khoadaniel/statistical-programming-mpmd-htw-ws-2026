@@ -1,6 +1,6 @@
 # Lag features, backtesting and forecast metrics
 
-The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test over several years. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. The page ends with a model recommendation for the review series.
+The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test over several years. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. The page ends with a model recommendation and a forecast of the next twelve months of BTI decisions.
 
 The code blocks build on each other; run them in order from the repository root.
 
@@ -12,11 +12,12 @@ from sklearn.model_selection import TimeSeriesSplit
 from statsmodels.tsa.exponential_smoothing.ets import ETSModel
 
 pd.set_option("display.width", 120)
-reviews = pd.read_parquet("case-study/data/train.parquet", columns=["date"])
-y = reviews.set_index("date").resample("MS").size()["2012":"2021"].rename("reviews")
+counts = pd.read_parquet("case-study/data/monthly_counts.parquet")
+y = (counts[counts["issuing_country"] != "GB"].groupby("month")["n_decisions"].sum()
+     ["2010":"2026-09"].rename("decisions"))
 y.index.freq = "MS"
 log_y = np.log(y)
-train, test = y[:"2020"], y["2021"]
+train, test = y[:"2025-09"], y["2025-10":]
 ```
 
 ## Machine learning with lag features
@@ -30,9 +31,9 @@ For a forecast of the next 12 months there are two strategies:
 - **Direct**: use only lags of 12 or more. Then every feature is known for all 12 forecast months, and one model predicts all of them.
 - **Recursive**: predict one month ahead with lags 1, 2, …, then feed the prediction back in as a lag for the next month. Errors can accumulate.
 
-Small example: to predict March 2021 directly 12 months ahead, the features are lag 12 (March 2020), lag 13 (February 2020) and lag 24 (March 2019), all known in December 2020. Lag 1 (February 2021) is not known in December 2020 and must not be used.
+Small example: to predict March 2026 directly from a forecast origin at the end of September 2025, the features are lag 12 (March 2025), lag 13 (February 2025) and lag 24 (March 2024), all known in September 2025. Lag 1 (February 2026) is not known in September 2025 and must not be used.
 
-Tree ensembles (Session 10) cannot predict values outside the range of the training targets: a forest trained up to a level of 7,000 never forecasts 8,000. On trending series this is a real limitation; transforming the target (logs, differences, growth rates) helps.
+Tree ensembles (Session 10) cannot predict values outside the range of the training targets: a forest trained on months with at most 4,900 decisions never forecasts 5,500. On trending series this is a real limitation; transforming the target (logs, differences, growth rates) helps.
 
 ```mermaid
 flowchart LR
@@ -56,18 +57,18 @@ for lag in (12, 13, 24):                       # only values known 12 months bef
     frame[f"lag{lag}"] = log_y.shift(lag)
 frame["month"] = frame.index.month
 frame = frame.dropna()                         # the first 24 months have no lag 24
-print(frame.loc["2021-03-01"].round(2).to_dict())
-# {'target': 8.91, 'lag12': 8.59, 'lag13': 8.8, 'lag24': 8.34, 'month': 3.0}
+print(frame.loc["2026-03-01"].round(2).to_dict())
+# {'target': 8.24, 'lag12': 8.26, 'lag13': 8.23, 'lag24': 8.26, 'month': 3.0}
 
-X_train, y_train = frame.loc[:"2020"].drop(columns="target"), frame.loc[:"2020", "target"]
-X_test = frame.loc["2021"].drop(columns="target")
+X_train, y_train = frame.loc[:"2025-09"].drop(columns="target"), frame.loc[:"2025-09", "target"]
+X_test = frame.loc["2025-10":].drop(columns="target")
 hgb = HistGradientBoostingRegressor(min_samples_leaf=5, random_state=0).fit(X_train, y_train)
 lag_fc = pd.Series(np.exp(hgb.predict(X_test)), index=test.index)
 print(len(X_train), f"training rows, MAE {np.mean(np.abs(test - lag_fc)):.0f}")
-# 84 training rows, MAE 1722
+# 165 training rows, MAE 339
 ```
 
-84 training rows remain, and the lag model is worse in 2021 than all baselines of page 1 (naive 1,162). `min_samples_leaf=5` is needed because the default of 20 leaves almost no splits on so few rows. Workbook 06 (scikit-learn) shows lag features with more data, and workbook 09 (MLForecast) builds them automatically for many series.
+165 training rows remain. In the hold-out year the lag model (MAE 339) is about as good as the naive forecast (349) and worse than seasonal naive (258) and ETS (282). `min_samples_leaf=5` is needed because the default of 20 leaves almost no splits on so few rows. Workbook 06 (scikit-learn) shows lag features with more data, and workbook 09 (MLForecast) builds them automatically for many series.
 
 ### In practice
 
@@ -90,24 +91,24 @@ One hold-out year is one sample of forecast performance. **Rolling-origin backte
 ```mermaid
 flowchart LR
     subgraph F1["Fold 1"]
-        A1["Train 2012-2016"] --> B1["Test 2017"]
+        A1["Train 2010 to Sep 2021"] --> B1["Test Oct 2021 to Sep 2022"]
     end
     subgraph F2["Fold 2"]
-        A2["Train 2012-2017"] --> B2["Test 2018"]
+        A2["Train 2010 to Sep 2022"] --> B2["Test Oct 2022 to Sep 2023"]
     end
     subgraph F3["Fold 3"]
-        A3["Train 2012-2018"] --> B3["Test 2019"]
+        A3["Train 2010 to Sep 2023"] --> B3["Test Oct 2023 to Sep 2024"]
     end
     subgraph F4["Fold 4"]
-        A4["Train 2012-2019"] --> B4["Test 2020"]
+        A4["Train 2010 to Sep 2024"] --> B4["Test Oct 2024 to Sep 2025"]
     end
     subgraph F5["Fold 5"]
-        A5["Train 2012-2020"] --> B5["Test 2021"]
+        A5["Train 2010 to Sep 2025"] --> B5["Test Oct 2025 to Sep 2026"]
     end
     F1 --> F2 --> F3 --> F4 --> F5
 ```
 
-scikit-learn's `TimeSeriesSplit(n_splits=5, test_size=12)` produces exactly these five folds on 120 months. StatsForecast and MLForecast have `cross_validation` methods that do the same for many series (workbooks 08 and 09).
+scikit-learn's `TimeSeriesSplit(n_splits=5, test_size=12)` produces exactly these five folds on the 201 months. StatsForecast and MLForecast have `cross_validation` methods that do the same for many series (workbooks 08 and 09).
 
 ### Why it matters
 
@@ -146,7 +147,7 @@ Worked example: the training series 10, 12, 14, 11, 13, 15 with m = 3. The seaso
 
 ### Why it matters
 
-Scaled errors make results comparable across series and across folds with different levels, which is why forecasting competitions (M4) used MASE. Reporting MAE alongside keeps the result understandable ("about 900 reviews per month off").
+Scaled errors make results comparable across series and across folds with different levels, which is why forecasting competitions (M4) used MASE. Reporting MAE alongside keeps the result understandable ("about 280 decisions per month off").
 
 ### How it works in Python
 
@@ -167,34 +168,47 @@ for train_idx, test_idx in TimeSeriesSplit(n_splits=5, test_size=12).split(y):
     point, interval = forecasts(y_tr, y_te.index)
     covered = ((y_te >= interval["pi_lower"]) & (y_te <= interval["pi_upper"])).mean()
     for name, fc in point.items():
-        results.append({"year": y_te.index[0].year, "model": name, "MAE": mae(y_te, fc),
+        results.append({"test from": y_te.index[0].strftime("%Y-%m"), "model": name, "MAE": mae(y_te, fc),
                         "MASE": mase(y_te, fc, y_tr), "ETS coverage": covered})
 bt = pd.DataFrame(results)
-print(bt.pivot(index="year", columns="model", values="MASE").round(2))
-# model    ETS  lag model  naive  seasonal naive
-# year
-# 2017    0.92       0.47   0.64            0.65
-# 2018    0.79       0.62   0.72            0.69
-# 2019    1.18       0.89   1.17            1.27
-# 2020    0.90       2.13   0.92            1.73
-# 2021    1.06       1.69   1.14            1.42
+print(bt.pivot(index="test from", columns="model", values="MASE").round(2))
+# model       ETS  lag model  naive  seasonal naive
+# test from
+# 2021-10    0.50       0.87   0.90            0.74
+# 2022-10    0.81       0.69   0.80            1.03
+# 2023-10    0.68       0.87   0.91            1.01
+# 2024-10    0.53       0.53   1.15            0.78
+# 2025-10    0.65       0.78   0.80            0.59
 print(bt.groupby("model")[["MAE", "MASE"]].mean().round(2))
-#                     MAE  MASE
+#                    MAE  MASE
 # model
-# ETS              931.27  0.97
-# lag model       1112.50  1.16
-# naive            881.17  0.92
-# seasonal naive  1100.38  1.15
-print(bt.groupby("year")["ETS coverage"].first().to_list())   # [1.0, 1.0, 1.0, 1.0, 1.0]
+# ETS             280.04  0.63
+# lag model       330.42  0.75
+# naive           402.97  0.91
+# seasonal naive  366.68  0.83
+print(bt.groupby("test from")["ETS coverage"].first().round(2).to_list())   # [0.92, 1.0, 0.92, 1.0, 1.0]
 ```
 
 ### Reading the backtest and recommending a model
 
-- **No model wins every year.** The lag model is best from 2017 to 2019, when growth was steady, and worst in 2020 and 2021, when the series broke its pattern; trees cannot extrapolate beyond the levels they have seen.
-- **Naive and ETS are close on average** (MASE 0.92 and 0.97). The difference is smaller than the spread across years.
-- **The ETS intervals covered every month in every fold.** A 95 % interval that never misses is probably too wide; with 60 test months we would expect about three misses.
+- **ETS is best on average and never bad.** Its mean MASE is 0.63; it is the best or joint best model in three of the five folds, and its worst fold (0.81) is better than the worst fold of every other model. The seasonal naive forecast won the hold-out year of pages 1 and 2, but over five folds it is only third (MASE 0.83): one year would have led to the wrong choice.
+- **The lag model beats the baselines but not ETS** (MASE 0.75). With one short series there is little for a tree ensemble to learn that the seasonal pattern and the level do not already say.
+- **The ETS intervals are close to their promise.** They covered 58 of 60 test months (97 %) for a nominal 95 %: about right, slightly conservative.
 
-A defensible recommendation for the monthly review forecast: **damped ETS on log counts**, reported with its 95 % interval, because its accuracy matches the best baseline, it models the January peak explicitly, and it provides an interval that has held in five out of five backtest years. Report it together with the naive forecast as a benchmark, state that the intervals are conservative, and refit every month.
+A defensible recommendation for the monthly decision forecast: **damped ETS on log counts**, reported with its 95 % interval, because it has the lowest error in the backtest, models the December dip explicitly and gives intervals whose coverage has been checked. Report the seasonal naive forecast as a benchmark and refit every month. The forecast for the next twelve months, fitted on all data up to September 2026:
+
+```python
+final = ETSModel(log_y, error="add", trend="add", damped_trend=True,
+                 seasonal="add", seasonal_periods=12).fit(disp=False)
+outlook = np.exp(final.get_prediction(start="2026-10-01", end="2027-09-01").summary_frame(alpha=0.05))
+print(outlook.loc[["2026-12-01", "2027-03-01"], ["mean", "pi_lower", "pi_upper"]].round(0))
+#               mean  pi_lower  pi_upper
+# 2026-12-01  3293.0    2713.0    3997.0
+# 2027-03-01  4128.0    3370.0    5057.0
+print(round(outlook["mean"].sum()))   # 45085 decisions expected from October 2026 to September 2027
+```
+
+The intervals are for single months. The interval for the twelve-month total is not the sum of the monthly limits (errors partly cancel); it would need a simulation from the model.
 
 ```mermaid
 flowchart TD
@@ -219,15 +233,15 @@ flowchart TD
 > [!CAUTION]
 > **Tuning on the backtest makes it optimistic.** If you choose hyperparameters (or the model) on the same folds you report, hold out a final period or report the result as a model-selection result, not as an estimate of future accuracy.
 
-*Practice (block 3):* case study: backtest the models and recommend one with its prediction interval: Part 3 of [10-case-study-review-forecast.ipynb](../workbooks/10-case-study-review-forecast.ipynb).
+*Practice (block 3):* case study: backtest the models and recommend one with its prediction interval: Part 3 of [10-case-study-decision-forecast.ipynb](../workbooks/10-case-study-decision-forecast.ipynb).
 
 ## Check your understanding
 
-1. For a forecast made on 31 December 2020 for June 2021, which of these features may be used: lag 1, lag 6, lag 12, the month, a 3-month rolling mean of the shifted series `y.shift(12)`?
-2. Why can a gradient-boosting model trained on levels up to 7,000 not forecast 8,000? How does a log transform or a growth target change this?
+1. For a forecast made on 30 September 2026 for March 2027, which of these features may be used: lag 1, lag 6, lag 12, the month, a 3-month rolling mean of the shifted series `y.shift(12)`?
+2. Why can a gradient-boosting model trained on months with at most 4,900 decisions not forecast 5,500? How does a log transform or a growth target change this?
 3. Compute the MASE scale for the training series 5, 7, 6, 8, 9, 7 with m = 2.
-4. Model A has a mean MASE of 0.92, model B 0.97, and the MASE of each varies between 0.6 and 1.2 across years. Would you call A better? What else would you report?
-5. A 95 % interval covers 60 of 60 test months. Is that good news? What would you do?
+4. Seasonal naive won the hold-out year, ETS won the five-fold backtest. Which result do you trust more, and why?
+5. A 95 % interval covers 58 of 60 test months. Is it well calibrated? What would 60 of 60 or 45 of 60 suggest?
 
 ## Further reading
 

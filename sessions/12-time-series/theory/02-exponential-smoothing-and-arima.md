@@ -111,7 +111,7 @@ A prediction interval is not a **confidence interval**. A confidence interval de
 
 A 95 % interval is **calibrated** if about 95 % of future values fall inside it. This **coverage** can be checked in a backtest (page 3).
 
-![Line chart of monthly decisions 2021 to 2026 with the ETS point forecast for October 2025 to September 2026 and a shaded 95 % interval that widens slightly from about 3,000-4,400 to 2,900-4,450; all actual values lie inside](figures/ets_interval.png)
+![Line chart of monthly decisions 2021 to 2026 with the ETS point forecast for October 2025 to September 2026 and a shaded 95 % interval of roughly plus or minus 20 % around it that follows the seasonal pattern; all actual values lie inside, December 2025 close to the lower limit](figures/ets_interval.png)
 
 ### Why it matters
 

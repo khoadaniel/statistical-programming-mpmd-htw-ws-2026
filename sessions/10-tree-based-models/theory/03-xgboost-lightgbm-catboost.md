@@ -205,7 +205,7 @@ print(lgbm.best_iteration_, round(roc_auc_score(y_te, lgbm.predict_proba(Xc_te)[
 With the high learning rate 0.3, XGBoost's validation log loss reaches its minimum of 0.383 at round 25 (26 trees, counting from 0) and rises afterwards; training stopped 20 rounds later. LightGBM with the smaller learning rate 0.05 needs 208 trees. Both reach a test AUC similar to the fixed 300-tree models. CatBoost accepts `eval_set` and `early_stopping_rounds` in `fit`; `HistGradientBoostingClassifier` has `early_stopping=True` with an internal `validation_fraction`. The workbook [10-gradient-boosting-early-stopping.ipynb](../workbooks/10-gradient-boosting-early-stopping.ipynb) plots the curves.
 
 > [!CAUTION]
-> Never use the test set as `eval_set`. The number of trees is then chosen on the test data, and the test score is no longer an independent estimate. For time-ordered data (the reviews), the validation set must be *later* than the training rows.
+> Never use the test set as `eval_set`. The number of trees is then chosen on the test data, and the test score is no longer an independent estimate. For time-ordered data (the BTI decisions), the validation set must be *later* than the training rows.
 
 ## 5. Tuning
 
@@ -256,6 +256,9 @@ The search prefers very small trees (5 leaves) and a low learning rate, which fi
 
 > [!WARNING]
 > Early stopping inside `RandomizedSearchCV` is tricky: the validation set for early stopping would have to be split off each training fold. Either fix the number of trees in the search (as above) or search with a fixed learning rate and use early stopping only for the final fit.
+
+> [!CAUTION]
+> **Many classes, few rows per class.** A multiclass booster fits one tree per class and round. For a class with few rows, the second derivative of the loss (the hessian) in a leaf is close to zero, and the Newton step of the leaf value, gradient divided by hessian, explodes. On the case study, with the 97 chapters as classes and 150 text components as features, LightGBM with the default `min_sum_hessian_in_leaf=0.001` reached only about 15 % validation accuracy, and `HistGradientBoostingClassifier` with the default `l2_regularization=0` only 13 %; with `min_sum_hessian_in_leaf=1.0`, respectively `l2_regularization=1.0`, both reached 75 %. If a multiclass booster is worse than a constant prediction, suspect this first.
 
 ## Practice
 

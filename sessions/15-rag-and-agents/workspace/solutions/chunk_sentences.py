@@ -1,4 +1,4 @@
-"""Exercise 2: sentence-based chunking (replace the stub in src/review_assistant/chunking.py)."""
+"""Exercise 2: sentence-based chunking (replace the stub in src/bti_assistant/chunking.py)."""
 
 import re
 

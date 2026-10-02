@@ -159,7 +159,7 @@ print(pd.Series(np.abs(sv_leak.values).mean(axis=0), index=leak_te.columns)
 # {'retention_offer': 1.112, 'Contract': 0.698, 'tenure': 0.344}
 ```
 
-The test AUC jumps from 0.842 to 0.918, and the SHAP summary shows one feature far ahead of contract type, which domain experts know as the strongest churn driver. The right reaction is not to celebrate but to ask *when* `retention_offer` is recorded. The same check on the case study reveals `train_avg_rating` as the top feature of a leaky review model.
+The test AUC jumps from 0.842 to 0.918, and the SHAP summary shows one feature far ahead of contract type, which domain experts know as the strongest churn driver. The right reaction is not to celebrate but to ask *when* `retention_offer` is recorded. The same check on the case study would reveal a feature built from `classification_justification` (Session 9) as the top feature of a leaky heading model.
 
 ### In practice
 
@@ -224,7 +224,7 @@ print(round(roc_auc_score(yt, p_cur), 3), round(roc_auc_score(yt, p_ch), 3),
 # 0.844 0.845 [-0.005  0.007]
 ```
 
-The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the 95 % bootstrap interval of the difference, from −0.005 to +0.007, contains 0. The honest conclusion for the churn data: **keep the logistic regression**. It is as accurate, faster, has fewer dependencies, and its coefficients are easy to explain. On the review data the same procedure gives a different answer, because there the boosted model is clearly better (see the leaderboard notebook).
+The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the 95 % bootstrap interval of the difference, from −0.005 to +0.007, contains 0. The honest conclusion for the churn data: **keep the logistic regression**. It is as accurate, faster, has fewer dependencies, and its coefficients are easy to explain. On the case study the same procedure also says "keep the current model", and much more clearly: the linear classifier on the TF-IDF matrix is 17 percentage points more accurate than the boosted model on dense text components (next section and the leaderboard notebook).
 
 > [!TIP]
 > Write the comparison down as a small table: metric with interval, training time, prediction time per 1,000 rows, model size, and one sentence on explainability. Decide with the table, not with the first line.
@@ -237,9 +237,22 @@ The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the
 > [!WARNING]
 > Comparing many challengers on the same test set and picking the best overfits the test set, just as tuning on it would. Use cross-validation to choose; use the test set once, for the final comparison.
 
+## 4. The case study: a boosted model is not always the challenger that wins
+
+The leaderboard task has 1,114 headings and the description as its main input. Gradient boosting cannot use the sparse TF-IDF matrix with 100,000 columns well, so the leaderboard notebook compresses it into 150 dense components (truncated SVD, Sessions 11 and 13) and adds the Session 9 features: text statistics, language, country, year and month. On the 50,000-decision sample, fitted on 2017–2021 and validated on 2022–2023:
+
+| Model | Accuracy | Macro-F1 | Chapter accuracy | Fit time (laptop) |
+|---|---|---|---|---|
+| current: linear classifier (`SGDClassifier`, hinge loss) on the TF-IDF matrix | 0.779 | 0.512 | 0.847 | about 30 s |
+| challenger: LightGBM on 150 text components + 10 metadata features | 0.610 | 0.291 | 0.736 | about 7 min |
+
+The 95 % bootstrap interval of the accuracy difference (challenger − current) is [−0.175, −0.162]: the challenger is clearly worse. On the public leaderboard, the challenger trained on the whole sample reaches an accuracy of 0.647 and a macro-F1 of 0.293 (private part, 2025–2026: 0.614 and 0.268), far below the 0.806 of the linear model on the same sample (case-study README). Permutation importance explains why: shuffling the block of 150 text components lowers the accuracy by 0.60, shuffling any metadata column by at most 0.004. The model depends on the text, and the 150 components keep only 28 % of the variance of the TF-IDF matrix. A plausible explanation of the gap is that fine distinctions, such as the material words that separate 6403 (leather uppers) from 6404 (textile uppers), are partly lost in the compression; an exercise in the notebook tests it with more components. A booster also needs one tree per class and round, 1,114 × 150 trees here, which makes it slow to fit and to predict.
+
+The general lesson: tree ensembles are the default for **tabular** data with a modest number of informative columns, such as the Telco churn table. For text with many classes, linear models on sparse features (Session 13) or embeddings (Session 14) are usually stronger. This is a result to report, not a failure: L2 shows what the flexible model costs and what it does not buy.
+
 ## Practice
 
-Leaderboard round L2 in [20-case-study-leaderboard-gradient-boosting.ipynb](../workbooks/20-case-study-leaderboard-gradient-boosting.ipynb): train a gradient boosting model on the leakage-free features of Session 9 (text statistics, metadata, date features, past product mean and count), tune it with a time-based cross-validation and macro-F1, handle the neutral class with class weights, compare it with the Session 8 logistic regression as the current model, inspect it with permutation importance and SHAP, and write the submission file `review_id,label` for the test set.
+Leaderboard round L2 in [20-case-study-leaderboard-gradient-boosting.ipynb](../workbooks/20-case-study-leaderboard-gradient-boosting.ipynb): build dense features (150 text components from character n-gram TF-IDF, text statistics, language, country, date), train LightGBM with settings that survive many rare classes, compare it with the linear text model as the current model on a time-based validation with a bootstrap interval, inspect it with permutation importance by feature group, and write the submission file `id,heading` for the test set.
 
 ## Check your understanding
 
@@ -248,6 +261,7 @@ Leaderboard round L2 in [20-case-study-leaderboard-gradient-boosting.ipynb](../w
 3. A SHAP base value is −1.0 and the contributions of a customer are +0.8, −0.3 and +0.5. What is the model's log-odds and probability for this customer?
 4. A new feature makes the test AUC jump from 0.84 to 0.92 and dominates the SHAP summary. What do you check before using it?
 5. A challenger wins 9 of 15 folds with a mean AUC difference of +0.001. Would you replace the current model? What else would you consider?
+6. Why may 150 text components lose the information that separates heading 6403 from 6404, although the full TF-IDF matrix keeps it?
 
 ## Further reading
 

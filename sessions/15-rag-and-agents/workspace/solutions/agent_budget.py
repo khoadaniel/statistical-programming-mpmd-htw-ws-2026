@@ -1,7 +1,7 @@
-"""Exercise 3: a token budget guardrail (replace run_agent in src/review_assistant/agent.py)."""
+"""Exercise 3: a token budget guardrail (replace run_agent in src/bti_assistant/agent.py)."""
 
-from review_assistant.agent import AGENT_SYSTEM, AgentResult, Step, _assistant_turn
-from review_assistant.tools import ToolBox
+from bti_assistant.agent import AGENT_SYSTEM, AgentResult, Step, _assistant_turn
+from bti_assistant.tools import ToolBox
 
 
 def run_agent(question: str, client, model: str, toolbox: ToolBox, max_steps: int = 6,

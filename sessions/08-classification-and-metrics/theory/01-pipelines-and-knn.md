@@ -16,7 +16,7 @@ flowchart LR
 
 ## Classification tasks and baselines
 
-**Concept.** A **classification** task predicts a category, the **class**, from features. With two classes (churn yes/no, spam/not spam) it is **binary**; with more (neg/neu/pos sentiment) it is **multiclass**. By convention the class of interest, usually the rarer one, is called the **positive** class and coded 1; here, "churns".
+**Concept.** A **classification** task predicts a category, the **class**, from features. With two classes (churn yes/no, spam/not spam) it is **binary**; with more (the four-digit HS heading of a customs decision, about 1,100 classes in the course case study) it is **multiclass**. By convention the class of interest, usually the rarer one, is called the **positive** class and coded 1; here, "churns".
 
 Before any model, define **baselines**: simple predictions that a model must beat to be worth its cost.
 
@@ -55,7 +55,8 @@ The rule beats the majority baseline slightly in accuracy and, unlike it, finds 
 **In practice.**
 - Telecom and subscription businesses have long used rule-based churn flags (contract type, tenure, complaints) in customer relationship management systems; a churn model is judged against these rules.
 - E-mail spam filtering started with hand-written rules (SpamAssassin's scored rule sets) before learned classifiers were added on top; the rules remain a baseline.
-- The course leaderboard lists "always positive" (macro-F1 0.26) as its baseline; every submission should beat it.
+- The course leaderboard lists "always the most frequent heading" (3926, other articles of plastics; accuracy 0.041, macro-F1 0.000 on the 2024 decisions) as its baseline; every submission should beat it.
+- Customs authorities answer classification questions with the help of earlier decisions on similar goods; a search in the public EBTI database is the human version of a nearest-neighbour rule.
 
 > [!WARNING]
 > On imbalanced data, a high accuracy can mean nothing more than "predicts the majority class". Always report the majority-class baseline next to your model.
@@ -201,7 +202,7 @@ In a real project, *k* would be chosen by cross-validation on the training data 
 - Anomaly detection (Session 11) often uses the distance to the *k*-th nearest neighbour as an outlier score.
 
 > [!WARNING]
-> k-NN has to compare each new case with all stored training cases. With hundreds of thousands of reviews and many features, prediction becomes slow; use it on small tables or with approximate nearest-neighbour indexes.
+> k-NN has to compare each new case with all stored training cases. With hundreds of thousands of customs decisions and tens of thousands of text features, prediction becomes slow; use it on small tables or with approximate nearest-neighbour indexes.
 
 > [!CAUTION]
 > With many one-hot or irrelevant features, all points become roughly equally far apart (the "curse of dimensionality") and k-NN degrades. Select or reduce features first, or prefer logistic regression.

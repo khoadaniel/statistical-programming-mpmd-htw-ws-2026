@@ -126,7 +126,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Tabular data with pandas in a notebook
 - Tips for using AI coding assistants
 
-*Practice:* Case study: download the review data with the provided script and answer five questions about the reviews in a notebook
+*Practice:* Case study: download the EBTI decisions with the provided script and answer five questions about them in a notebook
 
 **2:00–2:45**
 
@@ -136,7 +136,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - A first introduction to object-oriented programming (classes, objects, attributes, methods)
 - When to use a notebook and when an application
 
-*Practice:* Turn the notebook analysis into a module with a small class that loads and summarises the reviews
+*Practice:* Turn the notebook analysis into a module with a small class that loads and summarises the decisions
 
 **Team project until the next session.** Teams of three are formed and shortlist three project topics.
 
@@ -159,7 +159,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Exceptions and error handling
 - Automated tests with pytest
 
-*Practice:* Write and test a class that validates and cleans a review record
+*Practice:* Write and test a class that validates and cleans the record of one BTI decision
 
 **1:00–1:45**
 
@@ -176,7 +176,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Pull requests and code review
 - Continuous integration with GitHub Actions (ruff and pytest on every pull request)
 
-*Practice:* Case study: contribute a tested module of simple text features through a reviewed pull request; teams set up their repository with CI
+*Practice:* Case study: contribute a tested module of simple features of the description of goods through a reviewed pull request; teams set up their repository with CI
 
 **Team project until the next session.** Team repository from the template, with branch protection and CI.
 
@@ -202,7 +202,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Aggregation with GROUP BY and HAVING
 - INNER and LEFT JOIN; NULL values in joins and aggregates
 
-*Practice:* Answer first questions about the reviews in SQL; average rating per store; join reviews with product prices and count products without a price
+*Practice:* Answer first questions about the decisions in SQL; decisions per country and year; join headings to their English names; find headings without any decision
 
 **1:00–1:45**
 
@@ -211,7 +211,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Loading data reproducibly with an ingestion script and constraints
 - Documenting a dataset (data card)
 
-*Practice:* Case study: load reviews and products into PostgreSQL with the provided script; rank products by reviews per year with a window function; write a short data card
+*Practice:* Case study: load decisions and nomenclature into PostgreSQL with the provided script; rank headings per country and year with a window function; write a short data card
 
 **2:00–2:45**
 
@@ -220,7 +220,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - The same query in SQL, pandas and Polars
 - Choosing a tool: SQL database, pandas or Polars, depending on data size and task
 
-*Practice:* Case study: run the same aggregation on all 494,121 reviews in pandas and Polars and compare code, runtime and memory use
+*Practice:* Case study: run the same aggregation on the raw EBTI export (1.05 million decisions) in SQL, pandas and Polars and compare code, runtime and memory use
 
 **Team project until the next session.** Identify the project's data sources and load a first extract into the team database.
 
@@ -242,7 +242,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Checks for types, ranges, duplicates and consistency
 - Validation rules as tests
 
-*Practice:* Write a data quality report for the review data
+*Practice:* Write a data quality report for the BTI decisions
 
 **1:00–1:45**
 
@@ -251,7 +251,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Missing-value indicators
 - Univariate outliers (IQR rule, z-score, median absolute deviation)
 
-*Practice:* Is a missing product price related to the number of reviews? Compare imputation methods
+*Practice:* Is a missing keyword list related to the issuing country, language or year? Compare imputation methods; find outliers in description length and validity
 
 **2:00–2:45**
 
@@ -259,7 +259,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)
 - A documented cleaning pipeline
 
-*Practice:* Case study: produce the cleaned review table with a log of the cleaning decisions
+*Practice:* Case study: produce the cleaned decision table with a log of the cleaning decisions
 
 **Team project until the next session.** Project charter: question, stakeholder, emphasis (analytics or machine learning), metric, baseline, data loaded.
 
@@ -282,7 +282,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Describing data by variable type: distributions, centre and spread, robust summaries, frequency tables
 - Choosing and designing charts with matplotlib, seaborn and Plotly (perception, colour, accessibility, annotation)
 
-*Practice:* Rating distribution and number of reviews per month; improve a poorly designed chart
+*Practice:* Languages, description length and number of decisions per month; improve a poorly designed chart
 
 **1:00–1:45**
 
@@ -291,7 +291,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - A/B tests as an application
 - Choosing a test from a decision table
 
-*Practice:* Do verified purchases rate differently? Label × verified purchase: significant but negligible
+*Practice:* Are German descriptions longer than French ones? Issuing country × section (chi-square, Cramér's V): large, moderate and significant-but-negligible effects
 
 **2:00–2:45**
 
@@ -299,7 +299,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - From correlation to the regression line (the bridge to Session 6)
 - Communicating findings in a short report or a Streamlit dashboard
 
-*Practice:* Case study: correlation of text length and helpful votes; a one-page report or dashboard for a product manager
+*Practice:* Case study: correlation of description length and number of keywords, confounding by language; a one-page report or dashboard of decisions per month for a customs analyst
 
 **Team project until the next session.** Exploratory and statistical findings of the project, presented in a short team review.
 
@@ -331,14 +331,14 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Simple and multiple linear regression (least squares, coefficients, residuals)
 - Regression metrics (MAE, RMSE, R²)
 
-*Practice:* Map the review-sentiment task to the ten steps; split the data and model the number of helpful votes with linear regression
+*Practice:* Map the heading-classification task to the ten steps; split the data and model the length of the description (log scale) with linear regression
 
 **1:00–1:45**
 
 - Underfitting and overfitting: model complexity (polynomial degree), training versus test error, the bias–variance trade-off
 - Robust regression (Huber, quantile regression) for data with outliers
 
-*Practice:* Compare training and test error for increasing model complexity; compare least squares and robust regression on helpful votes
+*Practice:* Compare training and test error for increasing model complexity; compare least squares and robust regression on how long early-invalidated decisions stayed valid
 
 **2:00–2:45**
 
@@ -379,7 +379,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Validation curves and learning curves to diagnose underfitting and overfitting
 - Hyperparameter tuning with GridSearchCV and RandomizedSearchCV
 
-*Practice:* Tune the ridge penalty and the regularisation of logistic regression; compare random and time-based validation on the reviews
+*Practice:* Tune the ridge penalty and the regularisation of logistic regression; compare random and time-based validation for the heading classifier
 
 **2:00–2:45**
 
@@ -448,7 +448,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - High-cardinality categories: grouping rare categories, target encoding and its leakage risk
 - Custom transformers in scikit-learn pipelines
 
-*Practice:* Build date, interaction and target-encoded store features for the reviews
+*Practice:* Build date, interaction and target-encoded features for the decisions, validated by time
 
 **1:00–1:45**
 
@@ -456,7 +456,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Target leakage through aggregates
 - Simple text statistics as features
 
-*Practice:* Case study: detect a leaking product-rating feature (it contains the review's own rating) and replace it with the mean of earlier reviews of the same product
+*Practice:* Case study: detect the leaking justification column (it names the heading and is missing in the test data) and replace a leaky description lookup by a past-only one
 
 **2:00–2:45**
 
@@ -467,7 +467,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Resampling inside the cross-validation only, never on validation or test data
 - Pipelines with imbalanced-learn
 
-*Practice:* Case study: compare undersampling, oversampling, SMOTE and class weights for the rare neutral class of the reviews by macro-F1
+*Practice:* Case study: compare undersampling, oversampling, SMOTE and class weights for rare headings by macro-F1
 
 **Team project until the next session.** Feature set for the project model, documented in the repository.
 
@@ -535,7 +535,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Density-based clustering (DBSCAN)
 - Evaluating and interpreting clusters (silhouette, stability, cluster profiles)
 
-*Practice:* Compare k-means, hierarchical clustering and DBSCAN on product-level features
+*Practice:* Compare k-means, hierarchical clustering and DBSCAN on the decisions of one chapter
 
 **2:00–2:45**
 
@@ -544,7 +544,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Model-based anomaly detection with Isolation Forest and local outlier factor, continuing the outliers of Session 4
 - Clusters and components as features
 
-*Practice:* Case study: cluster products by their review statistics, visualise them with PCA and test whether cluster membership improves the tree-based model of Session 10
+*Practice:* Case study: cluster the decisions of one chapter, map them with truncated SVD and t-SNE, find decisions far from their heading's centroid and test whether cluster features improve the tree-based model of Session 10
 
 **Team project until the next session.** Segmentation or anomaly detection where it supports the project.
 
@@ -566,7 +566,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Aggregating to regular time intervals with pandas
 - Baselines (naive, seasonal naive, moving average)
 
-*Practice:* Compute the monthly number of reviews and its baseline forecasts
+*Practice:* Compute the monthly number of BTI decisions and its baseline forecasts
 
 **1:00–1:45**
 
@@ -604,7 +604,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Bag-of-words computed by hand
 - Sparse, high-dimensional matrices
 
-*Practice:* Build the vocabulary of the reviews and inspect the document-term matrix
+*Practice:* Build the vocabulary of the descriptions of goods across languages and inspect the document-term matrix
 
 **1:00–1:45**
 
@@ -621,7 +621,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Dimensionality reduction with truncated SVD
 - Limits of word counts (word order, synonyms) as the motivation for language models
 
-*Practice:* Analyse 20 misclassified reviews and improve the classifier
+*Practice:* Analyse 20 misclassified decisions with their English keywords and heading texts, and improve the classifier
 
 **Team project until the next session.** Text features where the project uses text; otherwise model improvement.
 
@@ -643,13 +643,13 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models
 - Embedding models (sentence-transformers)
 
-*Practice:* Tokenise reviews and compare token counts; compute semantic similarity between review sentences
+*Practice:* Tokenise descriptions and compare token counts across languages; compute semantic similarity between descriptions of the same goods in different languages
 
 **1:00–1:45**
 
 - Applications of embedding models: semantic search, clustering (with the methods of Session 11) and classification features compared with TF-IDF
 
-*Practice:* Embedding features versus TF-IDF on a subsample; nearest-neighbour search over reviews
+*Practice:* Embedding features versus TF-IDF on a subsample; nearest-neighbour search over decisions in several languages
 
 **2:00–2:45**
 
@@ -657,7 +657,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Zero-shot and few-shot classification with structured output
 - Comparison with a trained model on quality, cost, latency and data protection
 
-*Practice:* Case study: compare an LLM with the trained classifier on 200 reviews
+*Practice:* Case study: compare an LLM, choosing among ten candidate headings, with the trained classifier on 200 decisions
 
 **Team project until the next session.** Decide with evidence whether a language-model component improves the project.
 
@@ -678,21 +678,21 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Why retrieval: knowledge cut-off, hallucination, sources
 - The components of RAG: chunking, embedding, vector search in PostgreSQL with pgvector, prompt assembly, answers with citations
 
-*Practice:* Build semantic search over the reviews in PostgreSQL
+*Practice:* Build semantic search over past decisions in PostgreSQL
 
 **1:00–1:45**
 
 - Evaluating RAG: a test set of questions, recall@k, groundedness and human ratings
 - Improving retrieval (chunk size, hybrid search, re-ranking)
 
-*Practice:* Case study: a RAG prototype that answers questions about products from their reviews, with recall@5 on ten labelled questions
+*Practice:* Case study: a RAG classification assistant that proposes a heading from similar past decisions with cited BTI references, evaluated with heading hit@5 on labelled requests
 
 **2:00–2:45**
 
 - Agents: tool calling, the loop of planning, acting and observing, function schemas
 - Risks (error propagation, costs, prompt injection) and guardrails
 
-*Practice:* Build a small agent with two tools (an SQL query and the review search) and evaluate it on ten tasks
+*Practice:* Build a small agent with three tools (an SQL query, the similar-decision search, a nomenclature look-up) and evaluate it on ten tasks
 
 **Team project until the next session.** Language-model component of the project, where chosen, with its evaluation.
 
@@ -714,7 +714,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - The prediction API with FastAPI and pydantic, building on Session 2
 - Tests for the service
 
-*Practice:* Build and test version 1 of the sentiment service
+*Practice:* Build and test version 1 of the heading service (top three headings with scores)
 
 **1:00–1:45**
 
@@ -730,7 +730,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Retraining triggers and versioning
 - Documenting a model in a model card
 
-*Practice:* Case study: the 2022 labels are released as feedback data; detect the shift (negative share 19 % → 26 %), retrain and make the final leaderboard submission, ranked on the 2023 reviews
+*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no decisions from the United Kingdom after Brexit, a lower share of chapter 85, a few unseen headings), retrain and make the final leaderboard submission, ranked on the 2025–2026 decisions
 
 **Team project until the next session.** Release: dashboard or deployed model, repository and documentation complete.
 
@@ -771,13 +771,13 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 The running case study uses decisions from the European Commission's **European Binding Tariff Information (EBTI)** database. A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The course task is to predict the four-digit HS heading of a decision from its description of goods. Why this dataset was chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
 
-The prepared data contain 309,529 training decisions (2017–2023) and 113,188 test decisions (2024–2026), with 1,114 headings in the training data. Descriptions are written in the language of the issuing country: 57 % German, 16 % French and the rest in 20 other EU languages; each training decision also carries English keywords. A second table holds the HS nomenclature (sections, chapters, headings) in English, and a third the monthly number of decisions since 2004.
+The prepared data contain 309,529 training decisions (2017–2023) and 113,188 test decisions (2024–2026), with 1,114 headings in the training data. Descriptions are written in the language of the issuing country: 57 % German, 16 % French and the rest in more than 20 other EU languages; each training decision also carries English keywords. A second table holds the HS nomenclature (sections, chapters, headings) in English, and a third the monthly number of decisions since 2004.
 
 | Part | Use of the dataset |
 |---|---|
 | Foundations and data | Loading with pandas and into PostgreSQL; SQL across decisions and nomenclature; Polars on the full export of 1.05 million decisions; data-quality checks (impossible dates, duplicates, code formats); cleaned table |
 | Analytics | Decisions by country, language and chapter; description length across languages; country × section contingency tables; a dashboard of decisions over time |
-| Machine learning | Regression and robust regression on decision durations; validation with time-based splits; a classifier for 1,000+ headings with accuracy, macro-F1 and abstention; features without leakage and the long tail of rare headings; tree-based models; clusters and unusual decisions; forecast of monthly decision counts (Brexit, COVID); multilingual TF-IDF; multilingual embeddings and LLMs; a retrieval-based classification assistant; deployed service, drift and retraining |
+| Machine learning | Regression and robust regression on decision durations; validation with time-based splits; a classifier for 1,000+ headings with accuracy, macro-F1 and abstention; features without leakage and the long tail of rare headings; tree-based models; clusters and unusual decisions; forecast of monthly decision counts (with the Brexit break); multilingual TF-IDF; multilingual embeddings and LLMs; a retrieval-based classification assistant; deployed service, drift and retraining |
 
 ### Leaderboard
 

@@ -31,38 +31,32 @@ def save(fig, name):
 
 
 def missingness_pattern():
-    p = pd.read_parquet(DATA / "products.parquet")
-    miss = pd.DataFrame({
-        "price": p["price"].isna(),
-        "features (empty)": p["features"].eq(""),
-        "description (empty)": p["description"].eq(""),
-        "train_avg_rating": p["train_avg_rating"].isna(),
-        "store": p["store"].isna(),
-        "details": p["details"].isna(),
-    })
-    n_reviews = p["train_n_reviews"].fillna(0)
-    sample = miss.assign(n=n_reviews).sample(400, random_state=0).sort_values("n", ascending=False)
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4), layout="constrained", width_ratios=[1.2, 1])
+    d = pd.read_parquet(DATA / "train.parquet",
+                        columns=["issuing_country", "keywords", "status", "invalidation_reason", "start_date", "end_date"])
+    by_country = d.groupby("issuing_country").agg(share=("keywords", lambda s: s.isna().mean()), n=("keywords", "size"))
+    by_country = by_country[by_country["n"] >= 1000].sort_values("share", ascending=False)
+    days = (d["end_date"] - d["start_date"]).dt.days
+    group = np.select([d["status"].eq("VALID"), days.between(1094, 1096)],
+                      ["valid", "invalid,\nfull 3 years"], "invalid,\nended early")
+    structural = d["invalidation_reason"].isna().groupby(group).mean().reindex(
+        ["valid", "invalid,\nfull 3 years", "invalid,\nended early"])
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4), layout="constrained", width_ratios=[1.5, 1])
     ax = axes[0]
-    ax.imshow(sample.drop(columns="n").to_numpy().T, aspect="auto", interpolation="nearest",
-              cmap=plt.matplotlib.colors.ListedColormap(["#f1f0ec", BLUE]))
-    ax.set_yticks(range(miss.shape[1]), [f"{c}  {miss[c].mean():.0%}" for c in miss.columns])
-    ax.set_xticks([0, len(sample) - 1], ["most reviews", "fewest"])
-    ax.set_title("Missing (blue) in 400 random products, sorted by number of reviews", fontsize=10)
-    for s in ax.spines.values():
-        s.set_visible(False)
-    bins = pd.cut(n_reviews, [-1, 0, 1, 5, 20, 100, np.inf], labels=["0", "1", "2-5", "6-20", "21-100", ">100"])
-    share = miss["price"].groupby(bins, observed=True).mean()
+    ax.bar(by_country.index, by_country["share"] * 100, color=BLUE, width=0.65)
+    overall = d["keywords"].isna().mean() * 100
+    ax.axhline(overall, color=MUTED, ls="--", lw=1)
+    ax.text(len(by_country) - 0.5, overall + 0.1, f"all: {overall:.1f} %", ha="right", color=MUTED, fontsize=9)
+    ax.set(ylabel="% of decisions without keywords", title="Keywords missing: depends on the issuing country (not MCAR)")
+    ax.tick_params(axis="x", labelsize=8.5)
     ax = axes[1]
-    ax.bar(share.index.astype(str), share.values, color=BLUE, width=0.65)
-    ax.axhline(miss["price"].mean(), color=MUTED, ls="--", lw=1)
-    ax.text(5.4, miss["price"].mean() + 0.02, f"all: {miss['price'].mean():.0%}", ha="right", color=MUTED, fontsize=9)
-    for x, v in enumerate(share.values):
-        ax.text(x, v + 0.015, f"{v:.0%}", ha="center", fontsize=9, color=INK)
-    ax.set(ylim=(0, 1), xlabel="training reviews per product", ylabel="share with missing price",
-           title="Price missing less often for popular products")
-    ax.grid(axis="y", color=GRID, lw=0.8)
-    ax.set_axisbelow(True)
+    ax.bar(structural.index, structural.values * 100, color=ORANGE, width=0.6)
+    for x, v in enumerate(structural.values):
+        ax.text(x, v * 100 + 2, f"{v:.1%}", ha="center", fontsize=9, color=INK)
+    ax.set(ylim=(0, 115), ylabel="% without invalidation reason",
+           title="Invalidation reason: missing by design")
+    for a in axes:
+        a.grid(axis="y", color=GRID, lw=0.8)
+        a.set_axisbelow(True)
     save(fig, "missingness-pattern.png")
 
 
@@ -79,18 +73,17 @@ def fences(x):
 
 
 def univariate_outliers():
-    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["text"])
-    length = r["text"].str.len().to_numpy()
-    length = length[length > 0]
+    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["description"])
+    length = r["description"].str.len().to_numpy()
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.8), layout="constrained")
     styles = {"IQR rule": (ORANGE, "-"), "z-score |z| > 3": (AQUA, "--"), "MAD rule |z*| > 3.5": (INK, ":")}
     # raw scale
     ax = axes[0]
-    ax.hist(length[length < 3000], bins=80, color="#a9c7ee")
+    ax.hist(length[length < 4000], bins=80, color="#a9c7ee")
     for name, (lo, hi) in fences(length).items():
         share = np.mean((length < lo) | (length > hi))
         ax.axvline(hi, color=styles[name][0], ls=styles[name][1], lw=1.8, label=f"{name}: {share:.1%} flagged")
-    ax.set(title="Review length, raw scale (cut at 3,000)", xlabel="characters", ylabel="reviews")
+    ax.set(title="Description length, raw scale (cut at 4,000)", xlabel="characters", ylabel="decisions")
     ax.legend(fontsize=8.5)
     # log scale
     ax = axes[1]
@@ -102,7 +95,7 @@ def univariate_outliers():
             ax.axvline(v, color=styles[name][0], ls=styles[name][1], lw=1.8,
                        label=f"{name}: {share:.1%} flagged" if v == lo else None)
     ax.set_xticks([0, 1, 2, 3, 4], ["1", "10", "100", "1,000", "10,000"])
-    ax.set(title="Review length, log scale: rules flag both tails", xlabel="characters (log scale)")
+    ax.set(title="Description length, log scale: rules flag both tails", xlabel="characters (log scale)")
     ax.set_ylim(0, ax.get_ylim()[1] * 1.45)
     ax.legend(fontsize=8.5, loc="upper left", frameon=True, facecolor="white", edgecolor="white", framealpha=1)
     for a in axes:
@@ -112,16 +105,15 @@ def univariate_outliers():
 
 
 def box_cox():
-    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["text"])
-    length = r["text"].str.len()
-    length = length[length > 0].to_numpy()
+    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["description"])
+    length = r["description"].str.len().to_numpy()
     transformed, lam = stats.boxcox(length)
     fig, axes = plt.subplots(2, 2, figsize=(11, 6), layout="constrained")
-    for col, (x, title) in enumerate([(length, "before: review length"),
+    for col, (x, title) in enumerate([(length, "before: description length"),
                                       (transformed, f"after: Box–Cox, λ = {lam:.2f}")]):
         ax = axes[0, col]
-        ax.hist(x if col else x[x < 3000], bins=70, color=BLUE)
-        ax.set(title=f"{title}  (skewness {stats.skew(x):.2f})", ylabel="reviews")
+        ax.hist(x if col else x[x < 4000], bins=70, color=BLUE)
+        ax.set(title=f"{title}  (skewness {stats.skew(x):.2f})", ylabel="decisions")
         ax.grid(axis="y", color=GRID, lw=0.8)
         ax.set_axisbelow(True)
         ax = axes[1, col]
@@ -130,7 +122,7 @@ def box_cox():
         (osm, osr), (slope, intercept, _) = stats.probplot(sub, dist="norm")
         ax.scatter(osm, osr, s=6, color=BLUE, alpha=0.5, linewidths=0)
         ax.plot(osm, slope * osm + intercept, color=ORANGE, lw=1.5)
-        ax.set(xlabel="normal quantiles", ylabel="sample quantiles", title="normal Q–Q plot (2,000 reviews)")
+        ax.set(xlabel="normal quantiles", ylabel="sample quantiles", title="normal Q–Q plot (2,000 decisions)")
     save(fig, "box-cox-before-after.png")
 
 

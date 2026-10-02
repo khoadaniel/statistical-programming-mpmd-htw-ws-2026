@@ -1,17 +1,18 @@
-# Model card: review sentiment classifier
+# Model card: HS heading suggestions for customs decisions
 
 Template after Mitchell et al. (2019), *Model Cards for Model Reporting*. Replace every `<...>` and keep
 the card next to the model files: one card per released version. Values marked *example* come from the
-course run of version 1.0.0 and must be replaced with your own.
+course run of version 1.0.0 on the 50,000-decision sample and must be replaced with your own.
 
 ## Model details
 
 | | |
 |---|---|
-| Name and version | review-sentiment `<1.0.0>` (semantic versioning: major = new training data or method) |
+| Name and version | tariff-heading `<1.0.0>` (semantic versioning: major = new training data or method) |
 | Date | `<YYYY-MM-DD>` |
 | Developers | `<team, contact>` |
-| Type | TF-IDF (word 1–2-grams, sublinear tf, min_df 2) + logistic regression (C = 4, balanced class weights) |
+| Type | word TF-IDF (unigrams, sublinear tf, min_df 2) + linear SVM (`SGDClassifier`, hinge loss, alpha 1e-5); coefficients with \|w\| < 0.05 pruned |
+| Output | the three highest-scoring four-digit HS headings with decision scores (margins, not probabilities) and English heading texts |
 | Software | scikit-learn `<version>` (see `metadata.json`), Python `<version>`; locked in `uv.lock` |
 | Files | `model.joblib` (SHA-256 in `metadata.json`), `metadata.json` |
 | Licence | `<licence of the code and the model>` |
@@ -19,67 +20,73 @@ course run of version 1.0.0 and must be replaced with your own.
 
 ## Intended use
 
-- **Primary use:** sort Amazon health and personal care product reviews into `neg` (1–2 stars), `neu` (3) and `pos` (4–5) for *aggregate* reporting: share of negative reviews per product and month.
-- **Primary users:** product and quality teams; the course leaderboard.
-- **Out of scope:** decisions about individual customers or reviewers; other product categories or languages without re-evaluation; medical claims in reviews; moderation (deleting reviews).
+- **Primary use:** suggest candidate HS headings for a description of goods, as a starting point for a customs officer or a trader who searches the tariff; course leaderboard.
+- **Primary users:** classification experts who check every suggestion; students of the course.
+- **Out of scope:** issuing or refusing a Binding Tariff Information decision; classification at subheading (6 digits) or CN (8 digits) level; duty calculation; descriptions outside the EU languages of the training data; use without a person in the loop.
 
 ## Factors
 
 Groups or conditions across which performance may differ, and which the evaluation reports separately:
 
-- review length (short reviews carry little text),
-- verified versus unverified purchases,
-- product category and store,
-- year of the review (drift; see below).
+- language of the description (German 57 %, French 16 %; some languages have a few hundred training decisions only),
+- issuing country (GB issued decisions only until 2020),
+- description length (short descriptions score lower),
+- descriptions that quote their own heading number (about a quarter; nearly always right) versus those that do not,
+- frequency of the heading in training (long tail: about 900 headings, many with fewer than ten examples),
+- start year (drift; HS 2022 revision).
 
 ## Metrics
 
-- **Macro-F1**: every class counts equally, so the rare neutral class matters (leaderboard metric).
-- Accuracy and per-class F1 reported alongside.
-- Uncertainty: bootstrap 95 % interval over the evaluation reviews (200 resamples).
-- Decision threshold: the class with the highest predicted probability.
+- **Accuracy** (leaderboard metric) and **macro-F1** (every heading counts equally; long tail).
+- Top-3 accuracy (is the right heading among the three suggestions?) and chapter accuracy.
+- Uncertainty: bootstrap 95 % interval over the evaluation decisions.
+- Decision rule: the highest score; suggestions with a top score below `<0>` are flagged for review.
 
 ## Evaluation data
 
-- `<e.g. newest 20 % of training reviews (time-based hold-out, up to 2021); 2022 feedback Oct–Dec>`
-- Why: the model is used on *future* reviews, so evaluation data must be newer than training data.
+- `<e.g. newest 20 % of the training decisions (time-based hold-out, 2022-2023); 2024 feedback labels>`
+- Why: the model is used on *future* requests, so evaluation data must be newer than training data.
 
 ## Training data
 
-- Amazon Reviews 2023, Health and Personal Care (McAuley Lab; Hou et al. 2024), reviews up to `<date>`; `<n>` reviews (`train_sample.parquet`, SHA-256 in `metadata.json`) `<+ feedback_2022.csv>`.
-- Label: star rating mapped to three classes; the rating is the author's, not an expert judgement.
-- Class shares in training: `<neg 19.2 %, neu 7.5 %, pos 73.3 %>` *(example)*.
+- European Commission, EBTI database (BTI decisions with start of validity `<2017-2023>`), `<n>` decisions (`train_sample.parquet`, SHA-256 in `metadata.json`) `<+ feedback_2024.csv>`.
+- Input: the description of goods only. Not used: justification, keywords, CN code, status, end date (decided with or after the classification).
+- Label: the four-digit heading of the decision, taken by a customs authority; some decisions were later revoked.
+- Chapter shares in training: `<85: 14.7 %, 84: 7.5 %, 39: 7.0 %, ...>` *(example)*.
 
 ## Quantitative analyses
 
-| Data | Macro-F1 | F1 neg | F1 neu | F1 pos | Accuracy |
-|---|---|---|---|---|---|
-| Validation, newest 20 % up to 2021 | `<0.694>` *(example)* | `<0.80>` | `<0.35>` | `<0.93>` | `<0.86>` |
-| 2022 feedback | `<0.689>` *(example)* | | | | |
-| Subgroup: verified purchases | `< >` | | | | |
-| Subgroup: reviews under 50 characters | `< >` | | | | |
+| Data | Accuracy | Macro-F1 | Top-3 accuracy | Chapter accuracy |
+|---|---|---|---|---|
+| Validation, newest 20 % (2022-2023) | `<0.779>` *(example)* | `<0.519>` | `<0.848>` | `<0.844>` |
+| 2024 feedback | `<0.804>` *(example)* | | | |
+| Subgroup: descriptions in German | `< >` | | | |
+| Subgroup: descriptions under 200 characters | `< >` | | | |
+| Subgroup: no quoted heading number | `< >` | | | |
 
 ## Monitoring and maintenance
 
 | Signal | Statistic | Threshold | Action |
 |---|---|---|---|
-| Input drift: text length | PSI over reference deciles; KS statistic | PSI > 0.25 | review, consider retraining |
-| Prediction drift | predicted class shares; chi-square test | negative share ± 5 points | check with labelled sample |
-| Label shift | true class shares when labels arrive | `<...>` | update reporting; retrain |
-| Performance | macro-F1 on newly labelled reviews | below validation − 0.03 | retrain and compare |
+| Input drift: description length | PSI over reference deciles; KS statistic | PSI > 0.25 | review, consider retraining |
+| Input drift: language, issuing country | PSI over category shares | PSI > 0.25 | check new countries or languages |
+| Prediction drift | PSI of predicted chapter shares | PSI > 0.1 | check with labelled sample |
+| Label shift | PSI of true chapter shares when labels arrive; share of unseen headings | `<...>` | retrain |
+| Performance | accuracy on newly labelled decisions | below validation − 0.03 | retrain and compare |
 
-- Observed so far: `<the negative share rose from 19 % (to 2021) to 26 % (2022); macro-F1 changed from 0.694 to 0.689>` *(example)*.
-- Retraining schedule: `<e.g. when a new year of labels is released, or when a trigger fires>`.
-- Version history: `<1.0.0: trained on reviews to 2021; 2.0.0: + 2022 feedback, ...>`.
+- Observed so far: `<country PSI 0.24 (no GB decisions since 2021); chapter label shift PSI 0.06; 0.4 % unseen headings; accuracy 0.80 on 2024 against 0.78 in validation>` *(example)*.
+- Retraining schedule: `<e.g. once a year when the new year of decisions is labelled, and after each HS revision>`.
+- Version history: `<1.0.0: decisions 2017-2023; 2.0.0: + 2024 feedback, ...>`.
 
-## Ethical considerations
+## Ethical and legal considerations
 
-- Reviews are written by people and can contain personal and health information; the service logs only text length, label and probability, never the text.
-- User ids are hashed in the data and not used by the model.
-- The label is the star rating, not the text: sarcasm, mixed reviews and ratings that contradict the text are misread.
+- Published BTI decisions are public, but a pending request contains confidential business information; the service logs only length, language, top heading and score, never the description.
+- The holders of decisions are not part of the data.
+- A wrong heading can change the duty a trader pays. The model's output is a suggestion; the classification is the responsibility of the customs authority (governance questions: module 3.3).
 
 ## Caveats and recommendations
 
-- The neutral class is hard (F1 about 0.35): do not report neutral shares without their uncertainty.
-- Re-evaluate before using the model on another category, language or platform.
+- Short descriptions often score below zero and miss the right heading; show the three suggestions with their scores, not one answer.
+- Headings created by the HS 2022 revision (for example 8524, flat panel display modules) have few training examples.
+- Re-evaluate after every nomenclature revision and before using the model on another tariff or language.
 - `<limitations you found in the error analysis>`

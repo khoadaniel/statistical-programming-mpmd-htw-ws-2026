@@ -31,12 +31,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
       - name: Tiny model for the smoke test (the real model is never built from data in CI)
-        run: uv run python -m sentiment_service.train --fixture --out models
-      - run: docker build -t sentiment-service:${{ github.sha }} .
+        run: uv run python -m tariff_service.train --fixture --out models
+      - run: docker build -t tariff-service:${{ github.sha }} .
       - name: Smoke test the image
         run: |
-          docker run -d -p 8000:8000 --name api sentiment-service:${{ github.sha }}
+          docker run -d -p 8000:8000 --name api tariff-service:${{ github.sha }}
           curl --retry 10 --retry-connrefused --fail http://localhost:8000/health
           curl --fail -X POST http://localhost:8000/predict \
-               -H "Content-Type: application/json" -d '{"text": "Broke after two days."}'
+               -H "Content-Type: application/json" -d '{"description": "Damenstiefel mit Oberteil aus Rindleder"}'
           docker stop api

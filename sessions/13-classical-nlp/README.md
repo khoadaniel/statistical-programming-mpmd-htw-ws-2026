@@ -17,7 +17,7 @@
 - [Preprocessing (lower-casing, stop words, stemming and lemmatisation)](theory/01-text-as-data.md#preprocessing-lower-casing-stop-words-stemming-and-lemmatisation)
 - [Bag-of-words computed by hand](theory/01-text-as-data.md#bag-of-words-computed-by-hand)
 - [Sparse, high-dimensional matrices](theory/01-text-as-data.md#sparse-high-dimensional-matrices)
-- *Practice:* build the vocabulary of the reviews and inspect the document-term matrix → [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb)
+- *Practice:* build the vocabulary of the descriptions of goods (22 languages) and inspect the document-term matrix → [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb)
 
 **1:00–1:45 · TF-IDF and text classification** ([theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md))
 
@@ -32,53 +32,46 @@
 - [The most informative n-grams per class](theory/03-error-analysis-and-limits.md#the-most-informative-n-grams-per-class)
 - [Dimensionality reduction with truncated SVD](theory/03-error-analysis-and-limits.md#dimensionality-reduction-with-truncated-svd)
 - [Limits of word counts (word order, synonyms) as the motivation for language models](theory/03-error-analysis-and-limits.md#the-limits-of-word-counts)
-- *Practice:* analyse 20 misclassified reviews and improve the classifier → [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb)
+- *Practice:* analyse 20 misclassified decisions (with English keywords and heading texts) and improve the classifier → [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb)
 
 ## Materials
 
 | File | Content | Block | Status |
 |---|---|---|---|
-| [theory/01-text-as-data.md](theory/01-text-as-data.md) | Tokens, vocabulary, preprocessing, bag-of-words, sparse matrices | 1 | core |
-| [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md) | TF-IDF, n-grams, linear classifiers, per-class metrics, leaderboard round L3 | 2 | core |
-| [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Confusion matrix, error categories, top n-grams and shortcuts, truncated SVD, limits of counts | 3 | core |
-| [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb) | Case study: tokens, vocabulary, document-term matrix, Zipf's law, preprocessing | 1 | core |
+| [theory/01-text-as-data.md](theory/01-text-as-data.md) | Tokens, vocabulary, preprocessing in a multilingual corpus (stemming, compounds), bag-of-words, sparse matrices | 1 | core |
+| [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md) | TF-IDF, word and character n-grams, linear SVM with 1,000 headings, validation by time, per-heading metrics, leaderboard round L3 | 2 | core |
+| [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Footwear confusion matrix, error categories, top n-grams and quoted codes, truncated SVD, limits of counts | 3 | core |
+| [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb) | Case study: reading decisions with keywords, tokens per language, document-term matrix, Zipf's law, preprocessing, compounds | 1 | core |
 | [workbooks/02-data100-text-wrangling-regex.ipynb](workbooks/02-data100-text-wrangling-regex.ipynb) | Data 100: string canonicalisation and regular expressions (Polars) | 1 | optional |
 | [workbooks/03-sklearn-hashing-vs-dict-vectorizer.ipynb](workbooks/03-sklearn-hashing-vs-dict-vectorizer.ipynb) | scikit-learn: vectorisers compared, hashing trick, sparse output | 1 | optional |
 | [workbooks/04-sklearn-text-classification-sparse-features.ipynb](workbooks/04-sklearn-text-classification-sparse-features.ipynb) | scikit-learn: linear classifiers on TF-IDF (20 Newsgroups), confusion matrix, top features | 2 | optional |
-| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Case study: TF-IDF classifier, per-class report, `submission.csv` for round L3 | 2 | core |
+| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Case study: word and character TF-IDF classifiers, per-heading report, `submission-L3-tfidf.csv` for round L3 | 2 | core |
 | [workbooks/06-sklearn-document-clustering-lsa.ipynb](workbooks/06-sklearn-document-clustering-lsa.ipynb) | scikit-learn: LSA (truncated SVD) and k-means on news texts | 3 | optional |
-| [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Case study: 20 misclassified reviews, top n-grams, star-title shortcut, improvements | 3 | core |
+| [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Case study: 20 misclassified decisions, top n-grams, quoted heading numbers, improvements | 3 | core |
 
 Sources and licences of third-party files: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Make sure `case-study/data/` exists (run `case-study/prepare_data.py`, see [case-study/README.md](../../case-study/README.md)). Revise logistic regression (Session 6), macro-F1 and the confusion matrix (Session 8), and PCA (Session 11). Read the first section of the scikit-learn tutorial *Working with text data* (link below).
+**Preparation.** Make sure `case-study/data/` exists (run `case-study/prepare_data.py`, see [case-study/README.md](../../case-study/README.md)). Revise logistic regression (Session 6), validation by time (Session 7), accuracy, macro-F1 and the confusion matrix (Session 8), and PCA (Session 11). Read the WCO page *What is the Harmonized System?* (link below) to know what a heading is.
 
 **Team project until the next session.** Text features where the project uses text; otherwise model improvement.
 
 **Further reading (optional).**
 
 - Jurafsky, D. and Martin, J. H. *Speech and Language Processing*, 3rd ed. draft, chapters on words and tokens, naive Bayes and sentiment, logistic regression: https://web.stanford.edu/~jurafsky/slp3/
+- World Customs Organization, *What is the Harmonized System (HS)?*: https://www.wcoomd.org/en/topics/nomenclature/overview/what-is-the-harmonized-system.aspx
 - scikit-learn tutorial *Working with text data*: https://scikit-learn.org/1.4/tutorial/text_analytics/working_with_text_data.html (documentation of version 1.4; the tutorial is not part of later versions)
 - Manning, Raghavan and Schütze, *Introduction to Information Retrieval*, chapters 2 and 6 (tokens, TF-IDF): https://nlp.stanford.edu/IR-book/
-- spaCy 101 (tokenisation, lemmatisation; outlook to linguistic methods in module 3.4): https://spacy.io/usage/spacy-101
-- NLTK book, chapter 3 *Processing raw text*: https://www.nltk.org/book/ch03.html
+- spaCy 101 (tokenisation and lemmatisation in many languages; outlook to linguistic methods in module 3.4): https://spacy.io/usage/spacy-101
 
 ## Setup
 
-Everything except stemming runs in the course environment (`uv sync` at the repository root, then `uv run jupyter lab`). Extra packages:
-
-- `nltk` (Porter stemmer in theory page 1 and workbook 01; no data download needed)
-- optional: `spacy` with the model `en_core_web_sm` for lemmatisation (theory page 1)
+Everything runs in the course environment (`uv sync` at the repository root, then `uv run jupyter lab`); `nltk` (Snowball stemmers for German and French, no data download needed) is part of it.
 
 ```bash
 # from the repository root
-uv run --with nltk jupyter lab
-# optional lemmatisation example
-uv run --with nltk --with spacy \
-  --with "en_core_web_sm@https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" \
-  jupyter lab
+uv run jupyter lab
 ```
 
-Workbooks 03, 04 and 06 download the 20 Newsgroups dataset (about 14 MB) on first use. Workbook 02 reads the small files in [workbooks/data/](workbooks/data/).
+The models are trained on the 50,000-decision sample; the case-study workbooks 05 and 07 take about 8 and 5 minutes on a laptop (the character n-gram model is the slow part). Workbooks 03, 04 and 06 download the 20 Newsgroups dataset (about 14 MB) on first use. Workbook 02 reads the small files in [workbooks/data/](workbooks/data/). The figures of the theory pages are made by [theory/figures/make_figures.py](theory/figures/make_figures.py).

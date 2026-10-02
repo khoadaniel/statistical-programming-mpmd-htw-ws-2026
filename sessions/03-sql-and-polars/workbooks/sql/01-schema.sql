@@ -1,51 +1,45 @@
 -- Schema of the course database with keys and constraints.
 -- Works in PostgreSQL and in DuckDB. Run it once on an empty database,
--- then load the rows (see 10-case-study-postgres-reviews.ipynb).
+-- then load the rows (see 10-case-study-postgres-decisions.ipynb).
 -- Author: course team, licence CC-BY-4.0
 
-DROP TABLE IF EXISTS reviews_test;
-DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS decisions_test;
+DROP TABLE IF EXISTS decisions;
+DROP TABLE IF EXISTS nomenclature;
 
-CREATE TABLE products (
-    parent_asin      TEXT PRIMARY KEY,          -- one row per product
-    main_category    TEXT,
-    title            TEXT NOT NULL,
-    features         TEXT,
-    description      TEXT,
-    price            DOUBLE PRECISION CHECK (price > 0),   -- NULL allowed: price unknown
-    store            TEXT,
-    categories       TEXT,
-    details          TEXT,
-    train_avg_rating DOUBLE PRECISION CHECK (train_avg_rating BETWEEN 1 AND 5),
-    train_n_reviews  INTEGER CHECK (train_n_reviews >= 1)
+CREATE TABLE nomenclature (
+    heading             TEXT PRIMARY KEY CHECK (length(heading) = 4),   -- one row per HS heading
+    heading_description TEXT NOT NULL,
+    chapter             TEXT NOT NULL CHECK (length(chapter) = 2),
+    chapter_description TEXT,
+    section             TEXT,
+    section_name        TEXT
 );
 
-CREATE TABLE reviews (
-    review_id         TEXT PRIMARY KEY,
-    rating            SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    title             TEXT,
-    text              TEXT,
-    parent_asin       TEXT NOT NULL REFERENCES products (parent_asin),  -- foreign key
-    user_id           TEXT NOT NULL,
-    helpful_vote      INTEGER NOT NULL CHECK (helpful_vote >= 0),
-    verified_purchase BOOLEAN NOT NULL,
-    date              TIMESTAMP NOT NULL,
-    n_images          INTEGER NOT NULL CHECK (n_images >= 0),
-    label             TEXT NOT NULL CHECK (label IN ('neg', 'neu', 'pos'))
+CREATE TABLE decisions (
+    bti_reference                TEXT PRIMARY KEY,
+    issuing_country              TEXT NOT NULL CHECK (length(issuing_country) = 2),
+    language                     TEXT NOT NULL CHECK (length(language) = 2),
+    start_date                   DATE NOT NULL,
+    end_date                     DATE,          -- end_date >= start_date fails for 510 rows (Session 4)
+    date_of_issue                DATE,
+    status                       TEXT NOT NULL CHECK (status IN ('VALID', 'INVALID')),
+    invalidation_reason          TEXT,          -- NULL: the decision expired normally or is valid
+    description                  TEXT NOT NULL,
+    keywords                     TEXT,
+    classification_justification TEXT,
+    cn_code                      TEXT NOT NULL,  -- 8 digits, but 1,040 rows have only 4 or 6 (Session 4)
+    heading                      TEXT NOT NULL REFERENCES nomenclature (heading),  -- foreign key
+    chapter                      TEXT NOT NULL CHECK (chapter = substr(heading, 1, 2))
 );
 
-CREATE TABLE reviews_test (
-    review_id         TEXT PRIMARY KEY,
-    title             TEXT,
-    text              TEXT,
-    parent_asin       TEXT NOT NULL REFERENCES products (parent_asin),
-    user_id           TEXT NOT NULL,
-    helpful_vote      INTEGER NOT NULL CHECK (helpful_vote >= 0),
-    verified_purchase BOOLEAN NOT NULL,
-    date              TIMESTAMP NOT NULL,
-    n_images          INTEGER NOT NULL CHECK (n_images >= 0)
+CREATE TABLE decisions_test (
+    id              TEXT PRIMARY KEY,
+    issuing_country TEXT NOT NULL CHECK (length(issuing_country) = 2),
+    language        TEXT NOT NULL CHECK (length(language) = 2),
+    start_date      DATE NOT NULL,
+    description     TEXT NOT NULL
 );
 
-CREATE INDEX reviews_parent_asin_idx ON reviews (parent_asin);
-CREATE INDEX reviews_date_idx ON reviews (date);
+CREATE INDEX decisions_heading_idx ON decisions (heading);
+CREATE INDEX decisions_start_date_idx ON decisions (start_date);

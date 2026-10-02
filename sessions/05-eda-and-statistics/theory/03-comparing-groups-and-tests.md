@@ -1,6 +1,6 @@
 # Comparing groups and testing differences
 
-Many analytical questions compare groups: do verified buyers rate differently from unverified ones, does a new checkout page convert better, is the share of negative reviews the same in every category? This page recaps the tests for such questions as tools to **choose, run and interpret**: the t-test and the Mann–Whitney test for numeric outcomes, the chi-square test and Cramér's V for categorical outcomes, and the A/B test as the main application. Every test result is reported with a **confidence interval** and an **effect size**, because with 50,000 reviews almost any difference becomes "significant". The theory behind the tests belongs to the statistics module; workbooks [10](../workbooks/10-hypothesis-testing.ipynb) and [11](../workbooks/11-hypothesis-testing-by-simulation.ipynb) recap it.
+Many analytical questions compare groups: are German descriptions of goods longer than French ones, does a new checkout page convert better, do customs authorities in different countries classify the same kinds of goods? This page recaps the tests for such questions as tools to **choose, run and interpret**: the t-test and the Mann–Whitney test for numeric outcomes, the chi-square test and Cramér's V for categorical outcomes, and the A/B test as the main application. Every test result is reported with a **confidence interval** and an **effect size**, because with 50,000 decisions almost any difference becomes "significant". The theory behind the tests belongs to the statistics module; workbooks [10](../workbooks/10-hypothesis-testing.ipynb) and [11](../workbooks/11-hypothesis-testing-by-simulation.ipynb) recap it.
 
 ```mermaid
 flowchart LR
@@ -32,22 +32,22 @@ The p-value answers only "could this be zero?". A stakeholder needs "how much, i
 
 ### How it works in Python
 
-A **permutation test** builds the null world directly: if verification status did not matter, shuffling the labels would not change the difference.
+A **permutation test** builds the null world directly: if the language did not matter for the length of a description, shuffling the language labels would not change the difference.
 
 ```python
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
-v = reviews.loc[reviews["verified_purchase"], "n_words"].to_numpy()
-u = reviews.loc[~reviews["verified_purchase"], "n_words"].to_numpy()
-print(round(v.mean(), 1), round(u.mean(), 1))    # 31.1 74.8 words
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+de = decisions.loc[decisions["language"] == "de", "n_chars"].to_numpy()
+fr = decisions.loc[decisions["language"] == "fr", "n_chars"].to_numpy()
+print(round(de.mean(), 1), round(fr.mean(), 1))    # 807.7 342.4 characters
 
-res = stats.permutation_test((v, u), lambda a, b: a.mean() - b.mean(),
+res = stats.permutation_test((de, fr), lambda a, b: a.mean() - b.mean(),
                              n_resamples=2_000, random_state=0)
-print(round(res.statistic, 1), res.pvalue)       # -43.7 0.0009995: no shuffle came close
+print(round(res.statistic, 1), res.pvalue)         # 465.3 0.0009995: no shuffle came close
 ```
 
 With 2,000 shuffles the smallest possible p-value is 1/2,001 ≈ 0.0005; "p < 0.001" is the honest report.
@@ -65,11 +65,11 @@ With 2,000 shuffles the smallest possible p-value is 1/2,001 ≈ 0.0005; "p < 0.
 
 Effect sizes:
 
-- the **difference in means** with its CI, in real units (words, euros, stars): the most useful for readers;
+- the **difference in means** with its CI, in real units (characters, euros, days): the most useful for readers;
 - **Cohen's d** = difference in means / pooled SD. Rough guide: 0.2 small, 0.5 medium, 0.8 large;
 - the **common-language effect size (CLES)** = U / (n₁ · n₂): the probability that a random observation from group 1 exceeds one from group 2 (ties count half). 0.5 means no effect.
 
-Worked example: verified reviews have a mean of 31 words, unverified 75 words, pooled SD about 50 words. Then d ≈ (31 − 75) / 50 ≈ −0.88: a large difference.
+Worked example: German descriptions have a mean of 808 characters, French ones 342 characters, pooled SD about 336 characters. Then d ≈ (808 − 342) / 336 ≈ 1.4: a large difference.
 
 ### Why it matters
 
@@ -82,13 +82,14 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
 
 def compare(df: pd.DataFrame, column: str) -> dict:
-    """Welch t-test, Mann-Whitney U and effect sizes: verified vs not verified."""
-    a = df.loc[df["verified_purchase"], column]
-    b = df.loc[~df["verified_purchase"], column]
+    """Welch t-test, Mann-Whitney U and effect sizes: German vs French decisions."""
+    a = df.loc[df["language"] == "de", column].dropna()
+    b = df.loc[df["language"] == "fr", column].dropna()
     t = stats.ttest_ind(a, b, equal_var=False)
     ci = t.confidence_interval()
     mw = stats.mannwhitneyu(a, b)
@@ -99,16 +100,16 @@ def compare(df: pd.DataFrame, column: str) -> dict:
             "d": round(float((a.mean() - b.mean()) / pooled_sd), 3),
             "cles": round(float(mw.statistic / (len(a) * len(b))), 3)}
 
-print(compare(reviews, "n_words"))
-# {'diff': -43.714, 'ci': (-46.341, -41.087), 'p_t': 6.6e-212, 'p_mw': 0.0, 'd': -0.883, 'cles': 0.29}
-print(compare(reviews, "rating"))
-# {'diff': -0.03, 'ci': (-0.072, 0.013), 'p_t': 0.17, 'p_mw': 0.9, 'd': -0.02, 'cles': 0.5}
+print(compare(decisions, "n_chars"))
+# {'diff': 465.251, 'ci': (458.281, 472.222), 'p_t': 0.0, 'p_mw': 0.0, 'd': 1.384, 'cles': 0.897}
+print(compare(decisions, "n_keywords"))
+# {'diff': 0.256, 'ci': (0.188, 0.323), 'p_t': 1.3e-13, 'p_mw': 1.4e-83, 'd': 0.108, 'cles': 0.569}
 ```
 
 Reading the two results:
 
-- **Length**: unverified reviews are 44 words longer on average (95 % CI 41 to 46 words); d = −0.88 is large; a random verified review is shorter than a random unverified one 71 % of the time (1 − 0.29).
-- **Rating**: the difference is −0.03 stars, the CI includes 0, and d = −0.02. On the full training set (434,373 reviews) the same difference becomes significant (p = 0.02) with d = −0.01. The effect is negligible either way; only the sample size changed.
+- **Length**: German descriptions are 465 characters longer on average (95 % CI 458 to 472 characters); d = 1.38 is very large; a random German description is longer than a random French one 90 % of the time. Part of the reason is the language itself (German compounds, longer sentences), part is how the national administrations write their decisions; the test cannot separate the two.
+- **Keywords**: German decisions carry 0.26 more English keywords on average (CI 0.19 to 0.32). The p-values are tiny, but d = 0.11 is small and CLES = 0.57 is close to 0.5. On the full training set (309,529 decisions) the difference is 0.17 keywords (d = 0.07) and the p-value even smaller (3.8e-31). Only the sample size changed; the effect is small either way.
 
 ### In practice
 
@@ -117,7 +118,7 @@ Reading the two results:
 - Paired t-tests are standard in before–after evaluations of training programmes.
 
 > [!WARNING]
-> **Ratings are ordinal.** A t-test on star ratings treats the scale as interval data. This is common and usually harmless with large samples, but the Mann–Whitney test and the share of 1–2 star reviews are more defensible. Report what the reader cares about.
+> **Counts and ordinal scales.** The number of keywords is a small count (median 6); a t-test treats it as interval data. This is common and usually harmless with large samples, but the Mann–Whitney test, or the share of decisions with more than a given number of keywords, is easier to defend. The same holds for star ratings and other ordinal scales. Report what the reader cares about.
 
 ## Categorical data: contingency tables, chi-square and Cramér's V
 
@@ -129,7 +130,7 @@ E = row total × column total / grand total, and χ² = Σ (O − E)² / E.
 
 Large gaps give a large χ² and a small p-value. **Cramér's V** = √(χ² / (n · (k − 1))), with k the smaller number of rows or columns, rescales χ² to a strength between 0 (no association) and 1 (perfect association). Rough guide for tables with k = 2: 0.1 small, 0.3 medium, 0.5 large.
 
-Worked example (verified × label, sample): 8,751 verified reviews are negative. Expected under independence: 9,609 negative × 45,195 verified / 50,000 = 8,686. The observed count is 65 above expectation: about 0.7 %.
+Worked example (German language × chapter 85, electrical machinery and equipment, sample): 4,333 German-language decisions are in chapter 85. Expected under independence: 7,344 chapter-85 decisions × 28,656 German decisions / 50,000 = 4,209. The observed count is 124 above expectation: about 3 %.
 
 If any expected count is below about 5, use **Fisher's exact test** (2 × 2 tables) instead.
 
@@ -144,30 +145,43 @@ import pandas as pd
 from scipy import stats
 from scipy.stats.contingency import association
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-table = pd.crosstab(reviews["label"], reviews["verified_purchase"])
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+german = decisions["language"].eq("de").rename("german")
+ch85 = decisions["chapter"].eq("85").rename("chapter_85")
+table = pd.crosstab(german, ch85)
 print(table)
-# verified_purchase  False  True
-# label
-# neg                  858   8751
-# neu                  340   3399
-# pos                 3607  33045
+# chapter_85  False  True
+# german
+# False       18333   3011
+# True        24323   4333
 
 res = stats.chi2_contingency(table)
-print(round(res.statistic, 2), round(res.pvalue, 4), res.dof)   # 8.53 0.014 2
+print(round(res.statistic, 2), round(res.pvalue, 4), res.dof)   # 9.95 0.0016 1
 print(pd.DataFrame(res.expected_freq, index=table.index, columns=table.columns).round(0))
-print(round(association(table, method="cramer"), 3))           # 0.013: negligible
-print(pd.crosstab(reviews["label"], reviews["verified_purchase"], normalize="columns").round(3))
-# verified_purchase  False   True
-# neg                0.179  0.194   -> 1.5 percentage points more negative among verified
+print(round(association(table, method="cramer"), 3))           # 0.014: negligible
+print(pd.crosstab(german, ch85, normalize="index").round(3))
+# chapter_85  False   True
+# german
+# False       0.859  0.141
+# True        0.849  0.151   -> 1 percentage point more chapter 85 among German decisions
+
+# a larger table: the six largest issuing countries x the 21 sections of the nomenclature
+nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
+d = decisions.merge(nomenclature[["heading", "section"]], on="heading")
+d = d[d["issuing_country"].isin(d["issuing_country"].value_counts().index[:6])]
+big = pd.crosstab(d["issuing_country"], d["section"])
+res = stats.chi2_contingency(big)
+print(big.shape, res.dof, round(association(big, method="cramer"), 3))   # (6, 21) 100 0.191
+print((res.expected_freq < 5).sum())                                    # 12 cells expected below 5
 ```
 
-**Significant but negligible.** p = 0.014 says the shares are probably not exactly equal; V = 0.013 and a gap of 1.5 percentage points say the difference does not matter for any product decision.
+**Significant but negligible.** p = 0.0016 says the shares are probably not exactly equal; V = 0.014 and a gap of one percentage point say the difference does not matter for any practical purpose. The country × section table is different: V = 0.19 is a small-to-moderate association. Customs authorities in different countries receive requests for different kinds of goods (for example, more chemicals in one country, more machinery in another), which a model of the heading must cope with. Twelve of 126 cells have expected counts below 5, so the p-value of that table is approximate; V is still a useful description.
 
 ### In practice
 
 - Public-health reporting cross-tabulates vaccination status and hospitalisation.
 - Churn analysis compares cancellation rates by subscription plan (Session 6 uses the IBM Telco data).
+- Trade statistics cross-tabulate reporting country × product section to describe the structure of imports (Eurostat Comext).
 - Recruitment audits compare offer rates by applicant group with contingency tables; the Berkeley admissions case on [page 4](04-correlation-and-communication.md#confounding-and-simpsons-paradox) shows why such tables need a closer look.
 
 > [!TIP]
@@ -285,13 +299,15 @@ A wrong test can give a wrong answer: an independent-samples test on paired data
 import pandas as pd
 from scipy import stats
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+main = decisions[decisions["language"].isin(["de", "fr", "en", "nl", "pl"])]
 
-# Three or more groups, skewed outcome -> Kruskal-Wallis: does length differ by label?
-groups = [g["n_words"] for _, g in reviews.groupby("label")]
+# Three or more groups, skewed outcome -> Kruskal-Wallis: does length differ by language?
+groups = [g["n_chars"] for _, g in main.groupby("language")]
 print(stats.kruskal(*groups).pvalue < 0.001)                         # True
-print(reviews.groupby("label")["n_words"].median().to_dict())       # {'neg': 23.0, 'neu': 26.0, 'pos': 19.0}
+print(main.groupby("language")["n_chars"].median().to_dict())
+# {'de': 740.0, 'en': 309.0, 'fr': 272.0, 'nl': 544.0, 'pl': 455.0}
 
 # Small 2 x 2 table -> Fisher's exact test
 print(round(stats.fisher_exact([[8, 2], [1, 5]]).pvalue, 3))        # 0.035
@@ -304,7 +320,7 @@ print(round(stats.fisher_exact([[8, 2], [1, 5]]).pvalue, 3))        # 0.035
 - Experimentation platforms fix the test per metric type (proportion, mean, ratio) so that analysts do not choose after seeing the data.
 
 > [!IMPORTANT]
-> **Practice (block 2).** Do verified purchases rate differently? Run Welch's t-test and the Mann–Whitney test on `rating` by `verified_purchase`, report the difference with its CI and Cohen's d. Then test label × verified purchase with chi-square and Cramér's V and write one sentence that explains why the result is significant but negligible. Notebook: [18-case-study-verified-purchases-and-helpful-votes.ipynb](../workbooks/18-case-study-verified-purchases-and-helpful-votes.ipynb).
+> **Practice (block 2).** Are German descriptions longer than French ones? Run Welch's t-test and the Mann–Whitney test on description length by language, report the difference with its CI, Cohen's d and the CLES. Repeat for the number of keywords. Then test issuing country × section and German language × chapter 85 with chi-square and Cramér's V, and write one sentence that explains which result is significant but negligible. Notebook: [18-case-study-ebti-exploration.ipynb](../workbooks/18-case-study-ebti-exploration.ipynb).
 
 > [!CAUTION]
 > **Many tests.** At α = 0.05, each test on pure noise has a 5 % chance of a false positive; with 20 tests the chance of at least one is 64 %. When you test many metrics or subgroups, correct with Holm or Benjamini–Hochberg (`statsmodels.stats.multitest.multipletests`).
@@ -312,9 +328,9 @@ print(round(stats.fisher_exact([[8, 2], [1, 5]]).pvalue, 3))        # 0.035
 ## Check your understanding
 
 1. A test gives p = 0.03. Which of these statements are correct: "H₀ is false with probability 97 %", "If H₀ were true, data this extreme would occur about 3 % of the time"?
-2. Why can the rating difference be non-significant in the sample and significant in the full training set, with the same effect size?
+2. The keyword difference has p = 1.3e-13 in the sample and p = 3.8e-31 in the full training set, with d around 0.1 in both. Why does the p-value change so much while the effect size hardly does?
 3. When would you prefer the Mann–Whitney test over the t-test?
-4. Compute the expected count of neutral unverified reviews under independence from the table above.
+4. Compute the expected count of non-German decisions in chapter 85 under independence from the table above.
 5. Name two things you must fix before an A/B test starts, and one error that invalidates it.
 
 ## Further reading

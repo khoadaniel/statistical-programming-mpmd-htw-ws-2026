@@ -1,6 +1,6 @@
 # Missing values and univariate outliers
 
-This page covers the second block. Missing values are the most common data quality problem, and how to handle them depends on *why* they are missing. We introduce the three missing-data mechanisms (MCAR, MAR, MNAR), compare simple, KNN and iterative imputation, add missing-value indicators, and finish with three rules for detecting outliers in a single variable: the IQR rule, the z-score and the median absolute deviation. The statistical theory belongs to the statistics module; here we choose, run and interpret the methods. The practice question is whether a missing product price is related to the number of reviews ([workbook 08](../workbooks/08-case-study-missing-prices.ipynb)).
+This page covers the second block. Missing values are the most common data quality problem, and how to handle them depends on *why* they are missing. We introduce the three missing-data mechanisms (MCAR, MAR, MNAR), compare simple, KNN and iterative imputation, add missing-value indicators, and finish with three rules for detecting outliers in a single variable: the IQR rule, the z-score and the median absolute deviation. The statistical theory belongs to the statistics module; here we choose, run and interpret the methods. The practice question is whether a missing keyword list is related to the issuing country, the language or the year, and how well imputation recovers hidden values ([workbook 08](../workbooks/08-case-study-missing-keywords.ipynb)).
 
 ```mermaid
 flowchart TD
@@ -74,33 +74,30 @@ for name, miss in [("MCAR", mcar), ("MAR", mar), ("MNAR", mnar)]:
 # MNAR 0.28 3459 42.4   <- biased, and nothing observed explains it fully
 ```
 
-On the case-study data, a **missingness indicator** (1 = missing) compared across groups shows that missing prices are not MCAR:
+On the case-study data, a **missingness indicator** (1 = missing) compared across groups shows that missing keyword lists are not MCAR:
 
 ```python
-import numpy as np
 import pandas as pd
 
-products = pd.read_parquet("case-study/data/products.parquet")
-products["price_missing"] = products["price"].isna()
-popularity = pd.cut(products["train_n_reviews"].fillna(0), [-1, 0, 1, 5, 20, 100, np.inf],
-                    labels=["0", "1", "2-5", "6-20", "21-100", ">100"])
-print(products.groupby(popularity, observed=True)["price_missing"].mean().round(2).to_string())
-# train_n_reviews
-# 0         0.71
-# 1         0.85
-# 2-5       0.84
-# 6-20      0.82
-# 21-100    0.75
-# >100      0.54
-print(products.groupby(products["features"].eq(""))["price_missing"].mean().round(2).to_string())
-# features
-# False    0.65    <- products with a feature list
-# True     0.89    <- empty feature list
+decisions = pd.read_parquet("case-study/data/train.parquet")
+decisions["keywords_missing"] = decisions["keywords"].isna()
+by_country = decisions.groupby("issuing_country")["keywords_missing"].agg(["mean", "size"])
+print(by_country.query("size >= 1000").sort_values("mean", ascending=False)["mean"].head(4).round(4).to_string())
+# issuing_country
+# SK    0.0433
+# PL    0.0340
+# AT    0.0271
+# BG    0.0081
+print(by_country.loc[["DE", "FR"], "mean"].round(4).to_string())
+# DE    0.0016
+# FR    0.0029
+print(decisions.groupby(decisions["start_date"].dt.year)["keywords_missing"].mean().round(4).to_dict())
+# {2017: 0.0074, 2018: 0.0098, 2019: 0.0019, 2020: 0.0013, 2021: 0.0032, 2022: 0.0027, 2023: 0.0016}
 ```
 
-![Missingness pattern of the product table and share of missing prices by number of reviews](figures/missingness-pattern.png)
+![Share of decisions without keywords by issuing country, and the structural missingness of the invalidation reason by status and validity](figures/missingness-pattern.png)
 
-Popular products and products with a complete product page have a price more often. The group "0" contains products that only appear in the test years (2022–2023); they are newer listings, which have prices more often. Whether the remaining missingness is MAR or MNAR (for example, a price missing *because* the product was discontinued) cannot be decided from these data.
+Only 0.4 % of the keyword lists are missing, but a Slovak decision is 27 times as likely to have none as a German one, and 2017–2018 have more gaps than later years. The issuing office and its practice in a given year explain much of the pattern, which makes MAR a reasonable working assumption; whether a list is also missing *because of* the product (MNAR) cannot be decided from these data. The right panel shows a second kind of missing value. The invalidation reason is missing for 85 % of the decisions **by design**: valid decisions and decisions that ran their three years have none. This **structural missingness** is not a mechanism to correct; it is information in itself, for example as a variable "ended early".
 
 ### In practice
 
@@ -163,7 +160,7 @@ for imputer in [SimpleImputer(strategy="median"), KNNImputer(n_neighbors=10),
 # IterativeImputer  mean 3690  RMSE 496    <- uses age; recovers the true mean (3686)
 ```
 
-On the product prices, the observed columns say little about the price, and model-based imputers barely beat the mean (workbook 08 hides 30 % of the known prices and compares): RMSE on the log price about 0.91 for the mean, 0.91 for the iterative imputer, 0.95 for KNN and 0.87 for the median price of the same store. Imputation cannot create information that the other variables do not contain.
+On the case-study data, workbook 08 hides 30 % of the known numbers of keywords and imputes them from simple description features (length, digits, lines, German or not). The features say little about the number of keywords (correlations of 0.24 and below), and model-based imputers barely beat the mean: RMSE 2.29 keywords for the mean, 2.22 for KNN, 2.20 for the iterative imputer, and 2.15 for the median of decisions with the same heading. Imputation cannot create information that the other variables do not contain.
 
 ### In practice
 
@@ -175,7 +172,7 @@ On the product prices, the observed columns say little about the price, and mode
 > Fit the imputer on the training data only, then apply it to validation and test data. Fitting it on all rows lets the test rows influence the imputed values, a form of data leakage (Session 7).
 
 > [!CAUTION]
-> Never impute the **target** variable of a model and then evaluate on it. And do not impute a value that is missing *by definition* (a "price" for a free sample, a "date of death" for a living patient); use a category or an indicator instead.
+> Never impute the **target** variable of a model and then evaluate on it. And do not impute a value that is missing *by definition* (an invalidation reason for a valid decision, a "date of death" for a living patient); use a category or an indicator instead.
 
 ## Missing-value indicators
 
@@ -183,33 +180,36 @@ On the product prices, the observed columns say little about the price, and mode
 
 Imputation hides the fact that a value was missing. A **missing-value indicator** is an extra 0/1 column that records it: 1 where the original value was missing. In scikit-learn, `MissingIndicator` creates the indicators, and `SimpleImputer(add_indicator=True)` (also `KNNImputer` and `IterativeImputer`) appends them to the imputed columns.
 
-By hand: prices `[12.99, ?, 4.50]` with median imputation become `[12.99, 8.75, 4.50]` and the indicator `[0, 1, 0]`. A model can now learn "products without a price behave differently", which the imputed 8.75 alone would hide.
+By hand: numbers of keywords `[4, ?, 8]` with median imputation become `[4, 6, 8]` and the indicator `[0, 1, 0]`. A model can now learn "decisions without keywords behave differently", which the imputed 6 alone would hide.
 
 ### Why it matters
 
-When missingness is informative (not MCAR), the indicator carries signal: in the case study, a missing price goes with fewer reviews and a lower average rating. For tree-based models (Session 10), an indicator, or simply leaving the value missing for models that support it, is often better than any imputed value.
+When missingness is informative (not MCAR), the indicator carries signal: in the case study, a missing keyword list goes with particular issuing countries and with shorter descriptions. For tree-based models (Session 10), an indicator, or simply leaving the value missing for models that support it, is often better than any imputed value.
 
 ### How it works in Python
 
 ```python
 import numpy as np
 import pandas as pd
-from sklearn.impute import MissingIndicator, SimpleImputer
+from sklearn.impute import SimpleImputer
 
-products = pd.read_parquet("case-study/data/products.parquet")
-X = products[["price", "train_avg_rating"]]
+decisions = pd.read_parquet("case-study/data/train.parquet")
+X = pd.DataFrame({
+    "n_keywords": decisions["keywords"].str.split(",").str.len(),   # NaN where keywords are missing
+    "log_chars": np.log(decisions["description"].str.len()),
+})
 
 imp = SimpleImputer(strategy="median", add_indicator=True).fit(X)
 out = pd.DataFrame(imp.transform(X), columns=imp.get_feature_names_out())
 print(out.columns.tolist())
-# ['price', 'train_avg_rating', 'missingindicator_price', 'missingindicator_train_avg_rating']
-print(imp.statistics_.round(2), out["missingindicator_price"].mean().round(3))   # [19.99  4.36] 0.825
+# ['n_keywords', 'log_chars', 'missingindicator_n_keywords']
+print(imp.statistics_.round(2), out["missingindicator_n_keywords"].mean().round(4))   # [6.   6.38] 0.0041
 
-# does the indicator relate to the rating?
-print(products.groupby(products["price"].isna())["train_avg_rating"].mean().round(2).to_string())
-# price
-# False    4.14
-# True     3.93
+# does the indicator relate to the length of the description?
+print(decisions.groupby(decisions["keywords"].isna())["description"].apply(lambda s: s.str.len().median()).to_string())
+# keywords
+# False    588.0
+# True     479.0
 ```
 
 ### In practice
@@ -239,11 +239,11 @@ A worked example by hand with the values 2, 3, 3, 4, 4, 5, 40:
 - mean = 8.7, SD = 13.8; z(40) = 2.3 → *not* flagged with |z| > 3 (masking).
 - median = 4, MAD = median(2, 1, 1, 0, 0, 1, 36) = 1; z*(40) = 0.6745·36/1 = 24.3 → flagged.
 
-All three rules assume one dense centre. For **skewed** variables such as prices or text lengths, apply them on a log scale; for **counts with mostly zeros** (helpful votes), the MAD is 0 and the robust rule breaks down.
+All three rules assume one dense centre. For **skewed** variables such as text lengths, apply them on a log scale; for a variable where **most values are identical** (the validity of a BTI decision is three years for most decisions), the MAD is 0 and the robust rule breaks down.
 
 ### Why it matters
 
-Extreme values change means, standard deviations, correlations and regression lines, and some models (linear models, k-nearest neighbours, PCA) are very sensitive to them. At the same time, extreme cases are often the interesting ones: the viral product, the very long review, the fraudulent transaction. A flag is a question, not a verdict: a **data error** (typo, unit mix-up, duplicated record) is corrected or removed; a **genuine extreme value** is kept and handled by the method (log transformation, robust statistics, an indicator).
+Extreme values change means, standard deviations, correlations and regression lines, and some models (linear models, k-nearest neighbours, PCA) are very sensitive to them. At the same time, extreme cases are often the interesting ones: the very long technical description, the decision revoked after a few days, the fraudulent transaction. A flag is a question, not a verdict: a **data error** (typo, unit mix-up, duplicated record) is corrected or removed; a **genuine extreme value** is kept and handled by the method (log transformation, robust statistics, an indicator).
 
 ### How it works in Python
 
@@ -251,33 +251,34 @@ Extreme values change means, standard deviations, correlations and regression li
 import numpy as np
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-length = reviews["text"].str.len()                    # characters per review
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+length = decisions["description"].str.len()          # characters per description
 
 q1, q3 = length.quantile([0.25, 0.75])
 upper = q3 + 1.5 * (q3 - q1)
-print(upper, round((length > upper).mean(), 3))       # 495.0 0.076   (IQR rule)
+print(upper, round((length > upper).mean(), 3))       # 1540.0 0.026  (IQR rule)
 
 z = (length - length.mean()) / length.std()
-print(round((z.abs() > 3).mean(), 3))                 # 0.017         (z-score)
+print(round((z.abs() > 3).mean(), 3))                 # 0.012         (z-score)
 
 mad = (length - length.median()).abs().median()
 robust_z = 0.6745 * (length - length.median()) / mad
-print(round((robust_z.abs() > 3.5).mean(), 3))        # 0.076         (MAD rule)
+print(round((robust_z.abs() > 3.5).mean(), 3))        # 0.012         (MAD rule)
 
-# on the log scale the distribution is roughly symmetric, and far fewer reviews are flagged
-log_len = np.log10(length[length > 0])
+# on the log scale the rules flag both tails
+log_len = np.log10(length)
 q1, q3 = log_len.quantile([0.25, 0.75])
-print(round(((log_len < q1 - 1.5 * (q3 - q1)) | (log_len > q3 + 1.5 * (q3 - q1))).mean(), 3))   # 0.011
+print(round(((log_len < q1 - 1.5 * (q3 - q1)) | (log_len > q3 + 1.5 * (q3 - q1))).mean(), 3))   # 0.019
 
-votes = reviews["helpful_vote"]                       # mostly zeros: the MAD rule breaks down
-print((votes - votes.median()).abs().median(), votes.quantile([0.5, 0.99, 1.0]).tolist())
-# 0.0 [0.0, 17.0, 7326.0]
+days = (decisions["end_date"] - decisions["start_date"]).dt.days   # validity: mostly exactly 3 years
+days = days[decisions["end_date"].dt.year > 1900]                  # without the placeholder dates
+print((days - days.median()).abs().median(), days.quantile([0.01, 0.05, 0.5, 1.0]).tolist())
+# 0.0 [53.0, 358.0, 1095.0, 1095.0]: the MAD is 0, the robust rule breaks down
 ```
 
-![Review length with the upper fences of the IQR rule, the z-score and the MAD rule on the raw and on the log scale](figures/univariate-outliers.png)
+![Description length with the upper fences of the IQR rule, the z-score and the MAD rule on the raw and on the log scale](figures/univariate-outliers.png)
 
-On the raw scale, the IQR and MAD rules flag 7.6 % of reviews, all of them long ones: a consequence of the skewed distribution, not of errors. On the log scale, the rules flag about 1 % or less, in both tails: one-character reviews and reviews of several thousand characters. For product prices, the IQR rule flags 933 of 10,535 known prices on the raw scale but 261 on the log scale (workbook 08); the most expensive products are mobility scooters and massage chairs, which are genuine.
+On the raw scale, the IQR rule flags 2.6 % of the descriptions, all of them long ones: a consequence of the skewed distribution, not of errors. On the log scale, the rules flag between 0.7 % and 1.9 % in both tails: descriptions of a few characters and descriptions of several thousand. Looking at the flagged rows pays off: among the shortest are "TEST" (with the keyword TEST) and the Italian "prova" (*test*), test entries that reached the public database, while the longest are genuine technical descriptions of conveyor systems (workbook 08). For the validity duration, a rule from the domain works better than any statistical fence: a decision is valid for three years, so "shorter than 1,094 days" means "ended early", and an early end without an invalidation reason (274 decisions) is the real anomaly.
 
 ### In practice
 
@@ -286,10 +287,10 @@ On the raw scale, the IQR and MAD rules flag 7.6 % of reviews, all of them long 
 - **Web analytics**: sessions from bots produce page counts far above any human visitor; analytics providers filter known bots before conversion rates are computed.
 
 > [!CAUTION]
-> Do not delete outliers automatically. Look at the flagged rows first. Removing genuine extreme values makes the data look tidier and the conclusions wrong; for example, removing very long reviews removes many of the most detailed negative reviews.
+> Do not delete outliers automatically. Look at the flagged rows first. Removing genuine extreme values makes the data look tidier and the conclusions wrong; for example, removing very long descriptions removes many of the most detailed technical decisions, which are among the hardest to classify.
 
 > [!WARNING]
-> With large samples, |z| > 3 is not rare: for 434,373 normally distributed values, about 1,170 would exceed it by chance. A flag rate tells you about the shape of the distribution as much as about errors.
+> With large samples, |z| > 3 is not rare: for 309,529 normally distributed values, about 840 would exceed it by chance. A flag rate tells you about the shape of the distribution as much as about errors.
 
 ## Check your understanding
 
@@ -297,7 +298,7 @@ On the raw scale, the IQR and MAD rules flag 7.6 % of reviews, all of them long 
 2. Why does mean imputation reduce the standard deviation of a variable? Which analyses are affected?
 3. When is a missing-value indicator useful even if the imputed value itself is poor?
 4. For the values 1, 2, 2, 3, 3, 3, 4, 50, compute the IQR fences and the robust z-score of 50. Which rule flags it?
-5. Why does the MAD rule fail for `helpful_vote`, and what would you do instead?
+5. Why does the MAD rule fail for the validity duration of the decisions, and what would you do instead?
 
 ## Further reading
 

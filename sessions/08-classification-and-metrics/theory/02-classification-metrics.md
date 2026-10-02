@@ -1,6 +1,6 @@
 # Evaluation metrics for classification
 
-This page covers the second block of Session 8. Accuracy, the share of correct predictions, hides *which* errors a classifier makes, and on imbalanced data it can reward a model that never finds the cases we care about. The page introduces the confusion matrix and the metrics derived from it (precision, recall, F1, macro-F1 for several classes), and two curves that evaluate a classifier over all possible thresholds: the ROC curve with its AUC and the precision–recall curve.
+This page covers the second block of Session 8. Accuracy, the share of correct predictions, hides *which* errors a classifier makes, and on imbalanced data it can reward a model that never finds the cases we care about. The page introduces the confusion matrix and the metrics derived from it (precision, recall, F1, macro-F1 for several classes), the views needed for a task with more than a thousand classes (per-class results, confusions between neighbouring classes, top-k accuracy), and two curves that evaluate a classifier over all possible thresholds: the ROC curve with its AUC and the precision–recall curve.
 
 The code blocks build on each other; run them in order from the repository root. The first block rebuilds the Telco pipelines of theory page 01.
 
@@ -10,6 +10,7 @@ flowchart TD
     Q -->|"a ranking of cases,<br/>threshold set later"| R["ROC AUC"]
     Q -->|"ranking, positive<br/>class rare"| PR["Precision–recall curve,<br/>average precision"]
     Q -->|"several classes,<br/>all equally important"| MF["Macro-F1"]
+    Q -->|"many classes,<br/>a human picks from a list"| TK["Top-k accuracy,<br/>per-class F1 by frequency"]
 ```
 
 ## Confusion matrix and accuracy
@@ -121,31 +122,101 @@ The two models have the same F1 but a different balance: k-NN finds slightly mor
 - **Weighted F1**: weighted by the number of true cases per class; dominated by the large classes.
 - **Micro-F1**: pools all decisions; for single-label problems it equals accuracy.
 
-Worked example with ten reviews (6 pos, 2 neg, 2 neu). The model gets 6 of 6 positive right, 1 of 2 negative and 1 of 2 neutral; the two errors are predicted as positive. Per-class F1: neg 0.67, neu 0.67, pos 0.86. Macro-F1 = (0.67 + 0.67 + 0.86)/3 = 0.73; accuracy = 8/10 = 0.80.
+Worked example with ten customs decisions: six of heading 3926 (plastic articles), two of 6403 (leather footwear) and two of 6404 (textile footwear). The model gets all six 3926 right, one of two 6403 and one of two 6404; the two errors are predicted as 3926. Per-class F1: 3926 0.86, 6403 0.67, 6404 0.67. Macro-F1 = (0.86 + 0.67 + 0.67)/3 = 0.73; accuracy = 8/10 = 0.80.
 
-**Why it matters.** In the review data 73 % of the training labels are positive, and the rare classes are the interesting ones: a complaint or a mixed review is what a product team needs to find. The course leaderboard uses macro-F1 for this reason. Predicting only "pos" gives about 0.85 F1 for pos and 0 for the other two, so macro-F1 ≈ 0.28, although accuracy is 0.73.
+**Why it matters.** The course leaderboard has more than 1,100 headings with a **long tail**: the most frequent heading covers 4 % of the decisions, and about half of the headings in the sample have fewer than ten decisions. Accuracy is dominated by the few hundred frequent headings; macro-F1 gives a heading with 3 decisions the same weight as one with 2,000. Always predicting 3926 gives accuracy 0.04 and macro-F1 close to 0. A model that is good on frequent headings and useless on rare ones can reach high accuracy and a modest macro-F1, which is exactly what the reference models of the leaderboard show (word TF-IDF on the full training set: accuracy 0.872, macro-F1 0.682 on 2024).
 
 **How it works in Python.**
 
 ```python
-y_true = ["pos", "pos", "pos", "pos", "pos", "pos", "neg", "neg", "neu", "neu"]
-y_pred = ["pos", "pos", "pos", "pos", "pos", "pos", "pos", "neg", "pos", "neu"]
-print(f1_score(y_true, y_pred, average=None, labels=["neg", "neu", "pos"]).round(2))   # [0.67 0.67 0.86]
+y_true = ["3926"] * 6 + ["6403", "6403", "6404", "6404"]
+y_pred = ["3926"] * 6 + ["3926", "6403", "3926", "6404"]
+print(f1_score(y_true, y_pred, average=None, labels=["3926", "6403", "6404"]).round(2))   # [0.86 0.67 0.67]
 print(round(f1_score(y_true, y_pred, average="macro"), 2))                               # 0.73
 print(round(accuracy_score(y_true, y_pred), 2))                                          # 0.8
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-always_pos = ["pos"] * len(reviews)
-print(round(f1_score(reviews["label"], always_pos, average="macro"), 2))                # 0.28
-print(round(accuracy_score(reviews["label"], always_pos), 2))                            # 0.73
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+always_3926 = ["3926"] * len(decisions)
+print(round(accuracy_score(decisions["heading"], always_3926), 3))                       # 0.04
+print(round(f1_score(decisions["heading"], always_3926, average="macro"), 4))           # 0.0001
 ```
 
 **In practice.**
-- Shared tasks in sentiment analysis, such as SemEval-2017 Task 4 (Rosenthal et al., 2017), use macro-averaged measures so that the rare negative and neutral classes count.
-- Medical diagnosis with several rare conditions is evaluated per class, because a model that only recognises the common condition is useless.
+- Shared tasks in text classification, such as SemEval-2017 Task 4 (Rosenthal et al., 2017), use macro-averaged measures so that rare classes count.
+- Automatic coding of occupations, causes of death or economic activities by statistical offices deals with hundreds of codes and a long tail; evaluations report accuracy together with per-class or macro-averaged results.
 
 > [!WARNING]
-> `f1_score` on string labels without `average=` raises an error for more than two classes. Always pass `average="macro"` (or the average you intend) and say which one you report.
+> `f1_score` on string labels without `average=` raises an error for more than two classes. Always pass `average="macro"` (or the average you intend) and say which one you report. With very many classes macro-F1 also depends on which classes appear at all in the evaluation set; compare macro-F1 values only on the same set.
+
+## Many classes: per-class metrics, neighbouring headings and top-k accuracy
+
+**Concept.** With a thousand classes a single number hides where a model fails. Three views help:
+
+- **Per-class precision and recall**, sorted or grouped by class frequency, show whether errors concentrate in the rare classes.
+- A **confusion matrix restricted to a few related classes** shows which classes are mixed up. In the HS nomenclature, neighbouring headings are often very similar: 6403 is footwear with uppers of leather, 6404 footwear with uppers of textile materials, 6402 footwear with uppers of rubber or plastics.
+- **Top-k accuracy** counts a prediction as correct if the true class is among the k classes with the highest scores. It measures a model that proposes candidates to a human, which is how a classification tool for customs officers or traders would be used.
+
+**Why it matters.** Errors between 6403 and 6404 are understandable (the material of the upper decides), errors between footwear and plastics are not. Knowing where the errors are tells you what to improve: more data for rare headings, better features for neighbouring ones.
+
+**How it works in Python.** A text classifier (TF-IDF of the description and a linear model with logistic loss; Session 13 explains both, here it is a black box), trained on the decisions of 2017–2021 in the sample and evaluated on 2022–2023. Fitting takes about 15 seconds.
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import precision_recall_fscore_support
+
+past = decisions["start_date"].dt.year <= 2021
+train, valid = decisions[past], decisions[~past]
+text_clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                         SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
+text_clf.fit(train["description"], train["heading"])
+proba = text_clf.predict_proba(valid["description"])
+y_val = valid["heading"].to_numpy()
+y_hat = text_clf.classes_[proba.argmax(axis=1)]
+print(round(accuracy_score(y_val, y_hat), 3), round(f1_score(y_val, y_hat, average="macro"), 3))   # 0.749 0.492
+
+# per-class F1 grouped by the number of training decisions of the heading
+labels = np.unique(y_val)
+_, _, f1_per_class, support = precision_recall_fscore_support(y_val, y_hat, labels=labels, zero_division=0)
+n_train = train["heading"].value_counts().reindex(labels, fill_value=0)
+groups = pd.cut(n_train, [-1, 9, 49, 199, 10**6], labels=["<10", "10-49", "50-199", "200+"])
+print(pd.DataFrame({"f1": f1_per_class, "n": support}).groupby(groups.values, observed=True)
+      .agg(headings=("f1", "size"), mean_f1=("f1", "mean"), decisions=("n", "sum")).round(2))
+#         headings  mean_f1  decisions
+# <10          326     0.27        835
+# 10-49        257     0.61       2073
+# 50-199       123     0.77       4653
+# 200+          35     0.78       5638
+
+# footwear: which neighbouring headings are confused?
+shoes = ["6402", "6403", "6404", "6405"]
+print(pd.crosstab(pd.Series(y_val, name="true"), pd.Series(y_hat, name="predicted")).reindex(
+    index=shoes, columns=shoes, fill_value=0))
+# predicted  6402  6403  6404  6405
+# true
+# 6402         45     0     1     0
+# 6403          0   113     0     0
+# 6404          1     5    91     7
+# 6405          0     0     1    70
+
+# top-k accuracy: is the true heading among the k best-scored candidates?
+order = np.argsort(-proba, axis=1)
+for k in [1, 3, 5]:
+    top_k = text_clf.classes_[order[:, :k]]
+    print(k, round((top_k == y_val[:, None]).any(axis=1).mean(), 3))
+# 1 0.749
+# 3 0.824
+# 5 0.848
+```
+
+Three findings. Headings with fewer than ten training decisions reach a mean F1 of 0.27, against about 0.78 for frequent ones: the long tail is where macro-F1 is lost. Within footwear most errors are understandable: 6404 (textile uppers) is sometimes predicted as 6403 (leather uppers) or 6405 (other footwear), and leather footwear is never mistaken for plastic articles. And if the model may propose three candidates, the true heading is among them for 82 % of the decisions instead of 75 %. `sklearn.metrics.top_k_accuracy_score` computes the same, but only when every validation heading also occurs in training; here about 1 % do not.
+
+**In practice.**
+- Search engines and recommender systems are evaluated by top-k measures (precision at k, recall at k), because users look at a short list.
+- Tools for automatic coding of free text into classifications (for example of occupations or economic activities at statistical offices) usually propose a few candidate codes for a human coder to confirm.
+
+> [!TIP]
+> Group per-class results by class frequency, as above. A list of 1,000 F1 values is unreadable; four groups show at once whether the problem is the tail.
 
 ## The ROC curve and AUC
 
@@ -228,7 +299,7 @@ In the [Telco case-study workbook](../workbooks/05-case-study-churn-pipelines.ip
 
 1. Compute precision, recall and F1 from TP = 50, FP = 30, FN = 20, TN = 900. What is the accuracy, and why is it misleading here?
 2. A model has precision 0.9 and recall 0.2. Describe in words what it does. When would that be acceptable?
-3. Why does macro-F1 punish a model that never predicts "neu", while accuracy hardly notices?
+3. Why does macro-F1 punish a model that never predicts the rare headings, while accuracy hardly notices? Why is top-3 accuracy a sensible metric for a tool that assists customs officers?
 4. Explain the meaning of AUC = 0.84 in one sentence without using the word "curve".
 5. For a fraud model with 0.1 % positives, why can ROC AUC be 0.98 while precision at 50 % recall is only 0.10?
 

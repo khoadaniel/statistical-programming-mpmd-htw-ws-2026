@@ -32,7 +32,7 @@ Theory: [02-regularisation-and-tuning.md](theory/02-regularisation-and-tuning.md
 - [Validation curves and learning curves to diagnose underfitting and overfitting](theory/02-regularisation-and-tuning.md#validation-curves-and-learning-curves)
 - [Hyperparameter tuning with GridSearchCV and RandomizedSearchCV](theory/02-regularisation-and-tuning.md#hyperparameter-tuning-with-gridsearchcv-and-randomizedsearchcv)
 
-*Practice:* Tune the ridge penalty and the regularisation of logistic regression; compare random and time-based validation on the reviews ([case-study workbook](workbooks/19-case-study-validation.ipynb), part B).
+*Practice:* Tune the ridge penalty and the regularisation of logistic regression; compare random and time-based validation for the heading classifier on the EBTI decisions ([case-study workbook](workbooks/19-case-study-validation.ipynb), part B).
 
 ### 2:00–2:45 · Data leakage, pipelines, nested CV and the final test
 
@@ -70,13 +70,13 @@ Theory: [03-leakage-and-final-test.md](theory/03-leakage-and-final-test.md)
 | [workbooks/16-data-leakage-feature-selection.ipynb](workbooks/16-data-leakage-feature-selection.ipynb) | INRIA: feature selection outside versus inside the pipeline (leakage) | 3 | core |
 | [workbooks/17-nested-cross-validation.ipynb](workbooks/17-nested-cross-validation.ipynb) | INRIA: nested cross-validation | 3 | core |
 | [workbooks/18-nested-cv-sklearn.ipynb](workbooks/18-nested-cv-sklearn.ipynb) | scikit-learn: nested versus non-nested CV on iris | 3 | optional |
-| [workbooks/19-case-study-validation.ipynb](workbooks/19-case-study-validation.ipynb) | Own: CV with bootstrap CIs, ridge and C tuning, random vs time-based validation, leaking vs Pipeline workflow | 1–3 | core |
+| [workbooks/19-case-study-validation.ipynb](workbooks/19-case-study-validation.ipynb) | Own: CV with bootstrap CIs, ridge and alpha tuning, random vs time-based vs grouped validation of the heading classifier, leaking vs Pipeline workflow, the customs' justification as target leakage (EBTI decisions and Telco) | 1–3 | core |
 
 The INRIA notebooks read data from `datasets/` and images from `figures/` in this folder (paths `../datasets/` and `../figures/` relative to `workbooks/`); see [source.md](source.md).
 
 ## Before and after the session
 
-**Before.** Re-run your Session 6 notebooks (linear regression of helpful votes, logistic regression for Telco churn). Make sure `case-study/data/train_sample.parquet` exists (`uv run --with pandas --with pyarrow python case-study/prepare_data.py`). Read the first section of the theory page 01.
+**Before.** Re-run your Session 6 notebooks (linear regression of the description length, logistic regression for Telco churn). Make sure `case-study/data/train_sample.parquet` exists (`uv run python case-study/prepare_data.py`). Read the first section of the theory page 01.
 
 **Team project until the next session.** Validation plan for the project model (machine learning teams): splitter, metric, uncertainty, leakage checks. Uncertainty of key results (analytics teams): bootstrap intervals for the main numbers of your analysis.
 

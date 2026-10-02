@@ -56,7 +56,7 @@ for degree in [1, 2, 4, 8, 15]:
 # degree 15  train 0.061  test 0.650
 ```
 
-On the case study, complexity in review length barely helps, because length explains only part of the votes:
+On the case study, take the decisions that were invalidated before their normal three-year expiry and model how many days they stayed valid from the start date (in years since 2017). The relationship is not a straight line, because many decisions end on fixed dates (31 December 2020 and 31 December 2021 are the most frequent end dates; Session 4 and the notebook look at them). Compare all 5,700 training decisions with a training set of only 60:
 
 ```python
 import numpy as np
@@ -67,24 +67,35 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-X = np.log1p(reviews["text"].str.split().str.len()).to_frame("log_words")
-y = np.log1p(reviews["helpful_vote"])
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+early = decisions[decisions["invalidation_reason"].notna()].copy()       # ended before normal expiry
+early["days_valid"] = (early["end_date"] - early["start_date"]).dt.days
+early = early[early["days_valid"] >= 0]                                  # drop impossible values here
+early["start_year"] = (early["start_date"] - pd.Timestamp("2017-01-01")).dt.days / 365.25
+train, test = train_test_split(early, test_size=0.2, random_state=42)
+small = train.sample(60, random_state=0)
 
-for degree in [1, 2, 3, 5, 10]:
-    model = make_pipeline(StandardScaler(), PolynomialFeatures(degree), LinearRegression())
-    model.fit(X_train, y_train)
-    print(degree, round(root_mean_squared_error(y_train, model.predict(X_train)), 4),
-          round(root_mean_squared_error(y_test, model.predict(X_test)), 4))
-# 1 0.6226 0.6079
-# 2 0.6149 0.5999
-# 3 0.6147 0.5997
-# 5 0.6146 0.5998
-# 10 0.6143 0.6002
+for degree in [1, 3, 8, 12]:
+    for name, part in [("5,700", train), ("60", small)]:
+        model = make_pipeline(StandardScaler(), PolynomialFeatures(degree), LinearRegression())
+        model.fit(part[["start_year"]], part["days_valid"])
+        print(f"degree {degree:2d}, {name:>5s} rows: train RMSE "
+              f"{root_mean_squared_error(part['days_valid'], model.predict(part[['start_year']])):6.1f}"
+              f"  test RMSE {root_mean_squared_error(test['days_valid'], model.predict(test[['start_year']])):6.1f}")
 ```
 
-With 40,000 training reviews and one feature, even degree 10 does not overfit much: training and test errors stay close (here the test error is even slightly lower, by chance of the split), and the gain from degree 2 onwards is tiny. Overfitting is a problem of **flexibility relative to the amount of data**.
+```
+degree  1, 5,700 rows: train RMSE  322.3  test RMSE  327.5
+degree  1,    60 rows: train RMSE  303.4  test RMSE  329.6
+degree  3, 5,700 rows: train RMSE  318.5  test RMSE  321.6
+degree  3,    60 rows: train RMSE  301.8  test RMSE  328.3
+degree  8, 5,700 rows: train RMSE  314.6  test RMSE  317.1
+degree  8,    60 rows: train RMSE  285.8  test RMSE  341.1
+degree 12, 5,700 rows: train RMSE  313.8  test RMSE  317.9
+degree 12,    60 rows: train RMSE  265.6  test RMSE  393.1
+```
+
+With 5,700 training decisions, more flexibility helps a little up to degree 8 (test RMSE from 328 to 317 days) and degree 12 does not overfit: training and test errors stay close. With 60 training decisions the same degree 12 lowers the training error to 266 days and raises the test error to 393 days, worse than the straight line. Overfitting is a problem of **flexibility relative to the amount of data**. Note also how little the start date explains: an RMSE of about 320 days against a standard deviation of about 330 days. When a decision ends early depends mostly on events outside the data of the decision.
 
 ### In practice
 
@@ -93,7 +104,7 @@ With 40,000 training reviews and one feature, even degree 10 does not overfit mu
 - Finance: trading strategies backtested over many variants look profitable on past data and fail on new data ("backtest overfitting", Bailey et al., 2014).
 
 > [!IMPORTANT]
-> **Practice (block 2, part 1).** In the case-study notebook, compare training and test error for increasing polynomial degree, first on the toy data, then on the helpful-votes data with more features. Where does the test error stop improving?
+> **Practice (block 2, part 1).** In the case-study notebook, compare training and test error for increasing polynomial degree, first on the toy data, then on the early-invalidation data with all training rows and with a small training set. Where does the test error stop improving?
 
 ## The bias–variance trade-off
 
@@ -168,7 +179,7 @@ for degree in [1, 4, 12]:
 
 ### Concept
 
-Least squares squares the residuals, so a few gross errors (typing errors, unit mix-ups, bots, viral reviews) can pull the whole line towards them.
+Least squares squares the residuals, so a few gross errors (typing errors, unit mix-ups, placeholder dates) can pull the whole line towards them.
 
 ![Eight gross errors at large x tilt the least-squares line; the Huber line follows the bulk of the data](figures/robust-vs-ols.png)
 
@@ -211,7 +222,7 @@ The second line of the output shows the price of robustness: 0.41 instead of 0.5
 - Sensor and laboratory data, in which occasional faulty readings are expected, are routinely fitted with M-estimators such as Huber's.
 
 > [!WARNING]
-> **Outliers are information.** Down-weighting a point is a modelling decision. Inspect the points with low weights: are they errors, or the most important cases (fraud, failures, viral reviews)? Report both fits if the conclusion depends on them.
+> **Outliers are information.** Down-weighting a point is a modelling decision. Inspect the points with low weights: are they errors, or the most important cases (fraud, failures, unusual products)? Report both fits if the conclusion depends on them.
 
 ## Robust regression: quantile regression
 
@@ -229,33 +240,46 @@ Many decisions concern a typical case or a tail rather than the average: deliver
 
 ### How it works in Python
 
-Helpful votes are an extreme case: 71 % of reviews have zero votes and the maximum is 7,326.
+The case study contains a real version of the gross errors in the figure. Among the decisions that ended early, 77 in the sample have an end date in the year 1900, about 120 years **before** the start date (a placeholder date; they all carry the same invalidation reason code, 55). Fit the number of days valid on the start date, once with these rows included:
 
 ```python
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
+from sklearn.linear_model import HuberRegressor
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error
 from sklearn.model_selection import train_test_split
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["log_words"] = np.log1p(reviews["text"].str.split().str.len())
-train, test = train_test_split(reviews, test_size=0.2, random_state=42)
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+early = decisions[decisions["invalidation_reason"].notna()].copy()
+early["days_valid"] = (early["end_date"] - early["start_date"]).dt.days      # includes the placeholders
+early["start_year"] = (early["start_date"] - pd.Timestamp("2017-01-01")).dt.days / 365.25
+print((early["days_valid"] < 0).sum(), early["days_valid"].min())          # 77 -45175
+train, test = train_test_split(early, test_size=0.2, random_state=42)
+clean_test = test[test["days_valid"] >= 0]                                 # judge on plausible rows
 
-fits = {"OLS (mean)": smf.ols("helpful_vote ~ log_words", train).fit(),
-        "median (q=0.5)": smf.quantreg("helpful_vote ~ log_words", train).fit(q=0.5),
-        "q=0.9": smf.quantreg("helpful_vote ~ log_words", train).fit(q=0.9)}
+fits = {"OLS (mean)": smf.ols("days_valid ~ start_year", train).fit(),
+        "median (q=0.5)": smf.quantreg("days_valid ~ start_year", train).fit(q=0.5),
+        "q=0.9": smf.quantreg("days_valid ~ start_year", train).fit(q=0.9),
+        "OLS, clean rows": smf.ols("days_valid ~ start_year", train[train["days_valid"] >= 0]).fit()}
 for name, fit in fits.items():
-    pred = fit.predict(test)
-    print(f"{name:15s} slope {fit.params['log_words']:6.3f}  "
-          f"MAE {mean_absolute_error(test['helpful_vote'], pred):.2f}  "
-          f"RMSE {root_mean_squared_error(test['helpful_vote'], pred):.2f}")
-# OLS (mean)      slope  1.374  MAE 1.93  RMSE 6.49
-# median (q=0.5)  slope  0.000  MAE 1.10  RMSE 6.62
-# q=0.9           slope  1.108  MAE 2.57  RMSE 6.63
+    pred = fit.predict(clean_test)
+    print(f"{name:15s} intercept {fit.params['Intercept']:7.1f}  slope {fit.params['start_year']:6.1f}  "
+          f"MAE {mean_absolute_error(clean_test['days_valid'], pred):5.0f}  "
+          f"RMSE {root_mean_squared_error(clean_test['days_valid'], pred):5.0f}")
+huber = HuberRegressor(max_iter=1000).fit(train[["start_year"]], train["days_valid"])
+print("Huber           intercept", round(huber.intercept_, 1), " slope", round(huber.coef_[0], 1))
 ```
 
-Each model wins on the metric it optimises: least squares has the lowest RMSE, the median line the lowest MAE. The median line is flat at zero votes: the typical review gets no vote, whatever its length. The 90th-percentile line rises with length: the tail of well-voted reviews consists of longer reviews. The choice of metric and model is a choice of question.
+```
+77 -45175
+OLS (mean)      intercept   241.4  slope  -74.0  MAE   533  RMSE   621
+median (q=0.5)  intercept   677.6  slope  -45.2  MAE   281  RMSE   328
+q=0.9           intercept  1027.0  slope  -14.8  MAE   455  RMSE   552
+OLS, clean rows intercept   617.5  slope  -26.0  MAE   283  RMSE   327
+Huber           intercept 646.3  slope -37.0
+```
+The 77 placeholder rows (about 1 % of the training rows) pull the least-squares intercept from 618 to 241 days and nearly triple the slope; its errors on the plausible test rows almost double. The median line (678 days, slope −45) and the Huber line (646 days, slope −37) stay close to the fit on clean rows: both are robust to gross errors in y. The 90th-percentile line answers another question: the longest-lasting early-invalidated decisions run about 1,000 days, almost the full term, and that upper quantile depends little on the start date. Removing the placeholder rows is the right fix here, because they are errors (Session 4); the robust fits show what happens when you have not found them yet.
 
 ### In practice
 
@@ -264,7 +288,7 @@ Each model wins on the metric it optimises: least squares has the lowest RMSE, t
 - Engel's law: quantile regression on Engel's 1857 household data, a standard example since Koenker and Bassett (1982), shows that food expenditure rises with income at every quantile, but more steeply at the upper quantiles ([workbook 12](../workbooks/12-quantile-regression-statsmodels.ipynb)).
 
 > [!IMPORTANT]
-> **Practice (block 2, part 2).** Compare least squares with Huber and quantile regression on helpful votes, on the raw and on the log scale. Which model would you use to tell a product manager how many votes a typical review gets, and which to find reviews that get many votes?
+> **Practice (block 2, part 2).** Compare least squares with Huber and quantile regression on the days valid of early-invalidated decisions, with and without the 77 placeholder rows. Which model would you use to tell a trader how long a typical decision lasts before early invalidation, and which to describe the decisions that last longest?
 
 > [!CAUTION]
 > Quantile lines fitted separately can cross (the 0.9 line below the 0.5 line for some x), especially at the edges of the data. Check a plot before reporting them.
@@ -272,10 +296,10 @@ Each model wins on the metric it optimises: least squares has the lowest RMSE, t
 ## Check your understanding
 
 1. A model has training RMSE 0.06 and test RMSE 0.65. Underfitting or overfitting? Name two remedies.
-2. Why does the degree-10 polynomial not overfit on the 40,000 reviews, although degree 15 overfits on 20 points?
+2. Why does the degree-12 polynomial hardly overfit on the 5,700 training decisions, although it overfits badly on 60?
 3. Explain bias and variance with the example of a straight line and a degree-15 polynomial fitted to a curve.
 4. What does the Huber loss do with a residual of 10 compared with least squares?
-5. Why is the median regression line of helpful votes flat at zero, and what question does it answer?
+5. Why does the least-squares line of days valid move so much when 77 placeholder rows are added, while the median line hardly moves? What question does each line answer?
 
 ## Further reading
 

@@ -41,7 +41,7 @@ The INRIA MOOC notebooks read `../datasets/<file>.csv`; the files are copied unc
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG files | Depth-2 churn tree, depth vs training/CV accuracy, boosting stages | CC-BY-4.0 |
 | [workbooks/05-churn-decision-tree.ipynb](workbooks/05-churn-decision-tree.ipynb) | Practice 1: decision tree on the churn data. Author: course team | CC-BY-4.0 |
 | [workbooks/15-churn-gradient-boosting.ipynb](workbooks/15-churn-gradient-boosting.ipynb) | Practice 2: boosting libraries compared on the churn data. Author: course team | CC-BY-4.0 |
-| [workbooks/20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb) | Practice 3: leaderboard round L2. Author: course team | CC-BY-4.0 |
+| [workbooks/20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb) | Practice 3: leaderboard round L2 on the EBTI decisions (LightGBM on text components vs linear text model). Author: course team | CC-BY-4.0 |
 
 ## Citations
 
@@ -69,4 +69,4 @@ The INRIA MOOC notebooks read `../datasets/<file>.csv`; the files are copied unc
 - Shotton, J. et al. (2011). Real-time human pose recognition in parts from single depth images. *CVPR 2011*, 1297–1304. https://doi.org/10.1109/CVPR.2011.5995316
 - Stiell, I. G. et al. (1992). A study to develop clinical decision rules for the use of radiography in acute ankle injuries. *Annals of Emergency Medicine*, 21(4), 384–390. https://doi.org/10.1016/S0196-0644(05)82656-3
 - Strobl, C., Boulesteix, A.-L., Zeileis, A. & Hothorn, T. (2007). Bias in random forest variable importance measures: illustrations, sources and a solution. *BMC Bioinformatics*, 8, 25. https://doi.org/10.1186/1471-2105-8-25
-- Data: IBM Telco customer churn sample data, https://github.com/IBM/telco-customer-churn-on-icp4d (Apache-2.0 repository), read from GitHub at run time; Amazon Reviews 2023, Health and Personal Care (McAuley Lab), downloaded by each student, not redistributed.
+- Data: IBM Telco customer churn sample data, https://github.com/IBM/telco-customer-churn-on-icp4d (Apache-2.0 repository), read from GitHub at run time; European Commission, *European Binding Tariff Information (EBTI)* database, full export, retrieved by each student with `case-study/prepare_data.py` (reuse under Commission Decision 2011/833/EU), https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en.

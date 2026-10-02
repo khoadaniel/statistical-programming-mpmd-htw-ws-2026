@@ -1,13 +1,13 @@
 # Features from dates, interactions and categories
 
-A **feature** is one input column of a model. Feature engineering means constructing new input columns from the raw data so that a model can use information it could not see before. This page covers the first block of Session 9: features from dates and times, interactions between features, categories with many levels (rare-category grouping and target encoding) and custom transformers that put all of this into a scikit-learn pipeline. The running example is the review table of the case study. Session 8 introduced one-hot encoding, scaling and the `ColumnTransformer`; this page builds on them.
+A **feature** is one input column of a model. Feature engineering means constructing new input columns from the raw data so that a model can use information it could not see before. This page covers the first block of Session 9: features from dates and times, interactions between features, categories with many levels (rare-category grouping and target encoding) and custom transformers that put all of this into a scikit-learn pipeline. The running example is the table of Binding Tariff Information (BTI) decisions of the case study, where the task is to predict the four-digit HS heading of a product from its description; for quick demonstrations we also use the simpler binary question "is this decision in chapter 85 (electrical machinery and equipment)?", which covers 14.7 % of the decisions. Session 8 introduced one-hot encoding, scaling and the `ColumnTransformer`; this page builds on them.
 
 > [!NOTE]
-> The code blocks on this page build on each other. Run them in order from the repository root, for example in a notebook started with `uv run jupyter lab`. They use `case-study/data/train_sample.parquet` (50,000 reviews) and `case-study/data/products.parquet`.
+> The code blocks on this page build on each other. Run them in order from the repository root, for example in a notebook started with `uv run jupyter lab`. They use `case-study/data/train_sample.parquet` (50,000 decisions from 2017–2023).
 
 ```mermaid
 flowchart LR
-    raw["Raw columns<br/>date, store, text"] --> d["Date parts<br/>year, month, sin/cos"]
+    raw["Raw columns<br/>date, country, text"] --> d["Date parts<br/>year, month, sin/cos"]
     raw --> i["Interactions<br/>a × b"]
     raw --> c["Categories<br/>rare grouping,<br/>target encoding"]
     d --> p["Pipeline<br/>fit on training data only"]
@@ -20,7 +20,7 @@ flowchart LR
 
 ### Concept
 
-A timestamp such as `2019-12-24 18:05` is one value, but it carries several kinds of information: the **year** (long-term trend), the **month** and **day of the week** (seasonal patterns), the **hour** (daily rhythm), and the **time elapsed** since some event (age of an account, days since a product's first review). A model cannot extract these parts on its own; we compute them as separate columns.
+A timestamp such as `2019-12-24 18:05` is one value, but it carries several kinds of information: the **year** (long-term trend), the **month** and **day of the week** (seasonal patterns), the **hour** (daily rhythm), and the **time elapsed** since some event (age of an account, days since the previous decision on the same product). A model cannot extract these parts on its own; we compute them as separate columns.
 
 Some parts are **cyclical**: month 12 is followed by month 1, and hour 23 by hour 0. If we use the month as a number from 1 to 12, a linear model sees December and January as far apart. A **cyclical encoding** places each value on a circle with two columns:
 
@@ -33,7 +33,7 @@ Worked example: for January, 2π · 1/12 = 0.52 rad, so sin = 0.50 and cos = 0.8
 
 ### Why it matters
 
-Customer behaviour follows calendars: sales peak before holidays, call centres have busy Mondays, and online reviews have become more critical over the years. A raw timestamp, stored as nanoseconds since 1970, mixes all these effects into one large number. Without date features a model either ignores time or picks up the trend in an uncontrolled way.
+Behaviour follows calendars: sales peak before holidays, call centres have busy Mondays, and the mix of goods that traders ask customs about changes over the years. A raw timestamp, stored as nanoseconds since 1970, mixes all these effects into one large number. Without date features a model either ignores time or picks up the trend in an uncontrolled way.
 
 ### How it works in Python
 
@@ -41,31 +41,30 @@ Customer behaviour follows calendars: sales peak before holidays, call centres h
 import numpy as np
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-d = reviews["date"]                                   # datetime64 column
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+d = decisions["start_date"]                           # start of validity, datetime64 column
 dates = pd.DataFrame({
     "year": d.dt.year,
     "month": d.dt.month,
     "dayofweek": d.dt.dayofweek,                      # Monday = 0, Sunday = 6
-    "hour": d.dt.hour,
-    "is_weekend": d.dt.dayofweek.ge(5).astype(int),
-    "days_since_2000": (d - pd.Timestamp("2000-01-01")).dt.days,   # elapsed time, a trend feature
+    "days_since_2017": (d - pd.Timestamp("2017-01-01")).dt.days,   # elapsed time, a trend feature
 })
 dates["month_sin"] = np.sin(2 * np.pi * dates["month"] / 12)      # cyclical encoding
 dates["month_cos"] = np.cos(2 * np.pi * dates["month"] / 12)
-print(dates.round(2).head(3).to_string())
-#    year  month  dayofweek  hour  is_weekend  days_since_2000  month_sin  month_cos
-# 0  2001      9          2     0           0              613      -1.00       -0.0
-# 1  2003      8          0    20           0             1311      -0.87       -0.5
-# 2  2003      9          1    14           0             1347      -1.00       -0.0
+print(dates.round(2).sample(3, random_state=1).to_string())
+#        year  month  dayofweek  days_since_2017  month_sin  month_cos
+# 26247  2020      5          4             1244       0.50      -0.87
+# 35067  2021      9          4             1727      -1.00      -0.00
+# 34590  2021      8          4             1699      -0.87      -0.50
 
-# Is there a trend? Share of negative reviews per year
-share_neg = reviews["label"].eq("neg").groupby(dates["year"]).mean()
-print(share_neg.loc[2015:2021].round(3).to_dict())
-# {2015: 0.142, 2016: 0.153, 2017: 0.187, 2018: 0.186, 2019: 0.19, 2020: 0.224, 2021: 0.235}
+# Is there a trend? Share of heading 6307 (other made-up textile articles, incl. face masks) per year
+print(decisions["heading"].eq("6307").groupby(dates["year"]).mean().round(3).to_dict())
+# {2017: 0.019, 2018: 0.025, 2019: 0.031, 2020: 0.029, 2021: 0.037, 2022: 0.026, 2023: 0.028}
+print(dates["dayofweek"].value_counts(normalize=True).sort_index().round(2).to_dict())
+# {0: 0.4, 1: 0.11, 2: 0.09, 3: 0.19, 4: 0.2, 5: 0.0, 6: 0.0}
 ```
 
-The share of negative reviews rose from 14 % in 2015 to 24 % in 2021, so `year` carries information. The day of the week and the hour hardly change the share of negative reviews in this sample (between 17 % and 22 %); they are weak features here. Checking such simple group means before adding a feature is good practice.
+The share of heading 6307 doubled from 1.9 % in 2017 to 3.7 % in 2021 and fell back afterwards, so `year` carries some information about the label. The day of the week mostly describes how offices work: 40 % of all decisions become valid on a Monday, almost none at weekends. The share of chapter 85 hardly differs between weekdays (14–16 %), so the weekday is a weak feature for the heading. Checking such simple group means before adding a feature is good practice.
 
 scikit-learn offers the same idea inside a pipeline: a `FunctionTransformer` (Section 5) can compute the sine and cosine, and `SplineTransformer(extrapolation="periodic")` builds smooth periodic features. The workbook [01-time-related-feature-engineering.ipynb](../workbooks/01-time-related-feature-engineering.ipynb) compares these encodings on a bike-sharing demand dataset.
 
@@ -76,10 +75,10 @@ scikit-learn offers the same idea inside a pipeline: a `FunctionTransformer` (Se
 - The scikit-learn example on bike-sharing demand in Washington, D.C. shows that hour-of-day features with a periodic encoding reduce the error of a linear model considerably.
 
 > [!WARNING]
-> **Time zones and the future.** Timestamps in the case study are in UTC; "evening" in UTC is the afternoon in California. Convert to local time (`dt.tz_localize("UTC").dt.tz_convert(...)`) before building hour features about human behaviour. And never use a date feature that is only known later, such as "date of the last review of this product": at prediction time it does not exist yet.
+> **Only dates known at prediction time.** The test decisions have `start_date`, but not `end_date`: the end of validity is decided together with the classification, and some decisions are invalidated early for reasons linked to the code. A feature such as "validity in days" therefore cannot be used for the heading task. For timestamps with a time of day, also convert to local time (`dt.tz_convert(...)`) before building hour features about human behaviour.
 
 > [!CAUTION]
-> A `year` feature lets a model learn a trend, but tree-based models cannot extrapolate it: for the test years 2022 and 2023 they treat every review like one from 2021, the last year they saw. That is often acceptable, but be aware of it when the target drifts (Session 16).
+> A `year` feature lets a model learn a trend, but tree-based models cannot extrapolate it: for the test years 2024–2026 they treat every decision like one from 2023, the last year they saw. That is often acceptable, but be aware of it when the target drifts (Session 16).
 
 ## 2. Interactions between features
 
@@ -131,7 +130,7 @@ print(inter[0].get_feature_names_out())   # ['member' 'discount' 'member discoun
 
 The additive model is wrong in every cell: it underestimates the members with a discount and overestimates the others. With the product column the predictions match the observed rates.
 
-On the reviews, candidate interactions are, for example, `verified_purchase × text length` or `number of exclamation marks × share of capital letters`. Domain knowledge suggests which products are worth trying; `PolynomialFeatures(interaction_only=True)` creates all pairwise products, which grows quickly (p features give p·(p−1)/2 products).
+On the decisions, candidate interactions are, for example, `language × description length` (a long German description and a long French one mean different things, because German compounds pack several words into one) or `issuing country × year` (the United Kingdom stops after 2020). Domain knowledge suggests which products are worth trying; `PolynomialFeatures(interaction_only=True)` creates all pairwise products, which grows quickly (p features give p·(p−1)/2 products).
 
 ### In practice
 
@@ -145,35 +144,36 @@ On the reviews, candidate interactions are, for example, `verified_purchase × t
 
 ### Concept
 
-The **cardinality** of a categorical feature is its number of distinct values. `verified_purchase` has 2; `store` (the brand or seller of a product) has 11,672 distinct values in the 50,000-review sample. One-hot encoding (Session 8) would create one column per store. Most of these columns would contain a single 1, because half of all stores appear only once.
+The **cardinality** of a categorical feature is its number of distinct values. `issuing_country` has 29 values in the sample and `language` 23: manageable. A category with thousands of values arises when we take a word from the text as a category. Here we use the **first word** of the description in lower case, which is often the product name ("lampe", "smartphone") but also often boilerplate ("es handelt sich um…", "bei der Ware…"). It has 9,832 distinct values in the 50,000-decision sample. One-hot encoding (Session 8) would create one column per word; 6,170 of them would contain a single 1.
 
 **Grouping rare categories** replaces every category that appears fewer than *k* times in the training data by one shared level, often called `"infrequent"` or `"other"`. The frequent categories keep their own column. Categories that appear only in new data are mapped to the same shared level.
 
 ### Why it matters
 
-A column with one 1 in 50,000 rows cannot teach a model anything reliable, but it costs memory and invites overfitting. Grouping keeps the information of the frequent categories, gives the model a stable estimate for "small store", and handles unseen categories at prediction time without errors. Frequency itself can be a feature: the number of reviews of a store says something about its size.
+A column with one 1 in 50,000 rows cannot teach a model anything reliable, but it costs memory and invites overfitting. Grouping keeps the information of the frequent categories, gives the model a stable estimate for "rare word", and handles unseen categories at prediction time without errors. Frequency itself can be a feature: how common the first word is says something about the description style.
 
 ### How it works in Python
 
 ```python
 from sklearn.preprocessing import OneHotEncoder
 
-products = pd.read_parquet("case-study/data/products.parquet", columns=["parent_asin", "store"])
-df = reviews.merge(products, on="parent_asin", how="left")      # join the store of each product
-df["store"] = df["store"].fillna("missing")
-counts = df["store"].value_counts()
-print(df["store"].nunique(), (counts == 1).sum())                # 11673 levels (with "missing"), 5805 seen once
+df = decisions.copy()
+df["first_word"] = df["description"].str.lower().str.extract(r"([^\W\d_]+)", expand=False).fillna("")
+counts = df["first_word"].value_counts()
+print(df["first_word"].nunique(), (counts == 1).sum())          # 9832 levels, 6170 seen once
+print(counts.head(5).to_dict())
+# {'es': 3458, 'bei': 2575, 'een': 2031, 'angaben': 1676, 'sog': 1654}
 
 for k in [None, 20, 100]:
     enc = OneHotEncoder(min_frequency=k, handle_unknown="infrequent_if_exist")
-    n_cols = enc.fit(df[["store"]]).transform(df[["store"]]).shape[1]
+    n_cols = enc.fit(df[["first_word"]]).transform(df[["first_word"]]).shape[1]
     print(k, n_cols)
-# None 11673   one column per store
-# 20 364       stores with fewer than 20 reviews share one column
-# 100 38
+# None 9832    one column per word
+# 20 243       words seen fewer than 20 times share one column
+# 100 43
 ```
 
-`min_frequency` sets the threshold *k* (an integer count, or a fraction of rows); `max_categories` keeps only the most frequent levels. With `handle_unknown="infrequent_if_exist"` a store that appears for the first time in the test data is encoded like a rare store. A **count encoding** (`df["store"].map(counts)`) adds the size of the store as one numeric feature; it must also be computed on the training data only.
+`min_frequency` sets the threshold *k* (an integer count, or a fraction of rows); `max_categories` keeps only the most frequent levels. With `handle_unknown="infrequent_if_exist"` a word that appears for the first time in the test data is encoded like a rare word. A **count encoding** (`df["first_word"].map(counts)`) adds the frequency as one numeric feature; it must also be computed on the training data only.
 
 ### In practice
 
@@ -187,15 +187,17 @@ for k in [None, 20, 100]:
 
 ### Concept
 
-**Target encoding** (also called mean encoding) replaces each category by the mean of the target in the training rows of that category. For a binary target "review is negative", the store "B" with 10 negative reviews out of 50 gets the value 10/50 = 0.20. One numeric column replaces thousands of dummy columns, and it orders the categories by their relation to the target.
+**Target encoding** (also called mean encoding) replaces each category by the mean of the target in the training rows of that category. For the binary target "decision is in chapter 85", the first word "lampe" with 8 chapter-85 decisions out of 19 gets the value 8/19 = 0.42. One numeric column replaces thousands of dummy columns, and it orders the categories by their relation to the target.
+
+For a **multiclass** target, target encoding creates one column per class: the share of each class among the rows of the category. With 1,114 headings that is 1,114 columns per encoded feature, as many as the one-hot encoding we wanted to avoid. In practice one encodes against a coarser target (the 97 chapters) or a binary sub-question, as here.
 
 Two problems arise.
 
-1. **Small categories give noisy means.** A store with 2 reviews, both negative, gets 1.0. **Smoothing** shrinks the mean of a small category towards the overall mean ȳ:
+1. **Small categories give noisy means.** A word seen twice, both times in chapter 85, gets 1.0. **Smoothing** shrinks the mean of a small category towards the overall mean ȳ:
 
    encoding = (n · ȳ_category + m · ȳ) / (n + m)
 
-   With an overall share of negative reviews ȳ = 0.19 and *m* = 10: store A (n = 2, mean 1.0) gets (2 · 1.0 + 10 · 0.19)/12 = 0.33; store B (n = 50, mean 0.20) gets (50 · 0.20 + 10 · 0.19)/60 = 0.20. The large store keeps its value; the small one moves towards the average.
+   With an overall chapter-85 share ȳ = 0.15 and *m* = 10: word A (n = 2, mean 1.0) gets (2 · 1.0 + 10 · 0.15)/12 = 0.29; "lampe" (n = 19, mean 0.42) gets (19 · 0.42 + 10 · 0.15)/29 = 0.33. The small category moves most towards the average.
 
 2. **Target leakage.** **Leakage** means that information that will not be available at prediction time enters the training data. If a row's own label is part of the mean that encodes it, the feature partly *is* the label. For a category with one row, the encoding equals the label exactly. A model learns to trust the feature, and its training score is far too optimistic.
 
@@ -204,7 +206,7 @@ The remedy is **cross-fitting**: split the training data into *k* folds; encode 
 ```mermaid
 flowchart TB
     subgraph naive["Naive encoding"]
-        n1["Mean per store<br/>from ALL training rows"] --> n2["Row i encoded with<br/>a mean that includes y_i"]
+        n1["Mean per category<br/>from ALL training rows"] --> n2["Row i encoded with<br/>a mean that includes y_i"]
         n2 --> n3["Training score too high"]
     end
     subgraph cross["Cross-fitting (TargetEncoder)"]
@@ -219,17 +221,17 @@ Target encoding is often the best way to use a high-cardinality category in line
 
 ### How it works in Python
 
-The hashed `user_id` makes the leak visible: 49,494 of the 50,000 sample reviews have their own user. A naive encoding of `user_id` therefore copies the label.
+The decision reference `bti_reference` makes the leak visible: every one of the 50,000 sample decisions has its own reference. A naive encoding of it therefore copies the label.
 
 ```python
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.preprocessing import TargetEncoder
 
-y = df["label"].eq("neg").astype(int)                           # binary target: negative review
+y = df["chapter"].eq("85").astype(int)                          # binary target: chapter 85 (target only, never an input)
 tr, te = train_test_split(df.index, test_size=0.3, random_state=0, stratify=y)
 
-for col in ["user_id", "store"]:
+for col in ["bti_reference", "first_word"]:
     naive = y[tr].groupby(df.loc[tr, col]).mean()               # mean target per category, own row included
     f_tr = df.loc[tr, col].map(naive)
     f_te = df.loc[te, col].map(naive).fillna(y[tr].mean())      # unseen categories: overall mean
@@ -238,13 +240,13 @@ for col in ["user_id", "store"]:
     e_te = enc.transform(df.loc[te, [col]]).ravel()
     print(col, "naive:", round(roc_auc_score(y[tr], f_tr), 3), round(roc_auc_score(y[te], f_te), 3),
           "| cross-fitted:", round(roc_auc_score(y[tr], e_tr), 3), round(roc_auc_score(y[te], e_te), 3))
-# user_id naive: 1.0 0.505 | cross-fitted: 0.494 0.505
-# store naive: 0.881 0.619 | cross-fitted: 0.622 0.62
+# bti_reference naive: 1.0 0.5 | cross-fitted: 0.492 0.5
+# first_word naive: 0.975 0.902 | cross-fitted: 0.901 0.902
 ```
 
-Read the numbers as "training AUC, test AUC". The naive encoding of `user_id` separates negative from other reviews perfectly on the training rows (AUC 1.0) and is useless on new rows (0.505, chance level). The cross-fitted version is honest: its training AUC already shows that the feature carries no information. For `store`, the naive training AUC of 0.881 promises much more than the 0.619 that the feature delivers on new data; the cross-fitted training AUC (0.622) is a fair estimate.
+Read the numbers as "training AUC, test AUC". The naive encoding of `bti_reference` separates chapter-85 decisions from the others perfectly on the training rows (AUC 1.0) and is useless on new rows (0.5, chance level). The cross-fitted version is honest: its training AUC already shows that the feature carries no information. For `first_word`, the naive training AUC of 0.975 promises more than the 0.902 that the feature delivers on new data; the cross-fitted training AUC (0.901) is a fair estimate. The first word is a strong feature: words such as "smartphone" or "lampe" point to chapters directly.
 
-For the three-class review label, `TargetEncoder(target_type="multiclass")` creates one column per class (`store_neg`, `store_neu`, `store_pos`), each the smoothed share of that class. The workbooks [03-target-encoder.ipynb](../workbooks/03-target-encoder.ipynb) and [04-target-encoder-cross-fitting.ipynb](../workbooks/04-target-encoder-cross-fitting.ipynb) show both points on a wine-review dataset.
+The workbooks [03-target-encoder.ipynb](../workbooks/03-target-encoder.ipynb) and [04-target-encoder-cross-fitting.ipynb](../workbooks/04-target-encoder-cross-fitting.ipynb) show both points on a wine-review dataset.
 
 ### In practice
 
@@ -255,7 +257,7 @@ For the three-class review label, `TargetEncoder(target_type="multiclass")` crea
 > `TargetEncoder.fit(X, y).transform(X)` is **not** the same as `fit_transform(X, y)`. The first encodes the training rows with means that include their own labels (the naive leak); only `fit_transform` cross-fits. Inside a `Pipeline`, scikit-learn calls `fit_transform` during training and `transform` during prediction, which is correct.
 
 > [!WARNING]
-> Cross-fitting protects against the row's own label, not against the future. If the categories' target means change over time, encode with past data only (page 2) and validate with a time-based split (Session 7).
+> Cross-fitting protects against the row's own label, not against the future, nor against **renewals**: a decision renewed in a later year has the same description and the same heading, so with a random split the "new" row's twin sits in the training data. Encode with past data only (page 2) and validate with a time-based split (Session 7).
 
 ## 5. Custom transformers in scikit-learn pipelines
 
@@ -264,7 +266,7 @@ For the three-class review label, `TargetEncoder(target_type="multiclass")` crea
 A **transformer** in scikit-learn is an object with two methods: `fit(X, y)` learns what it needs from the training data, and `transform(X)` applies it to any data. `StandardScaler` learns means and standard deviations; `OneHotEncoder` learns the list of categories. When no built-in transformer does what we need, we write our own in one of two ways:
 
 - `FunctionTransformer(func)` wraps a function that needs nothing from the training data, such as "compute the text length" or "take the sine of the month". Its `fit` does nothing.
-- A small class that inherits from `BaseEstimator` and `TransformerMixin` is needed when something must be learned in `fit`, such as the list of frequent stores.
+- A small class that inherits from `BaseEstimator` and `TransformerMixin` is needed when something must be learned in `fit`, such as the list of frequent words.
 
 Put inside a `Pipeline` or `ColumnTransformer`, both are fitted on the training folds only, exactly like the built-in ones.
 
@@ -303,9 +305,9 @@ from sklearn.preprocessing import FunctionTransformer
 
 
 def date_features(X):
-    """Year and cyclical month of a data frame with one datetime column 'date'."""
-    month = X["date"].dt.month
-    return pd.DataFrame({"year": X["date"].dt.year,
+    """Year and cyclical month of a data frame with one datetime column 'start_date'."""
+    month = X["start_date"].dt.month
+    return pd.DataFrame({"year": X["start_date"].dt.year,
                          "month_sin": np.sin(2 * np.pi * month / 12),
                          "month_cos": np.cos(2 * np.pi * month / 12)}, index=X.index)
 
@@ -333,22 +335,23 @@ class RareGrouper(BaseEstimator, TransformerMixin):
 features = ColumnTransformer([
     ("dates", FunctionTransformer(date_features,         # names of the three output columns:
                                   feature_names_out=lambda tf, names: ["year", "month_sin", "month_cos"]),
-     ["date"]),
-    ("store", make_pipeline(RareGrouper(min_count=20),
-                            TargetEncoder(target_type="multiclass",
-                                          cv=KFold(5, shuffle=True, random_state=0))), ["store"]),
-    ("meta", "passthrough", ["helpful_vote", "n_images"]),
+     ["start_date"]),
+    ("word", make_pipeline(RareGrouper(min_count=20),
+                           TargetEncoder(target_type="binary",
+                                         cv=KFold(5, shuffle=True, random_state=0))), ["first_word"]),
+    ("meta", OneHotEncoder(min_frequency=20, handle_unknown="infrequent_if_exist", sparse_output=False),
+     ["language", "issuing_country"]),
 ])
-model = make_pipeline(features, HistGradientBoostingClassifier(random_state=0, class_weight="balanced"))
-X = df[["date", "store", "helpful_vote", "n_images"]]
+model = make_pipeline(features, HistGradientBoostingClassifier(random_state=0))
+X = df[["start_date", "first_word", "language", "issuing_country"]]
 cv = StratifiedKFold(5, shuffle=True, random_state=0)
-scores = cross_val_score(model, X, df["label"], cv=cv, scoring="f1_macro")
-print(scores.mean().round(3))                                # 0.337
-print(model.fit(X, df["label"])[0].get_feature_names_out()[:4])
-# ['dates__year' 'dates__month_sin' 'dates__month_cos' 'store__store_neg']
+scores = cross_val_score(model, X, y, cv=cv, scoring="roc_auc")
+print(scores.mean().round(3))                                # 0.826
+print(model.fit(X, y)[0].get_feature_names_out()[:4])
+# ['dates__year' 'dates__month_sin' 'dates__month_cos' 'word__first_word']
 ```
 
-Everything that learns from data (the list of frequent stores, the target means) is fitted again inside each cross-validation fold. The cross-validated macro-F1 of 0.34 is only a little above the 0.28 of always predicting "positive", because the model sees no text; text statistics follow on page 2. The mechanism matters here, not the score.
+Everything that learns from data (the list of frequent words, the target means, the categories of the one-hot encoder) is fitted again inside each cross-validation fold. The model sees no text apart from the first word, so its cross-validated ROC AUC of 0.83 is modest. The grouping threshold matters: with `min_count=5` the same pipeline reaches 0.878, without grouping (`min_count=1`) 0.868. Too coarse a grouping throws away informative words, too fine a grouping leaves noisy categories; the threshold is a hyperparameter to tune (Session 7). Adding the text statistics of page 2 raises the score to about 0.93 in our runs; the full text follows in Sessions 13 and 14. The mechanism matters here, not the score.
 
 ### In practice
 
@@ -363,14 +366,14 @@ Everything that learns from data (the list of frequent stores, the target means)
 
 ## Practice
 
-Build date, interaction and target-encoded store features for the reviews in [05-case-study-review-features.ipynb](../workbooks/05-case-study-review-features.ipynb): add year and cyclical month features, one interaction of your choice, the store grouped and target-encoded with cross-fitting, and compare the cross-validated macro-F1 with and without each group of features.
+Build date, interaction and target-encoded features for the decisions in [05-case-study-decision-features.ipynb](../workbooks/05-case-study-decision-features.ipynb): add year and cyclical month features, one interaction of your choice (for example language × description length), the first word grouped and target-encoded with cross-fitting, and compare the ROC AUC for the chapter-85 question with and without each group of features, using a time-based validation (fit 2017–2021, validate 2022–2023).
 
 ## Check your understanding
 
 1. Why does a logistic regression need a cyclical encoding of the month, while a decision tree usually does not?
 2. In the member-discount table, what single extra column lets an additive model fit all four cells, and what values does it take?
-3. A store has 3 reviews, all negative; the overall share of negative reviews is 0.19. What is its smoothed target encoding with *m* = 10?
-4. Why does a naive target encoding of `user_id` give a training AUC of 1.0 but a test AUC of 0.5?
+3. A first word occurs in 3 decisions, all in chapter 85; the overall chapter-85 share is 0.15. What is its smoothed target encoding with *m* = 10?
+4. Why does a naive target encoding of `bti_reference` give a training AUC of 1.0 but a test AUC of 0.5? And why would a multiclass target encoding of the first word against the 1,114 headings be impractical?
 5. When do you need a class that inherits from `BaseEstimator` and `TransformerMixin` instead of a `FunctionTransformer`?
 
 ## Further reading

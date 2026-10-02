@@ -1,16 +1,16 @@
 # Multivariate outliers, transformations and a documented cleaning pipeline
 
-This page covers the third block. Some observations are unusual only in the *combination* of their values; the **Mahalanobis distance** finds them. Skewed variables are made more symmetric with the logarithm, Box–Cox or Yeo–Johnson transformations, and variables on different scales are brought to a common scale. Finally, all decisions are combined into a **cleaning pipeline** that is code, runs in one go and writes a log of every decision. The practice task produces the cleaned review table that later sessions use ([workbook 14](../workbooks/14-case-study-cleaned-review-table.ipynb)). Model-based outlier detection (Isolation Forest, local outlier factor) follows in Session 11.
+This page covers the third block. Some observations are unusual only in the *combination* of their values; the **Mahalanobis distance** finds them. Skewed variables are made more symmetric with the logarithm, Box–Cox or Yeo–Johnson transformations, and variables on different scales are brought to a common scale. Finally, all decisions are combined into a **cleaning pipeline** that is code, runs in one go and writes a log of every decision. The practice task produces the cleaned table of BTI decisions with a log of every cleaning decision ([workbook 14](../workbooks/14-case-study-cleaned-decision-table.ipynb)). Model-based outlier detection (Isolation Forest, local outlier factor) follows in Session 11.
 
 ```mermaid
 flowchart LR
-    RAW["train.parquet<br/>434,373 rows"] --> S1["1 remove<br/>empty texts"]
-    S1 --> S2["2 normalise<br/>text"]
-    S2 --> S3["3 remove repeated<br/>user-product reviews"]
-    S3 --> S4["4-7 add columns,<br/>transform, flag outliers"]
-    S4 --> S5["8-10 join products,<br/>indicators"]
+    RAW["train.parquet<br/>309,529 rows"] --> S1["1 remove<br/>template texts"]
+    S1 --> S2["2-3 placeholder dates,<br/>normalise text"]
+    S2 --> S3["4-7 flag codes,<br/>duplicates, languages"]
+    S3 --> S4["8-9 indicators<br/>for missing values"]
+    S4 --> S5["10-12 transform,<br/>flag outliers"]
     S5 --> V{"validate"}
-    V -->|pass| OUT["reviews_clean.parquet<br/>+ cleaning_log.csv"]
+    V -->|pass| OUT["decisions_clean.parquet<br/>+ cleaning_log.csv"]
     V -->|fail| S1
 ```
 
@@ -34,7 +34,7 @@ A small example by hand with two standardised, uncorrelated variables: the point
 
 ### Why it matters
 
-Many data errors and many interesting cases show up only in combinations: a plausible age with an implausible diagnosis, a normal transaction amount at an unusual time, a very long title with a one-word review. Univariate rules miss them. The robust version matters because real data often contain a *group* of anomalies (a batch of mis-coded records), which would otherwise widen the classical ellipse until it no longer flags them.
+Many data errors and many interesting cases show up only in combinations: a plausible age with an implausible diagnosis, a normal transaction amount at an unusual time, a long technical description without a single number. Univariate rules miss them. The robust version matters because real data often contain a *group* of anomalies (a batch of mis-coded records), which would otherwise widen the classical ellipse until it no longer flags them.
 
 ### How it works in Python
 
@@ -64,7 +64,7 @@ for est in [EmpiricalCovariance().fit(X), MinCovDet(random_state=0).fit(X)]:
 
 With the classical estimate, the contaminating group pulls the centre and inflates the covariance: the tall, light person has d = 3.2, below the cut-off √13.8 = 3.7, and is not flagged, and 8 of the 25 group points also escape. With the MCD estimate, the person (d = 6.4) and the whole group are flagged, plus two ordinary points in the tails. The figure above shows the two ellipses.
 
-On the review data, workbook 14 computes the robust distance on (log text length, log title length) and flags about 0.2 % of reviews, for example reviews with a long title and a text of one word.
+On the decision data, workbook 14 computes the robust distance on two description features (Box–Cox length, log of 1 + number of digits) and flags 5,299 decisions (1.7 %), for example long descriptions without any number. A first attempt with four features, adding the number of lines and the share of upper-case letters, flagged 23.7 % of all decisions: the share of upper-case letters is bimodal, because about 7.6 % of the descriptions are written in capitals, and MCD then treats the whole minority group as outliers. The distance assumes one elliptical cloud; check that before you trust it.
 
 ### In practice
 
@@ -76,7 +76,7 @@ On the review data, workbook 14 computes the robust distance on (log text length
 > The Mahalanobis distance assumes one roughly elliptical cloud. With strongly skewed variables, transform them first (next section); with several clusters or many zeros, use the model-based methods of Session 11. With many variables relative to rows, the covariance estimate becomes unstable.
 
 > [!CAUTION]
-> MCD needs a covariance matrix that is not singular. A variable that is constant in more than half of the rows (for example `helpful_vote`, which is 0 for most reviews) makes MCD fail or give meaningless distances. Leave such variables out or transform them first.
+> MCD needs a covariance matrix that is not singular. A variable that is constant in more than half of the rows (for example the validity duration, which is 1,095 days for most decisions) makes MCD fail or give meaningless distances. Leave such variables out or transform them first.
 
 ## Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)
 
@@ -102,7 +102,7 @@ y = (x^λ − 1) / λ for λ ≠ 0, and y = log(x) for λ = 0.
 | `MinMaxScaler` | (x − min) / (max − min) | bounded inputs, e.g. for neural networks |
 | `RobustScaler` | (x − median) / IQR | data with outliers |
 
-A worked example by hand: review lengths 10, 100 and 1,000 characters. Their mean is 370, dominated by the longest. Their base-10 logarithms are 1, 2 and 3, with mean 2, corresponding to a typical length of 10² = 100 characters (the geometric mean).
+A worked example by hand: description lengths 10, 100 and 1,000 characters. Their mean is 370, dominated by the longest. Their base-10 logarithms are 1, 2 and 3, with mean 2, corresponding to a typical length of 10² = 100 characters (the geometric mean).
 
 ```mermaid
 flowchart TD
@@ -128,32 +128,32 @@ import pandas as pd
 from scipy.stats import boxcox, skew
 from sklearn.preprocessing import PowerTransformer, RobustScaler, StandardScaler
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-length = reviews["text"].str.len()
-length = length[length > 0]                                    # Box-Cox needs positive values
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+length = decisions["description"].str.len()                   # all > 0: Box-Cox is possible
 
 transformed, lam = boxcox(length)
 print(round(lam, 2), round(skew(length), 2), round(skew(np.log(length)), 2), round(skew(transformed), 2))
-# 0.09 7.19 -0.31 -0.0   <- lambda close to 0: nearly a log transformation
+# 0.35 1.32 -0.75 -0.0   <- the log over-corrects (skew to the left); Box-Cox finds lambda = 0.35
 
 # the same with scikit-learn, which stores lambda for new data
 pt = PowerTransformer(method="box-cox").fit(length.to_frame())
-print(pt.lambdas_.round(2))                                     # [0.09]
+print(pt.lambdas_.round(2))                                     # [0.35]
 
-votes = reviews[["helpful_vote"]]                               # zeros: Yeo-Johnson or log1p
-yj = PowerTransformer(method="yeo-johnson").fit(votes)
-print(round(skew(votes["helpful_vote"]), 1), round(skew(np.log1p(votes["helpful_vote"])), 2),
-      round(skew(yj.transform(votes).ravel()), 2))
-# 201.4 2.52 0.99
+digits = decisions["description"].str.count(r"[0-9]").to_frame("n_digits")   # 13 % zeros: Yeo-Johnson or log1p
+yj = PowerTransformer(method="yeo-johnson").fit(digits)
+print(round(skew(digits["n_digits"]), 1), round(skew(np.log1p(digits["n_digits"])), 2),
+      round(skew(yj.transform(digits).ravel()), 2))
+# 4.4 -0.59 -0.06
 
-X = reviews[["helpful_vote", "n_images"]].assign(length=reviews["text"].str.len())
+X = pd.DataFrame({"n_chars": length, "n_digits": digits["n_digits"],
+                  "n_lines": decisions["description"].str.count("\n") + 1})
 print(StandardScaler().fit_transform(X).std(axis=0).round(2))   # [1. 1. 1.]
-print(RobustScaler().fit(X).scale_)                             # IQR of each column: [  1.   1. 180.]
+print(RobustScaler().fit(X).scale_)                             # IQR of each column: [468.  17.   7.]
 ```
 
-![Review length before and after the Box–Cox transformation, with normal Q–Q plots](figures/box-cox-before-after.png)
+![Description length before and after the Box–Cox transformation, with normal Q–Q plots](figures/box-cox-before-after.png)
 
-After the transformation the histogram is close to symmetric and the points of the Q–Q plot lie close to the line. Helpful votes remain skewed even after Yeo–Johnson, because most values are 0; for such variables an indicator ("has at least one vote") plus log1p of the count is often more useful than any power transformation.
+After the transformation the histogram is close to symmetric and the points of the Q–Q plot lie close to the line, except in the extreme tails. Description length is a case where the plain logarithm is too strong (the skewness changes sign, from 1.32 to −0.75); Box–Cox with λ = 0.35, between a square root and a cube root, fits better. For the number of digits, with 13 % zeros, Yeo–Johnson and log1p both remove most of the skew.
 
 ### In practice
 
@@ -165,7 +165,7 @@ After the transformation the histogram is close to symmetric and the points of t
 > Fit transformations (λ, mean, SD, median, IQR) on the training data and apply them to the test data unchanged. Estimating λ on all data is a mild form of data leakage.
 
 > [!CAUTION]
-> Results on a transformed scale must be translated back for the reader. The back-transformed mean of log values is the geometric mean, not the arithmetic mean: exp(mean(log price)) is not the average price. Say which one you report.
+> Results on a transformed scale must be translated back for the reader. The back-transformed mean of log values is the geometric mean, not the arithmetic mean: exp(mean(log length)) is not the average length. Say which one you report.
 
 ## A documented cleaning pipeline
 
@@ -180,17 +180,19 @@ A **cleaning pipeline** is a fixed sequence of steps that turns the raw table in
 
 The record of all steps is the **cleaning log**. Together with the code, it lets anyone reproduce the cleaned table from the raw data and understand every difference between them.
 
-Typical decisions for the review data, with the counts from workbook 14:
+Typical decisions for the BTI data, with the counts from workbook 14:
 
 | Step | Rule | Rows | Action | Reason |
 |---|---|---|---|---|
-| 1 | text empty | 95 | remove | no content for text tasks |
-| 2 | HTML `<br />` or U+00A0 in text | 35,001 | correct | distort lengths and word counts |
-| 3 | same user, same product again | 602 | keep the latest | one opinion per customer and product |
-| 4 | text identical to another review | 37,731 | flag | short generic texts are genuine |
-| 5 | skewed length and votes | all | add Box–Cox / log1p columns | raw columns kept |
-| 6–7 | univariate / Mahalanobis outliers | 137 / 997 | flag | inspect, do not delete |
-| 8–10 | store missing, price missing, empty column | … | "unknown", indicator, drop | see block 2 |
+| 1 | description is a database template (`SQL{...}`) | 73 | remove | says nothing about the goods |
+| 2 | end date 1900-01-01 (annulled, code 55) | 510 | set to missing, flag `annulled` | a placeholder is not a date |
+| 3 | Windows line breaks, no-break spaces, repeated spaces | 181,359 | correct | makes lengths comparable; line breaks kept |
+| 4–5 | heading 8803 (deleted in HS 2022); CN code with 4 or 6 digits | 51 / 1,040 | flag | the label is still valid for its time |
+| 6 | description identical to another decision | 23,606 | flag | renewals are real; they matter for validation (Session 7) |
+| 7 | language neither official in the country nor English | 9 | flag | probably a wrong language code |
+| 8–9 | keywords missing; invalidation reason missing | 1,273 / 264,254 | keep NULL, add indicators | not MCAR; structural |
+| 10 | skewed length and digit counts | all | add Box–Cox / log1p columns | raw columns kept |
+| 11–12 | univariate / Mahalanobis outliers | 169 / 5,299 | flag | inspect, do not delete |
 
 ```mermaid
 stateDiagram-v2
@@ -218,7 +220,7 @@ Good practice:
 
 ### Why it matters
 
-Cleaning decisions change results. Removing duplicates changes counts; removing extreme reviews changes average lengths; imputing prices changes every price statistic. If decisions are not recorded, results cannot be reproduced or defended, and different team members clean the same data differently. A documented pipeline is also what reviewers, supervisors and future colleagues ask for first.
+Cleaning decisions change results. Removing duplicates changes counts; removing extreme descriptions changes average lengths; imputing a value changes every statistic computed from it. If decisions are not recorded, results cannot be reproduced or defended, and different team members clean the same data differently. A documented pipeline is also what reviewers, supervisors and future colleagues ask for first.
 
 ### How it works in Python
 
@@ -236,27 +238,29 @@ def record(step, rule, affected, action, reason, n_rows):
                 "action": action, "reason": reason, "rows_after": n_rows})
 
 
-def drop_empty_text(df):
-    empty = df["text"].str.strip().eq("")
-    out = df[~empty]
-    record("1", "text empty", int(empty.sum()), "remove", "no content for text analysis", len(out))
+def drop_template_descriptions(df):
+    template = df["description"].str.upper().str.contains("SQL{", regex=False)
+    out = df[~template]
+    record("1", "description is a database template", int(template.sum()), "remove",
+           "the text says nothing about the goods", len(out))
     return out
 
 
-def dedupe_user_product(df):
-    dup = df.duplicated(["user_id", "parent_asin"], keep="last")
-    out = df[~dup]
-    record("2", "same user and product again", int(dup.sum()), "keep the latest",
-           "one opinion per customer and product", len(out))
+def fix_placeholder_end_date(df):
+    out = df.copy()
+    placeholder = out["end_date"].dt.year.eq(1900)
+    out.loc[placeholder, "end_date"] = pd.NaT
+    record("2", "end_date 1900-01-01 (annulled)", int(placeholder.sum()), "set to missing",
+           "a placeholder is a hidden missing value, not a date", len(out))
     return out
 
 
-clean = raw.sort_values("date").pipe(drop_empty_text).pipe(dedupe_user_product)
-assert not clean.duplicated(["user_id", "parent_asin"]).any()     # validate before saving
+clean = raw.pipe(drop_template_descriptions).pipe(fix_placeholder_end_date)
+assert not clean["end_date"].dt.year.eq(1900).any()                # validate before saving
 print(pd.DataFrame(log)[["step", "rows_affected", "action", "rows_after"]].to_string(index=False))
-# step  rows_affected          action  rows_after
-#    1             95          remove      434278
-#    2            602 keep the latest      433676
+# step  rows_affected         action  rows_after
+#    1             73         remove      309456
+#    2            510 set to missing      309456
 ```
 
 ### In practice
@@ -266,18 +270,18 @@ print(pd.DataFrame(log)[["step", "rows_affected", "action", "rows_after"]].to_st
 - **Data engineering teams** keep cleaning steps in version-controlled code (for example dbt models or Python modules) and run the validation tests after each step, so that each published table has a known lineage.
 
 > [!IMPORTANT]
-> The cleaned table is an input to all later sessions. Keep the pipeline and the log in your project repository, and regenerate the table with the code rather than copying it around.
+> The cleaned table can be the input of later analyses. Keep the pipeline and the log in your project repository, and regenerate the table with the code rather than copying it around.
 
 > [!TIP]
-> Write the reason as if for a colleague who disagrees: "keep the latest review because an updated review replaces the earlier opinion" can be discussed; "removed duplicates" cannot.
+> Write the reason as if for a colleague who disagrees: "flag renewed decisions but keep them, because each is a real decision; keep copies on one side of a validation split" can be discussed; "removed duplicates" cannot.
 
 ## Check your understanding
 
 1. Why can a point be a Mahalanobis outlier although its z-score is below 3 in every variable?
 2. Why does the robust (MCD) ellipse in the figure flag the contaminating group while the classical ellipse does not?
-3. Box–Cox estimates λ = 0.09 for the review length. What does that tell you about the transformation, and why can it not be applied to `helpful_vote`?
+3. Box–Cox estimates λ = 0.35 for the description length. What does that tell you about the transformation compared with the logarithm, and why can it not be applied to the number of digits?
 4. Which scaler would you choose for a variable with a few extreme values, and why?
-5. For each of the following, decide between remove, correct, flag and keep, and write the log entry: (a) reviews with an empty text; (b) a price of 4,449 dollars for a mobility scooter; (c) a review dated 1970-01-01.
+5. For each of the following, decide between remove, correct, flag and keep, and write the log entry: (a) a decision whose description is "TEST"; (b) a description of 8,621 characters for a conveyor system; (c) a decision whose start date is 06/07/2200.
 
 ## Further reading
 

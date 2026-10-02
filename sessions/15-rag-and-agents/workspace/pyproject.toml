@@ -1,7 +1,7 @@
 [project]
-name = "review-assistant"
-version = "0.1.0"
-description = "Retrieval-augmented generation and a small tool-calling agent over product reviews (Session 15)"
+name = "bti-assistant"
+version = "0.2.0"
+description = "A classification assistant for EU customs decisions: retrieval-augmented generation and a small tool-calling agent (Session 15)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# real embeddings (downloads all-MiniLM-L6-v2, about 90 MB, on first use)
+# real embeddings (downloads intfloat/multilingual-e5-small, about 470 MB, on first use)
 embeddings = ["sentence-transformers>=3.0"]
 # the course path: PostgreSQL with the pgvector extension
 postgres = ["psycopg[binary]>=3.2", "pgvector>=0.3"]
@@ -26,7 +26,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/review_assistant"]
+packages = ["src/bti_assistant"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

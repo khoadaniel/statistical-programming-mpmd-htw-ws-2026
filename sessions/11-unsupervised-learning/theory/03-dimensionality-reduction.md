@@ -2,7 +2,7 @@
 
 Tables in practice have many columns, and people can only look at two or three at a time. **Dimensionality reduction** replaces many columns by a few new ones that keep as much of the relevant information as possible. This page covers the linear standard method, **principal component analysis** (PCA), with its two key outputs, explained variance and loadings, and then two non-linear methods made for pictures, **t-SNE** and **UMAP**. It ends with what such pictures can and cannot show.
 
-The code blocks build on each other; run them in order. They use two built-in scikit-learn datasets: 178 wines with 13 chemical measurements, and 1,797 images of handwritten digits with 64 pixels each.
+The code blocks build on each other; run them in order. They use two built-in scikit-learn datasets, 178 wines with 13 chemical measurements and 1,797 images of handwritten digits with 64 pixels each, and finally the BTI decisions of the case study.
 
 ```mermaid
 flowchart LR
@@ -97,7 +97,7 @@ Both keep **local** structure: rows that are neighbours in the original space st
 
 ### Why it matters
 
-A good 2-D map lets people see groups, outliers and mislabelled examples in data with dozens or thousands of columns (embeddings of reviews in Session 14, for instance). But the maps distort. Distances *between* groups, the *size* of groups and the empty space in a t-SNE or UMAP map have no reliable meaning, and different settings can produce different pictures from the same data.
+A good 2-D map lets people see groups, outliers and mislabelled examples in data with dozens or thousands of columns (TF-IDF or embeddings of BTI decisions, below and in Session 14). But the maps distort. Distances *between* groups, the *size* of groups and the empty space in a t-SNE or UMAP map have no reliable meaning, and different settings can produce different pictures from the same data.
 
 ### How it works in Python
 
@@ -138,6 +138,46 @@ In the t-SNE and UMAP maps the ten digits form ten separate groups, although the
 > [!TIP]
 > For data with hundreds of columns (text embeddings), first reduce to 30–50 principal components, then run t-SNE or UMAP on the scores. It is faster and removes noise.
 
+## A map of decisions: truncated SVD and t-SNE on text
+
+### Concept
+
+A TF-IDF matrix (Session 13) has one column per word: thousands of sparse columns. **Truncated SVD** is the PCA of such matrices: it finds the directions of largest variation without first subtracting the column means, which would destroy the sparsity. Applied to text it is also called **latent semantic analysis** (LSA): words that occur in the same documents load on the same component. The usual recipe for a picture is the one of the tip above: TF-IDF, then 50 SVD components, then t-SNE or UMAP on the components.
+
+### Why it matters
+
+Maps of documents show at a glance what dominates the texts. For the case study, a map of the decisions of one chapter can show whether the headings form separate regions, and whether something else, such as the language, structures the data more strongly.
+
+### How it works in Python
+
+```python
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+sample = pd.read_parquet("case-study/data/train_sample.parquet")
+furn = sample[sample["chapter"] == "94"].reset_index(drop=True)     # furniture, seats, bedding, lamps
+X_text = TfidfVectorizer(min_df=3, sublinear_tf=True).fit_transform(furn["description"])
+svd = TruncatedSVD(n_components=50, random_state=0).fit(X_text)
+S = svd.transform(X_text)
+print(X_text.shape, svd.explained_variance_ratio_.sum().round(3))   # (2321, 5463) 0.309
+text_map = TSNE(perplexity=30, init="pca", random_state=0).fit_transform(S)
+print(round(trustworthiness(S, text_map, n_neighbors=10), 3),        # 0.996  t-SNE
+      round(trustworthiness(S, S[:, :2], n_neighbors=10), 3))        # 0.852  first two components
+# plot: plt.scatter(*text_map.T, c=furn["language"].astype("category").cat.codes, s=4)
+```
+
+![Two t-SNE maps of the same 2,321 chapter-94 decisions: coloured by language (left) the points form clearly separated islands for German, French, Swedish and English; coloured by heading (right) lamps, furniture and seats appear as regions inside each language island](figures/decision_map.png)
+
+Fifty components keep 31 % of the variance of the 5,463 word columns, and the t-SNE map preserves neighbourhoods well (trustworthiness 0.996). Coloured by language, the map splits into islands, one per language; coloured by heading, the lamps, furniture and seats form regions *inside* each island. The picture explains the finding of page 2: in a word space, two descriptions of the same lamp in German and French are farther apart than a German lamp and a German chair.
+
+### In practice
+
+- **Topic exploration.** LSA was introduced for information retrieval (Deerwester et al., 1990); SVD components of TF-IDF matrices are still a quick way to explore large document collections.
+- **Checking labels.** Customs authorities and other coding services could use such maps to spot decisions whose heading colour lies inside a region of another heading; page 4 turns this idea into an anomaly score.
+
+> [!WARNING]
+> Truncated SVD on raw TF-IDF is not centred, so its first component often just measures document length or the most common words. Look at the top-loading words of a component before giving it a name.
+
 ## Check your understanding
 
 1. Two standardised columns have correlation 0. What are the eigenvalues of their correlation matrix, and how much variance does PC1 explain?
@@ -145,6 +185,7 @@ In the t-SNE and UMAP maps the ten digits form ten separate groups, although the
 3. What does a loading of 0.42 for flavanoids on PC1 tell you? What does it not tell you?
 4. In a t-SNE map, group A is twice as large as group B and far away from it. Which of these two observations can you report?
 5. When would you prefer PCA scores over a UMAP map as input to a later model?
+6. Why does truncated SVD not subtract the column means of a TF-IDF matrix, and what is the consequence for the first component?
 
 ## Further reading
 

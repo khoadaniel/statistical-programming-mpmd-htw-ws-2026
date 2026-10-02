@@ -1,6 +1,6 @@
 # Decision thresholds, calibration and the first leaderboard submission
 
-This page covers the third block of Session 8. A classifier produces probabilities; a business needs decisions. The page shows how to turn probabilities into decisions with a threshold chosen from the costs of the two kinds of error, how to check whether the probabilities themselves can be trusted (calibration), and how to make the first submission to the course leaderboard with a logistic regression on the seven simple text features of Session 2.
+This page covers the third block of Session 8. A classifier produces probabilities; a business needs decisions. The page shows how to turn probabilities into decisions with a threshold chosen from the costs of the two kinds of error, how a threshold on the model's confidence lets a classifier with a thousand classes **abstain** and pass uncertain cases to a human, how to check whether the probabilities themselves can be trusted (calibration), and how to make the first submission to the course leaderboard with a logistic regression on the simple description features of Session 2.
 
 The code blocks build on each other; run them in order from the repository root. The first block rebuilds the Telco pipeline of theory page 01.
 
@@ -12,6 +12,7 @@ flowchart LR
     CAL -->|yes| TH["Choose threshold<br/>from error costs<br/>(on validation data)"]
     FIX --> TH
     TH --> D["Decision:<br/>offer / no offer"]
+    P --> AB["Many classes:<br/>accept or abstain<br/>(confidence threshold)"]
 ```
 
 ## Decision thresholds from the costs of errors
@@ -101,6 +102,55 @@ The scikit-learn workbooks [10-tuned-decision-threshold.ipynb](../workbooks/10-t
 > [!TIP]
 > Costs are often uncertain. Plot the total cost against the threshold: if the curve is flat around the optimum, the exact choice matters little; if it is steep, the cost assumptions deserve a second look with the business owner.
 
+## Abstention: routing uncertain decisions to a human
+
+**Concept.** With more than two classes there is no single threshold between "yes" and "no". There is, however, a natural decision: **accept** the model's prediction, or **abstain** and pass the case to a person. A simple rule uses the model's **confidence**, the highest predicted probability of a case: accept if it is at least *t*, abstain otherwise. Two numbers describe the result for each *t*:
+
+- **coverage**: the share of cases the model decides on its own;
+- **accuracy on the covered cases** (sometimes called selective accuracy).
+
+Raising *t* lowers coverage and, if the confidences are informative, raises accuracy. The **coverage–accuracy curve** shows the whole trade-off, and the costs decide where to operate, as for churn: a wrong classification can lead to wrongly paid duties or a dispute; a case passed to a customs officer costs working time.
+
+![Coverage–accuracy curve of a TF-IDF text classifier on the EBTI decisions of 2022–2023: at full coverage accuracy is 0.75; when the model decides only the 65 % of cases with confidence of at least 0.5, accuracy on them is 0.96.](figures/coverage_accuracy.png)
+
+**Why it matters.** A model that is right three times out of four is not acceptable for binding decisions, but it can still do useful work: settle the clear cases and leave the hard ones to experts. This is how classification assistants in customs administrations and tariff tools for traders are usually designed. Abstention also makes the errors visible: the cases the model passes on are where it would have been wrong most often.
+
+**How it works in Python.** The text classifier of theory page 02, trained on 2017–2021 and applied to 2022–2023 in the sample (about 15 seconds):
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import SGDClassifier
+
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+past = decisions["start_date"].dt.year <= 2021
+train_d, valid_d = decisions[past], decisions[~past]
+text_clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                         SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
+text_clf.fit(train_d["description"], train_d["heading"])
+proba_h = text_clf.predict_proba(valid_d["description"])
+pred_h = text_clf.classes_[proba_h.argmax(axis=1)]
+confidence = proba_h.max(axis=1)
+correct = pred_h == valid_d["heading"].to_numpy()
+
+for t in [0.0, 0.3, 0.5, 0.7, 0.9]:
+    accept = confidence >= t
+    print(f"t = {t:.1f}  coverage {accept.mean():.3f}  accuracy on accepted {correct[accept].mean():.3f}")
+# t = 0.0  coverage 1.000  accuracy on accepted 0.749
+# t = 0.3  coverage 0.739  accuracy on accepted 0.920
+# t = 0.5  coverage 0.654  accuracy on accepted 0.961
+# t = 0.7  coverage 0.565  accuracy on accepted 0.986
+# t = 0.9  coverage 0.274  accuracy on accepted 0.999
+```
+
+At *t* = 0.5 the model decides about two thirds of the 13,199 decisions with 96 % accuracy and passes one third to a person. As with the churn threshold, *t* must be chosen on validation data and checked once on test data; the leaderboard itself has no abstention (every test decision needs a heading).
+
+**In practice.**
+- Document-processing systems (for example invoice or form extraction) route fields with low confidence to manual verification; the threshold is set from the cost of an error and the capacity of the verification team.
+- Automatic coding of free-text answers into official classifications (occupations, economic activities) at statistical offices accepts high-confidence codes automatically and sends the rest to human coders.
+
+> [!WARNING]
+> Abstention needs confidences that rank the cases well; it does not need them to be calibrated. If you also want to promise an accuracy ("at least 95 % on the accepted cases"), estimate it on validation data, because the confidences of a model are not automatically equal to its accuracy (next section).
+
 ## Calibration of predicted probabilities
 
 **Concept.** A classifier is **calibrated** if its probabilities mean what they say: among all customers who receive a churn probability of about 0.3, about 30 % actually churn. A **calibration curve** (reliability diagram) groups the test cases into bins by predicted probability and plots the mean predicted probability (x-axis) against the observed share of positives (y-axis). A calibrated model lies on the diagonal.
@@ -149,62 +199,73 @@ Naive Bayes predicts "certain churn" (p ≈ 1) for many customers of whom only a
 > Recalibrate on data the model was not trained on. `CalibratedClassifierCV(cv=5)` does this internally with cross-validation; never fit the calibration mapping on the test set.
 
 > [!NOTE]
-> For three or more classes (the leaderboard) calibration is checked per class, one-vs-rest. Session 9 returns to calibration after re-weighting the rare classes.
+> For three or more classes calibration is checked per class (one-vs-rest) or for the **confidence**: among cases with a highest probability of about 0.4, is the prediction right about 40 % of the time? The text classifier of the abstention section is **under-confident**: its mean confidence on 2022–2023 is 0.62 while its accuracy is 0.75 (`print(confidence.mean().round(2), correct.mean().round(2))`). Its confidences rank the cases well, which is all abstention needs, but they understate how often it is right.
 
 ## The first leaderboard submission (round L1)
 
-**Concept.** The course leaderboard ([case study](../../../case-study/README.md)) asks for the sentiment of each test review: `neg`, `neu` or `pos`. Training data are the reviews up to 2021; the test set contains the reviews of 2022 (public leaderboard) and 2023 (private leaderboard), without labels. The metric is **macro-F1**. Round L1 uses the simplest reasonable model: logistic regression on seven simple text features from Session 2 (text length, "!", "?", negation words, verified purchase, helpful votes, images). Reference value on the public leaderboard: about 0.49.
+**Concept.** The course leaderboard ([case study](../../../case-study/README.md)) asks for the four-digit HS heading of each test decision. Training data are the decisions of 2017–2023; the test set contains the decisions of 2024 (public leaderboard) and 2025–2026 (private leaderboard), with only what a trader's request contains: description, language, issuing country and start date. The metric is **accuracy**, with **macro-F1** reported alongside. Round L1 uses the simplest reasonable model: logistic regression on the simple description features of Session 2 (length in characters and words, number of lines and digits, share of capital letters, whether the description quotes its own code), plus the language and the issuing country.
 
-A submission is a CSV file with the columns `review_id,label` and exactly one row per test review.
+A submission is a CSV file with the columns `id,heading` (heading as a four-digit string, leading zeros kept) and exactly one row per test decision.
 
-**Why it matters.** The leaderboard is the course's shared held-out test (Session 7): nobody sees the labels, so nobody can tune on them. L1 sets the baseline that every later round (gradient boosting in Session 10, TF-IDF in Session 13) must beat, and it trains the workflow: fit on the training data, predict the test file, write a valid submission, record the validation score next to the leaderboard score.
+**Why it matters.** The leaderboard is the course's shared held-out test (Session 7): nobody sees the labels, so nobody can tune on them. L1 sets the baseline that every later round (tree-based models in Session 10, TF-IDF in Session 13) must beat, and it trains the workflow: fit on the training data, predict the test file, write a valid submission, record the validation score next to the leaderboard score. The simple features describe the *form* of a description, not its content, so L1 is deliberately weak: it shows why the text itself is needed.
 
-**How it works in Python.** Because the neutral class is rare (7.5 %), a plain logistic regression almost never predicts it and macro-F1 suffers. `class_weight="balanced"` gives errors on rare classes more weight during fitting; Session 9 explains this in detail. Here we use it as a given setting.
+**How it works in Python.** The 50,000-decision sample (a logistic regression with about 1,000 classes on all 309,529 decisions needs several GB of memory). Each fit takes about a minute.
 
 ```python
-from sklearn.metrics import f1_score
-from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+from sklearn.metrics import accuracy_score, f1_score
+
+def upper_share(text):
+    letters = [c for c in text if c.isalpha()]
+    return sum(c.isupper() for c in letters) / len(letters) if letters else 0.0
 
 def simple_features(d):
-    t = d["title"].fillna("") + " " + d["text"].fillna("")
+    t = d["description"]
     return pd.DataFrame({
-        "log_len": np.log1p(t.str.len()), "n_excl": t.str.count("!"), "n_quest": t.str.count(r"\?"),
-        "n_neg": t.str.lower().str.count(r"\b(?:not|no|never|don't|didn't|doesn't|waste|return)\b"),
-        "verified": d["verified_purchase"].astype(int), "log_helpful": np.log1p(d["helpful_vote"]),
-        "n_images": d["n_images"]})
+        "log_chars": np.log(t.str.len()), "log_words": np.log1p(t.str.split().str.len()),
+        "n_lines": t.map(lambda x: sum(1 for line in x.splitlines() if line.strip())),
+        "has_code": t.str.contains("<CODE>", regex=False).astype(int),
+        "n_digits": t.str.count(r"[0-9]"), "upper_share": t.map(upper_share),
+        "language": d["language"], "country": d["issuing_country"]}, index=d.index)
 
-cols = ["review_id", "title", "text", "helpful_vote", "verified_purchase", "n_images", "date", "label"]
-train = pd.read_parquet("case-study/data/train.parquet", columns=cols).sort_values("date", ignore_index=True)
+train = pd.read_parquet("case-study/data/train_sample.parquet")
 test = pd.read_parquet("case-study/data/test.parquet")
-X_tr, y_tr, X_te = simple_features(train), train["label"], simple_features(test)
+X_tr, y_tr, X_te = simple_features(train), train["heading"], simple_features(test)
+numeric = ["log_chars", "log_words", "n_lines", "has_code", "n_digits", "upper_share"]
+l1 = make_pipeline(
+    ColumnTransformer([("num", StandardScaler(), numeric),
+                       ("cat", OneHotEncoder(handle_unknown="infrequent_if_exist", min_frequency=20),
+                        ["language", "country"])]),
+    LogisticRegression(max_iter=300))
 
-l1 = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000, class_weight="balanced"))
-cv_f1 = cross_val_score(l1, X_tr, y_tr, cv=TimeSeriesSplit(5), scoring="f1_macro")
-print(cv_f1.round(3), round(cv_f1.mean(), 3))      # [0.487 0.49  0.488 0.492 0.496] 0.49  (time-based CV)
+past = (train["start_date"].dt.year <= 2021).to_numpy()          # validate by time: 2022-2023
+pred = l1.fit(X_tr[past], y_tr[past]).predict(X_tr[~past])
+print(round(accuracy_score(y_tr[~past], pred), 3), round(f1_score(y_tr[~past], pred, average="macro"), 4))
+# 0.103 0.0065   (always 3926: 0.040 0.0001)
 
 l1.fit(X_tr, y_tr)
-submission = pd.DataFrame({"review_id": test["review_id"], "label": l1.predict(X_te)})
-assert len(submission) == len(test) and submission["review_id"].is_unique
+submission = pd.DataFrame({"id": test["id"], "heading": l1.predict(X_te)})
+assert len(submission) == len(test) and submission["id"].is_unique
 submission.to_csv("submission.csv", index=False)
-print(submission["label"].value_counts(normalize=True).round(3).to_dict())
-# {'pos': 0.607, 'neu': 0.209, 'neg': 0.184}
+print(submission["heading"].value_counts(normalize=True).head(3).round(3).to_dict())
+# {'3926': 0.213, '9503': 0.122, '2106': 0.117}
 ```
 
-Upload `submission.csv` to the course leaderboard. The lecturer, who holds the hidden labels, can score it locally:
+The model predicts only about a hundred of the most frequent headings, mostly 3926, 9503, 2106 and 6307. Upload `submission.csv` to the course leaderboard and delete the local file afterwards. The lecturer, who holds the hidden labels, scores it from the repository root:
 
 ```bash
-uv run --with pandas --with scikit-learn python case-study/score.py submission.csv
-# public_macro_f1 about 0.49 (2022), private_macro_f1 about 0.49 (2023)
+uv run python case-study/score.py submission.csv
+# public_accuracy 0.1109  public_macro_f1 0.0055  (2024)
+# private_accuracy 0.1098  private_macro_f1 0.0048  (2025-2026)
 ```
 
-The [leaderboard workbook](../workbooks/13-case-study-leaderboard-l1.ipynb) contains the full workflow with a validation report, the confusion matrix on the newest training year and exercises.
+The validation accuracy on 2022–2023 (0.103) predicted the leaderboard (0.111) well. The reference value in the case-study README (0.076) uses fewer features. Either way, nine of ten decisions are wrong: form and origin of a description do not determine the product. The [leaderboard workbook](../workbooks/13-case-study-leaderboard-l1.ipynb) contains the full workflow with a validation report and exercises.
 
 **In practice.**
 - Kaggle and Codabench competitions follow the same protocol: a hidden test set, a fixed submission format, a public leaderboard during the competition and a private one for the final ranking.
 - Shared tasks in natural language processing (for example the SemEval series) release unlabelled test data and evaluate submitted predictions centrally, which makes results of different teams comparable.
 
 > [!WARNING]
-> Do not use `train_avg_rating` from the product table in your submission: for training reviews it contains the review's own rating (target leakage, Session 7). In a trial run it raised time-based CV to 0.55 but scored 0.41 on the leaderboard.
+> Do not use `keywords`, `classification_justification`, `cn_code` or `chapter` in a submission: the test set does not have them, and they are written by customs during or after the classification. In Session 7 a model trained with the justification looked excellent in validation (0.96) and was worse than the honest model on new descriptions.
 
 > [!CAUTION]
 > Every leaderboard submission you choose by its public score is a small step of tuning on the test set. Choose models by your own validation score; use the leaderboard to check, not to search.
@@ -215,7 +276,8 @@ The [leaderboard workbook](../workbooks/13-case-study-leaderboard-l1.ipynb) cont
 2. Why should the cost-optimal threshold be chosen on out-of-fold predictions rather than on the test set?
 3. A model has ROC AUC 0.85 and a Brier score of 0.30 (worse than predicting the base rate). How can both be true?
 4. What does `CalibratedClassifierCV(method="isotonic", cv=5)` fit, and on which data?
-5. Your L1 model scores 0.49 macro-F1 in time-based CV and 0.49 on the public leaderboard. A teammate's model scores 0.55 in random CV and 0.41 on the leaderboard. What would you check first?
+5. Your L1 model scores 0.10 accuracy in time-based validation and 0.11 on the public leaderboard. A teammate's model scores 0.96 in random CV and 0.71 on the leaderboard. What would you check first?
+6. A heading classifier decides 65 % of the cases at 96 % accuracy and passes the rest to customs officers. What information do you need to decide whether the threshold is set well?
 
 ## Further reading
 

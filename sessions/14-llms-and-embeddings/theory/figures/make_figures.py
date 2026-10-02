@@ -1,13 +1,11 @@
 """Figures for Session 14 (language models and embeddings).
 
 Run from the repository root:
-    uv run --with pandas --with pyarrow --with scikit-learn --with matplotlib \
-        --with sentence-transformers --with tiktoken --with umap-learn \
-        python sessions/14-llms-and-embeddings/theory/figures/make_figures.py
+    uv run --with sentence-transformers python sessions/14-llms-and-embeddings/theory/figures/make_figures.py
 
 Writes tokenisation.png, attention.png and embedding_space.png next to this script.
-embedding_space.png encodes 1,500 sample reviews with sentence-transformers/all-MiniLM-L6-v2
-(about 90 MB download on first use). Everything is seeded and deterministic up to
+embedding_space.png encodes 1,500 EBTI decisions of five chapters with intfloat/multilingual-e5-small
+(about 470 MB download on first use). Everything is seeded and deterministic up to
 floating-point differences between machines.
 """
 
@@ -45,16 +43,16 @@ def tokenisation() -> None:
     import tiktoken
     from transformers import AutoTokenizer
 
-    bert = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+    sp = AutoTokenizer.from_pretrained("intfloat/multilingual-e5-small")
     gpt = tiktoken.get_encoding("o200k_base")
-    en = "Unbelievably overpriced toothbrush heads"
-    de = "Leider überteuerte Zahnbürstenaufsätze"
+    en = "plastic toy car with wheels"
+    de = "Kunststoffspielzeugauto mit Rädern"
     rows = [
         ("words", en.split()),
-        ("WordPiece\n(MiniLM/BERT)", bert.tokenize(en)),
+        ("SentencePiece\n(XLM-R, e5)", sp.tokenize(en)),
         ("BPE\n(o200k, GPT-4o)", [gpt.decode([i]) for i in gpt.encode(en)]),
         ("German, words", de.split()),
-        ("German,\nWordPiece", bert.tokenize(de)),
+        ("German,\nSentencePiece", sp.tokenize(de)),
         ("German, BPE", [gpt.decode([i]) for i in gpt.encode(de)]),
     ]
     fig, ax = plt.subplots(figsize=(10.5, 4.6), dpi=130)
@@ -65,7 +63,7 @@ def tokenisation() -> None:
     ax.set_ylim(-5.4, 0.6)
     ax.axis("off")
     ax.set_title("The same text split into words and into subword tokens\n"
-                 "(␣ = leading space; ## = continues the previous token)")
+                 "(␣ = leading space in BPE; ▁ = start of a word in SentencePiece)")
     fig.tight_layout()
     fig.savefig(OUT / "tokenisation.png")
     plt.close(fig)
@@ -73,7 +71,7 @@ def tokenisation() -> None:
 
 def attention() -> None:
     """Illustrative attention weights: softmax of hand-set scores (not from a trained model)."""
-    tokens = ["the", "pump", "stopped", "because", "it", "overheated"]
+    tokens = ["the", "boot", "leaks", "because", "it", "cracked"]
     scores = np.array([
         [2.0, 1.0, 0.2, 0.0, 0.1, 0.1],
         [0.5, 2.0, 1.0, 0.0, 0.6, 0.4],
@@ -95,7 +93,7 @@ def attention() -> None:
     ax.set_ylabel("token being updated (queries)")
     ax.add_patch(plt.Rectangle((-0.5, 3.5), len(tokens), 1, fill=False, edgecolor="#c0392b", lw=2))
     ax.set_title("Attention weights (illustrative): each row sums to 1;\n"
-                 "'it' takes most of its new vector from 'pump'")
+                 "'it' takes most of its new vector from 'boot'")
     ax.spines[:].set_visible(False)
     fig.tight_layout()
     fig.savefig(OUT / "attention.png")
@@ -105,43 +103,34 @@ def attention() -> None:
 def embedding_space() -> None:
     import umap
     from sentence_transformers import SentenceTransformer
-    from sklearn.cluster import KMeans
-    from sklearn.feature_extraction.text import TfidfVectorizer
 
-    reviews = pd.read_parquet(DATA)
-    sub = reviews.groupby("label").sample(n=500, random_state=0)
-    texts = (sub["title"] + ". " + sub["text"]).tolist()
-    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
-    E = model.encode(texts, batch_size=64, normalize_embeddings=True)
+    d = pd.read_parquet(DATA)
+    chapters = {"61": "61 knitted clothing", "64": "64 footwear", "85": "85 electrical machinery",
+                "95": "95 toys, sports", "22": "22 beverages"}
+    sub = d[d["chapter"].isin(list(chapters))].groupby("chapter").sample(n=300, random_state=0)
+    model = SentenceTransformer("intfloat/multilingual-e5-small", device="cpu")
+    E = model.encode(("passage: " + sub["description"]).tolist(), batch_size=64, normalize_embeddings=True)
     xy = umap.UMAP(n_neighbors=15, min_dist=0.1, metric="cosine", random_state=0).fit_transform(E)
-    km = KMeans(n_clusters=6, n_init=10, random_state=0).fit(E)
-
-    tv = TfidfVectorizer(min_df=5, stop_words="english")
-    T = tv.fit_transform(texts)
-    names = tv.get_feature_names_out()
-    overall = np.asarray(T.mean(axis=0)).ravel()
 
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.8), dpi=130)
-    for k in range(6):
-        m = km.labels_ == k
-        lift = np.asarray(T[m].mean(axis=0)).ravel() / (overall + 1e-9)
-        lift[np.asarray((T[m] > 0).sum(axis=0)).ravel() < 5] = 0
-        top = ", ".join(names[np.argsort(lift)[::-1][:3]])
-        axes[0].scatter(xy[m, 0], xy[m, 1], s=6, color=PALETTE[k], label=f"{k}: {top}")
-    axes[0].set_title("Coloured by k-means cluster (k = 6)\nlegend: distinctive words")
-    axes[0].legend(fontsize=7, markerscale=2, loc="best", frameon=False)
-    for label, color in [("pos", "#2471a3"), ("neu", "#7f8c8d"), ("neg", "#c0392b")]:
-        m = (sub["label"] == label).to_numpy()
-        axes[1].scatter(xy[m, 0], xy[m, 1], s=6, color=color, label=label, alpha=0.7)
-    axes[1].set_title("Coloured by sentiment label")
+    for k, (ch, name) in enumerate(chapters.items()):
+        m = (sub["chapter"] == ch).to_numpy()
+        axes[0].scatter(xy[m, 0], xy[m, 1], s=6, color=PALETTE[k], label=name)
+    axes[0].set_title("Coloured by HS chapter")
+    axes[0].legend(fontsize=8, markerscale=2, loc="best", frameon=False)
+    langs = sub["language"].where(sub["language"].isin(["de", "fr", "en", "nl"]), "other")
+    for k, lang in enumerate(["de", "fr", "nl", "en", "other"]):
+        m = (langs == lang).to_numpy()
+        axes[1].scatter(xy[m, 0], xy[m, 1], s=6, color=PALETTE[k], label=lang, alpha=0.7)
+    axes[1].set_title("Coloured by language of the description")
     axes[1].legend(markerscale=2, frameon=False)
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
         ax.set_xlabel("UMAP 1")
         ax.set_ylabel("UMAP 2")
-    fig.suptitle("1,500 reviews embedded with all-MiniLM-L6-v2 (384 dimensions), "
-                 "projected to 2-D with UMAP")
+    fig.suptitle("1,500 decisions of five chapters embedded with multilingual-e5-small (384 dimensions), "
+                 "projected to 2-D with UMAP", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "embedding_space.png")
     plt.close(fig)

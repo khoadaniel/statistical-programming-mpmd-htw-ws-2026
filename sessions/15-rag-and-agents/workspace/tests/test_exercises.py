@@ -2,10 +2,10 @@
 
 import pytest
 
-from review_assistant.agent import run_agent
-from review_assistant.chunking import chunk_sentences
-from review_assistant.llm import FakeChatClient, message, tool_call
-from review_assistant.tools import ToolBox, make_search_tool
+from bti_assistant.agent import run_agent
+from bti_assistant.chunking import chunk_sentences
+from bti_assistant.llm import FakeChatClient, message, tool_call
+from bti_assistant.tools import ToolBox, make_search_tool
 
 exercise = pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="exercise not solved yet")
 
@@ -21,7 +21,7 @@ def test_exercise2_chunk_sentences():
 
 @exercise
 def test_exercise3_token_budget(retriever):
-    client = FakeChatClient(lambda m, t: message(tool_calls=[tool_call("search_reviews", {"query": "x"})]),
+    client = FakeChatClient(lambda m, t: message(tool_calls=[tool_call("search_decisions", {"query": "x"})]),
                             tokens_per_call=(400, 100))
     result = run_agent("q", client, "fake", ToolBox([make_search_tool(retriever)]), max_steps=10,
                        max_total_tokens=1200)

@@ -29,7 +29,7 @@
 
 - Interpretation of tree-based models with [feature importance and permutation importance](theory/04-interpretation-and-model-comparison.md#1-feature-importance-impurity-based-and-permutation-importance) and [SHAP values](theory/04-interpretation-and-model-comparison.md#2-shap-values-as-a-model-checking-tool), used to check and debug the model
 - [Comparing a challenger with the current model](theory/04-interpretation-and-model-comparison.md#3-comparing-a-challenger-with-the-current-model)
-- *Practice:* case study: leaderboard round L2, gradient boosting on the features of Session 9 → [20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb)
+- *Practice:* case study: leaderboard round L2, gradient boosting on dense text components and the features of Session 9, compared with the linear text model → [20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb)
 
 ## Materials
 
@@ -58,14 +58,14 @@
 | [workbooks/17-feature-importance.ipynb](workbooks/17-feature-importance.ipynb) | Coefficients, impurity and permutation importance compared (INRIA MOOC) | 3 | optional |
 | [workbooks/18-shap-census-xgboost.ipynb](workbooks/18-shap-census-xgboost.ipynb) | SHAP values for an XGBoost model on census income (SHAP; outputs included) | 3 | core |
 | [workbooks/19-shap-causal-caution.ipynb](workbooks/19-shap-causal-caution.ipynb) | Why SHAP values are not causal effects (SHAP; read with outputs) | 3 | optional |
-| [workbooks/20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb) | **Practice 3:** leaderboard round L2: Session 9 features, LightGBM, time-based CV, SHAP, submission (own) | 3 | core |
+| [workbooks/20-case-study-leaderboard-gradient-boosting.ipynb](workbooks/20-case-study-leaderboard-gradient-boosting.ipynb) | **Practice 3:** leaderboard round L2: text components and Session 9 features, LightGBM, time-based validation, comparison with the linear text model, permutation importance, submission (own) | 3 | core |
 | [datasets/](datasets/) | Penguins and Adult census CSV files used by the INRIA MOOC notebooks | – | – |
 
 Third-party sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Re-read Session 7 on cross-validation and `RandomizedSearchCV` and Session 9 page 2 on the leakage-free product feature. Run the first cell of [15-churn-gradient-boosting.ipynb](workbooks/15-churn-gradient-boosting.ipynb) once to check that XGBoost, LightGBM and CatBoost import (see Setup).
+**Preparation.** Re-read Session 7 on cross-validation and `RandomizedSearchCV` and Session 9 page 2 on leakage-free features and the justification leak. Run the first cell of [15-churn-gradient-boosting.ipynb](workbooks/15-churn-gradient-boosting.ipynb) once to check that XGBoost, LightGBM and CatBoost import (see Setup).
 
 **Team project until the next session.** Interim review (10 minutes per team): model or dashboard, validation, plan to the end.
 
@@ -83,4 +83,4 @@ The course environment (`uv sync`, then `uv run jupyter lab`) contains scikit-le
 - **macOS:** XGBoost and LightGBM need the OpenMP runtime. Install it once with `brew install libomp`; without it, `import xgboost` fails with an error about `libomp.dylib`.
 - Notebooks that load the Telco data and the scikit-learn examples need an internet connection (GitHub, OpenML).
 - Optional notebooks need extra packages: `13-catboost-tutorial.ipynb` uses `hyperopt` (`uv run --with hyperopt jupyter lab`); `14-islp-tree-based-methods-lab.ipynb` uses the `ISLP` package (`uv run --with ISLP jupyter lab`, a large install because it pulls in PyTorch); `19-shap-causal-caution.ipynb` uses `econml` and `graphviz` and is meant to be read with its stored outputs.
-- `20-case-study-leaderboard-gradient-boosting.ipynb` takes about three minutes on the 50,000-review sample and writes `submission_l2.csv` next to the notebook.
+- `20-case-study-leaderboard-gradient-boosting.ipynb` takes 10–20 minutes on the 50,000-decision sample (LightGBM fits one tree per heading and round) and writes `submission_l2.csv` next to the notebook. Reference result of the notebook on the public leaderboard: accuracy 0.647, macro-F1 0.293.

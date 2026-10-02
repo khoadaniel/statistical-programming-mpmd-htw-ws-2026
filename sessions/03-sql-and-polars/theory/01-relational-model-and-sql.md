@@ -1,11 +1,11 @@
 # The relational model and basic SQL
 
-This page covers the first block of the session: how a relational database organises data in tables linked by keys, why the course uses PostgreSQL, and the core of SQL: selecting, filtering, sorting, aggregating and joining. Almost every organisation keeps its operational data in relational databases, and SQL is the language analysts use to get data out of them. In job advertisements for data roles, SQL is among the most frequently requested skills after Python. All examples use the two tables of the course case study, `reviews` (one row per review) and `products` (one row per product).
+This page covers the first block of the session: how a relational database organises data in tables linked by keys, why the course uses PostgreSQL, and the core of SQL: selecting, filtering, sorting, aggregating and joining. Almost every organisation keeps its operational data in relational databases, and SQL is the language analysts use to get data out of them. In job advertisements for data roles, SQL is among the most frequently requested skills after Python. All examples use the tables of the course case study: `decisions` (one row per Binding Tariff Information decision, the training data 2017–2023) and `nomenclature` (one row per four-digit heading of the Harmonized System, with its English description, chapter and section).
 
 ```mermaid
 flowchart LR
     Q["Business question"] --> S["SQL query"]
-    S --> DB[("PostgreSQL<br/>reviews, products")]
+    S --> DB[("PostgreSQL<br/>decisions, nomenclature")]
     DB --> R["Small result table"]
     R --> P["pandas / Polars<br/>in Python"]
     P --> A["Chart, model, report"]
@@ -20,99 +20,104 @@ flowchart LR
 
 A **relational database** stores data in **tables** (also called relations). Each **row** is one record; each **column** has a name and a **data type** (text, integer, decimal number, date, true/false). The set of table definitions is the **schema**. The idea goes back to Edgar F. Codd (1970), who proposed that data should be described by tables and queried by their content, not by the way they are stored on disk.
 
-A **primary key** is a column, or a combination of columns, whose value identifies each row uniquely and is never empty. In the case study, `review_id` identifies a review and `parent_asin` (Amazon's product identifier) identifies a product.
+A **primary key** is a column, or a combination of columns, whose value identifies each row uniquely and is never empty. In the case study, `bti_reference` identifies a decision and `heading` (the four-digit code, such as `9503` for toys) identifies a row of the nomenclature.
 
-A **foreign key** is a column that refers to the primary key of another table. `reviews.parent_asin` points to `products.parent_asin`. This expresses a **relationship**: one product has many reviews, each review belongs to exactly one product (a *one-to-many* relationship). The database can enforce it: a review of a product that does not exist is rejected.
+A **foreign key** is a column that refers to the primary key of another table. `decisions.heading` points to `nomenclature.heading`. This expresses a **relationship**: one heading has many decisions, each decision is classified under exactly one heading (a *one-to-many* relationship). The database can enforce it: a decision with a heading that does not exist in the nomenclature is rejected.
 
-Storing each fact once, in one table, is called **normalisation**. The store name of a product is stored once in `products`, not repeated in each of its 3,000 reviews. If the store is renamed, one row changes, and no copy can contradict another.
+Storing each fact once, in one table, is called **normalisation**. The English description of heading 9503 is stored once in `nomenclature`, not repeated in each of its almost 9,000 decisions. If the description is corrected, one row changes, and no copy can contradict another.
 
 A small example that you can follow by hand:
 
-| products |  |  |
+| nomenclature |  |  |
 |---|---|---|
-| **parent_asin** (PK) | title | price |
-| A1 | Vitamin D3 drops | 12.99 |
-| B2 | Pill organiser | NULL |
+| **heading** (PK) | heading_description | chapter |
+| 0102 | Bovine animals; live | 01 |
+| 6404 | Footwear with textile uppers | 64 |
+| 9503 | Toys | 95 |
 
-| reviews |  |  |
+| decisions |  |  |
 |---|---|---|
-| **review_id** (PK) | parent_asin (FK) | rating |
-| r1 | A1 | 5 |
-| r2 | A1 | 2 |
-| r3 | B2 | 4 |
+| **bti_reference** (PK) | heading (FK) | keywords |
+| DE-1 | 9503 | TOYS, PLUSH |
+| DE-2 | 9503 | NULL |
+| FR-1 | 6404 | SNEAKERS |
 
-Product A1 has two reviews, B2 has one. `NULL` marks a value that is unknown: the price of B2 was not recorded.
+Heading 9503 has two decisions, 6404 one, 0102 none. `NULL` marks a value that is unknown: no keywords were recorded for DE-2. (The references and keywords here are invented; the real ones are longer.)
 
 ```mermaid
 classDiagram
     direction LR
-    class products {
-        parent_asin : text  PK
-        title : text
-        store : text
-        price : numeric
-        train_avg_rating : numeric
+    class nomenclature {
+        heading : text  PK
+        heading_description : text
+        chapter : text
+        section : text
+        section_name : text
     }
-    class reviews {
-        review_id : text  PK
-        parent_asin : text  FK
-        rating : smallint
-        text : text
-        date : timestamp
-        label : text
+    class decisions {
+        bti_reference : text  PK
+        heading : text  FK
+        issuing_country : text
+        language : text
+        start_date : date
+        description : text
+        keywords : text
     }
-    products "1" --> "0..*" reviews : has
+    nomenclature "1" --> "0..*" decisions : classifies
 ```
 
 ### Why it matters
 
-Keys make the relationship between tables explicit, and the database uses them to guard data quality at the moment data are written: a rating of 6 or a review of an unknown product is rejected immediately instead of being discovered months later in an analysis. The database also builds an **index** (a sorted lookup structure) on every primary key, which makes lookups and joins fast. Without normalisation, the same fact is stored many times, and copies drift apart.
+Keys make the relationship between tables explicit, and the database uses them to guard data quality at the moment data are written: a heading with three digits or a decision for a heading that does not exist is rejected immediately instead of being discovered months later in an analysis. The database also builds an **index** (a sorted lookup structure) on every primary key, which makes lookups and joins fast. Without normalisation, the same fact is stored many times, and copies drift apart.
 
 ### How it works in Python
 
-The case-study tables arrive as Parquet files. The following check confirms the two key properties with pandas: the primary key is unique, and every foreign key value has a partner.
+The case-study tables arrive as Parquet files. The following check tests the two key properties with pandas: the primary key is unique, and every foreign-key value has a partner.
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train.parquet")
-products = pd.read_parquet("case-study/data/products.parquet")
+decisions = pd.read_parquet("case-study/data/train.parquet", columns=["bti_reference", "heading"])
+nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
 
-print(reviews["review_id"].is_unique, products["parent_asin"].is_unique)   # True True
-# foreign key: does every review refer to an existing product?
-print(reviews["parent_asin"].isin(products["parent_asin"]).all())          # True
-# one-to-many: reviews per product
-print(reviews.groupby("parent_asin").size().describe()[["mean", "50%", "max"]].round(1))
-# mean 7.8 | 50% 2.0 | max 2997.0
+print(decisions["bti_reference"].is_unique, nomenclature["heading"].is_unique)   # True True
+# foreign key: does every decision refer to an existing heading?
+known = decisions["heading"].isin(nomenclature["heading"])
+print(known.all(), decisions.loc[~known, "heading"].value_counts().to_dict())  # False {'8803': 51}
+# one-to-many: decisions per heading
+print(decisions.groupby("heading").size().describe()[["mean", "50%", "max"]].round(1).to_dict())
+# {'mean': 277.9, '50%': 44.0, 'max': 12852.0}
 ```
+
+The foreign key fails for 51 decisions. They use heading 8803 (parts of aircraft), which the 2022 revision of the Harmonized System deleted; such parts now belong to the new heading 8807. The nomenclature table is the 2022 version, the decisions go back to 2017. A real foreign key would have rejected these rows, which is exactly the point: the database makes you decide what to do with them (keep an extra table of old headings, map 8803 to 8807, or drop the rows) instead of letting a join lose them silently.
 
 The same rules written as SQL create the tables with **constraints**. `CHECK` adds a rule for the values; `REFERENCES` declares the foreign key.
 
 ```sql
-CREATE TABLE shop_products (
-    parent_asin TEXT PRIMARY KEY,                 -- one row per product
-    title       TEXT NOT NULL,
-    price       NUMERIC(8, 2) CHECK (price >= 0)  -- NULL allowed: price unknown
+CREATE TABLE tariff_headings (
+    heading     TEXT PRIMARY KEY CHECK (length(heading) = 4),   -- one row per heading
+    description TEXT NOT NULL
 );
-CREATE TABLE shop_reviews (
-    review_id   TEXT PRIMARY KEY,
-    parent_asin TEXT NOT NULL REFERENCES shop_products (parent_asin),  -- foreign key
-    rating      SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5)
+CREATE TABLE tariff_decisions (
+    bti_reference TEXT PRIMARY KEY,
+    heading       TEXT NOT NULL REFERENCES tariff_headings (heading),   -- foreign key
+    keywords      TEXT                                                  -- NULL allowed
 );
-INSERT INTO shop_products VALUES ('A1', 'Vitamin D3 drops', 12.99), ('B2', 'Pill organiser', NULL);
-INSERT INTO shop_reviews VALUES ('r1', 'A1', 5), ('r2', 'A1', 2), ('r3', 'B2', 4);
-INSERT INTO shop_reviews VALUES ('r4', 'Z9', 3);   -- ERROR: violates foreign key constraint
-INSERT INTO shop_reviews VALUES ('r5', 'A1', 6);   -- ERROR: violates check constraint
+INSERT INTO tariff_headings VALUES ('0102', 'Bovine animals; live'), ('6404', 'Footwear with textile uppers'),
+                                   ('9503', 'Toys');
+INSERT INTO tariff_decisions VALUES ('DE-1', '9503', 'TOYS, PLUSH'), ('DE-2', '9503', NULL), ('FR-1', '6404', 'SNEAKERS');
+INSERT INTO tariff_decisions VALUES ('NL-1', '8803', 'AIRCRAFT PARTS');   -- ERROR: violates foreign key constraint
+INSERT INTO tariff_headings VALUES ('950', 'Toys?');                     -- ERROR: violates check constraint
 ```
 
 ### In practice
 
 - **Stack Exchange Data Explorer** lets anyone query the public Stack Overflow database with SQL; questions, answers, users and votes are separate tables linked by identifiers such as `PostId` and `UserId`.
 - **Wikimedia** offers public read-only copies of the Wikipedia databases through the Quarry service; pages, revisions and users are related tables, and volunteers answer research questions about Wikipedia with SQL.
-- **Hospital information systems** store patients, admissions and diagnoses in separate tables; a patient appears once in the patient table and many times in the admissions table, linked by a patient identifier.
+- **The EU customs tariff** itself is relational: the Commission's TARIC database links each code to duty rates, measures and legal acts through code identifiers, and the EBTI database links each decision to its code.
 
 > [!WARNING]
-> A file is not a database. A Parquet or CSV file has no keys and no constraints: nothing stops a duplicated `review_id` or a rating of 6. When you work with files, check the key properties yourself (as in the Python block above) and repeat the check after each update.
+> A file is not a database. A Parquet or CSV file has no keys and no constraints: nothing stops a duplicated `bti_reference` or a heading that no longer exists. When you work with files, check the key properties yourself (as in the Python block above) and repeat the check after each update.
 
 ## PostgreSQL as the course database
 
@@ -143,9 +148,9 @@ Start a PostgreSQL server in Docker with one command (details in [block 2](02-sq
 import duckdb
 
 con = duckdb.connect()   # in-memory database, no server
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
-con.execute("CREATE VIEW products AS SELECT * FROM 'case-study/data/products.parquet'")
-print(con.sql("SELECT COUNT(*) AS n FROM reviews").fetchone())   # (434373,)
+con.execute("CREATE VIEW decisions AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW nomenclature AS SELECT * FROM 'case-study/data/nomenclature.parquet'")
+print(con.sql("SELECT COUNT(*) AS n FROM decisions").fetchone())   # (309529,)
 
 # with PostgreSQL (requires a running server, see block 2):
 # from sqlalchemy import create_engine
@@ -182,24 +187,26 @@ flowchart LR
     F["1 FROM / JOIN"] --> W["2 WHERE"] --> G["3 GROUP BY"] --> H["4 HAVING"] --> S["5 SELECT"] --> O["6 ORDER BY"] --> L["7 LIMIT"]
 ```
 
-By hand: in the small tables above, `SELECT review_id FROM reviews WHERE rating >= 4 ORDER BY review_id` keeps r1 (5) and r3 (4) and returns them in the order r1, r3.
+By hand: in the small tables above, `SELECT bti_reference FROM decisions WHERE heading = '9503' ORDER BY bti_reference` keeps DE-1 and DE-2 and returns them in this order.
 
 ### Why it matters
 
-Filtering in the database moves only the rows you need into Python. With millions of rows, `SELECT *` followed by filtering in pandas wastes memory and time. Writing the condition explicitly also makes the question precise: "recent negative reviews" becomes `rating <= 2 AND date >= '2021-01-01'`.
+Filtering in the database moves only the rows you need into Python. With millions of rows, `SELECT *` followed by filtering in pandas wastes memory and time. Writing the condition explicitly also makes the question precise: "textile decisions from the first COVID-19 year" becomes `chapter = '63' AND start_date BETWEEN '2020-01-01' AND '2020-12-31'`.
 
 ### How it works in Python
 
 ```sql
-SELECT review_id, rating, helpful_vote, LEFT(title, 30) AS title
-FROM reviews
-WHERE rating = 1 AND verified_purchase      -- both conditions must hold
-ORDER BY helpful_vote DESC                  -- most helpful first
+SELECT bti_reference, issuing_country, start_date, LEFT(keywords, 30) AS keywords
+FROM decisions
+WHERE heading = '9503' AND language = 'en'     -- both conditions must hold
+ORDER BY start_date DESC, bti_reference        -- newest first; reference breaks ties
 LIMIT 3;
--- r232284 | 1 | 400 | Unreliable!
--- r220303 | 1 | 399 | Tired it, didn't work for me.
--- r200692 | 1 | 386 | I want to live!
+-- XIBTI000000-2023-BTI157 | XI | 2023-11-22 | CARDS,EDUCATIONAL,EDUCATIONAL
+-- XIBTI505051787          | XI | 2023-10-16 | EDUCATIONAL,FOR CHILDREN,FOR E
+-- XIBTI505051885          | XI | 2023-10-16 | EDUCATIONAL,FOR CHILDREN,FOR E
 ```
+
+The newest English toy decisions come from `XI`, the code for Northern Ireland: after Brexit, decisions of the United Kingdom (`GB`) are no longer EU decisions, but Northern Ireland still follows the EU customs rules for goods.
 
 From Python with DuckDB, a query result becomes a pandas DataFrame with `.df()`:
 
@@ -207,24 +214,27 @@ From Python with DuckDB, a query result becomes a pandas DataFrame with `.df()`:
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW decisions AS SELECT * FROM 'case-study/data/train.parquet'")
 
 print(con.sql("""
-    SELECT COUNT(*) AS n FROM reviews
-    WHERE rating <= 2 AND date >= '2021-01-01'
-""").fetchone())                                                   # (15882,)
-print(con.sql("SELECT COUNT(*) FROM reviews WHERE title ILIKE '%refund%'").fetchone())  # (147,)
-top = con.sql("SELECT review_id, helpful_vote FROM reviews ORDER BY helpful_vote DESC LIMIT 3").df()
-print(top)
-#   review_id  helpful_vote
-# 0   r016260          7326
-# 1   r076389          5907
-# 2   r007437          1343
+    SELECT COUNT(*) AS n FROM decisions
+    WHERE chapter = '63' AND start_date BETWEEN '2020-01-01' AND '2020-12-31'
+""").fetchone())                                                             # (1498,)
+print(con.sql("SELECT COUNT(*) FROM decisions WHERE keywords ILIKE '%face mask%'").fetchone())   # (200,)
+longest = con.sql("""
+    SELECT bti_reference, language, LENGTH(description) AS n_chars
+    FROM decisions ORDER BY n_chars DESC LIMIT 3
+""").df()
+print(longest)
+#      bti_reference language  n_chars
+# 0  DKBTI20-0944546       da     8621
+# 1  DKBTI23-0238810       da     7134
+# 2  DKBTI20-0944545       da     6403
 ```
 
 ### In practice
 
-- **Customer-service teams** at online retailers filter recent negative reviews with many helpful votes to find product problems first.
+- **Customs officers and trade-compliance teams** filter the EBTI database by heading, keyword and date before classifying a new product; the public consultation page of the database offers search fields for exactly such conditions.
 - The **European Medicines Agency's** EudraVigilance database of suspected side effects is queried by drug, period and outcome before any statistical signal detection is done.
 - **Data engineers** check every nightly load with small queries such as `SELECT COUNT(*) FROM orders WHERE order_date = CURRENT_DATE - 1`.
 
@@ -237,79 +247,81 @@ print(top)
 
 An **aggregate function** reduces many values to one: `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`. `GROUP BY` splits the rows into groups with equal values of the grouping columns and computes the aggregates per group; the result has one row per group. Every column in `SELECT` must either be a grouping column or be inside an aggregate.
 
-`WHERE` filters **rows before** grouping; `HAVING` filters **groups after** aggregation, for example "only products with at least 1000 reviews".
+`WHERE` filters **rows before** grouping; `HAVING` filters **groups after** aggregation, for example "only countries with at least 10,000 decisions".
 
-A **share** is the average of a 0/1 variable. `AVG((rating <= 2)::int)` is the share of 1–2 star reviews, because `::int` turns true/false into 1/0.
+A **share** is the average of a 0/1 variable. `AVG((language = 'en')::int)` is the share of decisions written in English, because `::int` turns true/false into 1/0.
 
-By hand: grouping the three example reviews by `parent_asin` gives A1 with `COUNT(*) = 2`, `AVG(rating) = 3.5`, and B2 with 1 and 4.0. `HAVING COUNT(*) >= 2` keeps only A1.
+By hand: grouping the three example decisions by `heading` gives 9503 with `COUNT(*) = 2` and `COUNT(keywords) = 1`, and 6404 with 1 and 1. `HAVING COUNT(*) >= 2` keeps only 9503.
 
 ### Why it matters
 
-Almost every business question is an aggregate: reviews per month, average rating per store, share of complaints per product. `HAVING` with a minimum count prevents tiny groups from topping a ranking by chance: a product with one 5-star review has a perfect average.
+Almost every business question is an aggregate: decisions per month, per country, per heading; the share of a language per year. `HAVING` with a minimum count prevents tiny groups from topping a ranking by chance: a country with three decisions can have a share of 100 % for anything.
 
 ### How it works in Python
 
 ```sql
-SELECT rating, COUNT(*) AS n_reviews
-FROM reviews
-GROUP BY rating
-ORDER BY rating;
--- 1: 58129 | 2: 25349 | 3: 32482 | 4: 51043 | 5: 267370
-
-SELECT parent_asin, COUNT(*) AS n_reviews, ROUND(AVG(rating), 2) AS avg_rating
-FROM reviews
-GROUP BY parent_asin
-HAVING COUNT(*) >= 1000          -- filter groups, not rows
-ORDER BY avg_rating
-LIMIT 3;
--- B0CCWPQL6X | 1029 | 2.92
--- B00RTFT08W | 1069 | 3.10
--- B0077L8YFI | 1966 | 3.19
+SELECT issuing_country, COUNT(*) AS n_decisions, COUNT(DISTINCT heading) AS n_headings
+FROM decisions
+GROUP BY issuing_country
+HAVING COUNT(*) >= 10000          -- filter groups, not rows
+ORDER BY n_decisions DESC;
+-- DE | 172492 | 1004
+-- FR |  48909 |  882
+-- NL |  11933 |  540
+-- GB |  11616 |  553
+-- PL |  11259 |  571
 ```
+
+Germany issues more than half of all decisions. This matters for every later model: a classifier trained on these data learns mostly from German descriptions.
 
 ```python
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW decisions AS SELECT * FROM 'case-study/data/train.parquet'")
 yearly = con.sql("""
-    SELECT EXTRACT(YEAR FROM date)::int AS year,
+    SELECT EXTRACT(YEAR FROM start_date)::int AS year,
            COUNT(*) AS n,
-           ROUND(AVG((rating <= 2)::int), 3) AS share_neg
-    FROM reviews
-    WHERE date >= '2019-01-01'
+           ROUND(AVG((language = 'en')::int), 3) AS share_en,
+           COUNT(*) FILTER (WHERE issuing_country = 'GB') AS n_gb
+    FROM decisions
+    WHERE start_date >= '2019-01-01'
     GROUP BY year
     ORDER BY year
 """).df()
 print(yearly)
-#    year      n  share_neg
-# 0  2019  57594      0.188
-# 1  2020  75904      0.218
-# 2  2021  68456      0.232
+#    year      n  share_en  n_gb
+# 0  2019  48013     0.077  2885
+# 1  2020  41697     0.076  2503
+# 2  2021  40897     0.021     0
+# 3  2022  39217     0.014     0
+# 4  2023  43316     0.013     0
 ```
+
+The share of English descriptions drops from 7.6 % to 2.1 % in 2021, when the United Kingdom left the EU customs union: a change in the data that has nothing to do with the products (Session 16 calls it drift).
 
 ### In practice
 
-- **Retail dashboards** report sales and returns per store and week; each tile is a `GROUP BY` query on a transaction table.
+- **Eurostat and national statistical offices** publish trade statistics per product code, partner country and month, computed from individual customs declarations; each published cell is a `GROUP BY` result.
 - **Statistical offices** such as Destatis publish counts and rates per region and year computed from individual-level registers.
 - **Hospital comparisons** such as Care Compare of the US Centers for Medicare & Medicaid Services do not publish a measure when a hospital has too few cases, which is the idea of `HAVING COUNT(*) >= k`.
 
 > [!WARNING]
-> `COUNT(*)` counts rows; `COUNT(column)` counts non-NULL values of that column; `AVG(column)` silently ignores NULLs. On the products table, `COUNT(*)` is 60,274 but `COUNT(price)` is 10,535, and `AVG(price)` is the average of the known prices only.
+> `COUNT(*)` counts rows; `COUNT(column)` counts non-NULL values of that column; `AVG(column)` silently ignores NULLs. On the decisions table, `COUNT(*)` is 309,529 but `COUNT(keywords)` is 308,256 and `COUNT(invalidation_reason)` only 45,223: most decisions simply expired after three years and have no invalidation reason.
 
 ## INNER and LEFT JOIN; NULL values in joins and aggregates
 
 ### Concept
 
-A **join** combines rows of two tables whose key columns match. An **inner join** (`JOIN ... ON a.key = b.key`) returns one row per matching pair; rows without a partner disappear. Because each review has exactly one product, joining reviews with products keeps one row per review and adds the product columns. `USING (parent_asin)` is a short form when the key has the same name in both tables. Short **aliases** (`r`, `p`) say which table a column comes from.
+A **join** combines rows of two tables whose key columns match. An **inner join** (`JOIN ... ON a.key = b.key`) returns one row per matching pair; rows without a partner disappear. Because each decision has exactly one heading, joining decisions with the nomenclature keeps one row per decision (if its heading exists) and adds the English description, chapter and section. `USING (heading)` is a short form when the key has the same name in both tables. Short **aliases** (`d`, `n`) say which table a column comes from.
 
-A **left join** keeps every row of the left table; where no partner exists, the columns of the right table are `NULL`. Combined with `WHERE right.key IS NULL`, it finds rows **without** a partner, an **anti-join**: for example, products that were never reviewed.
+A **left join** keeps every row of the left table; where no partner exists, the columns of the right table are `NULL`. Combined with `WHERE right.key IS NULL`, it finds rows **without** a partner, an **anti-join**: for example, headings for which no decision was ever issued.
 
-![Inner and left join of a small products and reviews table](figures/join-types.png)
+![Inner and left join of a small nomenclature and decisions table](figures/join-types.png)
 
-**NULL** means "unknown". Any comparison with NULL is unknown, not true or false, so `price = NULL` never matches; use `price IS NULL`. In `GROUP BY`, all NULLs form one group, which is why a ranking of stores contains a row with store `NULL`.
+**NULL** means "unknown". Any comparison with NULL is unknown, not true or false, so `keywords = NULL` never matches; use `keywords IS NULL`. In `GROUP BY`, all NULLs form one group, which is why a count per `invalidation_reason` contains one large row with reason `NULL`.
 
-By hand, with the tables above plus a product C3 without reviews: `products JOIN reviews` gives 3 rows (r1, r2, r3); `products LEFT JOIN reviews` gives 4 rows, the fourth being C3 with `review_id = NULL`.
+By hand, with the tables above: `nomenclature JOIN decisions` gives 3 rows (DE-1, DE-2, FR-1); `nomenclature LEFT JOIN decisions` gives 4 rows, the fourth being heading 0102 with `bti_reference = NULL`.
 
 ### Why it matters
 
@@ -318,73 +330,80 @@ Normalised data must be joined before they can be analysed. The join type decide
 ### How it works in Python
 
 ```sql
--- average rating per store: each review gets the columns of its product
-SELECT p.store, COUNT(*) AS n_reviews, ROUND(AVG(r.rating), 2) AS avg_rating
-FROM reviews AS r
-JOIN products AS p ON p.parent_asin = r.parent_asin
-GROUP BY p.store
-HAVING COUNT(*) >= 1000
-ORDER BY avg_rating DESC, n_reviews DESC
+-- decisions per section: each decision gets the columns of its heading
+SELECT n.section, LEFT(n.section_name, 40) AS section_name, COUNT(*) AS n_decisions
+FROM decisions AS d
+JOIN nomenclature AS n ON n.heading = d.heading
+GROUP BY n.section, n.section_name
+ORDER BY n_decisions DESC
 LIMIT 3;
--- ASUTRA | 2997 | 4.74
--- Essential Depot | 2123 | 4.74
--- Pure Acres Farm | 1317 | 4.74
+-- XVI | Machinery and mechanical appliances; ele | 68648
+-- XX  | Miscellaneous manufactured articles      | 32408
+-- XV  | Base metals and articles of base metal   | 32266
 
--- anti-join: products without any review in the training period
-SELECT COUNT(*) AS products_without_reviews
-FROM products AS p
-LEFT JOIN reviews AS r ON r.parent_asin = p.parent_asin
-WHERE r.review_id IS NULL;
--- 4915
+-- anti-join: headings without any decision in 2017-2023
+SELECT COUNT(*) AS headings_without_decisions
+FROM nomenclature AS n
+LEFT JOIN decisions AS d ON d.heading = n.heading
+WHERE d.bti_reference IS NULL;
+-- 116
 ```
 
 ```python
 import duckdb
 
 con = duckdb.connect()
-con.execute("CREATE VIEW reviews AS SELECT * FROM 'case-study/data/train.parquet'")
-con.execute("CREATE VIEW products AS SELECT * FROM 'case-study/data/products.parquet'")
+con.execute("CREATE VIEW decisions AS SELECT * FROM 'case-study/data/train.parquet'")
+con.execute("CREATE VIEW nomenclature AS SELECT * FROM 'case-study/data/nomenclature.parquet'")
 
-# practice question: how many products have no price, and do their reviews differ?
+# which chapters have the most headings without any decision?
 print(con.sql("""
-    SELECT p.price IS NULL AS price_missing,
-           COUNT(DISTINCT r.parent_asin) AS n_products,
-           COUNT(*) AS n_reviews,
-           ROUND(AVG(r.rating), 2) AS avg_rating
-    FROM reviews AS r
-    LEFT JOIN products AS p USING (parent_asin)
-    GROUP BY price_missing
-    ORDER BY price_missing
+    SELECT n.chapter, LEFT(MIN(n.chapter_description), 30) AS chapter_description,
+           COUNT(*) AS headings_without_decisions
+    FROM nomenclature AS n
+    LEFT JOIN decisions AS d ON d.heading = n.heading
+    WHERE d.bti_reference IS NULL
+    GROUP BY n.chapter
+    ORDER BY headings_without_decisions DESC, n.chapter
+    LIMIT 3
 """).df())
-#    price_missing  n_products  n_reviews  avg_rating
-# 0          False        9107     137937        4.18
-# 1           True       46252     296436        3.95
+#   chapter             chapter_description  headings_without_decisions
+# 0      26  Ores, slag and ash                                       15
+# 1      51  Wool, fine or coarse animal ha                            9
+# 2      28  Inorganic chemicals; organic a                            7
 
-n_groups = con.sql("""SELECT COUNT(*) FROM (SELECT p.store FROM reviews r JOIN products p USING (parent_asin)
-                      GROUP BY p.store HAVING COUNT(*) >= 1000)""").fetchone()
-print(n_groups)                                                        # (30,) one of them is store NULL
+# the other direction: decisions whose heading is not in the nomenclature
+print(con.sql("""
+    SELECT d.heading, COUNT(*) AS n
+    FROM decisions AS d
+    LEFT JOIN nomenclature AS n ON n.heading = d.heading
+    WHERE n.heading IS NULL
+    GROUP BY d.heading
+""").fetchall())                                                       # [('8803', 51)]
+print(con.sql("SELECT COUNT(*) FROM decisions JOIN nomenclature USING (heading)").fetchone())
+# (309478,): the inner join silently drops the 51 decisions of heading 8803
 ```
 
-The reviews of products without a price have a lower average rating (3.95 against 4.18). Whether the missing price is related to other properties of a product is the starting question of Session 4.
+Raw materials such as ores and wool are rarely the subject of a decision: their classification is seldom in doubt. The inner join loses the 51 decisions of the deleted heading 8803 without any warning; only the count against the 309,529 rows of the table shows it.
 
 ### In practice
 
 - **Marketing analysts** join transactions with customer attributes to compare customer segments; a customer without transactions disappears in an inner join and must be kept with a left join if "inactive customers" are part of the question.
 - **Epidemiological record linkage**, for example linking cancer registries with mortality registers, keeps unmatched records and analyses them separately, because who fails to link is itself informative.
-- **Data quality checks** in finance and retail use anti-joins to find orders that refer to a deleted customer or a product that no longer exists.
+- **Data quality checks** in finance, retail and customs use anti-joins to find records that refer to a deleted customer, a discontinued product or, as here, a tariff code that no longer exists.
 
 > [!CAUTION]
-> A join on a key that is not unique on the "one" side multiplies rows. If `products` contained the same `parent_asin` twice, every review of that product would appear twice after the join and all counts would be inflated. Check uniqueness before joining (`COUNT(*)` against `COUNT(DISTINCT key)`), or in pandas use `merge(..., validate="many_to_one")`.
+> A join on a key that is not unique on the "one" side multiplies rows. If `nomenclature` contained heading 9503 twice (for example once from HS 2017 and once from HS 2022), every toy decision would appear twice after the join and all counts would be inflated. Check uniqueness before joining (`COUNT(*)` against `COUNT(DISTINCT key)`), or in pandas use `merge(..., validate="many_to_one")`.
 
 > [!WARNING]
-> A condition on the right table in `WHERE` turns a left join back into an inner join: `LEFT JOIN products p ... WHERE p.price > 20` drops all rows where `p.price` is NULL. Put such conditions into the `ON` clause if unmatched rows must stay.
+> A condition on the right table in `WHERE` turns a left join back into an inner join: `nomenclature n LEFT JOIN decisions d ... WHERE d.language = 'de'` drops all headings without decisions, because `d.language` is NULL there. Put such conditions into the `ON` clause if unmatched rows must stay.
 
 ## Check your understanding
 
-1. Which column is the primary key of `reviews`, and which column is a foreign key? What would the database do with a review whose `parent_asin` does not exist in `products`?
-2. Explain the difference between `WHERE` and `HAVING` with an example from the review data.
-3. Why does `SELECT COUNT(*) FROM products WHERE price = NULL` return 0?
-4. A colleague joins `reviews` with `products` using an inner join and reports the average price of reviewed products. Which products are missing from the result, and does it matter for her question?
+1. Which column is the primary key of `decisions`, and which column is a foreign key? What would the database do with a decision whose heading does not exist in `nomenclature`?
+2. Explain the difference between `WHERE` and `HAVING` with an example from the decision data.
+3. Why does `SELECT COUNT(*) FROM decisions WHERE keywords = NULL` return 0?
+4. A colleague joins `decisions` with `nomenclature` using an inner join and reports the number of decisions per section. Which decisions are missing from the result, and does it matter for her question?
 5. Which logical step of a query is evaluated first: `SELECT` or `WHERE`? What follows for column aliases?
 
 ## Further reading

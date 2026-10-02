@@ -27,8 +27,8 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Trend, seasonality, autocorrelation; resampling; naive, seasonal naive, moving average | CC-BY-4.0, course team |
 | [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | Exponential smoothing, ETS prediction intervals, ARIMA outlook | CC-BY-4.0, course team |
 | [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features with gradient boosting, rolling-origin backtesting, MAE, MASE, coverage, recommendation | CC-BY-4.0, course team |
-| [theory/figures/](theory/figures/) (`make_figures.py` and 4 PNGs) | STL decomposition, ACF, baselines against actuals, ETS interval | CC-BY-4.0, course team |
-| [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb) | Practice of all three blocks: monthly review counts, baselines, ETS, lag model, backtest, recommendation, check against 2022 | CC-BY-4.0, course team |
+| [theory/figures/](theory/figures/) (`make_figures.py` and 4 PNGs) | STL decomposition, ACF, baselines against actuals, ETS interval (monthly BTI decisions) | CC-BY-4.0, course team |
+| [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb) | Practice of all three blocks: monthly BTI decision counts, baselines, ETS, lag model, backtest, recommendation, 12-month forecast, five chapter series | CC-BY-4.0, course team |
 
 ## Citations
 
@@ -46,4 +46,4 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - pandas developers (2026). *Time series / date functionality*. https://pandas.pydata.org/docs/user_guide/timeseries.html
 - scikit-learn developers (2026). *Time-related feature engineering* and *Lagged features for time series forecasting* (examples). https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html
 - Seabold, S. and Perktold, J. (2010). statsmodels: econometric and statistical modeling with Python. *Proceedings of the 9th Python in Science Conference*. https://www.statsmodels.org/
-- Hou, Y. et al. (2024). Bridging language and items for retrieval and recommendation (Amazon Reviews 2023). arXiv:2403.03952. https://arxiv.org/abs/2403.03952
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (DDS2-EBTI_Full), retrieved by `case-study/prepare_data.py`; aggregated to `monthly_counts.parquet`. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en

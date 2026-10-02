@@ -1,10 +1,10 @@
-"""Fixtures: a tiny model trained on twelve built-in sentences. No case-study data are needed."""
+"""Fixtures: a tiny model trained on 16 built-in descriptions. No case-study data are needed."""
 
 import pytest
 from fastapi.testclient import TestClient
 
-from sentiment_service.app import create_app
-from sentiment_service.model import train_fixture_model
+from tariff_service.app import create_app
+from tariff_service.model import train_fixture_model
 
 
 @pytest.fixture(scope="session")

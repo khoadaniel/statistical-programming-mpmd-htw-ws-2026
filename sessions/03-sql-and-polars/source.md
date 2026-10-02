@@ -37,11 +37,11 @@ Data downloaded at run time (not stored in the repository): UCI Bank Marketing d
 | [theory/01-relational-model-and-sql.md](theory/01-relational-model-and-sql.md) | Block 1: relational model, PostgreSQL, SELECT/WHERE/ORDER BY/LIMIT, GROUP BY/HAVING, joins and NULL | CC-BY-4.0 |
 | [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | Block 2: CTEs and window functions, SQLAlchemy and pandas, ingestion with constraints, data cards | CC-BY-4.0 |
 | [theory/03-polars-and-choosing-a-tool.md](theory/03-polars-and-choosing-a-tool.md) | Block 3: limits of pandas, Polars (expressions, lazy, optimiser, streaming, Parquet), SQL/pandas/Polars side by side, choosing a tool | CC-BY-4.0 |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `join-types.png`, `reviews-per-year-window.png`, `pandas-polars-benchmark.png` | CC-BY-4.0 |
-| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | Practice block 1: first SQL questions on the reviews with DuckDB (average rating per store, products without a price) | CC-BY-4.0 |
-| [workbooks/10-case-study-postgres-reviews.ipynb](workbooks/10-case-study-postgres-reviews.ipynb) | Practice block 2: load reviews into PostgreSQL (Docker) or DuckDB with constraints, window-function ranking, data card | CC-BY-4.0 |
-| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | Practice block 3: the same aggregation on all training reviews in SQL, pandas and Polars; code, runtime and peak memory | CC-BY-4.0 |
-| [workbooks/sql/01-schema.sql](workbooks/sql/01-schema.sql), [02-add-constraints.sql](workbooks/sql/02-add-constraints.sql), [03-rank-products-per-year.sql](workbooks/sql/03-rank-products-per-year.sql) | Schema with keys and constraints; constraints for tables written by `prepare_data.py --postgres`; window-function ranking | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `join-types.png`, `decisions-per-year-window.png`, `pandas-polars-benchmark.png` (benchmark values measured with workbook 14) | CC-BY-4.0 |
+| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | Practice block 1: first SQL questions on the BTI decisions with DuckDB (decisions per country and year, headings with English names, headings without decisions, the deleted heading 8803) | CC-BY-4.0 |
+| [workbooks/10-case-study-postgres-decisions.ipynb](workbooks/10-case-study-postgres-decisions.ipynb) | Practice block 2: load the decisions into PostgreSQL (Docker) or DuckDB with constraints, headings ranked per country and year, running totals, data card | CC-BY-4.0 |
+| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | Practice block 3: the same aggregation on the raw EBTI export (23 CSV files, 1,051,034 decisions) in SQL, pandas and Polars; code, runtime and peak memory | CC-BY-4.0 |
+| [workbooks/sql/01-schema.sql](workbooks/sql/01-schema.sql), [02-add-constraints.sql](workbooks/sql/02-add-constraints.sql), [03-rank-headings-per-country-year.sql](workbooks/sql/03-rank-headings-per-country-year.sql) | Schema with keys and constraints; constraints for tables written by `prepare_data.py --postgres`; window-function ranking | CC-BY-4.0 |
 | [workbooks/data-card-template.md](workbooks/data-card-template.md) | Data card template | CC-BY-4.0 |
 
 Author of own material: course team.
@@ -60,6 +60,7 @@ Author of own material: course team.
 - The PostgreSQL Global Development Group. *PostgreSQL documentation*. https://www.postgresql.org/docs/current/
 - Polars developers. *Polars user guide*. https://docs.pola.rs/user-guide/
 - SQLAlchemy. *SQLAlchemy 2.0 documentation*. https://docs.sqlalchemy.org/en/20/
-- Hou, Y., Li, J., He, Z., Yan, A., Chen, X., & McAuley, J. (2024). Bridging language and items for retrieval and recommendation. arXiv:2403.03952 (course dataset).
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (course dataset; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0 (course dataset). https://github.com/datasets/harmonized-system
 - Moro, S., Rita, P., & Cortez, P. (2014). Bank Marketing [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
 - Berka, P. (1999). Guide to the financial data set. PKDD'99 Discovery Challenge.

@@ -32,9 +32,9 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/02-web-apis.md](theory/02-web-apis.md) | HTTP, JSON, authentication, pagination, rate limits, httpx, FastAPI | CC-BY-4.0, course team |
 | [theory/03-git-github-and-ci.md](theory/03-git-github-and-ci.md) | Git, merge-conflict exercise, pull requests, review, GitHub Actions | CC-BY-4.0, course team |
 | [workbooks/03-case-study-open-data-api.ipynb](workbooks/03-case-study-open-data-api.ipynb) | Live CKAN request, pagination, validated parsing, MockTransport test | CC-BY-4.0, course team |
-| [workspace/](workspace/README.md) | Project `reviewtools` (records, open-data client, FastAPI app, text features, tests, CI, solutions) | CC-BY-4.0 (text), MIT (code), course team |
+| [workspace/](workspace/README.md) | Project `btitools` (BTI decision records, open-data client, FastAPI app with a small nomenclature extract, text features, tests, CI, solutions) | CC-BY-4.0 (text), MIT (code), course team |
 
-Code examples adapt the verified examples of the earlier course notes. The open-data client queries the CKAN API of GovData (https://www.govdata.de); no data are stored in the repository.
+Code examples adapt the verified examples of the earlier course notes. The open-data client queries the CKAN API of GovData (https://www.govdata.de); no data are stored in the repository. The nomenclature extract in `workspace/src/btitools/api.py` (nine headings, shortened English descriptions) comes from the HS 2022 dataset cited below; the example decisions in the tests are invented.
 
 ## Citations
 
@@ -42,11 +42,13 @@ Code examples adapt the verified examples of the earlier course notes. The open-
 - CKAN Association (2026). *CKAN API guide*. https://docs.ckan.org/en/latest/api/
 - CodeRefinery (2025). *Collaborative distributed version control*. https://coderefinery.github.io/git-collaborative/
 - Downey, A. B. (2024). *Think Python*, 3rd edition. O'Reilly. https://allendowney.github.io/ThinkPython/
+- European Commission (2026). *European Binding Tariff Information (EBTI) database* (course data; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Google (2026). *Google Engineering Practices: Code review*. https://google.github.io/eng-practices/review/
 - Herndon, T., Ash, M., & Pollin, R. (2014). Does high public debt consistently stifle economic growth? A critique of Reinhart and Rogoff. *Cambridge Journal of Economics*, 38(2), 257–279. https://doi.org/10.1093/cje/bet075
 - Lehtosalo, J. et al. (2019). *Our journey to type checking 4 million lines of Python*. Dropbox Tech Blog. https://dropbox.tech/application/our-journey-to-type-checking-4-million-lines-of-python
 - MIT CSAIL (2026). *The Missing Semester of Your CS Education*. https://missing.csail.mit.edu/
 - Mozilla (2026). *MDN Web Docs: HTTP*. https://developer.mozilla.org/en-US/docs/Web/HTTP
+- Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - Python Software Foundation (2026). *dataclasses — Data Classes*. https://docs.python.org/3/library/dataclasses.html
 - Ramírez, S. (2026). *FastAPI documentation*. https://fastapi.tiangolo.com/
 - Smith, E. V. (2017). *PEP 557 – Data Classes*. https://peps.python.org/pep-0557/

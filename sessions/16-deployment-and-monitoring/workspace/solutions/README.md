@@ -5,5 +5,5 @@ and run `uv run pytest -q`: the `xfail` tests of `tests/test_exercises.py` then 
 
 | Exercise | File | Replaces |
 |---|---|---|
-| 2 | [batch_endpoint.py](batch_endpoint.py) | the body of `predict_batch` in `src/sentiment_service/app.py` |
-| 4 | [oov_rate.py](oov_rate.py) | `oov_rate` in `src/sentiment_service/drift.py` |
+| 2 | [batch_endpoint.py](batch_endpoint.py) | the body of `predict_batch` in `src/tariff_service/app.py` |
+| 4 | [oov_rate.py](oov_rate.py) | `oov_rate` in `src/tariff_service/drift.py` |

@@ -220,7 +220,7 @@ The best three settings differ by 0.0001 AUC, far less than the fold-to-fold sta
 
 ## Practice: tuning on the case study
 
-In the [case-study workbook](../workbooks/19-case-study-validation.ipynb), part B, you tune the ridge penalty for the regression of helpful votes and the `C` of the review classifier, and you compare a random `StratifiedKFold` with a `TimeSeriesSplit` on the reviews. Ask: does the choice of splitter change the score, the chosen hyperparameter, or both?
+In the [case-study workbook](../workbooks/19-case-study-validation.ipynb), part B, you tune the ridge penalty for the description-length regression of Session 6 and the regularisation strength `alpha` and the TF-IDF settings of the heading classifier, once with random and once with time-based validation on the EBTI decisions. Ask: does the choice of splitter change the score, the chosen hyperparameter, or both?
 
 ## Check your understanding
 

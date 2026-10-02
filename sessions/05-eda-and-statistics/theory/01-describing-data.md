@@ -1,6 +1,6 @@
 # Describing data by variable type
 
-Exploratory data analysis (EDA) is the first look at a dataset before any test or model: which values occur, how often, and what looks wrong. This page recaps how to describe one variable at a time. The type of the variable decides which summaries and charts make sense, so we start there. Then we cover distributions, centre and spread, robust summaries for skewed data, and frequency tables. All examples use the 50,000-review sample of the course case study. Chart design follows on the [next page](02-chart-design.md).
+Exploratory data analysis (EDA) is the first look at a dataset before any test or model: which values occur, how often, and what looks wrong. This page recaps how to describe one variable at a time. The type of the variable decides which summaries and charts make sense, so we start there. Then we cover distributions, centre and spread, robust summaries for skewed data, and frequency tables. All examples use the 50,000-decision sample of the course case study: European Binding Tariff Information (EBTI) decisions, in which a customs authority states the four-digit HS heading of a product described by a trader (see [case-study/README.md](../../../case-study/README.md)). Chart design follows on the [next page](02-chart-design.md).
 
 ```mermaid
 flowchart LR
@@ -16,48 +16,50 @@ flowchart LR
 
 ### Concept
 
-A **variable** is one column of a table: one property measured for every observation (here: every review). Its **type** decides what arithmetic makes sense.
+A **variable** is one column of a table: one property measured for every observation (here: every decision). Its **type** decides what arithmetic makes sense.
 
 | Type | Meaning | Case-study example | Sensible summaries |
 |---|---|---|---|
-| **Nominal** (categorical) | categories without order | `label` (neg, neu, pos), `verified_purchase` | counts, shares, mode |
-| **Ordinal** | categories with an order but no fixed distance | `rating` (1–5 stars) | counts, shares, median, quantiles |
-| **Discrete numeric (count)** | whole numbers from counting | `helpful_vote`, `n_images` | median, quantiles, share of zeros, mean with care |
-| **Continuous numeric** | measurements on a continuous scale | price, text length (approximately) | mean, median, SD, IQR |
-| **Date/time** | a point in time | `date` | range, counts per day/month |
+| **Nominal** (categorical) | categories without order | `language`, `issuing_country`, `status`, `heading` (1,114 categories) | counts, shares, mode |
+| **Ordinal** | categories with an order but no fixed distance | none in the case study; a survey answer from "poor" to "excellent" | counts, shares, median, quantiles |
+| **Discrete numeric (count)** | whole numbers from counting | number of keywords, number of digits in the description | median, quantiles, share of zeros, mean with care |
+| **Continuous numeric** | measurements on a continuous scale | description length in characters (approximately), validity in days | mean, median, SD, IQR |
+| **Date/time** | a point in time | `start_date`, `date_of_issue` | range, counts per day/month |
 
-A worked example: the mean of the ratings 1, 5, 5 is 3.67 stars. That number assumes the step from 1 to 2 stars is as large as the step from 4 to 5. For a star scale this is a convention, not a fact. The median (5 stars) and the share of 5-star reviews (2 of 3) need no such assumption.
+The heading looks like a number (`3926`) but is a **code**: heading 3926 is not "larger" than heading 3924, and their mean means nothing. The codes are **hierarchical**: the first two digits give the chapter (39, plastics), and chapters belong to one of 21 sections.
+
+A worked example on ordinal data: the mean of the survey answers 1, 5, 5 (1 = poor, 5 = excellent) is 3.67. That number assumes the step from 1 to 2 is as large as the step from 4 to 5. For an answer scale this is a convention, not a fact. The median (5) and the share of "excellent" answers (2 of 3) need no such assumption.
 
 ### Why it matters
 
-Software computes a mean for any column of numbers, including postal codes and product IDs. The type tells you whether the result means anything. It also decides the test you choose later (see the [test decision table](03-comparing-groups-and-tests.md#choosing-a-test-from-a-decision-table)) and how a feature enters a model (Session 6 onwards).
+Software computes a mean for any column of numbers, including postal codes and tariff codes. The type tells you whether the result means anything. It also decides the test you choose later (see the [test decision table](03-comparing-groups-and-tests.md#choosing-a-test-from-a-decision-table)) and how a feature enters a model (Session 6 onwards).
 
 ### How it works in Python
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-print(reviews.dtypes)
-# rating                 int64   -> ordinal, although stored as integer
-# helpful_vote           int64   -> count
-# verified_purchase       bool   -> nominal (two categories)
-# date          datetime64[ms]   -> date/time
-# label                    str   -> nominal (ordered neg < neu < pos, so ordinal is also defensible)
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+print(decisions[["issuing_country", "language", "start_date", "heading", "description"]].dtypes)
+# issuing_country            object   -> nominal (29 countries)
+# language                   object   -> nominal (23 languages)
+# start_date         datetime64[ns]   -> date/time
+# heading                    object   -> nominal code, stored as text: good
+# description                object   -> free text; derive numeric variables from it
 
-# Make the order of an ordinal variable explicit
-reviews["label"] = pd.Categorical(reviews["label"], categories=["neg", "neu", "pos"], ordered=True)
-print(reviews["label"].min(), reviews["label"].max())   # neg pos
+decisions["n_chars"] = decisions["description"].str.len()                       # continuous (approx.)
+decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()        # count
+print(decisions["heading"].nunique(), decisions["chapter"].nunique())          # 934 93 in the sample
 ```
 
 ### In practice
 
 - Survey research distinguishes Likert items (ordinal) from scale scores; the European Social Survey documentation states the measurement level of every variable.
 - Official statistics (Eurostat, Destatis) publish median rather than mean income because income is a skewed continuous variable.
-- Data catalogues such as Frictionless Data table schemas record a type for every column so that tools can validate them.
+- Foreign-trade statistics (Eurostat's Comext database) store the HS and CN product codes as text with leading zeros, because they are nominal codes, not quantities.
 
 > [!WARNING]
-> **Numbers that are not quantities.** IDs, postal codes and encoded categories (1 = Berlin, 2 = Hamburg) are stored as integers but are nominal. Convert them to strings or `category` before describing them, or `describe()` will report a meaningless mean.
+> **Numbers that are not quantities.** IDs, postal codes, tariff codes and encoded categories (1 = Berlin, 2 = Hamburg) look like numbers but are nominal. Keep them as strings or `category`; read as integers, heading `0101` becomes `101` and `describe()` reports a meaningless mean.
 
 ## Distributions
 
@@ -71,9 +73,9 @@ The **distribution** of a variable tells you which values occur and how often. D
 
 A **histogram** cuts the value range into intervals (bins) and draws a bar for the number of observations in each. A **box plot** draws the quartiles as a box, the median as a line and points beyond 1.5 × IQR from the box as individual dots.
 
-![Histogram of words per review on a linear and a logarithmic axis, with mean and median marked](figures/skewed-distribution.png)
+![Histogram of description length in characters on a linear and a logarithmic axis, with mean and median marked](figures/skewed-distribution.png)
 
-Review length is **right-skewed**: most reviews are short, a few are very long. On a linear axis the long tail squeezes the bulk into the first bars. On a **logarithmic axis** equal distances stand for equal ratios (10, 100, 1,000 words), and the shape becomes readable.
+Description length is **right-skewed**: most descriptions have a few hundred characters, a few have several thousand. On a linear axis the long tail squeezes the bulk into the first bars. On a **logarithmic axis** equal distances stand for equal ratios (100, 1,000, 10,000 characters), and the shape becomes readable. On the log axis the distribution is slightly skewed the other way: a tail of very short descriptions, many of them in French and English, while German descriptions are long (the box plots in the code below show this).
 
 ### Why it matters
 
@@ -86,14 +88,15 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+main = decisions[decisions["language"].isin(["de", "fr", "en", "nl", "pl"])]
 
 fig, (left, right) = plt.subplots(1, 2, figsize=(9, 3.5), layout="constrained")
-sns.histplot(reviews, x="n_words", log_scale=True, bins=30, ax=left)   # shape on a log axis
-sns.boxplot(reviews, x="n_words", y="label", log_scale=True, ax=right)  # one box per group
-print(reviews["n_words"].skew().round(2))   # 6.39: strong right skew (0 = symmetric)
-print((reviews["n_words"] == 0).sum())       # 9 reviews with an empty text: check them
+sns.histplot(decisions, x="n_chars", log_scale=True, bins=40, ax=left)          # shape on a log axis
+sns.boxplot(main, x="n_chars", y="language", log_scale=True, ax=right)          # one box per group
+print(decisions["n_chars"].skew().round(2))         # 1.32: right skew (0 = symmetric)
+print((decisions["n_chars"] < 20).sum())            # 12 descriptions under 20 characters: read them
 ```
 
 ### In practice
@@ -115,7 +118,7 @@ print((reviews["n_words"] == 0).sum())       # 9 reviews with an empty text: che
 - The **standard deviation (SD)** is roughly the typical distance from the mean. It squares the distances, so large deviations dominate it.
 - The **quartiles** Q1 and Q3 cut off the lowest and highest 25 %. The **interquartile range** IQR = Q3 − Q1 is the width of the middle half.
 
-Worked example with five review lengths: 4, 8, 10, 12, 166 words. The mean is 200 / 5 = 40, but four of five reviews are shorter than 13 words. The median is 10. Remove the 166-word review and the mean drops to 8.5, while the median moves only from 10 to 9.
+Worked example with five description lengths: 200, 400, 500, 600, 3,300 characters. The mean is 5,000 / 5 = 1,000, but four of five descriptions are shorter than 601 characters. The median is 500. Remove the 3,300-character description and the mean drops to 425, while the median moves only from 500 to 450.
 
 ### Why it matters
 
@@ -126,19 +129,24 @@ A summary that is pulled by a few extreme values misleads every decision built o
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
+decisions["validity_days"] = (decisions["end_date"] - decisions["start_date"]).dt.days
 
-print(reviews["n_words"].agg(["mean", "median", "std"]).round(1).to_dict())
-# {'mean': 35.3, 'median': 20.0, 'std': 51.1}
-q1, q3 = reviews["n_words"].quantile([0.25, 0.75])
-print(q1, q3, q3 - q1)                       # 8.0 43.0 35.0  -> IQR 35 words
-print(reviews[["rating", "helpful_vote", "n_words"]].describe().round(1).loc[["mean", "50%", "max"]])
-#       rating  helpful_vote  n_words
-# mean     4.0           1.3     35.3
-# 50%      5.0           0.0     20.0
-# max      5.0        7326.0   1706.0
+print(decisions["n_chars"].agg(["mean", "median", "std"]).round(1).to_dict())
+# {'mean': 644.1, 'median': 587.0, 'std': 379.0}
+q1, q3 = decisions["n_chars"].quantile([0.25, 0.75])
+print(q1, q3, q3 - q1)                       # 370.0 838.0 468.0  -> IQR 468 characters
+print(decisions[["n_chars", "n_keywords", "validity_days"]].describe().round(1).loc[["mean", "50%", "min", "max"]])
+#       n_chars  n_keywords  validity_days
+# mean    644.1         6.2          945.3
+# 50%     587.0         6.0         1095.0
+# min       7.0         1.0       -45175.0
+# max    6403.0        39.0         1095.0
 ```
+
+The validity column already shows a problem: a decision cannot end 45,175 days (124 years) before it starts. Session 4 traced such values to typing errors and placeholder dates.
 
 ### In practice
 
@@ -147,7 +155,7 @@ print(reviews[["rating", "helpful_vote", "n_words"]].describe().round(1).loc[["m
 - Service-level agreements state percentiles (p50, p95, p99) of response times rather than means.
 
 > [!CAUTION]
-> **SD on skewed data.** The helpful-vote count has mean 1.3 and SD 34.0. "Mean ± 2 SD" would suggest negative votes are common. For skewed or bounded variables, describe spread with quantiles instead.
+> **SD on data with errors or bounds.** The validity has mean 945 days and SD 1,782 days, although no decision can be valid for more than three years (1,095 days). "Mean ± 2 SD" would suggest validities from minus 7 to plus 12 years. For skewed, bounded or contaminated variables, describe spread with quantiles instead.
 
 ## Robust summaries
 
@@ -160,11 +168,11 @@ Robust alternatives:
 - **median** instead of mean;
 - **IQR** or the **median absolute deviation (MAD)**, the median of |x − median|, instead of SD;
 - the **trimmed mean**, which drops a fixed share (for example 10 %) at each end before averaging;
-- **quantiles** (p10, p90, p99) to describe a tail directly.
+- **quantiles** (p1, p10, p90) to describe a tail directly.
 
 ### Why it matters
 
-Real data contain recording errors, bots and genuine extreme cases. Robust summaries describe the bulk of the data; comparing them with the classical ones shows how much the extremes matter. Session 4 used the same ideas to flag outliers; Session 6 applies them to regression.
+Real data contain recording errors, placeholder values and genuine extreme cases. Robust summaries describe the bulk of the data; comparing them with the classical ones shows how much the extremes matter. Session 4 used the same ideas to flag outliers; Session 6 applies them to regression.
 
 ### How it works in Python
 
@@ -172,17 +180,18 @@ Real data contain recording errors, bots and genuine extreme cases. Robust summa
 import pandas as pd
 from scipy import stats
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-votes = reviews["helpful_vote"]
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+days = (decisions["end_date"] - decisions["start_date"]).dt.days
 
-print(round(votes.mean(), 2), votes.median())                # 1.32 0.0
-print(round(stats.trim_mean(votes, 0.1), 2))                 # 0.29: 10 % cut at each end
-print(stats.median_abs_deviation(votes))                     # 0.0: most reviews have no votes
-print(round((votes == 0).mean(), 3))                         # 0.713: share of zeros
-print(votes.quantile([0.5, 0.9, 0.99]).to_dict())            # {0.5: 0.0, 0.9: 2.0, 0.99: 17.0}
+print(round(days.mean(), 1), days.median())                 # 945.3 1095.0
+print(round(stats.trim_mean(days, 0.1), 1))                 # 1085.4: 10 % cut at each end
+print(stats.median_abs_deviation(days))                     # 0.0: most decisions run the full term
+print(round((days == 1095).mean(), 3))                      # 0.723: share of the most common value
+print(days.quantile([0.01, 0.1, 0.5]).round(1).to_dict())   # {0.01: 45.0, 0.1: 757.9, 0.5: 1095.0}
+print((days < 0).sum())                                     # 77 impossible negative durations
 ```
 
-For a count like this, the best description is a few numbers in plain words: "71 % of reviews receive no helpful vote; 10 % receive more than 2; the maximum is 7,326."
+In plain words: "Most decisions (72 %) run for the full three years; one in ten ends more than 337 days early; 77 of 50,000 have impossible negative durations." Three numbers and a data-quality flag describe the variable better than mean and SD.
 
 ### In practice
 
@@ -199,41 +208,58 @@ For a count like this, the best description is a few numbers in plain words: "71
 
 For categorical and ordinal variables, the summary is a **frequency table**: the count and the share (relative frequency) of each category. A **cross-tabulation** counts combinations of two categorical variables; it is the starting point for the chi-square test on [page 3](03-comparing-groups-and-tests.md#categorical-data-contingency-tables-chi-square-and-cramérs-v).
 
-Worked example: 6,669 of 50,000 reviews have one star, a share of 6,669 / 50,000 = 13.3 %.
+Worked example: 28,656 of 50,000 decisions are written in German, a share of 28,656 / 50,000 = 57.3 %.
 
 ### Why it matters
 
-Shares make groups of different size comparable; counts show whether a share rests on 10 or 10,000 observations. Report both.
+Shares make groups of different size comparable; counts show whether a share rests on 10 or 10,000 observations. Report both. For a code such as the heading, add the meaning: a table of "3926, 9503, 6307" is unreadable without the English heading names from the nomenclature table.
 
 ### How it works in Python
 
 ```python
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
 
-counts = reviews["rating"].value_counts().sort_index()          # keep the natural order
-shares = reviews["rating"].value_counts(normalize=True).sort_index()
-print(pd.DataFrame({"n": counts, "share": shares.round(3)}))
-#            n  share
-# rating
-# 1       6669  0.133
-# 2       2940  0.059
-# 3       3739  0.075
-# 4       5898  0.118
-# 5      30754  0.615
+counts = decisions["language"].value_counts()
+shares = decisions["language"].value_counts(normalize=True)
+print(pd.DataFrame({"n": counts, "share": shares.round(3)}).head(5))
+#               n  share
+# language
+# de        28656  0.573
+# fr         8082  0.162
+# en         2615  0.052
+# nl         2404  0.048
+# pl         1796  0.036
 
-# Cross-tabulation with row shares: rating distribution within each group
-print(pd.crosstab(reviews["verified_purchase"], reviews["rating"], normalize="index").round(3))
-# rating                 1      2      3      4      5
-# verified_purchase
-# False              0.128  0.051  0.071  0.145  0.605
-# True               0.134  0.060  0.075  0.115  0.616
+# the five most frequent headings with their English names (join the nomenclature)
+top = (decisions["heading"].value_counts().head(5).rename("n").reset_index()
+       .merge(nomenclature[["heading", "heading_description"]], on="heading"))
+top["heading_description"] = top["heading_description"].str[:45]
+print(top.to_string(index=False))
+# heading    n                           heading_description
+#    3926 2009 Articles of plastics and articles of other ma
+#    9503 1424 Tricycles, scooters, pedal cars and similar w
+#    6307 1374 Textiles; made up articles n.e.c. in chapter
+#    2106 1364 Food preparations not elsewhere specified or
+#    4202 1269 Trunks; suit, camera, jewellery, cutlery case
+
+# Cross-tabulation with row shares: language mix per year
+decisions["year"] = decisions["start_date"].dt.year
+print(pd.crosstab(decisions["year"], decisions["language"], normalize="index")[["de", "fr", "en"]].round(3).loc[[2017, 2020, 2023]])
+# language     de     fr     en
+# year
+# 2017      0.574  0.129  0.085
+# 2020      0.548  0.183  0.073
+# 2023      0.598  0.167  0.013
 
 # Counts per month (date/time variable)
-monthly = reviews.set_index("date").resample("MS").size()
-print(monthly.idxmax().date(), monthly.max())                   # 2020-01-01 884
+monthly = decisions.set_index("start_date").resample("MS").size()
+print(monthly.idxmax().date(), monthly.max())   # 2017-03-01 881
 ```
+
+The English share falls from 8.5 % to 1.3 %: the United Kingdom issued decisions until the end of 2020 and none after Brexit.
 
 ### In practice
 
@@ -242,19 +268,19 @@ print(monthly.idxmax().date(), monthly.max())                   # 2020-01-01 884
 - Clinical trial publications begin with "Table 1": frequencies and shares of patient characteristics per study arm.
 
 > [!TIP]
-> The star ratings are **J-shaped**: many 5s, some 1s, few in between. A mean of 4.0 describes almost nobody. For such distributions show the full frequency table or a bar chart.
+> The heading distribution has a **long tail**: the most frequent heading covers 4 % of the decisions, and hundreds of headings appear fewer than ten times. Show the top of such a table and say how many categories are in the tail; Session 8 shows why the tail matters for evaluation.
 
 ## Check your understanding
 
-1. Classify `rating`, `helpful_vote`, `verified_purchase` and `date` by type and name one sensible summary for each.
-2. The mean review length is 35 words and the median 20. What does this tell you about the shape of the distribution?
-3. Why is the SD of `helpful_vote` (34.0) a poor description of its spread? What would you report instead?
+1. Classify `issuing_country`, `heading`, the number of keywords and `start_date` by type and name one sensible summary for each.
+2. The mean description length is 644 characters and the median 587. What does this tell you about the shape of the distribution?
+3. Why is the SD of the validity (1,782 days) a poor description of its spread? What would you report instead?
 4. What is the breakdown point of the median, and what does it mean in plain words?
-5. When should a frequency table show shares rather than counts, and when both?
+5. Why should a frequency table of headings include the heading names, and when should it show shares rather than counts?
 
 ## Further reading
 
 - Downey, A. B. (2025). *Think Stats: Exploratory Data Analysis in Python* (3rd ed.), chapters 1–4. O'Reilly. Free online: <https://allendowney.github.io/ThinkStats/>
 - Wilke, C. O. (2019). *Fundamentals of Data Visualization*, chapter 7 "Visualizing distributions: Histograms and density plots". O'Reilly. <https://clauswilke.com/dataviz/histograms-density-plots.html>
 - Poldrack, R. A. (2023). *Statistical Thinking for the 21st Century*, chapter 4 "Summarizing data". <https://statsthinking21.github.io/statsthinking21-core-site/>
-- Matejka, J., & Fitzmaurice, G. (2017). Same stats, different graphs. *Proceedings of CHI 2017*. <https://www.autodesk.com/research/publications/same-stats-different-graphs>
+- World Customs Organization. *What is the Harmonized System (HS)?* <https://www.wcoomd.org/en/topics/nomenclature/overview/what-is-the-harmonized-system.aspx>

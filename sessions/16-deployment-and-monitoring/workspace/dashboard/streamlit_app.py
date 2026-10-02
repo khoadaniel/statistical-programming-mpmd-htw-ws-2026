@@ -1,4 +1,4 @@
-"""A small dashboard for the service: classify a review and show the model metadata.
+"""A small dashboard for the service: suggest headings for a description of goods and show the metadata.
 
     uv sync --extra dashboard
     MODEL_DIR=models uv run streamlit run dashboard/streamlit_app.py
@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from sentiment_service.model import load_model, review_text
+from tariff_service.model import decision_text, load_model, top_k
 
 
 @st.cache_resource  # load once per server process, not on every interaction
@@ -22,13 +22,13 @@ def get_model():
 
 
 pipe, meta = get_model()
-st.title("Review sentiment")
-st.caption(f"Model {meta['model_version']} · validation macro-F1 {meta['validation']['macro_f1']}")
-title = st.text_input("Title", "Stopped working")
-text = st.text_area("Review", "Broke after two days. Waste of money.")
+st.title("Tariff heading suggestion")
+st.caption(f"Model {meta['model_version']} · validation accuracy {meta['validation']['accuracy']} · "
+           "a suggestion for a customs officer, not a decision")
+text = st.text_area("Description of goods (any EU language)", "Damenstiefel mit Oberteil aus Rindleder")
 if text.strip():
-    proba = pipe.predict_proba([review_text(title, text)])[0]
-    st.bar_chart(pd.DataFrame({"probability": proba}, index=pipe.classes_))
-    st.write("Predicted label:", pipe.classes_[proba.argmax()])
+    ranked = top_k(pipe, [decision_text(text)], k=3)[0]
+    st.dataframe(pd.DataFrame([{"heading": h, "score": s, "text": meta.get("headings", {}).get(h, "")}
+                               for h, s in ranked]))
 with st.expander("Model metadata"):
-    st.json(meta)
+    st.json({k: v for k, v in meta.items() if k != "headings"})

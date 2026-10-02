@@ -1,7 +1,7 @@
 """A small client for CKAN open-data portals, with validated records.
 
 Reference solution, for self-checking only: compare with your own version after
-you have tried the exercise. Copy it over src/reviewtools/opendata.py to check it.
+you have tried the exercise. Copy it over src/btitools/opendata.py to check it.
 
 CKAN is the open-source software behind many open-data portals, including GovData
 (Germany, https://www.govdata.de) and the Berlin open-data portal. Its search endpoint
@@ -29,11 +29,11 @@ from typing import Any
 
 import httpx
 
-from reviewtools.errors import APIError, RateLimitError, ValidationError
+from btitools.errors import APIError, RateLimitError, ValidationError
 
 DEFAULT_BASE_URL = "https://ckan.govdata.de/api/3/action/"
 BERLIN = "berlin-open-data"
-USER_AGENT = "htw-spp-course-reviewtools/0.2 (teaching example)"
+USER_AGENT = "htw-spp-course-btitools/0.2 (teaching example)"
 
 
 @dataclass

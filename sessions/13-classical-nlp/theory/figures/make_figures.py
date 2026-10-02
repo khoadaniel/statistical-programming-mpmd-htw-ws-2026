@@ -1,11 +1,10 @@
-"""Figures for Session 13 (classical NLP).
+"""Figures for Session 13 (classical NLP) on the EBTI case study.
 
 Run from the repository root:
-    uv run --with pandas --with pyarrow --with scikit-learn --with matplotlib \
-        python sessions/13-classical-nlp/theory/figures/make_figures.py
+    uv run python sessions/13-classical-nlp/theory/figures/make_figures.py
 
 Writes dtm_sketch.png, top_ngrams.png and confusion_matrix.png next to this script.
-Deterministic: fixed split (random_state=0) and fixed toy documents.
+Deterministic: fixed toy documents, time-based split (train 2017-2021, validate 2022-2023), random_state=0.
 """
 
 from pathlib import Path
@@ -17,41 +16,39 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[4] / "case-study" / "data" / "train_sample.parquet"
-LABELS = ["neg", "neu", "pos"]
-COLORS = {"neg": "#c0392b", "neu": "#7f8c8d", "pos": "#2471a3"}
+DATA = Path(__file__).resolve().parents[4] / "case-study" / "data"
+COLORS = ["#2471a3", "#c0392b", "#1e8449"]
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 
 
 def dtm_sketch() -> None:
-    """A small document-term matrix: rows are reviews, columns are vocabulary words."""
+    """A small document-term matrix: rows are descriptions in three languages, columns are words."""
     docs = [
-        "great pump, works great",
-        "pump stopped working",
-        "not great, not bad",
-        "smells great",
-        "bad smell, stopped using it",
+        "toy car of plastic",
+        "plastic toy, plastic box",
+        "Spielzeugauto aus Kunststoff",
+        "Spielzeug aus Holz",
+        "voiture jouet en plastique",
     ]
     cv = CountVectorizer()
     X = cv.fit_transform(docs).toarray()
     words = cv.get_feature_names_out()
-    fig, ax = plt.subplots(figsize=(10, 3.6), dpi=130)
+    fig, ax = plt.subplots(figsize=(11, 3.6), dpi=120)
     ax.imshow(X > 0, cmap="Blues", vmin=0, vmax=1.6, aspect="auto")
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
             ax.text(j, i, str(X[i, j]), ha="center", va="center",
-                    color="black" if X[i, j] else "#b0b0b0", fontsize=11)
+                    color="black" if X[i, j] else "#b0b0b0", fontsize=10)
     ax.set_xticks(range(len(words)), words, rotation=40, ha="right")
     ax.set_yticks(range(len(docs)), [f"d{i + 1}: {d}" for i, d in enumerate(docs)])
     ax.set_xlabel("vocabulary (one column per word type)")
     ax.set_title(f"Document-term matrix: {X.shape[0]} documents x {X.shape[1]} words, "
-                 f"{(X > 0).mean():.0%} of cells non-zero")
+                 f"{(X > 0).mean():.0%} of cells non-zero\n(d1, d3 and d5 describe the same toy)")
     ax.spines[:].set_visible(False)
     ax.tick_params(length=0)
     fig.tight_layout()
@@ -60,51 +57,56 @@ def dtm_sketch() -> None:
 
 
 def fit_model():
-    reviews = pd.read_parquet(DATA)
-    texts = reviews["title"] + " " + reviews["text"]
-    X_tr, X_va, y_tr, y_va = train_test_split(
-        texts, reviews["label"], test_size=0.2, stratify=reviews["label"], random_state=0
-    )
+    d = pd.read_parquet(DATA / "train_sample.parquet")
+    year = d["start_date"].dt.year
+    train, valid = d[year <= 2021], d[year >= 2022]
     model = make_pipeline(
-        TfidfVectorizer(ngram_range=(1, 2), min_df=3, sublinear_tf=True),
-        LogisticRegression(C=4, class_weight="balanced", max_iter=2000),
+        TfidfVectorizer(min_df=2, sublinear_tf=True),
+        SGDClassifier(loss="hinge", alpha=1e-5, max_iter=20, tol=None, random_state=0, n_jobs=-1),
     )
-    model.fit(X_tr, y_tr)
-    return model, X_va, y_va
+    model.fit(train["description"], train["heading"])
+    return model, valid
 
 
 def top_ngrams(model, k: int = 12) -> None:
     vec, clf = model.named_steps.values()
     names = vec.get_feature_names_out()
-    fig, axes = plt.subplots(1, 3, figsize=(10.5, 4.4), dpi=130)
-    for ax, label in zip(axes, clf.classes_):
-        coef = clf.coef_[list(clf.classes_).index(label)]
+    fig, axes = plt.subplots(1, 3, figsize=(11, 4.6), dpi=120)
+    for ax, heading, color in zip(axes, ["6403", "6404", "9503"], COLORS):
+        coef = clf.coef_[list(clf.classes_).index(heading)]
         top = np.argsort(coef)[::-1][:k][::-1]
-        ax.barh(range(k), coef[top], color=COLORS[label])
+        ax.barh(range(k), coef[top], color=color)
         ax.set_yticks(range(k), names[top])
-        ax.set_title(f"class '{label}'")
+        short = {"6403": "footwear, uppers of leather", "6404": "footwear, uppers of textile",
+                 "9503": "toys"}[heading]
+        ax.set_title(f"{heading}: {short}", fontsize=10)
         ax.set_xlabel("coefficient")
-    fig.suptitle("Most informative n-grams per class (TF-IDF 1-2-grams + logistic regression)")
+    fig.suptitle("Most informative words per heading (word TF-IDF + linear SVM, 2017-2021 sample)")
     fig.tight_layout()
     fig.savefig(OUT / "top_ngrams.png")
     plt.close(fig)
 
 
-def confusion(model, X_va, y_va) -> None:
-    pred = model.predict(X_va)
-    cm = confusion_matrix(y_va, pred, labels=LABELS)
-    share = cm / cm.sum(axis=1, keepdims=True)
-    fig, ax = plt.subplots(figsize=(5.2, 4.4), dpi=130)
+def confusion(model, valid) -> None:
+    shoes = ["6401", "6402", "6403", "6404", "6405", "6406"]
+    keep = valid["heading"].isin(shoes).to_numpy()
+    pred = model.predict(valid["description"])[keep]
+    labels = shoes + ["other"]
+    pred = np.where(np.isin(pred, shoes), pred, "other")
+    cm = confusion_matrix(valid["heading"][keep], pred, labels=labels)[: len(shoes)]
+    share = cm / np.maximum(cm.sum(axis=1, keepdims=True), 1)
+    fig, ax = plt.subplots(figsize=(7.2, 5.0), dpi=120)
     ax.imshow(share, cmap="Blues", vmin=0, vmax=1)
-    for i in range(3):
-        for j in range(3):
-            ax.text(j, i, f"{share[i, j]:.2f}\n({cm[i, j]})", ha="center", va="center",
-                    color="white" if share[i, j] > 0.6 else "black")
-    ax.set_xticks(range(3), LABELS)
-    ax.set_yticks(range(3), LABELS)
-    ax.set_xlabel("predicted label")
-    ax.set_ylabel("true label")
-    ax.set_title("Confusion matrix, validation set\n(row shares = recall; counts in brackets)")
+    for i in range(share.shape[0]):
+        for j in range(share.shape[1]):
+            if cm[i, j]:
+                ax.text(j, i, f"{share[i, j]:.2f}\n({cm[i, j]})", ha="center", va="center", fontsize=9,
+                        color="white" if share[i, j] > 0.6 else "black")
+    ax.set_xticks(range(len(labels)), labels)
+    ax.set_yticks(range(len(shoes)), shoes)
+    ax.set_xlabel("predicted heading")
+    ax.set_ylabel("true heading")
+    ax.set_title("Footwear (chapter 64), validation years 2022-2023\n(row shares = recall; counts in brackets)")
     ax.spines[:].set_visible(False)
     fig.tight_layout()
     fig.savefig(OUT / "confusion_matrix.png")
@@ -113,7 +115,7 @@ def confusion(model, X_va, y_va) -> None:
 
 if __name__ == "__main__":
     dtm_sketch()
-    model, X_va, y_va = fit_model()
+    model, valid = fit_model()
     top_ngrams(model)
-    confusion(model, X_va, y_va)
+    confusion(model, valid)
     print("figures written to", OUT)

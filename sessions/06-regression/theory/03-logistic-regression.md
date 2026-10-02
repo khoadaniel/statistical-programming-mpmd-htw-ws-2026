@@ -1,6 +1,6 @@
 # Logistic regression
 
-Many targets are not numbers but yes/no outcomes: does a customer cancel, is a review negative, is a transaction fraudulent? **Logistic regression** is the standard first model for such **binary** targets. It keeps the weighted sum of linear regression but passes it through the **sigmoid** function, so that the output is a probability between 0 and 1. This page explains the sigmoid, the log-odds scale on which the coefficients live and how to interpret them as odds ratios, how to fit the model with statsmodels and scikit-learn, and a first look at turning probabilities into predicted classes. The example is the IBM Telco customer-churn dataset (7,043 customers, 26.5 % churn). Evaluation of classifiers in depth (precision, recall, ROC) follows in Session 8.
+Many targets are not numbers but yes/no outcomes: does a customer cancel, does a customs decision concern electrical equipment (chapter 85), is a transaction fraudulent? **Logistic regression** is the standard first model for such **binary** targets. It keeps the weighted sum of linear regression but passes it through the **sigmoid** function, so that the output is a probability between 0 and 1. This page explains the sigmoid, the log-odds scale on which the coefficients live and how to interpret them as odds ratios, how to fit the model with statsmodels and scikit-learn, and a first look at turning probabilities into predicted classes. The example is the IBM Telco customer-churn dataset (7,043 customers, 26.5 % churn). Evaluation of classifiers in depth (precision, recall, ROC) follows in Session 8.
 
 ```mermaid
 flowchart LR
@@ -245,7 +245,7 @@ At threshold 0.5 the model is right for 78 % of customers, 4.7 points above the 
 - Spam filters choose a high threshold because a legitimate e-mail in the spam folder (false positive) is worse than a spam e-mail in the inbox.
 
 > [!IMPORTANT]
-> **Practice (block 3).** Predict churn probability for the IBM Telco customers with logistic regression in statsmodels and scikit-learn. Interpret three coefficients as odds ratios, translate one into probabilities for two typical customers, and compare accuracy at thresholds 0.5 and 0.3 with the majority baseline. Notebook: [17-case-study-helpful-votes-and-churn.ipynb](../workbooks/17-case-study-helpful-votes-and-churn.ipynb).
+> **Practice (block 3).** Predict churn probability for the IBM Telco customers with logistic regression in statsmodels and scikit-learn. Interpret three coefficients as odds ratios, translate one into probabilities for two typical customers, and compare accuracy at thresholds 0.5 and 0.3 with the majority baseline. Notebook: [17-case-study-ebti-regression-and-churn.ipynb](../workbooks/17-case-study-ebti-regression-and-churn.ipynb).
 
 > [!CAUTION]
 > **Accuracy on imbalanced data.** When only 1 % of cases are positive, "always negative" has 99 % accuracy and is useless. Session 8 introduces precision, recall, F1 and ROC curves; Session 9 treats class imbalance.

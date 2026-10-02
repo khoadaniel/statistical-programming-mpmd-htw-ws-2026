@@ -94,7 +94,7 @@ One deep tree reaches a test ROC AUC of 0.658. Averaging 200 such trees (bagging
 - The Microsoft Kinect body-part recognition (Shotton et al., 2011) classified each depth-image pixel with a randomised decision forest in real time.
 
 > [!WARNING]
-> Like every tree model, a random forest cannot extrapolate: beyond the range of the training data it predicts the value of the outermost leaves. For a trend in time (review volumes, prices), a forest forecasts a flat line.
+> Like every tree model, a random forest cannot extrapolate: beyond the range of the training data it predicts the value of the outermost leaves. For a trend in time (decision volumes, prices), a forest forecasts a flat line.
 
 ## 2. Gradient boosting
 

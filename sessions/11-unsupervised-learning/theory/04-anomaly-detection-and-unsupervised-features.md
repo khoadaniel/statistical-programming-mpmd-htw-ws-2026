@@ -104,6 +104,32 @@ print(ratio.quantile([0.001, 0.5, 0.999]).round(2).to_list())      # [0.75, 1.0,
 
 Isolation Forest ranks the customers at the edge of the data first: they are rare, but not wrong. LOF finds short-tenure customers whose total does not fit their neighbours. A ratio built from domain knowledge (total ≈ tenure × monthly charge) states directly what "inconsistent" means. Model-based detectors produce a ranked list for inspection; they do not decide what is an error.
 
+On the case study, a natural anomaly score needs no detector at all: **the distance of a decision from the centre of its own heading**. Decisions whose description is far from the typical description of their heading are either unusual products, borderline cases between headings, or possible misclassifications. We use the German decisions of chapter 94 (to avoid the language effect of pages 2 and 3), represent each description by 50 SVD components scaled to length 1, average them per heading (the **centroid**) and compute the cosine similarity of every decision to its heading's centroid.
+
+```python
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
+
+sample = pd.read_parquet("case-study/data/train_sample.parquet")
+de = sample[(sample["chapter"] == "94") & (sample["language"] == "de")].reset_index(drop=True)
+Z_text = make_pipeline(TfidfVectorizer(min_df=3, sublinear_tf=True), TruncatedSVD(50, random_state=0),
+                       Normalizer()).fit_transform(de["description"])
+centroids = pd.DataFrame(Z_text).groupby(de["heading"]).mean()
+own = centroids.loc[de["heading"]].to_numpy()
+de["similarity"] = (Z_text * own).sum(axis=1) / np.linalg.norm(own, axis=1)   # cosine to own centroid
+print(len(de), de["similarity"].quantile([0.01, 0.5]).round(2).to_list())      # 1422 [0.38, 0.71]
+print(de.nsmallest(4, "similarity")[["heading", "similarity", "keywords"]].round(2).to_string())
+#      heading  similarity                                                              keywords
+# 1221    9405        0.27              FOR LIGHTING,HOUSINGS,LED,MOUNTED,PRINTED CIRCUIT BOARDS
+# 1116    9405        0.29          CABLES,CONNECTIONS,HOUSINGS,INSULATED,PRINTED CIRCUIT BOARDS
+# 1134    9405        0.30                   DOORS,LIGHT FITTINGS,NON-ELECTRIC,OF GLASS,OF METAL
+# 925     9405        0.31  DOORS,GATHERED BY HAND,LIGHT FITTINGS,NON-ELECTRIC,OF GLASS,OF METAL
+```
+
+The English keywords make the German decisions readable. The two least typical lamp decisions are LED modules on printed circuit boards with housings and cables: products on the border between lamps (9405) and electrical parts of chapter 85, exactly the kind of case a customs specialist would want to review. The next ones are non-electric light fittings of glass and metal, a rare kind of 9405. None of these is necessarily wrong; the ranking tells an expert where to look first.
+
 ### In practice
 
 - **Fraud detection.** Card issuers and payment providers screen transactions with anomaly scores alongside supervised fraud models, because new fraud patterns have no labels yet. The credit-card fraud data of the Université Libre de Bruxelles (Dal Pozzolo et al., 2015), a common public benchmark, has 0.17 % fraudulent transactions.
@@ -128,7 +154,7 @@ Unsupervised outputs can be inputs to a supervised model:
 - **Cluster membership** as a categorical feature (one-hot encoded), or the **distances to each centroid** (`KMeans.transform`), which are numeric and smoother.
 - **Principal component scores** instead of, or in addition to, many correlated columns.
 - **Anomaly scores** as a feature ("how unusual is this transaction?").
-- **Aggregates at another level**, such as the cluster of the *product* attached to each *review*: the case study does this.
+- **Aggregates at another level**, such as the cluster of a whole group of rows (all decisions of a customs office, all products of a seller) attached to each row.
 
 Like scaling, these are **preparation steps** that are fitted. They belong inside the pipeline and are fitted on the training folds only. Clusters computed on all data, including the test rows, leak information.
 
@@ -175,7 +201,7 @@ for name, model in models.items():
 # 2 principal components             ROC AUC 0.807
 ```
 
-`make_union(FunctionTransformer(), KMeans(...))` keeps the original columns and appends the eight distances; because it sits inside the pipeline, k-means is refitted in every fold. The centroid distances let the linear model bend its boundary and gain 0.005 ROC AUC, a small effect of the size of the fold-to-fold noise. Two components lose almost nothing compared with three columns.
+`make_union(FunctionTransformer(), KMeans(...))` keeps the original columns and appends the eight distances; because it sits inside the pipeline, k-means is refitted in every fold. The centroid distances let the linear model bend its boundary and gain 0.005 ROC AUC, a small effect of the size of the fold-to-fold noise. Two components lose almost nothing compared with three columns. On the case study the effect goes the other way: in the practice notebook, adding the distances to 8 k-means centroids to 50 text components of the chapter-94 decisions changes the validation accuracy of a gradient-boosting model for the heading from 0.898 to 0.891, within the noise. A flexible model on informative features gains nothing from a summary of the same features.
 
 ### In practice
 
@@ -184,12 +210,12 @@ for name, model in models.items():
 - **Geodemographic codes as covariates.** Area classifications such as the ONS Output Area Classification are used as area-level variables in health and social research.
 
 > [!WARNING]
-> **Fit the clustering inside the cross-validation.** Clusters fitted on all rows, then used as a feature in cross-validation, carry information from the validation folds. Use a pipeline, or for aggregated features (product clusters) build them from an earlier period, as in the case study.
+> **Fit the clustering inside the cross-validation.** Clusters fitted on all rows, then used as a feature in cross-validation, carry information from the validation folds. Use a pipeline, or build the clusters from an earlier period only, as in the case study (clusters fitted on 2017–2021, used for 2022–2023).
 
 > [!CAUTION]
 > **A small gain in one split is not evidence.** Report the spread across folds or a confidence interval (Session 7) before claiming that clusters improve a model.
 
-*Practice (block 3):* cluster the products by their review statistics, visualise them with PCA and test whether cluster membership improves a gradient-boosting model: part B of workbook [24-case-study-product-clusters.ipynb](../workbooks/24-case-study-product-clusters.ipynb).
+*Practice (block 3):* cluster the decisions of one chapter, visualise them with truncated SVD and t-SNE, rank the decisions that are far from their heading's centroid, and test whether cluster features improve a gradient-boosting model (Session 10) on a time-based split: part B of workbook [24-case-study-decision-clusters.ipynb](../workbooks/24-case-study-decision-clusters.ipynb).
 
 ## Check your understanding
 
@@ -198,6 +224,7 @@ for name, model in models.items():
 3. The top Isolation Forest customers are the longest and most expensive ones. Should they be removed before training a churn model? Why or why not?
 4. Why must `KMeans` sit inside the pipeline when its distances are used as features in cross-validation?
 5. Adding cluster features raises the ROC AUC from 0.809 to 0.814. What would you need to see before recommending the change?
+6. A decision has a low similarity to its heading's centroid. Name three possible explanations and how you would tell them apart.
 
 ## Further reading
 

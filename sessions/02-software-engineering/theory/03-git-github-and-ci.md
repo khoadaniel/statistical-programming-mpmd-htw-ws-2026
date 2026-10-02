@@ -34,13 +34,13 @@ The history of a feature branch that is merged with a merge commit:
 gitGraph
   commit id: "Add word count"
   commit id: "Add README"
-  branch feature/negations
-  checkout feature/negations
-  commit id: "Add count_negations"
-  commit id: "Test count_negations"
+  branch feature/n-lines
+  checkout feature/n-lines
+  commit id: "Add n_lines"
+  commit id: "Test n_lines"
   checkout main
   commit id: "Fix typo in README"
-  merge feature/negations id: "Merge feature/negations"
+  merge feature/n-lines id: "Merge feature/n-lines"
   commit id: "Next change"
 ```
 
@@ -56,9 +56,9 @@ Git is used from the terminal (or from the Git panel of VS Code). A first reposi
 git config --global user.name "Ada Example"        # once per computer
 git config --global user.email "ada@example.org"
 
-git init -b main reviews-project && cd reviews-project
+git init -b main tariff-features && cd tariff-features
 printf '.venv/\n__pycache__/\ndata/\n*.parquet\n.env\n' > .gitignore   # never commit these
-echo "# Review features" > README.md
+echo "# Text features of descriptions of goods" > README.md
 git status --short                  # ?? .gitignore   ?? README.md   (untracked)
 git add .gitignore README.md        # stage
 git commit -m "Add README and .gitignore"
@@ -90,7 +90,7 @@ git revert <hash>                   # new commit that undoes an earlier one (saf
 > Never commit data files, `.env` files, passwords or API keys. Git keeps every version: deleting a file in a later commit does not remove it from the history. Write the `.gitignore` before the first commit.
 
 > [!TIP]
-> Write commit messages in the imperative, as if completing the sentence "This commit will …": *Add negation count*, *Fix empty-text bug in n_words*. One logical change per commit.
+> Write commit messages in the imperative, as if completing the sentence "This commit will …": *Add digit count*, *Fix empty-text bug in n_words*. One logical change per commit.
 
 ## Exercise: a merge conflict step by step
 
@@ -111,39 +111,40 @@ git add features.py
 git commit -m "Add word count"
 ```
 
-**Step 2 · Branch A adds `n_exclamations`.**
+**Step 2 · Branch A adds `n_digits`.**
 
 ```bash
-git switch -c feature/n-exclamations
+git switch -c feature/n-digits
 ```
 
-Edit `features.py` in your editor: change the first line to `FEATURE_NAMES = ["n_words", "n_exclamations"]` and add at the end:
+Edit `features.py` in your editor: change the first line to `FEATURE_NAMES = ["n_words", "n_digits"]` and add at the end:
 
 ```python
-def n_exclamations(text):
-    return text.count("!")
+def n_digits(text):
+    return sum(c in "0123456789" for c in text)
 ```
 
 ```bash
-git commit -am "Add exclamation count"    # -a stages all tracked, modified files
+git commit -am "Add digit count"    # -a stages all tracked, modified files
 git switch main                           # features.py is back to the one-feature version
 ```
 
-**Step 3 · Branch B adds `count_negations`, starting from the same `main`.**
+**Step 3 · Branch B adds `upper_share`, starting from the same `main`.**
 
 ```bash
-git switch -c feature/count-negations
+git switch -c feature/upper-share
 ```
 
-Edit `features.py`: change the first line to `FEATURE_NAMES = ["n_words", "count_negations"]` and add at the end:
+Edit `features.py`: change the first line to `FEATURE_NAMES = ["n_words", "upper_share"]` and add at the end:
 
 ```python
-def count_negations(text):
-    return sum(w in {"not", "no", "never"} for w in text.lower().split())
+def upper_share(text):
+    letters = [c for c in text if c.isalpha()]
+    return sum(c.isupper() for c in letters) / len(letters) if letters else 0.0
 ```
 
 ```bash
-git commit -am "Add negation count"
+git commit -am "Add upper-case share"
 git switch main
 ```
 
@@ -152,21 +153,21 @@ The history now has two branches that start from the same commit:
 ```mermaid
 gitGraph
   commit id: "Add word count"
-  branch feature/n-exclamations
-  checkout feature/n-exclamations
-  commit id: "Add exclamation count"
+  branch feature/n-digits
+  checkout feature/n-digits
+  commit id: "Add digit count"
   checkout main
-  branch feature/count-negations
-  checkout feature/count-negations
-  commit id: "Add negation count"
+  branch feature/upper-share
+  checkout feature/upper-share
+  commit id: "Add upper-case share"
   checkout main
 ```
 
 **Step 4 · Merge A, then B.**
 
 ```bash
-git merge feature/n-exclamations          # Fast-forward: main had not moved
-git merge feature/count-negations         # CONFLICT (content): Merge conflict in features.py
+git merge feature/n-digits          # Fast-forward: main had not moved
+git merge feature/upper-share         # CONFLICT (content): Merge conflict in features.py
                                           # Automatic merge failed; fix conflicts and then commit the result.
 git status --short                        # UU features.py   (both modified: unmerged)
 ```
@@ -175,10 +176,10 @@ git status --short                        # UU features.py   (both modified: unm
 
 ```
 <<<<<<< HEAD
-FEATURE_NAMES = ["n_words", "n_exclamations"]
+FEATURE_NAMES = ["n_words", "n_digits"]
 =======
-FEATURE_NAMES = ["n_words", "count_negations"]
->>>>>>> feature/count-negations
+FEATURE_NAMES = ["n_words", "upper_share"]
+>>>>>>> feature/upper-share
 
 
 def n_words(text):
@@ -186,12 +187,13 @@ def n_words(text):
 
 
 <<<<<<< HEAD
-def n_exclamations(text):
-    return text.count("!")
+def n_digits(text):
+    return sum(c in "0123456789" for c in text)
 =======
-def count_negations(text):
-    return sum(w in {"not", "no", "never"} for w in text.lower().split())
->>>>>>> feature/count-negations
+def upper_share(text):
+    letters = [c for c in text if c.isalpha()]
+    return sum(c.isupper() for c in letters) / len(letters) if letters else 0.0
+>>>>>>> feature/upper-share
 ```
 
 Between `<<<<<<< HEAD` and `=======` is the version of the current branch (`main`, which already contains A); between `=======` and `>>>>>>>` the incoming version (B). The lines outside the markers merged without problems.
@@ -199,33 +201,34 @@ Between `<<<<<<< HEAD` and `=======` is the version of the current branch (`main
 **Step 6 · Decide and edit.** Here both changes are wanted, so the result keeps both: one list with three names, and both functions. Delete all marker lines. VS Code offers buttons (*Accept Current*, *Accept Incoming*, *Accept Both*) above each conflict; check the result by eye anyway.
 
 ```python
-FEATURE_NAMES = ["n_words", "n_exclamations", "count_negations"]
+FEATURE_NAMES = ["n_words", "n_digits", "upper_share"]
 
 
 def n_words(text):
     return len(text.split())
 
 
-def n_exclamations(text):
-    return text.count("!")
+def n_digits(text):
+    return sum(c in "0123456789" for c in text)
 
 
-def count_negations(text):
-    return sum(w in {"not", "no", "never"} for w in text.lower().split())
+def upper_share(text):
+    letters = [c for c in text if c.isalpha()]
+    return sum(c.isupper() for c in letters) / len(letters) if letters else 0.0
 ```
 
 **Step 7 · Check, stage and commit.**
 
 ```bash
 grep -n "<<<<<<<\|=======\|>>>>>>>" features.py    # no output: all markers are gone
-python -c "import features; print(features.FEATURE_NAMES)"   # ['n_words', 'n_exclamations', 'count_negations']
+python -c "import features; print(features.FEATURE_NAMES)"   # ['n_words', 'n_digits', 'upper_share']
 git add features.py                        # marks the conflict as resolved
-git commit -m "Merge feature/count-negations: keep both features"
+git commit -m "Merge feature/upper-share: keep both features"
 git log --oneline --graph --all            # your hashes will differ
-# *   5060f29 Merge feature/count-negations: keep both features
+# *   5060f29 Merge feature/upper-share: keep both features
 # |\
-# | * e8173c8 Add negation count
-# * | 53c385d Add exclamation count
+# | * e8173c8 Add upper-case share
+# * | 53c385d Add digit count
 # |/
 # * 28165c7 Add word count
 ```
@@ -235,19 +238,19 @@ The final history:
 ```mermaid
 gitGraph
   commit id: "Add word count"
-  branch feature/count-negations
+  branch feature/upper-share
   checkout main
-  commit id: "Add exclamation count"
-  checkout feature/count-negations
-  commit id: "Add negation count"
+  commit id: "Add digit count"
+  checkout feature/upper-share
+  commit id: "Add upper-case share"
   checkout main
-  merge feature/count-negations id: "Merge: keep both"
+  merge feature/upper-share id: "Merge: keep both"
 ```
 
 > [!IMPORTANT]
 > A conflict is a question for the people involved, not an error of Git. If the two changes disagree in substance (one sets a threshold to 2, the other to 5), talk to your teammate before choosing. If you get lost, `git merge --abort` returns to the state before the merge.
 
-On GitHub the same conflict appears in the second pull request: *This branch has conflicts that must be resolved*. Resolve it locally (`git switch feature/count-negations`, `git merge main`, fix, commit, push) or with GitHub's web editor for simple cases.
+On GitHub the same conflict appears in the second pull request: *This branch has conflicts that must be resolved*. Resolve it locally (`git switch feature/upper-share`, `git merge main`, fix, commit, push) or with GitHub's web editor for simple cases.
 
 ## Pull requests and code review
 
@@ -282,11 +285,11 @@ The pull request is the point where a second person checks correctness, readabil
 ### How it works in Python
 
 ```bash
-git switch -c feature/n-exclamations
+git switch -c feature/n-digits
 # ... implement, test: uv run pytest -q; lint: uvx ruff check . ...
-git add src/reviewtools/text_features.py tests/test_text_features.py
-git commit -m "Add n_exclamations with tests"
-git push -u origin feature/n-exclamations   # -u: remember origin as upstream for this branch
+git add src/btitools/text_features.py tests/test_text_features.py
+git commit -m "Add n_digits with tests"
+git push -u origin feature/n-digits   # -u: remember origin as upstream for this branch
 # GitHub prints a link: open the pull request, describe what and why, request a reviewer
 # after review: fix, commit, git push (the PR updates); merge when approved and CI is green
 git switch main && git pull                 # update your local main
@@ -296,7 +299,7 @@ A short PR description that reviewers appreciate:
 
 ```markdown
 ## What
-Adds `n_exclamations(text)` to `text_features.py` and to `FEATURE_NAMES`.
+Adds `n_digits(text)` to `text_features.py` and to `FEATURE_NAMES`.
 
 ## Why
 Needed for the simple-features baseline (Session 8). Closes #4.
@@ -417,7 +420,7 @@ print(share(["a!", "b"]))   # 0.5; ruff reports: F401 `os` imported but unused
 
 In pairs, with the [workspace](../workspace/README.md) copied into a GitHub repository (exercises 6–8):
 
-1. Person A implements `n_exclamations`, person B `count_negations` in `src/reviewtools/text_features.py`, each on a branch, each with tests, each adding the name to `FEATURE_NAMES`.
+1. Person A implements `n_digits`, person B `upper_share` in `src/btitools/text_features.py`, each on a branch, each with tests, each adding the name to `FEATURE_NAMES`.
 2. Each opens a pull request; the partner reviews with at least one line comment; the author responds.
 3. Merge the first PR when CI is green. The second PR now has a conflict in `FEATURE_NAMES`: resolve it as in the exercise above.
 4. Teams set up their project repository from the template with `ci.yml` and a ruleset for `main` (PR required, one approval, check `test` required).

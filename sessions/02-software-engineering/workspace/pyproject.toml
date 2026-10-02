@@ -1,7 +1,7 @@
 [project]
-name = "reviewtools"
+name = "btitools"
 version = "0.2.0"
-description = "Validated review records, an open-data API client and a small web API (Session 2 workspace)"
+description = "Validated BTI decision records, an open-data API client and a small web API (Session 2 workspace)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-opendata-search = "reviewtools.opendata:main"
+opendata-search = "btitools.opendata:main"
 
 [build-system]
 requires = ["uv_build>=0.9,<0.12"]

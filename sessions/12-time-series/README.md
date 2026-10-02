@@ -19,20 +19,20 @@
 - [Time series: trend, seasonality, autocorrelation](theory/01-time-series-and-baselines.md#time-series-trend-seasonality-and-autocorrelation)
 - [Aggregating to regular time intervals with pandas](theory/01-time-series-and-baselines.md#aggregating-to-regular-time-intervals-with-pandas)
 - [Baselines (naive, seasonal naive, moving average)](theory/01-time-series-and-baselines.md#baselines-naive-seasonal-naive-and-moving-average)
-- *Practice:* compute the monthly number of reviews and its baseline forecasts → Part 1 of [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb)
+- *Practice:* compute the monthly number of BTI decisions and its baseline forecasts → Part 1 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
 
 **1:00–1:45 · Exponential smoothing and ARIMA** ([theory/02](theory/02-exponential-smoothing-and-arima.md))
 
 - [Exponential smoothing](theory/02-exponential-smoothing-and-arima.md#exponential-smoothing) [with prediction intervals](theory/02-exponential-smoothing-and-arima.md#prediction-intervals)
 - [ARIMA as an outlook](theory/02-exponential-smoothing-and-arima.md#arima-as-an-outlook)
-- *Practice:* fit exponential smoothing and compare it with the baselines → Part 2 of [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb)
+- *Practice:* fit exponential smoothing and compare it with the baselines → Part 2 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
 
 **2:00–2:45 · Lag features, backtesting and metrics** ([theory/03](theory/03-lag-features-and-backtesting.md))
 
 - [Machine learning with lag features (using the tree-based models of Session 10)](theory/03-lag-features-and-backtesting.md#machine-learning-with-lag-features)
 - [Rolling-origin backtesting](theory/03-lag-features-and-backtesting.md#rolling-origin-backtesting)
 - [Forecast metrics: MAE and MASE](theory/03-lag-features-and-backtesting.md#forecast-metrics-mae-and-mase)
-- *Practice:* case study: backtest the models and recommend one with its prediction interval → Part 3 of [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb)
+- *Practice:* case study: backtest the models and recommend one with its prediction interval → Part 3 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
 
 ## Materials
 
@@ -50,13 +50,13 @@
 | [workbooks/07-time-related-feature-engineering.ipynb](workbooks/07-time-related-feature-engineering.ipynb) | Calendar features: one-hot, cyclical, splines (scikit-learn) | 3 | optional |
 | [workbooks/08-statsforecast-cross-validation.ipynb](workbooks/08-statsforecast-cross-validation.ipynb) | Rolling-origin cross-validation for many series (StatsForecast) | 3 | optional |
 | [workbooks/09-mlforecast-walkthrough.ipynb](workbooks/09-mlforecast-walkthrough.ipynb) | Lag features, LightGBM and backtesting for many series (MLForecast) | 3 | optional |
-| [workbooks/10-case-study-review-forecast.ipynb](workbooks/10-case-study-review-forecast.ipynb) | **Practice 1–3:** monthly reviews, baselines, ETS, lag model, backtest, recommendation (own) | 1–3 | core |
+| [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb) | **Practice 1–3:** monthly BTI decisions, baselines, ETS, lag model, backtest, recommendation, forecast of the next 12 months (own) | 1–3 | core |
 
 Sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-review-forecast.ipynb). It needs `case-study/data/train.parquet` (see [case-study/README.md](../../case-study/README.md)).
+**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-decision-forecast.ipynb). It needs `case-study/data/monthly_counts.parquet` (see [case-study/README.md](../../case-study/README.md)).
 
 **Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
 

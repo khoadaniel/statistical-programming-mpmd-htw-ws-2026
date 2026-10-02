@@ -23,7 +23,7 @@ Start from the question, not from the chart type. Four questions cover most anal
 - **Relationship** between two numeric variables: scatter plot.
 - **Change over time**: line chart with time on the horizontal axis.
 
-Worked example: "Has the share of negative reviews changed since 2014?" is a change-over-time question about one share per year, so a line chart with one point per year answers it. A pie chart per year would force the reader to compare angles across eight pies.
+Worked example: "Has the share of English-language decisions changed since 2017?" is a change-over-time question about one share per year, so a line chart with one point per year answers it. A pie chart per year would force the reader to compare angles across seven pies.
 
 ### Why it matters
 
@@ -36,20 +36,21 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
+decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
 
 fig, axes = plt.subplots(2, 2, figsize=(10, 7), layout="constrained")
-sns.histplot(reviews, x="n_words", log_scale=True, ax=axes[0, 0])        # distribution
-share_neg = reviews.groupby("verified_purchase")["rating"].apply(lambda r: (r <= 2).mean())
-share_neg.plot.bar(ax=axes[0, 1], ylabel="share of 1–2 star reviews")   # comparison
-sns.scatterplot(reviews.sample(3000, random_state=1), x="n_words", y="helpful_vote",
-                alpha=0.3, ax=axes[1, 0]).set(xscale="log", yscale="symlog")  # relationship
-monthly = reviews.set_index("date").resample("MS").size()
-monthly.plot(ax=axes[1, 1], ylabel="reviews per month")                 # change over time
+sns.histplot(decisions, x="n_chars", log_scale=True, ax=axes[0, 0])           # distribution
+median_len = decisions.groupby("language")["n_chars"].median().loc[["de", "fr", "en", "nl", "pl"]]
+median_len.plot.bar(ax=axes[0, 1], ylabel="median characters per description")   # comparison
+sns.scatterplot(decisions.sample(3000, random_state=1), x="n_chars", y="n_keywords",
+                alpha=0.3, ax=axes[1, 0]).set(xscale="log")                   # relationship
+monthly = decisions.set_index("start_date").resample("MS").size()
+monthly.plot(ax=axes[1, 1], ylabel="decisions per month")                     # change over time
 
-print(share_neg.round(3).to_dict())      # {False: 0.179, True: 0.194}
-print(monthly.idxmax().date(), monthly.max())   # 2020-01-01 884
+print(median_len.to_dict())   # {'de': 740.0, 'fr': 272.0, 'en': 309.0, 'nl': 544.0, 'pl': 455.0}
+print(monthly.idxmax().date(), monthly.max())   # 2017-03-01 881
 ```
 
 ### In practice
@@ -86,17 +87,19 @@ Readers decide from what they see, not from the underlying table. Encodings that
 import matplotlib.pyplot as plt
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-share = reviews["rating"].value_counts(normalize=True).sort_index()
-print(share.round(3).to_dict())   # {1: 0.133, 2: 0.059, 3: 0.075, 4: 0.118, 5: 0.615}
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+share = decisions["language"].value_counts(normalize=True)
+share = pd.concat([share.head(5), pd.Series({"other": share.iloc[5:].sum()})])
+print(share.round(3).to_dict())
+# {'de': 0.573, 'fr': 0.162, 'en': 0.052, 'nl': 0.048, 'pl': 0.036, 'other': 0.129}
 
 fig, (left, right) = plt.subplots(1, 2, figsize=(9, 3.5), layout="constrained")
 left.pie(share, labels=share.index)                         # angles and areas: hard to compare
-right.barh(share.index.astype(str), share, color="0.35")    # positions on a common scale
+right.barh(share.index, share, color="0.35")                # positions on a common scale
 right.bar_label(right.containers[0], labels=[f"{v:.0%}" for v in share], padding=3)
 right.spines[["top", "right"]].set_visible(False)           # remove non-data ink
-right.set(xlabel="share of reviews", ylabel="stars", xticks=[])
-right.invert_yaxis()                                        # 1 star at the top
+right.set(xlabel="share of decisions", ylabel="language", xticks=[])
+right.invert_yaxis()                                        # largest at the top
 ```
 
 ### In practice
@@ -114,7 +117,7 @@ right.invert_yaxis()                                        # 1 star at the top
 
 matplotlib is the base plotting library of Python; pandas and seaborn draw with it. A **Figure** is the whole canvas; an **Axes** is one plot inside it, with its own x- and y-axis. `fig, ax = plt.subplots()` creates both, and all drawing is done with methods of `ax` (`ax.bar`, `ax.set`, `ax.annotate`). This **object-oriented interface** says explicitly which plot is changed.
 
-Every chart for a reader needs axis labels with units, a readable number format and a title. A title that states the finding ("13 % of reviews give a single star") tells the reader what to look for. `ax.annotate` points to a data point with text and an arrow; one highlighted colour draws attention to the category discussed.
+Every chart for a reader needs axis labels with units, a readable number format and a title. A title that states the finding ("57 % of decisions are written in German") tells the reader what to look for. `ax.annotate` points to a data point with text and an arrow; one highlighted colour draws attention to the category discussed.
 
 ### Why it matters
 
@@ -126,21 +129,21 @@ Charts in reports are read without the analyst present. Labels, a finding title 
 import matplotlib.pyplot as plt
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-counts = reviews["rating"].value_counts().sort_index()
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+counts = decisions["language"].value_counts().head(6)
 
 fig, ax = plt.subplots(figsize=(6, 3.5))                 # Figure = canvas, Axes = one plot
 bars = ax.bar(counts.index, counts, color="0.35", width=0.7)
 bars[0].set_color("#D55E00")                              # highlight the category discussed
-ax.set(xlabel="Star rating", ylabel="Number of reviews",
-       title="13 % of reviews give a single star")
-ax.annotate(f"{counts[1]:,} one-star reviews", xy=(1, counts[1]), xytext=(1.5, 20000),
+ax.set(xlabel="Language of the description", ylabel="Number of decisions",
+       title="57 % of decisions are written in German")
+ax.annotate(f"{counts['de']:,} German decisions", xy=(0, counts["de"]), xytext=(1.2, 22000),
             arrowprops={"arrowstyle": "->"})
 ax.spines[["top", "right"]].set_visible(False)
 ax.yaxis.set_major_formatter("{x:,.0f}")                  # 30,000 instead of 30000
-fig.savefig("ratings.png", dpi=200, bbox_inches="tight")  # fixed size and resolution
+fig.savefig("languages.png", dpi=200, bbox_inches="tight")  # fixed size and resolution
 print(type(fig).__name__, type(ax).__name__)             # Figure Axes
-print(counts[1], round(counts[1] / counts.sum(), 3))     # 6669 0.133
+print(counts["de"], round(counts["de"] / len(decisions), 3))   # 28656 0.573
 ```
 
 ### In practice
@@ -176,25 +179,25 @@ import pandas as pd
 import seaborn as sns
 
 print(sns.color_palette("colorblind").as_hex()[:3])   # ['#0173b2', '#de8f05', '#029e73']
-OKABE_ITO = {"neg": "#D55E00", "neu": "#999999", "pos": "#0072B2"}   # one fixed colour per label
+OKABE_ITO = {"de": "#0072B2", "fr": "#E69F00", "en": "#D55E00", "other": "#BBBBBB"}   # one fixed colour per group
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["year"] = reviews["date"].dt.year
-share = pd.crosstab(reviews["year"], reviews["label"], normalize="index").loc[2014:]
-print(share.loc[[2014, 2021]].round(3))
-# label    neg    neu    pos
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["year"] = decisions["start_date"].dt.year
+group = decisions["language"].where(decisions["language"].isin(["de", "fr", "en"]), "other")
+share = pd.crosstab(decisions["year"], group, normalize="index")[["de", "fr", "en", "other"]]
+print(share.loc[[2017, 2023]].round(3))
+# language     de     fr     en  other
 # year
-# 2014   0.159  0.085  0.756
-# 2021   0.235  0.075  0.690
+# 2017      0.574  0.129  0.085  0.212
+# 2023      0.598  0.167  0.013  0.222
 
 fig, ax = plt.subplots(figsize=(7, 3.5), layout="constrained")
-share[["neg", "neu", "pos"]].plot.bar(stacked=True, ax=ax, width=0.8, color=OKABE_ITO,
-                                      edgecolor="white", legend=False)
-for label, y in [("negative", 0.1), ("neutral", 0.25), ("positive", 0.6)]:
-    ax.text(7.6, y, label, va="center")              # direct labels instead of a legend
+share.plot.bar(stacked=True, ax=ax, width=0.8, color=OKABE_ITO, edgecolor="white", legend=False)
+for label, y in [("German", 0.3), ("French", 0.66), ("English", 0.76), ("other", 0.9)]:
+    ax.text(6.6, y, label, va="center")              # direct labels instead of a legend
 ax.tick_params(axis="x", rotation=0)
-ax.set(xlabel="", ylabel="share of reviews",
-       title="Negative reviews rose from 16 % (2014) to 23.5 % (2021)")
+ax.set(xlabel="", ylabel="share of decisions",
+       title="English-language decisions fell from 8.5 % (2017) to 1.3 % (2023)")
 ```
 
 ### In practice
@@ -224,20 +227,25 @@ Comparing groups is the most frequent analytical task. Small multiples scale to 
 import pandas as pd
 import seaborn as sns
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["n_words"] = reviews["text"].str.split().str.len().clip(lower=1)
+decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+decisions["n_chars"] = decisions["description"].str.len()
 
-g = sns.displot(reviews, x="n_words", col="label", col_order=["neg", "neu", "pos"],
-                log_scale=True, height=2.8, aspect=1.1, color="0.35")   # one panel per label
-g.set_axis_labels("words per review", "reviews")
+g = sns.displot(decisions, x="n_chars", col="language", col_order=["de", "fr", "en"],
+                log_scale=True, height=2.8, aspect=1.1, color="0.35")   # one panel per language
+g.set_axis_labels("characters per description", "decisions")
 print(g.axes.shape)                                                   # (1, 3)
-print(reviews.groupby("label")["n_words"].median().to_dict())       # {'neg': 23.0, 'neu': 26.0, 'pos': 19.0}
 
-monthly = (reviews.set_index("date").groupby("verified_purchase")
-           .resample("MS").size().rename("n").reset_index())
-sns.relplot(monthly, x="date", y="n", col="verified_purchase", kind="line",
-            height=2.8, aspect=1.6, color="0.35", facet_kws={"sharey": False})
+monthly = pd.read_parquet("case-study/data/monthly_counts.parquet")
+by_country = (monthly[monthly["issuing_country"].isin(["DE", "FR", "GB"])
+                      & monthly["month"].between("2010-01-01", "2023-12-01")]
+              .groupby(["issuing_country", "month"])["n_decisions"].sum().reset_index())
+sns.relplot(by_country, x="month", y="n_decisions", col="issuing_country", kind="line",
+            height=2.8, aspect=1.4, color="0.35", facet_kws={"sharey": False})
+print(by_country.groupby("issuing_country")["month"].max().dt.date.to_dict())
+# {'DE': datetime.date(2023, 12, 1), 'FR': datetime.date(2023, 12, 1), 'GB': datetime.date(2020, 12, 1)}
 ```
+
+With `sharey=False` each panel has its own scale: Germany issues several times more decisions than the United Kingdom did, which the panels no longer show. Say so in the caption, or keep the shared axis.
 
 ### In practice
 
@@ -258,7 +266,7 @@ A figure consists of **traces** (one per series, in `fig.data`) and a **layout**
 
 ### Why it matters
 
-Interactive charts let readers explore detail without the analyst producing dozens of static charts. They are the building blocks of dashboards, including the Streamlit app on [page 4](04-correlation-and-communication.md#communicating-findings-a-short-report-or-a-streamlit-dashboard).
+Interactive charts let readers explore detail without the analyst producing dozens of static charts, for example the curve of their own country among 29. They are the building blocks of dashboards, including the Streamlit app on [page 4](04-correlation-and-communication.md#communicating-findings-a-short-report-or-a-streamlit-dashboard).
 
 ### How it works in Python
 
@@ -266,18 +274,19 @@ Interactive charts let readers explore detail without the analyst producing doze
 import pandas as pd
 import plotly.express as px
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-OKABE_ITO = {"neg": "#D55E00", "neu": "#999999", "pos": "#0072B2"}
-
-by_label = (reviews.set_index("date").groupby("label").resample("MS").size()
-            .rename("reviews").reset_index().query("date >= '2015-01-01'"))
-fig = px.line(by_label, x="date", y="reviews", color="label",
-              color_discrete_map=OKABE_ITO, category_orders={"label": ["neg", "neu", "pos"]},
-              labels={"date": "", "reviews": "reviews per month"},
-              title="Monthly review volume by sentiment label")
+monthly = pd.read_parquet("case-study/data/monthly_counts.parquet")
+countries = ["DE", "FR", "NL", "GB"]
+by_country = (monthly[monthly["issuing_country"].isin(countries)
+                      & monthly["month"].between("2004-01-01", "2025-12-01")]
+              .groupby(["issuing_country", "month"])["n_decisions"].sum().reset_index())
+fig = px.line(by_country, x="month", y="n_decisions", color="issuing_country",
+              category_orders={"issuing_country": countries},
+              color_discrete_sequence=["#0072B2", "#E69F00", "#009E73", "#D55E00"],
+              labels={"month": "", "n_decisions": "decisions per month", "issuing_country": "country"},
+              title="Binding Tariff Information decisions per month, four issuing countries")
 fig.update_layout(hovermode="x unified")
-print(len(fig.data), [trace.name for trace in fig.data])   # 3 ['neg', 'neu', 'pos']
-fig.write_html("reviews_per_month.html", include_plotlyjs="cdn")   # open in a browser
+print(len(fig.data), [trace.name for trace in fig.data])   # 4 ['DE', 'FR', 'NL', 'GB']
+fig.write_html("decisions_per_month.html", include_plotlyjs="cdn")   # open in a browser
 ```
 
 ### In practice
@@ -300,9 +309,9 @@ A chart critique asks four questions:
 3. **Accuracy**: do the axes start where they should; are units and population stated?
 4. **Clarity**: is there anything the reader must decode that could be labelled directly?
 
-![A poorly designed bar chart with a truncated axis and rainbow colours next to a line chart of the share of negative reviews with a finding as its title](figures/good-vs-poor-chart.png)
+![A poorly designed bar chart of decisions per year with a truncated axis and rainbow colours next to a stacked bar chart from zero that separates the United Kingdom from the other countries, with a finding as its title](figures/good-vs-poor-chart.png)
 
-The left chart truncates the axis at 3.85, so a drop of 0.3 stars looks like a collapse; the rainbow colours encode nothing; the title says nothing. The right chart shows the measure a product manager cares about (share of 1–2 star reviews), starts at zero, uses one colour and states the finding in the title.
+The left chart shows the number of EBTI decisions per year (from `monthly_counts`). It truncates the axis at 38,000, so a fall of a fifth looks like a collapse to a quarter; the rainbow colours encode nothing; the title says nothing. The right chart starts at zero, uses colour for one distinction that explains part of the fall (decisions issued by the United Kingdom, which stopped after Brexit), and states the finding in the title.
 
 ### Why it matters
 
@@ -314,22 +323,25 @@ Most analyses reach decision makers as one chart and a few sentences. Spotting a
 import matplotlib.pyplot as plt
 import pandas as pd
 
-reviews = pd.read_parquet("case-study/data/train_sample.parquet")
-reviews["year"] = reviews["date"].dt.year
-yearly = reviews.query("year >= 2014").groupby("year")["rating"].agg(
-    avg="mean", share_neg=lambda r: (r <= 2).mean())
-print(yearly.loc[[2014, 2021]].round(3))
-#         avg  share_neg
+monthly = pd.read_parquet("case-study/data/monthly_counts.parquet")
+monthly["year"] = monthly["month"].dt.year
+monthly["uk"] = monthly["issuing_country"].eq("GB").map({True: "United Kingdom", False: "other countries"})
+yearly = (monthly[monthly["year"].between(2015, 2025)]
+          .pivot_table(index="year", columns="uk", values="n_decisions", aggfunc="sum", fill_value=0))
+print(yearly.loc[[2017, 2021]])
+# uk    United Kingdom  other countries
 # year
-# 2014  4.099      0.159
-# 2021  3.878      0.235
+# 2017            3333            48149
+# 2021               0            40897
 
 fig, ax = plt.subplots(figsize=(6, 3.5), layout="constrained")
-ax.plot(yearly.index, yearly["share_neg"], marker="o", color="#D55E00")
-ax.set_ylim(0, 0.3)                                   # full axis from zero
-ax.yaxis.set_major_formatter("{x:.0%}")
-ax.set(ylabel="share of 1–2 star reviews",
-       title="Negative reviews rose from 16 % (2014) to 23.5 % (2021)")
+ax.bar(yearly.index, yearly["other countries"], color="0.6", label="other countries")
+ax.bar(yearly.index, yearly["United Kingdom"], bottom=yearly["other countries"],
+       color="#D55E00", label="United Kingdom")
+ax.yaxis.set_major_formatter("{x:,.0f}")              # full axis from zero (bar default)
+ax.legend(frameon=False, loc="lower left")
+ax.set(ylabel="decisions per year",
+       title="Decisions fell by a fifth from 2017 to 2021;\na third of the fall is the United Kingdom leaving")
 ax.spines[["top", "right"]].set_visible(False)
 ```
 
@@ -342,11 +354,11 @@ A line chart need not start at zero when the reader compares changes rather than
 - The CONSORT guidelines for reporting clinical trials require absolute numbers alongside relative effects, for the same reason that bars start at zero.
 
 > [!IMPORTANT]
-> **Practice (block 1).** Plot the rating distribution and the number of reviews per month for the sample. Then take the poor chart above (code in [`figures/make_figures.py`](figures/make_figures.py)) and improve it with the four critique questions. The case-study notebook [18-case-study-verified-purchases-and-helpful-votes.ipynb](../workbooks/18-case-study-verified-purchases-and-helpful-votes.ipynb) starts with this task.
+> **Practice (block 1).** Plot the language distribution, the distribution of description length and the number of decisions per month for the sample. Then take the poor chart above (code in [`figures/make_figures.py`](figures/make_figures.py)) and improve it with the four critique questions. The case-study notebook [18-case-study-ebti-exploration.ipynb](../workbooks/18-case-study-ebti-exploration.ipynb) starts with this task.
 
 ## Check your understanding
 
-1. Which chart would you choose for "Do verified buyers write longer reviews?" and why?
+1. Which chart would you choose for "Are German descriptions longer than French ones?" and why?
 2. Rank position, angle, area and colour saturation by how accurately people decode them.
 3. Name two ways to make a chart readable without relying on colour.
 4. When is it acceptable for a y-axis not to start at zero?

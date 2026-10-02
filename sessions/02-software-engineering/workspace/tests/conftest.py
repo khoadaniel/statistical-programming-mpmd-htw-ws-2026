@@ -31,14 +31,16 @@ def ckan_response(packages: list[dict[str, Any]], count: int | None = None) -> d
 
 
 @pytest.fixture
-def raw_review() -> dict[str, Any]:
-    """A messy but valid review as it might arrive from a CSV file or a web form."""
+def raw_decision() -> dict[str, Any]:
+    """A messy but valid decision as it might arrive from the EBTI export or a web form."""
     return {
-        "review_id": "  r000042 ",
-        "rating": "2",
-        "title": "  Disappointed ",
-        "text": "Stopped working\nafter   two weeks.",
-        "helpful_vote": 3,
-        "verified_purchase": "yes",
-        "unused_column": "ignored",
+        "bti_reference": "  DE0001/23-1 ",
+        "issuing_country": " de",
+        "language": "DE",
+        "start_date": "10/05/2023",
+        "end_date": "09/05/2026",
+        "description": "Plüschtier in Form eines Bären,\n  Höhe   30 cm ",
+        "keywords": "TOYS, PLUSH",
+        "heading": "9503",
+        "classification_justification": "ignored: not part of the record",
     }

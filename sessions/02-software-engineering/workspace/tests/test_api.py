@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from reviewtools.api import app
+from btitools.api import app
 
 client = TestClient(app)
 
@@ -14,29 +14,43 @@ def test_health():
     assert response.json() == {"status": "ok"}
 
 
-@pytest.mark.parametrize(("rating", "label"), [(1, "neg"), (3, "neu"), (5, "pos")])
-def test_label_for_rating(rating, label):
-    assert client.get(f"/labels/{rating}").json() == {"rating": rating, "label": label}
+def test_headings_lists_the_extract():
+    assert "9503" in client.get("/headings").json()["headings"]
 
 
-def test_label_rejects_out_of_range_rating():
-    assert client.get("/labels/6").status_code == 422
+@pytest.mark.parametrize(("heading", "chapter"), [("0901", "09"), ("6404", "64"), ("9503", "95")])
+def test_heading_details(heading, chapter):
+    body = client.get(f"/headings/{heading}").json()
+    assert body["heading"] == heading
+    assert body["chapter"] == chapter
+    assert body["description"]
 
 
-def test_validate_review_returns_cleaned_record(raw_review):
-    response = client.post("/reviews/validate", json=raw_review)
+def test_unknown_heading_is_404():
+    assert client.get("/headings/9999").status_code == 404
+
+
+@pytest.mark.parametrize("heading", ["950", "95031", "toys"])
+def test_malformed_heading_is_422(heading):
+    assert client.get(f"/headings/{heading}").status_code == 422
+
+
+def test_validate_decision_returns_cleaned_record(raw_decision):
+    response = client.post("/decisions/validate", json=raw_decision)
     assert response.status_code == 200
     body = response.json()
-    assert body["review_id"] == "r000042"
-    assert body["label"] == "neg"
+    assert body["bti_reference"] == "DE0001/23-1"
+    assert body["start_date"] == "2023-05-10"
+    assert body["chapter"] == "95"
 
 
-def test_validate_review_reports_the_field(raw_review):
-    raw_review["rating"] = 7
-    response = client.post("/reviews/validate", json=raw_review)
+def test_validate_decision_reports_the_field(raw_decision):
+    raw_decision["issuing_country"] = "Germany"
+    response = client.post("/decisions/validate", json=raw_decision)
     assert response.status_code == 422
-    assert response.json()["detail"]["field"] == "rating"
+    assert response.json()["detail"]["field"] == "issuing_country"
 
 
 def test_features():
-    assert client.get("/features", params={"text": "Works as described"}).json() == {"n_words": 3}
+    response = client.get("/features", params={"text": "Plush toy\nsee <CODE>"})
+    assert response.json() == {"n_chars": 20, "n_words": 4, "n_lines": 2, "has_code": 1}
