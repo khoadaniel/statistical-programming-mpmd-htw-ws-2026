@@ -2,7 +2,7 @@
 
 Tables in practice have many columns, and people can only look at two or three at a time. **Dimensionality reduction** replaces many columns by a few new ones that keep as much of the relevant information as possible. This page covers the linear standard method, **principal component analysis** (PCA), with its two key outputs, explained variance and loadings, and then two non-linear methods made for pictures, **t-SNE** and **UMAP**. It ends with what such pictures can and cannot show.
 
-The code blocks build on each other; run them in order. They use two built-in scikit-learn datasets, 178 wines with 13 chemical measurements and 1,797 images of handwritten digits with 64 pixels each, and finally the BTI decisions of the case study.
+The code blocks build on each other; run them in order. They use two built-in scikit-learn datasets, 178 wines with 13 chemical measurements and 1,797 images of handwritten digits with 64 pixels each, and finally the amenities of the Berlin Airbnb listings (prepare the data with `uv run python case-study/prepare_airbnb.py`).
 
 ```mermaid
 flowchart LR
@@ -97,7 +97,7 @@ Both keep **local** structure: rows that are neighbours in the original space st
 
 ### Why it matters
 
-A good 2-D map lets people see groups, outliers and mislabelled examples in data with dozens or thousands of columns (TF-IDF or embeddings of BTI decisions, below and in Session 14). But the maps distort. Distances *between* groups, the *size* of groups and the empty space in a t-SNE or UMAP map have no reliable meaning, and different settings can produce different pictures from the same data.
+A good 2-D map lets people see groups, outliers and mislabelled examples in data with dozens or thousands of columns (amenity indicators, TF-IDF vectors of texts in Session 13, embeddings in Session 14). But the maps distort. Distances *between* groups, the *size* of groups and the empty space in a t-SNE or UMAP map have no reliable meaning, and different settings can produce different pictures from the same data.
 
 ### How it works in Python
 
@@ -138,45 +138,74 @@ In the t-SNE and UMAP maps the ten digits form ten separate groups, although the
 > [!TIP]
 > For data with hundreds of columns (text embeddings), first reduce to 30–50 principal components, then run t-SNE or UMAP on the scores. It is faster and removes noise.
 
-## A map of decisions: truncated SVD and t-SNE on text
+## What do Airbnb listings offer? PCA of amenities
 
 ### Concept
 
-A TF-IDF matrix (Session 13) has one column per word: thousands of sparse columns. **Truncated SVD** is the PCA of such matrices: it finds the directions of largest variation without first subtracting the column means, which would destroy the sparsity. Applied to text it is also called **latent semantic analysis** (LSA): words that occur in the same documents load on the same component. The usual recipe for a picture is the one of the tip above: TF-IDF, then 50 SVD components, then t-SNE or UMAP on the components.
+Every Airbnb listing has a list of **amenities** chosen by the host from a form: "Wifi", "Kitchen", "Hair dryer", "Wine glasses" and so on. Turned into a table, this is one 0/1 column per amenity (**indicator** or **dummy** columns): 2,653 different labels in the Berlin data, most of them rare. Such tables are wide and redundant: a listing with "Cooking basics" usually also has "Dishes and silverware" and "Dining table". PCA can show which bundles of amenities vary together and summarise a listing's equipment in a few scores.
+
+All indicator columns share one unit (0 or 1), so PCA can be run on them without standardising; standardising would give rare amenities the same weight as common ones. Columns that almost every listing has (Wifi, 91 %) or almost none has carry little information and are dropped first.
 
 ### Why it matters
 
-Maps of documents show at a glance what dominates the texts. For the case study, a map of the decisions of one chapter can show whether the headings form separate regions, and whether something else, such as the language, structures the data more strongly.
+A host who wants to know "what do comparable listings offer?" or an analyst who wants to use the equipment in a price model (Sessions 6 and 10) cannot work with 2,653 columns. A few components with readable loadings are a compact description. The loadings can also reveal how the data were *collected*, which is often the more important finding.
 
 ### How it works in Python
 
 ```python
-from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
+import json  # noqa: E402
 
-sample = pd.read_parquet("case-study/data/train_sample.parquet")
-furn = sample[sample["chapter"] == "94"].reset_index(drop=True)     # furniture, seats, bedding, lamps
-X_text = TfidfVectorizer(min_df=3, sublinear_tf=True).fit_transform(furn["description"])
-svd = TruncatedSVD(n_components=50, random_state=0).fit(X_text)
-S = svd.transform(X_text)
-print(X_text.shape, svd.explained_variance_ratio_.sum().round(3))   # (2321, 5463) 0.309
-text_map = TSNE(perplexity=30, init="pca", random_state=0).fit_transform(S)
-print(round(trustworthiness(S, text_map, n_neighbors=10), 3),        # 0.996  t-SNE
-      round(trustworthiness(S, S[:, :2], n_neighbors=10), 3))        # 0.852  first two components
-# plot: plt.scatter(*text_map.T, c=furn["language"].astype("category").cat.codes, s=4)
+from sklearn.preprocessing import MultiLabelBinarizer  # noqa: E402
+
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+lists = listings["amenities"].apply(json.loads)                 # '["Wifi", "Kitchen", ...]' -> list
+mlb = MultiLabelBinarizer()
+A = pd.DataFrame(mlb.fit_transform(lists), columns=mlb.classes_, index=listings.index)
+share = A.mean()
+A = A.loc[:, (share >= 0.05) & (share <= 0.95)]                 # drop very rare and near-universal items
+print(len(mlb.classes_), A.shape)                               # 2653 (12776, 90)
+
+pca_a = PCA().fit(A)                                            # 0/1 columns share one unit: no scaling
+print(pca_a.explained_variance_ratio_[:3].round(3),             # [0.212 0.058 0.046]
+      pca_a.explained_variance_ratio_.cumsum()[[1, 9]].round(2))   # [0.27 0.48]: 2 PCs 27 %, 10 PCs 48 %
+loadings = pd.DataFrame(pca_a.components_[:2].T, index=A.columns, columns=["PC1", "PC2"])
+print(loadings["PC1"].nlargest(4).round(2).to_dict())
+# {'Hot water kettle': 0.23, 'Dining table': 0.21, 'Cooking basics': 0.21, 'Wine glasses': 0.21}
+print(loadings["PC2"].nlargest(3).round(2).to_dict(), loadings["PC2"].nsmallest(2).round(2).to_dict())
+# {'Heating': 0.37, 'Stove': 0.26, 'Coffee maker': 0.23} {'Central heating': -0.25, 'Cleaning products': -0.17}
+
+scores = pca_a.transform(A)
+print(round(np.corrcoef(scores[:, 0], A.sum(axis=1))[0, 1], 2))   # 0.98: PC1 = how many amenities are listed
+print(pd.crosstab(A["Heating"], A["Central heating"]))
+# Central heating     0     1
+# Heating
+# 0                1596  2961
+# 1                8219     0
+medium_term = listings["minimum_nights"] >= 90
+print(pd.Series(scores[:, 0]).groupby(listings["room_type"]).median().round(2).to_dict())
+# {'Entire home/apt': 0.51, 'Hotel room': -0.82, 'Private room': -0.91, 'Shared room': -0.11}
+print(pd.Series(scores[:, 0]).groupby(medium_term).median().round(2).to_dict())   # {False: 0.67, True: -1.59}
+has_price = listings["price"].notna()
+print(round(np.corrcoef(scores[has_price, 0], np.log(listings.loc[has_price, "price"]))[0, 1], 2))   # 0.34
 ```
 
-![Two t-SNE maps of the same 2,321 chapter-94 decisions: coloured by language (left) the points form clearly separated islands for German, French, Swedish and English; coloured by heading (right) lamps, furniture and seats appear as regions inside each language island](figures/decision_map.png)
+![Left: scree plot of the 90 amenity columns with a first bar of 21 % and all further bars below 6 %. Middle: the ten largest PC1 loadings, all kitchen and household items of about 0.2. Right: PC1 against PC2 scores of the listings coloured by room type; entire homes lie mostly to the right, private rooms mostly to the left, and PC2 spreads the listings vertically without separating the room types](figures/amenities_pca.png)
 
-Fifty components keep 31 % of the variance of the 5,463 word columns, and the t-SNE map preserves neighbourhoods well (trustworthiness 0.996). Coloured by language, the map splits into islands, one per language; coloured by heading, the lamps, furniture and seats form regions *inside* each island. The picture explains the finding of page 2: in a word space, two descriptions of the same lamp in German and French are farther apart than a German lamp and a German chair.
+Three readings. **PC1 (21 % of the variance) is the size of the amenity list**: almost all columns load positively (a handful, such as "Washer", slightly negatively), led by kitchen and household items, and the scores correlate 0.98 with the number of amenities listed. Entire homes score high, private and hotel rooms low; medium-term rentals list far fewer amenities than short stays (median −1.59 against 0.67). PC1 correlates only moderately with the log price (0.34). **PC2 is not about equipment at all.** It contrasts "Heating" with "Central heating": no listing has both labels, and listings with "Central heating" also tend to use other specific labels ("Induction stove" instead of "Stove"). They are more common among listings first reviewed since 2022. PC2 most likely separates two versions of the amenity form, a property of how the data were entered, not of the flats; the data cannot confirm this. **Two components keep only 27 % of the variance**: amenities are a list of many fairly independent items, not a few strong bundles.
 
 ### In practice
 
-- **Topic exploration.** LSA was introduced for information retrieval (Deerwester et al., 1990); SVD components of TF-IDF matrices are still a quick way to explore large document collections.
-- **Checking labels.** Customs authorities and other coding services could use such maps to spot decisions whose heading colour lies inside a region of another heading; page 4 turns this idea into an anomaly score.
+- **Survey and questionnaire analysis.** PCA (and the related factor analysis) of many yes/no or rating items is a standard way to find a few underlying dimensions, for example the OECD's PISA index of economic, social and cultural status, which for many survey cycles was the first principal component of parental education, parental occupation and home possessions.
+- **Recommender systems.** Matrix factorisation of user–item tables, a close relative of PCA, was a central technique of the Netflix Prize (2006–2009).
+- **Market research.** Product feature lists (cars, phones, holiday rentals) are summarised with PCA or correspondence analysis to map which products resemble each other.
 
 > [!WARNING]
-> Truncated SVD on raw TF-IDF is not centred, so its first component often just measures document length or the most common words. Look at the top-loading words of a component before giving it a name.
+> **A component can encode the data-collection process.** Changes of a form, a scraper or a coding scheme create correlated columns, and PCA will find them as a strong direction. Before naming a component, look at its loadings and ask whether they describe the objects or the way they were recorded.
+
+> [!TIP]
+> For very wide sparse tables (text, thousands of amenity labels), use `TruncatedSVD`, which works on sparse matrices without centring them; Session 13 uses it for TF-IDF vectors of the EBTI descriptions.
+
+*Practice (block 3):* summarise the amenities of the Berlin listings with PCA and map the listings with t-SNE: part B of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb).
 
 ## Check your understanding
 
@@ -185,7 +214,7 @@ Fifty components keep 31 % of the variance of the 5,463 word columns, and the t-
 3. What does a loading of 0.42 for flavanoids on PC1 tell you? What does it not tell you?
 4. In a t-SNE map, group A is twice as large as group B and far away from it. Which of these two observations can you report?
 5. When would you prefer PCA scores over a UMAP map as input to a later model?
-6. Why does truncated SVD not subtract the column means of a TF-IDF matrix, and what is the consequence for the first component?
+6. The second amenity component contrasts "Heating" with "Central heating". Why should you not call it a "heating quality" component? How could you check the explanation offered above?
 
 ## Further reading
 

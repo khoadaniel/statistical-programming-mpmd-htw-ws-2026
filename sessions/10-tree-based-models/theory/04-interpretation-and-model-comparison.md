@@ -1,9 +1,9 @@
 # Interpreting tree ensembles and comparing a challenger with the current model
 
-A boosted model with 300 trees cannot be read like the depth-2 tree of page 1. Yet we must know what it has learned: to check that it uses sensible information, to find leaks and bugs, and to explain it to the people who rely on it. This page covers the third block of Session 10: **feature importance** (impurity-based), **permutation importance**, **SHAP values** as a tool for checking and debugging models, and the question every model update raises: is the new **challenger** model really better than the **current** model, by enough to replace it? The block ends with the second leaderboard round.
+A boosted model with 300 trees cannot be read like the depth-2 tree of page 1. Yet we must know what it has learned: to check that it uses sensible information, to find leaks and bugs, and to explain it to the people who rely on it. This page covers the third block of Session 10: **feature importance** (impurity-based), **permutation importance**, **SHAP values** as a tool for checking and debugging models, and the question every model update raises: is the new **challenger** model really better than the **current** model, by enough to replace it? Sections 1–3 use the Telco churn data; Section 4 applies everything to a practical tabular question: what drives the nightly price of a Berlin Airbnb listing, and does a tree ensemble price better than the linear model of Session 6?
 
 > [!NOTE]
-> The code blocks on this page build on each other. They need the Telco data from GitHub and the package `shap`, which is part of the course environment. On macOS, LightGBM needs `brew install libomp` (page 3).
+> The code blocks on this page build on each other. They need the Telco data from GitHub, the Inside Airbnb data for Section 4 (`uv run python case-study/prepare_airbnb.py`) and the package `shap`, which is part of the course environment. On macOS, LightGBM needs `brew install libomp` (page 3).
 
 ```mermaid
 flowchart LR
@@ -159,7 +159,7 @@ print(pd.Series(np.abs(sv_leak.values).mean(axis=0), index=leak_te.columns)
 # {'retention_offer': 1.112, 'Contract': 0.698, 'tenure': 0.344}
 ```
 
-The test AUC jumps from 0.842 to 0.918, and the SHAP summary shows one feature far ahead of contract type, which domain experts know as the strongest churn driver. The right reaction is not to celebrate but to ask *when* `retention_offer` is recorded. The same check on the case study would reveal a feature built from `classification_justification` (Session 9) as the top feature of a leaky heading model.
+The test AUC jumps from 0.842 to 0.918, and the SHAP summary shows one feature far ahead of contract type, which domain experts know as the strongest churn driver. The right reaction is not to celebrate but to ask *when* `retention_offer` is recorded. The same check on the Berlin price model of Section 4 would put Inside Airbnb's `estimated_revenue_l365d` (revenue = occupancy × price, Session 9) far ahead of every honest feature.
 
 ### In practice
 
@@ -224,7 +224,7 @@ print(round(roc_auc_score(yt, p_cur), 3), round(roc_auc_score(yt, p_ch), 3),
 # 0.844 0.845 [-0.005  0.007]
 ```
 
-The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the 95 % bootstrap interval of the difference, from −0.005 to +0.007, contains 0. The honest conclusion for the churn data: **keep the logistic regression**. It is as accurate, faster, has fewer dependencies, and its coefficients are easy to explain. On the case study the same procedure also says "keep the current model", and much more clearly: the linear classifier on the TF-IDF matrix is 17 percentage points more accurate than the boosted model on dense text components (next section and the leaderboard notebook).
+The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the 95 % bootstrap interval of the difference, from −0.005 to +0.007, contains 0. The honest conclusion for the churn data: **keep the logistic regression**. It is as accurate, faster, has fewer dependencies, and its coefficients are easy to explain. On the Berlin price data the same procedure gives the opposite answer (next section): there the challenger wins in every fold, by a margin that matters to a host.
 
 > [!TIP]
 > Write the comparison down as a small table: metric with interval, training time, prediction time per 1,000 rows, model size, and one sentence on explainability. Decide with the table, not with the first line.
@@ -237,22 +237,108 @@ The challenger wins 12 of 15 folds by 0.003 AUC on average. On the test set, the
 > [!WARNING]
 > Comparing many challengers on the same test set and picking the best overfits the test set, just as tuning on it would. Use cross-validation to choose; use the test set once, for the final comparison.
 
-## 4. The case study: a boosted model is not always the challenger that wins
+## 4. The case study: what drives Berlin Airbnb prices, and do trees price better?
 
-The leaderboard task has 1,114 headings and the description as its main input. Gradient boosting cannot use the sparse TF-IDF matrix with 100,000 columns well, so the leaderboard notebook compresses it into 150 dense components (truncated SVD, Sessions 11 and 13) and adds the Session 9 features: text statistics, language, country, year and month. On the 50,000-decision sample, fitted on 2017–2021 and validated on 2022–2023:
+**Question.** A host in Berlin wants a price suggestion for a flat. The current model is the linear regression of Session 6: log price explained by guests, room type, distance to Alexanderplatz and district. The challenger is LightGBM on everything the listing page offers: size, bedrooms, bathrooms, location, property type, minimum stay, availability, reviews and 122 common amenities. The data are the 6,675 listings of Sessions 7 and 9: the short-stay table of Sessions 4–6 (minimum stay below 28 nights) without 26 outliers priced below €10 or above €1,000 (Inside Airbnb, snapshot of 26 June 2026). The Session 6 model is re-evaluated here on these folds, so its error differs from the test error reported in Session 6. Validation keeps each host's listings in one fold (Session 7), because many hosts offer several similar flats. Leaky columns such as `estimated_revenue_l365d` stay out (Session 9).
 
-| Model | Accuracy | Macro-F1 | Chapter accuracy | Fit time (laptop) |
-|---|---|---|---|---|
-| current: linear classifier (`SGDClassifier`, hinge loss) on the TF-IDF matrix | 0.779 | 0.512 | 0.847 | about 30 s |
-| challenger: LightGBM on 150 text components + 10 metadata features | 0.610 | 0.291 | 0.736 | about 7 min |
+```python
+import json
+import re
 
-The 95 % bootstrap interval of the accuracy difference (challenger − current) is [−0.175, −0.162]: the challenger is clearly worse. On the public leaderboard, the challenger trained on the whole sample reaches an accuracy of 0.647 and a macro-F1 of 0.293 (private part, 2025–2026: 0.614 and 0.268), far below the 0.806 of the linear model on the same sample (case-study README). Permutation importance explains why: shuffling the block of 150 text components lowers the accuracy by 0.60, shuffling any metadata column by at most 0.004. The model depends on the text, and the 150 components keep only 28 % of the variance of the TF-IDF matrix. A plausible explanation of the gap is that fine distinctions, such as the material words that separate 6403 (leather uppers) from 6404 (textile uppers), are partly lost in the compression; an exercise in the notebook tests it with more components. A booster also needs one tree per class and round, 1,114 × 150 trees here, which makes it slow to fit and to predict.
+from lightgbm import LGBMRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
-The general lesson: tree ensembles are the default for **tabular** data with a modest number of informative columns, such as the Telco churn table. For text with many classes, linear models on sparse features (Session 13) or embeddings (Session 14) are usually stronger. This is a result to report, not a failure: L2 shows what the flexible model costs and what it does not buy.
+lst = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+bnb = lst[(lst["minimum_nights"] < 28) & lst["price"].between(10, 1000)].reset_index(drop=True)
+bnb["dist_km"] = np.hypot((bnb["latitude"] - 52.5219) * 111.2, (bnb["longitude"] - 13.4132) * 68.0)
+amen_lists = bnb["amenities"].map(json.loads)
+common = amen_lists.explode().value_counts().loc[lambda c: c >= 200].index            # 122 common amenities
+amen = pd.DataFrame({"am_" + re.sub(r"\W+", "_", a).strip("_").lower(): amen_lists.map(lambda x, a=a: a in x).astype(int)
+                     for a in common})                                                # LightGBM needs plain names
+y, price, hosts = np.log(bnb["price"]), bnb["price"], bnb["host_id"]
+
+X_s6 = pd.get_dummies(bnb[["accommodates", "dist_km", "room_type", "district"]], dtype=int)  # Session 6 features
+rich_num = ["accommodates", "bedrooms", "beds", "bathrooms", "dist_km", "latitude", "longitude",
+            "minimum_nights", "availability_365", "number_of_reviews", "review_scores_rating"]
+X_rich = pd.concat([bnb[rich_num], bnb[["room_type", "district", "property_type"]].astype("category"),
+                    amen.assign(n_amenities=amen_lists.map(len))], axis=1)
+X_dummies = pd.get_dummies(X_rich, dtype=int)                                         # for ridge and the forest
+
+
+def lgbm():
+    return LGBMRegressor(n_estimators=600, learning_rate=0.03, num_leaves=31, subsample=0.8, subsample_freq=1,
+                         colsample_bytree=0.5, verbose=-1, random_state=0)
+
+
+models = {
+    "current: linear, Session 6 features": (LinearRegression(), X_s6),
+    "LightGBM, Session 6 features": (lgbm(), X_s6),
+    "ridge, all features": (make_pipeline(SimpleImputer(strategy="median", add_indicator=True), StandardScaler(),
+                                          Ridge(alpha=10)), X_dummies),
+    "random forest, all features": (RandomForestRegressor(300, min_samples_leaf=3, max_features=0.33,
+                                                          n_jobs=-1, random_state=0), X_dummies),
+    "challenger: LightGBM, all features": (lgbm(), X_rich),
+}
+fold_mae, rows = {}, []
+for name, (model, X_m) in models.items():
+    pred, fold_mae[name] = np.zeros(len(y)), []
+    for tr, va in GroupKFold(5).split(X_m, y, groups=hosts):                          # identical folds for all
+        pred[va] = model.fit(X_m.iloc[tr], y.iloc[tr]).predict(X_m.iloc[va])
+        fold_mae[name].append(mean_absolute_error(price.iloc[va], np.exp(pred[va])))
+    rows.append({"model": name, "R² (log)": r2_score(y, pred), "MAE €": mean_absolute_error(price, np.exp(pred)),
+                 "median AE €": np.median(np.abs(price - np.exp(pred)))})
+print(pd.DataFrame(rows).set_index("model").round(3).to_string())
+d = np.array(fold_mae["challenger: LightGBM, all features"]) - np.array(fold_mae["current: linear, Session 6 features"])
+print(d.round(1), round(d.mean(), 1))         # paired differences of the MAE per fold, in euros
+```
+
+| Model | R² (log price) | MAE € | Median absolute error € |
+|---|---|---|---|
+| current: linear, Session 6 features | 0.506 | 56.9 | 35.8 |
+| LightGBM, Session 6 features | 0.498 | 57.1 | 37.4 |
+| ridge, all features | 0.616 | 49.6 | 31.8 |
+| random forest, all features | 0.616 | 48.3 | 30.4 |
+| challenger: LightGBM, all features | 0.635 | 46.5 | 29.0 |
+
+The paired MAE differences of the challenger against the current model are −10.0, −12.3, −8.4, −11.2 and −10.3 euros: the challenger wins in every fold, by €10.4 a night on average. Here the comparison of Section 3 says **replace**. The table also says *why*. With the four Session 6 features, LightGBM is no better than the linear model (MAE €57.1 against €56.9): there is little structure for a flexible model to find. Most of the gain comes from the **features**: ridge on all features already reaches €49.6. The tree ensembles add the rest (€48.3 for the forest, €46.5 for LightGBM) by finding interactions and thresholds that a linear model would have to be given by hand. A typical listing is still mispriced by about €29 (median absolute error), which is honest information for a host: the model gives a starting point, not a price.
+
+Which features drive the challenger, and is any of them suspicious? Permutation importance on held-out hosts and SHAP values on the log scale:
+
+```python
+tr, te = next(GroupShuffleSplit(1, test_size=0.25, random_state=0).split(X_rich, groups=hosts))   # held-out hosts
+challenger = lgbm().fit(X_rich.iloc[tr], y.iloc[tr])
+perm = permutation_importance(challenger, X_rich.iloc[te], y.iloc[te], scoring="r2", n_repeats=5, random_state=0)
+imp = pd.Series(perm.importances_mean, index=X_rich.columns)
+print(imp.sort_values(ascending=False).head(6).round(3).to_dict())
+print("all 122 amenities together:", round(imp.filter(like="am_").sum(), 3))
+
+sv = shap.TreeExplainer(challenger)(X_rich.iloc[te])               # SHAP values on the log-price scale
+print(pd.Series(np.abs(sv.values).mean(axis=0), index=X_rich.columns).nlargest(5).round(3).to_dict())
+i = 0                                                               # one held-out listing
+print(X_rich.iloc[te[i]][["room_type", "accommodates", "bedrooms", "dist_km"]].to_dict())
+print(round(float(np.exp(sv.base_values[i]))), round(float(np.exp(sv.base_values[i] + sv.values[i].sum()))),
+      round(float(price.iloc[te[i]])))                             # base price, prediction, actual price in EUR
+top = pd.Series(sv.values[i], index=X_rich.columns).sort_values(key=abs, ascending=False).head(4)
+print((np.exp(top) - 1).round(3).to_dict())                        # each contribution as a price factor
+```
+
+Shuffling `accommodates` costs 0.138 of R², property type 0.103, bedrooms 0.092, the distance to the centre 0.030; all 122 amenities together are worth 0.042. Nothing dominates suspiciously, and the order matches what a host would expect: size first, then the kind of property and location. The SHAP values agree. Because the model predicts the log price, a SHAP value φ is a factor on the price: e^φ. For the first held-out listing, an entire flat for two guests with one bedroom 1.6 km from Alexanderplatz, the base value is €158 (the average prediction) and the model predicts €188 (actual price: €161). Its small size lowers the prediction by 10 %; its property type raises it by 11 %, the central location by 10 % and its availability by 9 %. The factors multiply: SHAP values add on the log scale. Across all held-out listings (figure, right), the location contribution falls steadily with distance: a premium of up to about 25 % near Alexanderplatz, a discount of about 9 % beyond 8 km.
+
+![Interpretation of the LightGBM price model on held-out hosts. Left: permutation importance (drop in R²) of the ten most important features; guests, property type and bedrooms lead. Right: SHAP value of the distance to Alexanderplatz, as a price factor, against the distance; listings within about 4 km of the centre get a premium of up to about 25 %, listings beyond 8 km a discount of about 9 %, with a spread of a few percentage points at a given distance (interactions with other features).](figures/price_model_interpretation.png)
+
+> [!CAUTION]
+> "Central location raises the price by 10 %" describes the **model**. It is not the causal effect of moving a flat, and it is not advice to hosts to charge more. Location also stands for flat quality, building age and the kind of guest, which the data do not record.
 
 ## Practice
 
-Leaderboard round L2 in [20-case-study-leaderboard-gradient-boosting.ipynb](../workbooks/20-case-study-leaderboard-gradient-boosting.ipynb): build dense features (150 text components from character n-gram TF-IDF, text statistics, language, country, date), train LightGBM with settings that survive many rare classes, compare it with the linear text model as the current model on a time-based validation with a bootstrap interval, inspect it with permutation importance by feature group, and write the submission file `id,heading` for the test set.
+**What drives nightly prices in Berlin, and is a tree ensemble worth it?** In [20-case-study-airbnb-price-trees.ipynb](../workbooks/20-case-study-airbnb-price-trees.ipynb): compare the Session 6 linear model with a random forest, scikit-learn's gradient boosting and LightGBM on the Berlin listings with host-grouped folds; tune the booster with early stopping and a randomised search; decide between current model and challenger with paired fold differences and a bootstrap interval on held-out hosts; and interpret the challenger with permutation importance and SHAP, including a check that catches the revenue leak of Session 9.
+
+> [!NOTE]
+> For text the picture reverses. On the EBTI heading task, where the input is a description of goods, a linear classifier on sparse TF-IDF features (Session 13) is far stronger than boosting on compressed text, so the leaderboard has no tree-based round.
 
 ## Check your understanding
 
@@ -261,7 +347,7 @@ Leaderboard round L2 in [20-case-study-leaderboard-gradient-boosting.ipynb](../w
 3. A SHAP base value is −1.0 and the contributions of a customer are +0.8, −0.3 and +0.5. What is the model's log-odds and probability for this customer?
 4. A new feature makes the test AUC jump from 0.84 to 0.92 and dominates the SHAP summary. What do you check before using it?
 5. A challenger wins 9 of 15 folds with a mean AUC difference of +0.001. Would you replace the current model? What else would you consider?
-6. Why may 150 text components lose the information that separates heading 6403 from 6404, although the full TF-IDF matrix keeps it?
+6. With the four Session 6 features, LightGBM is no better than the linear model; with all features it is clearly better. What does that tell you about where the gain of a tree ensemble comes from?
 
 ## Further reading
 

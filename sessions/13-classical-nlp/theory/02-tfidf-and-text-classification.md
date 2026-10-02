@@ -1,6 +1,6 @@
 # TF-IDF, n-grams and linear text classifiers
 
-Raw counts treat every word alike: "mit" (with) counts as much as "Spielzeug" (toy). This page introduces TF-IDF, a weighting that makes informative words count more, and n-grams, which keep short phrases such as "leather upper" or pieces of words such as `zeug`. It then shows why linear models are the standard classifiers for this kind of sparse, high-dimensional input, even with more than 1,000 classes, and how to read per-class metrics when most headings are rare. The page ends with the practice task of this block: the third leaderboard round (L3) with a TF-IDF classifier.
+Raw counts treat every word alike: "mit" (with) counts as much as "Spielzeug" (toy). This page introduces TF-IDF, a weighting that makes informative words count more, and n-grams, which keep short phrases such as "leather upper" or pieces of words such as `zeug`. It then shows why linear models are the standard classifiers for this kind of sparse, high-dimensional input, even with more than 1,000 classes, and how to read per-class metrics when most headings are rare. The page ends with the practice task of this block: the third leaderboard round (L2) with a TF-IDF classifier.
 
 The code blocks on this page build on each other; run them in order from the repository root. The model comparison takes about one and a half minutes, the character n-gram model about two minutes.
 
@@ -296,7 +296,7 @@ print(report["f1-score"].groupby(bins, observed=True).agg(["mean", "count"]).rou
 > [!IMPORTANT]
 > A model trained on 50,000 decisions sees on average about 55 examples per heading, but the median heading has far fewer. More training data (the full 309,529 decisions) helps the tail most: on the public leaderboard, macro-F1 rises from 0.52 to 0.68 while accuracy rises from 0.81 to 0.87 (case-study README).
 
-## Practice: leaderboard round L3 with a TF-IDF classifier
+## Practice: leaderboard round L2 with a TF-IDF classifier
 
 The task is to train a TF-IDF classifier on the 50,000-decision sample, predict the 113,188 test decisions, and submit a file with one row per test decision and the columns `id,heading`. Workbook [05-case-study-tfidf-leaderboard.ipynb](../workbooks/05-case-study-tfidf-leaderboard.ipynb) contains the full exercise, including a character n-gram model and an optional run on the full training set.
 

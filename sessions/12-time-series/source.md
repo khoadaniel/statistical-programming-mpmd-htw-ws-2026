@@ -24,11 +24,12 @@ Third-party material in this session, with its origin and licence. Keep the attr
 
 | File | Covers | Licence |
 |---|---|---|
-| [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Trend, seasonality, autocorrelation; resampling; naive, seasonal naive, moving average | CC-BY-4.0, course team |
-| [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | Exponential smoothing, ETS prediction intervals, ARIMA outlook | CC-BY-4.0, course team |
+| [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Trend, seasonality, autocorrelation; resampling and data quality of the Airbnb review series; naive, seasonal naive, moving average, seasonal naive times growth | CC-BY-4.0, course team |
+| [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | Exponential smoothing, choosing the history after a break, ETS prediction intervals, ARIMA outlook with missing months | CC-BY-4.0, course team |
 | [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features with gradient boosting, rolling-origin backtesting, MAE, MASE, coverage, recommendation | CC-BY-4.0, course team |
-| [theory/figures/](theory/figures/) (`make_figures.py` and 4 PNGs) | STL decomposition, ACF, baselines against actuals, ETS interval (monthly BTI decisions) | CC-BY-4.0, course team |
-| [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb) | Practice of all three blocks: monthly BTI decision counts, baselines, ETS, lag model, backtest, recommendation, 12-month forecast, five chapter series | CC-BY-4.0, course team |
+| [theory/figures/](theory/figures/) (`make_figures.py` and 4 PNGs) | STL decomposition, ACF, baselines against actuals, ETS interval (monthly Airbnb reviews in Berlin) | CC-BY-4.0, course team |
+| [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb) | Practice of all three blocks: monthly Airbnb reviews in Berlin, baselines, ETS, airline model with the pandemic as missing months, lag model, rolling-origin backtest, recommendation, 12-month forecast, twelve district series | CC-BY-4.0, course team |
+| [workbooks/11-optional-ebti-decision-forecast.ipynb](workbooks/11-optional-ebti-decision-forecast.ipynb) | Optional exercise: monthly BTI decision counts, baselines, ETS, lag model, backtest, recommendation, five chapter series (renamed from `10-case-study-decision-forecast.ipynb`) | CC-BY-4.0, course team |
 
 ## Citations
 
@@ -46,4 +47,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - pandas developers (2026). *Time series / date functionality*. https://pandas.pydata.org/docs/user_guide/timeseries.html
 - scikit-learn developers (2026). *Time-related feature engineering* and *Lagged features for time series forecasting* (examples). https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html
 - Seabold, S. and Perktold, J. (2010). statsmodels: econometric and statistical modeling with Python. *Proceedings of the 9th Python in Science Conference*. https://www.statsmodels.org/
-- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (DDS2-EBTI_Full), retrieved by `case-study/prepare_data.py`; aggregated to `monthly_counts.parquet`. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
+- Eurostat (2020). *Guidance on time series treatment in the context of the COVID-19 crisis*. Methodological note, 26 March 2020 (treat the crisis months as outliers: additive outlier, transitory change or level shift). https://ec.europa.eu/eurostat/documents/10186/10693286/Time_series_treatment_guidance.pdf
+- Inside Airbnb (2026). *Berlin, snapshot of 26 June 2026* (listings, calendar, reviews), aggregated to `case-study/data/airbnb/reviews_monthly.parquet` by `case-study/prepare_airbnb.py` (personal data removed). Creative Commons Attribution 4.0 International (CC BY 4.0). https://insideairbnb.com/get-the-data/
+- Regulation (EU) 2024/1028 of the European Parliament and of the Council of 11 April 2024 on data collection and sharing relating to short-term accommodation rental services. https://eur-lex.europa.eu/eli/reg/2024/1028/oj
+- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (DDS2-EBTI_Full), retrieved by `case-study/prepare_data.py`; aggregated to `monthly_counts.parquet` (optional workbook 11). Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en

@@ -2,7 +2,7 @@
 
 k-means needs the number of clusters in advance and assumes round groups. This page adds two methods with other assumptions: **hierarchical clustering**, which builds a whole tree of nested clusters and draws it as a dendrogram, and **DBSCAN**, which finds dense regions of any shape and leaves sparse points as noise. The last section asks the question that matters most in practice: is a clustering any good? It covers the silhouette coefficient for comparing methods, stability under resampling and cluster profiles for interpretation.
 
-The running example are the 2,321 decisions of chapter 94 in the case-study sample (furniture, seats, mattresses and bedding, lamps and light fittings). Each decision is turned into 50 numbers in two ways: from its **description** (in the language of the issuing country) and from its English **keywords**, assigned by customs. In both cases the text becomes a TF-IDF matrix (Session 13), which truncated SVD (page 3) compresses to 50 components; each row is then scaled to length 1, so that Euclidean distances behave like cosine distances. Keywords are not allowed as inputs of the heading model (Session 9), but for exploring the data they are fair game. The code blocks build on each other; run them in order from the repository root.
+The running example are the Berlin listings of Inside Airbnb (snapshot of 26 June 2026; prepare the data with `uv run python case-study/prepare_airbnb.py`). The practical question: **what kinds of Airbnb offers exist in Berlin?** A city office that enforces the rules on short-term rentals, a tourism board or a new host would like a handful of types rather than 12,776 single listings. We use the 8,439 listings with a price and describe each by six numbers: the nightly price, the number of guests, the minimum number of nights, the number of nights bookable in the next year, the reviews of the last twelve months (a sign of recent activity) and the distance to Alexanderplatz. Price, minimum nights and reviews are strongly skewed, so they enter on the log scale (Session 4); then every column is standardised (page 1). Room type, district and host are left out of the clustering and used afterwards to describe the clusters. The code blocks build on each other; run them in order from the repository root.
 
 ```mermaid
 flowchart TD
@@ -22,32 +22,33 @@ import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans
-from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import adjusted_rand_score, silhouette_score
 from sklearn.neighbors import NearestNeighbors
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import StandardScaler
 
-pd.set_option("display.width", 120)
-sample = pd.read_parquet("case-study/data/train_sample.parquet")
-furn = sample[sample["chapter"] == "94"].reset_index(drop=True)
-print(len(furn), furn["heading"].value_counts().to_dict())
-# 2321 {'9405': 976, '9403': 839, '9401': 285, '9404': 195, '9406': 16, '9402': 10}
+pd.set_option("display.width", 150)
+pd.set_option("display.max_columns", 12)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+d = listings.dropna(subset=["price", "minimum_nights"]).reset_index(drop=True)   # 34 % have no price
+lat0, lon0 = 52.5219, 13.4132                                   # Alexanderplatz
+d["north_km"] = (d["latitude"] - lat0) * 111.2                  # degrees -> km (good enough within a city)
+d["east_km"] = (d["longitude"] - lon0) * 111.2 * np.cos(np.radians(lat0))
+d["km_centre"] = np.hypot(d["north_km"], d["east_km"])
 
-
-def lsa():
-    """50 SVD components of a TF-IDF matrix, each row scaled to length 1."""
-    return make_pipeline(TruncatedSVD(50, random_state=0), Normalizer())
-
-
-desc_vec = TfidfVectorizer(min_df=3, sublinear_tf=True, token_pattern=r"(?u)\b[^\W\d_]{2,}\b")
-Z_desc = lsa().fit_transform(desc_vec.fit_transform(furn["description"]))
-kw_vec = TfidfVectorizer(min_df=3, lowercase=False, token_pattern=None,     # one token per keyword
-                         tokenizer=lambda s: [w.strip() for w in s.split(",") if w.strip()])
-Z_kw = lsa().fit_transform(kw_vec.fit_transform(furn["keywords"].fillna("")))
-print(Z_desc.shape, Z_kw.shape)                               # (2321, 50) (2321, 50)
+features = pd.DataFrame({
+    "log_price": np.log(d["price"]),                  # skewed: log first (Session 4)
+    "guests": d["accommodates"],
+    "log_min_nights": np.log(d["minimum_nights"]),
+    "availability_365": d["availability_365"],        # nights bookable in the next year
+    "log_reviews_ltm": np.log1p(d["number_of_reviews_ltm"]),   # reviews in the last 12 months
+    "km_centre": d["km_centre"],
+})
+Z = StandardScaler().fit_transform(features)
+print(Z.shape)                                        # (8439, 6)
 ```
+
+> [!NOTE]
+> **Ethics.** Inside Airbnb scrapes public listing pages. Describe clusters in aggregate (sizes, medians, shares) and never single out or name hosts.
 
 ## Hierarchical clustering and dendrograms
 
@@ -76,7 +77,7 @@ The trees have the same shape here but different heights. Cutting the complete-l
 
 ### Why it matters
 
-The dendrogram shows structure at every level at once: a few large groups that split into subgroups. One does not have to fix k in advance; long vertical branches (a large gap between merge heights) suggest a natural number of clusters. Hierarchies are also meaningful in themselves: product categories, biological taxonomies, organisational units, and the HS nomenclature itself (sections, chapters, headings, subheadings).
+The dendrogram shows structure at every level at once: a few large groups that split into subgroups. One does not have to fix k in advance; long vertical branches (a large gap between merge heights) suggest a natural number of clusters. Hierarchies are also meaningful in themselves: product categories, biological taxonomies, organisational units, and the HS nomenclature of the main case study (sections, chapters, headings, subheadings).
 
 ### How it works in Python
 
@@ -86,19 +87,25 @@ tiny = np.array([[1.0], [2.0], [5.0], [11.0]])
 print(linkage(tiny, method="single")[:, 2])      # [1. 3. 6.]   merge heights
 print(linkage(tiny, method="complete")[:, 2])    # [ 1.  4. 10.]
 
-# the decisions (keyword components): Ward linkage, cut into four clusters
-Z_ward = linkage(Z_kw, method="ward")
-ward_labels = fcluster(Z_ward, t=4, criterion="maxclust")       # labels 1..4
+# the listings: Ward linkage on a random sample of 2,000 (memory grows with n squared)
+rng = np.random.default_rng(0)
+idx = rng.choice(len(Z), size=2000, replace=False)
+Zs = Z[idx]
+Z_ward = linkage(Zs, method="ward")
+print(Z_ward[-5:, 2].round(1))                                  # [31.9 40.7 42.5 47.8 86.6]  last merge heights
+ward_labels = fcluster(Z_ward, t=5, criterion="maxclust")       # labels 1..5
 print(pd.Series(ward_labels).value_counts().sort_index().to_dict())
-# {1: 452, 2: 584, 3: 192, 4: 1093}
+# {1: 377, 2: 713, 3: 179, 4: 141, 5: 590}
 
-# the same with scikit-learn (labels 0..3, same partition)
-agg = AgglomerativeClustering(n_clusters=4, linkage="ward").fit(Z_kw)
+# the same with scikit-learn (labels 0..4, same partition)
+agg = AgglomerativeClustering(n_clusters=5, linkage="ward").fit(Zs)
 print(adjusted_rand_score(ward_labels, agg.labels_))            # 1.0
 
 # draw the top of the tree (scipy.cluster.hierarchy.dendrogram):
 # dendrogram(Z_ward, truncate_mode="lastp", p=20)
 ```
+
+The last merge heights show one very large gap (from 47.8 to 86.6): at the top, the tree splits the listings into two groups that are far apart. Below that the heights grow slowly, so there is no single natural number of clusters between three and six; five is chosen here to compare with k-means below.
 
 The **adjusted Rand index** (ARI) used above compares two partitions of the same rows: 1 means identical (whatever the label numbers), about 0 means no more agreement than chance.
 
@@ -106,7 +113,7 @@ The **adjusted Rand index** (ARI) used above compares two partitions of the same
 
 - **Gene-expression heat maps.** Eisen et al. (1998, *PNAS*) introduced the clustered heat map with dendrograms on both axes; it remains the standard figure in genomics.
 - **Phylogenetics.** Average linkage (UPGMA) is a classical method for building trees of species from genetic distances.
-- **Document and product taxonomies.** Hierarchical clustering of product descriptions or support tickets proposes a first category tree that people then edit; the HS nomenclature is such a tree, built by people.
+- **Document and product taxonomies.** Hierarchical clustering of product descriptions or support tickets proposes a first category tree that people then edit; the HS nomenclature of the main case study is such a tree, built by people.
 
 > [!WARNING]
 > **Hierarchical clustering does not scale to large n.** It needs all pairwise distances: memory grows with n². Up to about 10,000–20,000 rows it is fine; beyond, cluster a sample or use k-means first.
@@ -158,22 +165,40 @@ DBSCAN finds clusters of any shape (rings, bands) and does not force every row i
 values = np.array([1, 2, 3, 7, 12, 13, 14], dtype=float).reshape(-1, 1)
 print(DBSCAN(eps=1.5, min_samples=3).fit(values).labels_)     # [ 0  0  0 -1  1  1  1]
 
-# choosing eps: distance of each decision to its 10th nearest neighbour (the k-distance)
-dist, _ = NearestNeighbors(n_neighbors=10).fit(Z_kw).kneighbors(Z_kw)
-print(np.quantile(dist[:, -1], [0.5, 0.9, 0.95, 0.99]).round(2))   # [0.64 0.83 0.86 0.94]
+# on the six standardised features; choose eps from the distance to the 10th neighbour (k-distance)
+dist, _ = NearestNeighbors(n_neighbors=10).fit(Z).kneighbors(Z)
+print(np.quantile(dist[:, -1], [0.5, 0.9, 0.99]).round(2))      # [0.57 0.91 1.46]
+for eps in (0.5, 1.0):
+    labels = pd.Series(DBSCAN(eps=eps, min_samples=10).fit(Z).labels_)
+    print(eps, labels.nunique() - (labels == -1).any(), "clusters,", (labels == -1).sum(), "noise points")
+# 0.5 11 clusters, 4091 noise points
+# 1.0 1 clusters, 229 noise points
 
-for eps in (0.3, 0.5):
-    labels = pd.Series(DBSCAN(eps=eps, min_samples=10).fit(Z_kw).labels_)
-    print(eps, labels.nunique() - 1, "clusters,", (labels == -1).sum(), "noise points")
-# 0.3 17 clusters, 2009 noise points
-# 0.5 32 clusters, 1412 noise points
+# on the map: dense areas of listings (coordinates in km, eps = 300 m)
+C = d[["east_km", "north_km"]].to_numpy()
+dist, _ = NearestNeighbors(n_neighbors=30).fit(C).kneighbors(C)
+print(np.quantile(dist[:, -1], [0.1, 0.5, 0.9]).round(2))       # [0.18 0.34 1.6 ]  km to the 30th neighbour
+spots = DBSCAN(eps=0.3, min_samples=30).fit(C).labels_
+d["hot_spot"] = spots
+print(len(set(spots)) - 1, "hot spots,", (spots == -1).sum(), "listings outside")   # 24 hot spots, 3499 listings outside
+top = (d[d["hot_spot"] >= 0].groupby("hot_spot")
+       .agg(listings=("id", "size"), area=("neighbourhood", lambda s: s.mode()[0]), median_price=("price", "median"))
+       .nlargest(3, "listings"))
+print(top)
+#           listings                      area  median_price
+# hot_spot
+# 0             1703            Alexanderplatz         170.5
+# 1              789      südliche Luisenstadt         129.0
+# 2              585  Frankfurter Allee Süd FK         139.8
 ```
 
-On the keyword components DBSCAN finds many small, very dense groups and declares most decisions noise. The dense groups are decisions with (almost) identical keyword lists, for example dozens of "LED, LIGHT FITTINGS, OF PLASTICS" decisions; between them the density is low everywhere. This is a finding, not a failure: the data are a few broad product types with many fine variants, not a handful of dense blobs. With one global eps, DBSCAN cannot see both levels; HDBSCAN (workbook 08) or k-means and Ward suit this data better.
+On the six features DBSCAN shows what kind of cloud the listings form. With a small eps it finds eleven small, dense groups (mostly listings with identical minimum nights and no recent reviews) and declares half the listings noise; with a larger eps everything joins one cluster, except 229 noise points. There are no dense blobs separated by empty space: the listings form one continuous cloud with denser and sparser regions. This is a finding, not a failure. It means that any segmentation of these listings cuts a continuum, and the 229 noise points at eps = 1.0 are the unusual listings that page 4 examines as anomalies.
+
+On the map, DBSCAN does what it was designed for. With a radius of 300 m and at least 30 listings, it finds 24 hot spots of Airbnb listings; the largest, around Alexanderplatz and Mitte, has 1,703 listings, followed by parts of Kreuzberg (südliche Luisenstadt) and Friedrichshain. 3,499 listings lie outside any hot spot; their median distance to Alexanderplatz is 6.5 km, against 3.1 km inside. A city office could use such hot spots to decide where to check registration numbers first.
 
 ### In practice
 
-- **Spatial data.** DBSCAN was designed for spatial databases; it is used to find hot spots in GPS points, for example stops in vehicle trajectories or clusters of reported incidents on a map.
+- **Spatial data.** DBSCAN was designed for spatial databases; it is used to find hot spots in GPS points, for example stops in vehicle trajectories or clusters of reported incidents on a map, and, as above, concentrations of short-term rentals.
 - **Astronomy.** Density-based methods (including HDBSCAN) are used to find star clusters and stellar streams in the Gaia catalogue of the European Space Agency.
 - **Recognition.** The DBSCAN paper received the SIGKDD Test of Time Award in 2014.
 
@@ -200,69 +225,88 @@ A segmentation that changes with the random seed, or that only splits a continuo
 ### How it works in Python
 
 ```python
-km = KMeans(n_clusters=4, n_init=10, random_state=0).fit(Z_kw)
-print(round(silhouette_score(Z_kw, km.labels_), 3))       # 0.119   k-means
-print(round(silhouette_score(Z_kw, agg.labels_), 3))      # 0.084   Ward
-print(round(adjusted_rand_score(km.labels_, agg.labels_), 2))   # 0.47: the methods partly agree
+km = KMeans(n_clusters=5, n_init=10, random_state=0).fit(Z)
+print(round(silhouette_score(Z, km.labels_), 3))                  # 0.29   k-means, all listings
+print(round(silhouette_score(Zs, km.labels_[idx]), 3),            # 0.302  k-means on the Ward sample
+      round(silhouette_score(Zs, agg.labels_), 3))                # 0.257  Ward
+print(round(adjusted_rand_score(km.labels_[idx], agg.labels_), 2))   # 0.65: the methods largely agree
 
 # stability: refit on bootstrap samples, compare with the first fit
-rng = np.random.default_rng(0)
 aris = []
 for seed in range(10):
-    idx = rng.choice(len(Z_kw), size=len(Z_kw), replace=True)
-    boot = KMeans(n_clusters=4, n_init=10, random_state=seed).fit(Z_kw[idx])
-    aris.append(adjusted_rand_score(km.labels_, boot.predict(Z_kw)))
-print(np.round([min(aris), np.median(aris)], 2))           # [0.76 0.9 ]  fairly stable
+    boot = rng.choice(len(Z), size=len(Z), replace=True)
+    refit = KMeans(n_clusters=5, n_init=10, random_state=seed).fit(Z[boot])
+    aris.append(adjusted_rand_score(km.labels_, refit.predict(Z)))
+print(np.round([min(aris), np.median(aris)], 2))                   # [0.96 0.98]  very stable
 
-# profile: variables NOT used in the clustering (heading) and the most typical keywords
-furn["cluster"] = km.labels_
-print(pd.crosstab(furn["cluster"], furn["heading"]))
-# heading  9401  9402  9403  9404  9405  9406
+# profile on the original scale, plus variables NOT used in the clustering
+d["cluster"] = km.labels_
+profile = d.groupby("cluster").agg(
+    listings=("id", "size"), price=("price", "median"), guests=("accommodates", "median"),
+    min_nights=("minimum_nights", "median"), open_days=("availability_365", "median"),
+    reviews_ltm=("number_of_reviews_ltm", "median"), km_centre=("km_centre", "median"),
+    entire_home=("room_type", lambda s: (s == "Entire home/apt").mean()),
+    multi_host=("calculated_host_listings_count", lambda s: (s > 1).mean()),
+    licence=("license", lambda s: s.notna().mean()),             # registration field filled in
+)
+print(profile.round(2))
+#          listings   price  guests  min_nights  open_days  reviews_ltm  km_centre  entire_home  multi_host  licence
 # cluster
-# 0           0     1     5     0   355     1
-# 1          31     2   775     6     8    10
-# 2           0     0     0     0   599     0
-# 3         254     7    59   189    14     5
-X_kw, terms = kw_vec.transform(furn["keywords"].fillna("")), kw_vec.get_feature_names_out()
-for c in range(4):
-    weights = np.asarray(X_kw[furn["cluster"].to_numpy() == c].mean(axis=0)).ravel()
-    print(c, list(terms[weights.argsort()[::-1][:3]]))
-# 0 ['LIGHTING SYSTEMS', 'LED', 'FOR LIGHTING']
-# 1 ['FURNITURE', 'OF WOOD', 'TABLES']
-# 2 ['LIGHT FITTINGS', 'ELECTRIC', 'LED']
-# 3 ['SEATS', 'UPHOLSTERED', 'CUSHIONS']
-
-# the same k-means on the DESCRIPTION components
-km_desc = KMeans(n_clusters=4, n_init=10, random_state=0).fit(Z_desc)
-print(round(adjusted_rand_score(furn["heading"], km_desc.labels_), 3),
-      round(adjusted_rand_score(furn["language"], km_desc.labels_), 3))   # 0.009 0.96
-print(round(adjusted_rand_score(furn["heading"], km.labels_), 3))          # 0.623 (keywords)
+# 0            2514  153.00     2.0         1.0      307.0         15.0       3.62         0.68        0.70     0.98
+# 1            2412  136.55     2.0         2.0       63.0          8.0       4.01         0.64        0.41     0.99
+# 2            1698   22.84     2.0        92.0      275.0          0.0       4.33         0.82        0.52     0.20
+# 3            1037  293.00     7.0         1.0      273.0         18.0       3.72         0.95        0.81     0.99
+# 4             778  119.10     3.0         2.0      257.0          4.0      13.61         0.65        0.46     0.95
+outer = ["Spandau", "Marzahn - Hellersdorf", "Treptow - Köpenick", "Steglitz - Zehlendorf", "Reinickendorf"]
+print(pd.crosstab(d["district"], d["cluster"], normalize="index").loc[["Mitte", "Neukölln"] + outer].round(2))
+# cluster                   0     1     2     3     4
+# district
+# Mitte                  0.34  0.27  0.23  0.16  0.00
+# Neukölln               0.22  0.42  0.18  0.09  0.10
+# Spandau                0.00  0.00  0.10  0.01  0.89
+# Marzahn - Hellersdorf  0.04  0.09  0.24  0.08  0.55
+# Treptow - Köpenick     0.06  0.16  0.15  0.05  0.57
+# Steglitz - Zehlendorf  0.05  0.08  0.28  0.06  0.53
+# Reinickendorf          0.19  0.14  0.26  0.00  0.41
 ```
 
-Reading: a silhouette of 0.12 means weak separation, but the partition is fairly stable under resampling, and the profile is easy to describe: two lighting clusters (lighting systems and LED modules; electric light fittings), furniture of wood and metal (9403), and seats with bedding (9401, 9404). The heading, which the clustering did not see, confirms the reading (ARI 0.62). The last lines carry the main lesson: the same k-means on the **description** components finds four clusters that are almost exactly the four main **languages** (ARI with the language 0.96, with the heading 0.01): German, French, Swedish and English descriptions share almost no words, so in a TF-IDF space the language is the strongest structure. A clustering finds whatever dominates the distance, not necessarily what you care about. Multilingual embeddings (Session 14) or a single language are ways out.
+Reading: a silhouette of 0.29 means weak to moderate separation, in line with the continuous cloud that DBSCAN showed. But the partition is very stable under resampling (median ARI 0.98), Ward on a sample largely agrees with it (ARI 0.65), and every cluster can be described in one sentence:
+
+| Cluster | Description | Evidence |
+|---|---|---|
+| 0 | **Year-round holiday flats**, often run by hosts with several listings | bookable 307 nights, 1-night minimum, 15 reviews a year, 70 % multi-listing hosts |
+| 1 | **Occasional lets**, probably people renting out their own home now and then | bookable only 63 nights, 41 % multi-listing hosts |
+| 2 | **Medium-term rentals** of three months or more | 92-night minimum, no recent reviews, a nightly price of €23, registration field filled in for only 20 % |
+| 3 | **Large group flats** | 7 guests, €293 a night, 95 % entire homes |
+| 4 | **Outer districts** | 13.6 km from the centre; 89 % of the Spandau listings |
+
+Three findings deserve a remark. The district table confirms cluster 4 with variables that the clustering did not see: almost no listing in Mitte belongs to it, most listings in Spandau do. And cluster 2 reveals a data problem: a median of €23 a night for entire flats is not a short-stay price. These listings are let for months at a time, and their scraped nightly price is not comparable with the price of a holiday flat. Anyone who models "the price of an Airbnb night" (Sessions 6 and 10) should treat them separately; page 4 does so. Finally, the registration field: 95–99 % of the listings in the short-stay clusters show something in it (including placeholders, Session 4), but only 20 % of the medium-term rentals. Whether that reflects the rules for longer lets or missing registrations cannot be decided from the data; it is a question for the city office, not for the algorithm.
+
+A clustering finds whatever dominates the distance, not necessarily what you care about. Here the six columns were chosen to describe the *offer*; adding ten amenity columns would make "similar" mean "similar equipment". The same happens with text: k-means on TF-IDF vectors of the multilingual EBTI descriptions of the main case study groups them mainly by language, because German and French descriptions share almost no words (Sessions 13 and 14 return to this).
 
 ### In practice
 
 - **Market research.** Commercial segmentations are typically validated by checking that segments differ on variables not used to build them (purchase behaviour, survey answers) and that they can be reproduced in a new survey wave.
 - **Clinical research.** Data-driven patient subgroups, for example the five adult-onset diabetes clusters of Ahlqvist et al. (2018, *The Lancet Diabetes & Endocrinology*), were replicated in independent cohorts before being discussed as clinically relevant.
+- **Housing policy.** Inside Airbnb reports listings by simple rules (entire homes, high availability, hosts with several listings) to estimate how many homes are used for short-term rental rather than housing; a clustering like the one above is a data-driven check of such rules.
 - **Benchmarks with known labels.** On data with known classes, the ARI between clusters and classes is used to compare clustering algorithms (workbook 09 shows the visual version).
 
 > [!WARNING]
 > **Do not compare silhouettes across different feature sets or scalings.** The silhouette depends on the distance; it is only comparable for different clusterings of the same matrix.
 
 > [!CAUTION]
-> **Profiles on transformed data hide the meaning.** "Cluster 2 has a mean of −1.2 on component 7" means nothing to a customs officer. Report profiles in terms people know (the original variables, typical keywords, the headings) and add the cluster size.
+> **Profiles on transformed data hide the meaning.** "Cluster 2 has a mean of −1.2 on standardised availability" means nothing to a city official. Report profiles in terms people know (median price in euros, nights, kilometres, shares of room types and districts) and add the cluster size.
 
-*Practice (block 2):* compare k-means, hierarchical clustering and DBSCAN on the decisions of one chapter: part A of workbook [24-case-study-decision-clusters.ipynb](../workbooks/24-case-study-decision-clusters.ipynb).
+*Practice (block 2):* what kinds of Airbnb offers exist in Berlin? Compare k-means, hierarchical clustering and DBSCAN on the listings and describe the clusters by district and room type: part A of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb).
 
 ## Check your understanding
 
 1. Build the single-linkage and complete-linkage trees for the values 0, 3, 4, 10 by hand. Where would you cut to get two clusters?
 2. In the DBSCAN example, what happens with eps = 1.5 and min_samples = 4? And with eps = 5 and min_samples = 3?
-3. DBSCAN on the keyword components returns 17 small clusters and 2,009 noise points. Is this a failure of DBSCAN? What does it tell you about the data?
-4. A clustering has silhouette 0.12 and median bootstrap ARI 0.90. Write two sentences for a report that describe what these numbers mean.
-5. Why should a cluster profile include a variable that was not used to build the clusters?
-6. k-means on the description components reproduces the languages. Name two ways to obtain clusters of products instead.
+3. DBSCAN on the six listing features returns one cluster and 229 noise points at eps = 1.0. Is this a failure of DBSCAN? What does it tell you about the listings?
+4. The listing clusters have silhouette 0.29 and median bootstrap ARI 0.98. Write two sentences for a report that describe what these numbers mean.
+5. Why should a cluster profile include a variable that was not used to build the clusters? Which variables did that job here?
+6. The medium-term rentals have a median nightly price of €23. What does this mean for a price model trained on all listings?
 
 ## Further reading
 

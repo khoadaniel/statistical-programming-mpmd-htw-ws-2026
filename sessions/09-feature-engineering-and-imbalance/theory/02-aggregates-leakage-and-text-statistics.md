@@ -1,36 +1,40 @@
-# Aggregates from earlier decisions, target leakage and text statistics
+# Aggregates from joined tables, target leakage and text statistics
 
-Many useful features do not sit in the row we predict on. They come from other rows, grouped by a key and summarised: how often the same description was decided before, which heading it received then, how many decisions a country issued last year. This page covers the second block of Session 9: how to compute such **aggregates** only from data that existed at the time of each prediction, how simple statistics of a text become numeric features, and how features leak the target when the past-only rule is broken. The case-study examples are **repeated descriptions** (the same text decided more than once: parallel decisions for variants of one product, and renewals after the three-year validity) and the column `classification_justification`, which customs writes when it classifies the product.
+Many useful features do not sit in the row we predict on. They come from another table, grouped by a key and summarised: how many reviews a listing received in the last twelve months, how long ago its last review was, what similar listings in the neighbourhood cost. This page covers the second block of Session 9: how to compute such **aggregates** only from data that existed at the time of each prediction, how features **leak the target** when that rule is broken, and how simple statistics of a text become numeric features. The examples use the Inside Airbnb data for Berlin: the listings table and the monthly review counts per listing, a proxy for stays (snapshot of 26 June 2026). A second, shorter example comes from the EBTI case study.
 
 > [!NOTE]
-> The code blocks on this page build on each other. Run them in order from the repository root. The first block reads the full training table (309,529 decisions), because the history of a description needs all earlier decisions, not only those in the 50,000-decision sample.
+> The code blocks on this page build on each other. Run them in order from the repository root. They need `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`). Review counts are a proxy for demand: not every guest writes a review, and the share who do may change over time.
 
 ## 1. Aggregates computed only from past data
 
 ### Concept
 
-An **aggregate feature** summarises many rows into one value per prediction row, for example a count, a mean, the most recent value or the time since the first event. In the case study, the same description of goods sometimes comes back: a trader may ask for several decisions on the same day (for variants of one product), and a BTI decision is valid for three years, after which traders may ask for a new one. Grouping the decisions by their description gives aggregates such as "number of earlier decisions with this exact description" and "heading of the most recent earlier decision with this description".
+An **aggregate feature** summarises many rows of a joined table into one value per prediction row, for example a count, a mean, the most recent value or the time since the first event. The table `reviews_monthly` has one row per listing and month (226,557 rows since 2009). Grouped by listing it gives features such as "reviews in the last 12 months", "reviews in the last 3 months" or "months since the last review".
 
-The rule for a correct aggregate is: **use only rows that were known at the moment of the prediction**. A decision that starts on 1 March 2020 may use the decisions that started before 1 March 2020, never those that started afterwards. Such features are called **point-in-time correct** or **as-of** features. For rows sorted in time, the **expanding** count and the **shifted** value give exactly this:
+A practical question that needs them: **which listings will be busy next year?** A city office that monitors short-term rentals, or a cleaning company planning staff, wants to know this in advance. We place ourselves on 1 July 2025 and predict the number of reviews from July 2025 to June 2026.
 
-Worked example: one description decided four times.
+The rule for a correct aggregate is: **use only rows that were known at the moment of the prediction**. A prediction made on 1 July 2025 may use the review months up to June 2025, never those from July 2025 onwards, because they are the target. Such features are called **point-in-time correct** or **as-of** features.
 
-| start date | heading | earlier decisions | prev_n | prev_heading | most frequent heading of all four |
-|---|---|---|---|---|---|
-| 2017-03-01 | 6404 | – | 0 | missing | 6404 |
-| 2020-03-02 | 6404 | 6404 | 1 | 6404 | 6404 |
-| 2021-06-01 | 6402 | 6404, 6404 | 2 | 6404 | 6404 |
-| 2023-06-05 | 6404 | 6404, 6404, 6402 | 3 | 6402 | 6404 |
+Worked example: one listing with reviews in five months.
 
-The last column uses all rows, including the row's own heading and later ones. For the decision of June 2021 (heading 6402, perhaps after a change of the legal interpretation) it says 6404, which is only known from the future majority.
+| month | reviews | used for a prediction on 1 July 2025? |
+|---|---|---|
+| 2024-05 | 2 | yes (but not in "last 12 months") |
+| 2024-08 | 3 | yes |
+| 2025-04 | 1 | yes (also in "last 3 months") |
+| 2025-09 | 4 | no: this is the target period |
+| 2026-02 | 2 | no: this is the target period |
+
+As of 1 July 2025: `rev_total` = 6, `rev_last12` = 4, `rev_last3` = 1, months since the last review ≈ 3. Target: 6 reviews. A "total number of reviews" taken from the June 2026 snapshot would say 12 and contain the target.
 
 ```mermaid
 timeline
-    title Decisions with one description: what a feature may use
-    2017-03-01 : heading 6404 : allowed for later decisions
-    2020-03-02 : heading 6404 : allowed for later decisions
-    2021-06-01 : prediction for this decision : may use 2017 and 2020 only
-    2023-06-05 : heading 6404 : future, not allowed
+    title One listing: what a feature may use for a prediction on 1 July 2025
+    2024 : reviews in May and August : allowed
+    April 2025 : 1 review : allowed
+    1 July 2025 : prediction : cut-off
+    July 2025 to June 2026 : 6 reviews : target, never a feature
+    26 June 2026 : snapshot columns : contain the target period
 ```
 
 ### Why it matters
@@ -39,87 +43,117 @@ At prediction time the model only knows the past. If the training features conta
 
 ### How it works in Python
 
-The grouped `cumcount` counts earlier rows; the grouped `shift(1)` takes the value of the previous row of the same group:
+Filter the joined table to the past, then group by the key:
 
 ```python
+import json
+
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.model_selection import GroupKFold, cross_val_score
 
-train = pd.read_parquet("case-study/data/train.parquet",
-                        columns=["bti_reference", "start_date", "language", "description", "heading",
-                                 "classification_justification"])
-train = train.sort_values(["start_date", "bti_reference"]).reset_index(drop=True)   # time order is essential
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+reviews = pd.read_parquet("case-study/data/airbnb/reviews_monthly.parquet")   # one row per listing and month
 
-g = train.groupby("description")
-train["desc_prev_n"] = g.cumcount()                        # earlier decisions with the same description
-train["desc_prev_heading"] = g["heading"].shift(1)         # heading of the most recent one (missing if none)
-train["days_since_prev"] = (train["start_date"] - g["start_date"].shift(1)).dt.days
+cutoff = pd.Timestamp("2025-07-01")                                  # the moment of prediction
+past = reviews[reviews["month"] < cutoff]                            # what was known then
+future = reviews[(reviews["month"] >= cutoff) & (reviews["month"] < "2026-07-01")]
 
-renewed = train["desc_prev_n"] > 0
-print(round(renewed.mean(), 3))                                          # 0.037: 3.7 % repeat a description
-print(round((train["desc_prev_heading"] == train["heading"])[renewed].mean(), 3))   # 0.987 same heading
-gap = train.loc[renewed, "days_since_prev"]
-print(round((gap == 0).mean(), 3), round((gap >= 900).mean(), 3))      # 0.624 0.162
+g = past.groupby("listing_id")
+feat = pd.DataFrame({
+    "rev_total": g["n_reviews"].sum(),
+    "rev_last12": past[past["month"] >= cutoff - pd.DateOffset(months=12)].groupby("listing_id")["n_reviews"].sum(),
+    "rev_last3": past[past["month"] >= cutoff - pd.DateOffset(months=3)].groupby("listing_id")["n_reviews"].sum(),
+    "months_since_first": (cutoff - g["month"].min()).dt.days / 30.44,
+    "months_since_last": (cutoff - g["month"].max()).dt.days / 30.44,
+}).fillna({"rev_last12": 0, "rev_last3": 0})
+demand = listings.set_index("id").join(feat, how="inner")            # listings with a review before the cut-off
+demand["target"] = future.groupby("listing_id")["n_reviews"].sum().reindex(demand.index).fillna(0)
+print(len(demand), demand["target"].median(), round((demand["target"] == 0).mean(), 3))   # 8775 3.0 0.371
+
+y_d = np.log1p(demand["target"])                                     # log(1 + reviews in the next 12 months)
+past_only = ["rev_total", "rev_last12", "rev_last3", "months_since_first", "months_since_last", "accommodates"]
+gbm = HistGradientBoostingRegressor(random_state=0)
+cv = GroupKFold(5)                                                   # whole hosts per fold (Session 7)
+print(cross_val_score(gbm, demand[past_only], y_d, cv=cv, groups=demand["host_id"], scoring="r2").mean().round(3))
+# 0.823
+naive = np.log1p(demand["rev_last12"])                               # baseline: "next year = last year"
+print(round(1 - ((y_d - naive) ** 2).sum() / ((y_d - y_d.mean()) ** 2).sum(), 3))            # 0.757
 ```
 
-3.7 % of the training decisions repeat a description that was decided before, and in 98.7 % of these cases the previous heading is the heading again. Most repeats (62 %) start on the same day as the previous decision: parallel decisions for variants of one product. 16 % come about 2.5 years or more later: renewals. For those rows the past-only aggregate is close to a perfect predictor, and it is legitimate: at the time of the new decision, the old one was public. The same logic in SQL (Session 3) is a window function: `LAG(heading) OVER (PARTITION BY description ORDER BY start_date)`. When the history lives in a separate table with its own timestamps, `pd.merge_asof(left, right, on="start_date", by="key", allow_exact_matches=False)` joins, for each row, the latest history row strictly before it.
+8,775 listings of the snapshot had at least one review before July 2025; 37 % of them received none in the following year. The past-only model explains 82 % of the variance of log(1 + reviews), against 76 % for the rule "next year = last year". The SQL version of such a feature (Session 3) is a filtered `GROUP BY`, or a window function such as `SUM(n_reviews) OVER (PARTITION BY listing_id ORDER BY month ROWS BETWEEN 12 PRECEDING AND 1 PRECEDING)`. When the history lives in a table with its own timestamps, `pd.merge_asof(left, right, on="date", by="key", allow_exact_matches=False)` joins, for each row, the latest history row strictly before it.
+
+Two honest caveats. First, the snapshot only contains listings that still exist in June 2026; listings that left Airbnb during the year are missing, so the share of "no reviews next year" is underestimated (**survivorship bias**). Second, the second kind of aggregate, a summary of the **target** over a group (for example the median price of the neighbourhood), is target encoding (page 1): it must be computed on the training folds only.
 
 ### In practice
 
 - Uber's machine-learning platform Michelangelo introduced a shared feature store in which aggregates such as "average meal preparation time of a restaurant over the last week" are computed once and reused for training and serving (Hermann & Del Balso, 2017).
 - Open-source feature stores such as Feast offer *point-in-time joins* as a core operation: for each training row, they look up feature values as they were at that row's timestamp.
-- Customs officers do the same by hand: before classifying a product, they search the EBTI database for earlier decisions on similar goods, which is exactly a past-only lookup.
+- Inside Airbnb itself derives "estimated occupancy" from review counts with stated assumptions (a review rate and an average length of stay); such derived columns are aggregates too, and Section 3 shows why they need care.
 
 > [!WARNING]
-> **Sort before you accumulate.** `cumcount` and `shift` follow the current row order. If the table is not sorted by date, the "earlier" decisions are arbitrary rows. Decisions with the same start date are an edge case; sort by a second key (here `bti_reference`) so the result is reproducible.
+> **Filter before you aggregate.** Write the cut-off as a variable and filter the joined table first (`reviews["month"] < cutoff`). Aggregating the whole table and "remembering" to ignore the recent part is how future rows slip in. For rolling features with `groupby(...).rolling(...)` or `cumsum`, sort by time first and shift by one period.
 
 > [!TIP]
-> The first decision of a description has no history. Leave `desc_prev_heading` missing and keep the count `desc_prev_n = 0` as a separate feature: models can learn "no history yet" from it.
+> A listing without any past review has no history. Keep such rows with a count of 0 and a separate indicator "no review yet" instead of dropping them; a model can learn from "no history".
 
 ## 2. Simple text statistics as features
 
 ### Concept
 
-Until TF-IDF and embeddings (Sessions 13 and 14), a model cannot read a description. But simple counts already carry some signal: descriptions of machines quote technical data with many digits, German descriptions are long and use long compound words, and some descriptions quote the tariff text of their own code (replaced by `<CODE>` in the case-study data). A **text statistic** is any number computed from a string without a vocabulary:
+Until TF-IDF and embeddings (Sessions 13 and 14), a model cannot read a text. But simple counts already carry signal. A **text statistic** is any number computed from a string without a vocabulary, or with a short, fixed list of words chosen in advance. For the listing title (`name`, written by the host):
 
-- length in characters (log-transformed, because a few texts are very long)
-- number of digits and number of lines
-- share of capital letters
-- mean word length (long German compounds such as "Kunststoffbehälter")
-- whether the text contains the placeholder `<CODE>`
+- length in characters, share of capital letters, number of digits
+- whether the title mentions the floor area ("m²", "qm", "sqm"), luxury words ("luxury", "premium", "design"), or "cozy"-type words ("cozy", "cosy", "gemütlich", "small", "little")
+- for the amenities list: the number of amenities
 
-Worked example: the text `"Damenschuh aus Leder,\nGröße 38, <CODE>"` has 36 characters (log1p = 3.61), 2 digits, 2 lines, 6 words with a mean length of 6.0 characters and contains `<CODE>`.
+Worked example: the title `"Bright 2-room flat, 65 m², Mitte"` has 32 characters, 3 digits, 3 capital letters (share 0.09) and mentions the area.
 
 ### Why it matters
 
-These features are cheap, transparent and available for every decision, including those in the test set. They form the inputs of the first leaderboard model (L1 in Session 8) together with language and country, and they are a complement to text components in the tree model of Session 10. The L1 model reaches only 7.6 % accuracy on the public leaderboard: statistics *about* a text cannot tell a shoe from a lamp. That is the point of the baseline: it shows how much the words themselves are needed.
+These features are cheap, transparent and available for every listing, including a new one: the host writes the title before the first guest arrives. They are also a first test of whether text helps at all before investing in a text model. In the EBTI case study the same kind of statistics form the inputs of the first leaderboard model (L1 in Session 8); there they reach only 7.6 % accuracy, because statistics *about* a description cannot tell a shoe from a lamp, which is why Session 13 uses the words themselves.
 
 ### How it works in Python
 
+The price table of Sessions 7 and 9 and a compact feature set first, then the text statistics:
+
 ```python
-def text_stats(description):
-    """Simple statistics of the description of goods, one row per decision."""
-    d = description.fillna("")
-    n_chars = d.str.len()
+bnb = listings[(listings["minimum_nights"] < 28) & listings["price"].between(10, 1000)].reset_index(drop=True)
+bnb["dist_km"] = np.hypot((bnb["latitude"] - 52.5219) * 111.2, (bnb["longitude"] - 13.4132) * 68.0)
+y = np.log(bnb["price"])
+hosts = bnb["host_id"]
+cols = ["accommodates", "bedrooms", "beds", "bathrooms", "dist_km", "room_type", "district",
+        "review_scores_rating", "number_of_reviews", "minimum_nights", "availability_365"]
+base = pd.get_dummies(bnb[cols], columns=["room_type", "district"], dtype=int)
+
+
+def title_stats(title):
+    """Statistics of the listing title, one row per listing (no vocabulary is learned)."""
+    t = title.fillna("")
     return pd.DataFrame({
-        "log_chars": np.log1p(n_chars),
-        "n_digits": d.str.count(r"\d"),
-        "n_lines": d.str.count("\n") + 1,
-        "upper_share": d.str.count(r"[A-ZÄÖÜ]") / n_chars.clip(lower=1),
-        "mean_word_len": n_chars / d.str.split().str.len().clip(lower=1),
-        "has_code": d.str.contains("<CODE>", regex=False).astype(int),
-    }, index=description.index)
+        "title_len": t.str.len(),
+        "title_upper": t.str.count(r"[A-Z]") / t.str.len().clip(lower=1),
+        "title_digits": t.str.count(r"\d"),
+        "says_sqm": t.str.contains(r"m²|m2|qm|sqm", case=False).astype(int),
+        "says_luxury": t.str.contains(r"luxur|premium|design", case=False).astype(int),
+        "says_cozy": t.str.contains(r"cozy|cosy|gemütlich|small|little", case=False).astype(int),
+    }, index=title.index)
 
 
-print(text_stats(pd.Series(["Damenschuh aus Leder,\nGröße 38, <CODE>"])).round(2).to_string())
-sample = pd.read_parquet("case-study/data/train_sample.parquet")
-stats = text_stats(sample["description"])
-print(stats.groupby(sample["language"]).mean().loc[["de", "fr", "en"]].round(2).to_string())
-chapters = sample["chapter"].isin(["30", "39", "61", "85"])
-print(stats[chapters].groupby(sample.loc[chapters, "chapter"]).mean().round(2).to_string())
+text = title_stats(bnb["name"]).assign(n_amenities=bnb["amenities"].map(lambda s: len(json.loads(s))))
+for col in ["says_sqm", "says_luxury", "says_cozy"]:
+    print(col, int(text[col].sum()), bnb.groupby(text[col])["price"].median().round(0).to_dict())
+# says_sqm 430 {0: 152.0, 1: 253.0}
+# says_luxury 340 {0: 153.0, 1: 232.0}
+# says_cozy 734 {0: 161.0, 1: 130.0}
+for name, X in [("base", base), ("+ title and amenity count", pd.concat([base, text], axis=1))]:
+    print(name, cross_val_score(gbm, X, y, cv=cv, groups=hosts, scoring="r2").mean().round(3))
+# base 0.599
+# + title and amenity count 0.613
 ```
 
-The statistics differ more between languages than between product groups: German descriptions are long, have many lines and digits; English ones are short and written largely in capitals (customs offices in the United Kingdom used upper case). Between chapters, machines (85) have the most digits, pharmaceuticals (30) quote their own code most often. Inside a pipeline, wrap the function in a `FunctionTransformer` (page 1, Section 5); because it uses only the row itself, it needs no fitting and cannot leak.
+Hosts who state the floor area or use luxury words ask for much higher prices (median €253 and €232 against about €152); "cozy" titles ask less (€130), often a polite word for small. Added to the price model, the seven statistics raise the host-grouped R² from 0.599 to 0.613. Part of this is size information that the size columns miss (`bedrooms` is missing for 21 % of the priced listings), part is the host's own positioning. Inside a pipeline, wrap the function in a `FunctionTransformer` (page 1, Section 5); because it uses only the row itself, it needs no fitting and cannot leak.
 
 ### In practice
 
@@ -127,88 +161,77 @@ The statistics differ more between languages than between product groups: German
 - Spam filters used counts of capital letters, exclamation marks and links long before they used word models.
 
 > [!WARNING]
-> A statistic that differs between groups is not automatically useful. Because the statistics mainly measure the language and the writing habits of an office, a model on them partly learns "which country wrote this", not "what is the product". Compare with a model on language and country alone before crediting the statistics.
+> A statistic that differs between groups is not automatically useful, and it is not a cause. "Luxury" in the title does not make a flat more expensive; it marks flats that their hosts consider expensive. For a price model that is fine; for advice to hosts ("write *luxury* and earn more") it is not.
 
 ## 3. Target leakage through aggregates and late information
 
 ### Concept
 
-**Target leakage** is the use of information that is not available at prediction time and is related to the target. The case study has two typical forms:
+**Target leakage** is the use of information that is not available at prediction time and is related to the target. Three typical forms:
 
-1. **Information written with or after the label.** `classification_justification` explains why customs chose the code and names the heading in about 70 % of the training decisions. `keywords`, `cn_code`, `chapter`, `status`, `end_date` and `invalidation_reason` are also set with or after the classification. The test decisions do not have them; a trader's request does not contain them.
-2. **Aggregates that include the row's own label or future rows.** "Most frequent heading of all decisions with this description" contains the decision's own heading and those of later renewals.
+1. **Columns derived from the target.** Inside Airbnb estimates each listing's occupancy from its reviews and computes `estimated_revenue_l365d` as occupancy × price. For a price model, a revenue feature contains the price.
+2. **Aggregates that include the target period.** The snapshot columns `number_of_reviews_ltm` (reviews in the last twelve months), `reviews_per_month` and `estimated_occupancy_l365d` were computed in June 2026. For the demand question of Section 1 they cover exactly the period to be predicted. Even `availability_365` (free nights in the coming year, measured in June 2026) describes a time after the cut-off.
+3. **Information written with or after the label**, such as the customs' justification in the EBTI case study (below), or a "reason for cancellation" in a churn table.
 
 The result is a feature that is much more strongly related to the target in the training data than it will ever be at prediction time.
 
 ```mermaid
 flowchart LR
-    subgraph past["Before the decision"]
-        p1["Earlier decisions<br/>with this description"]
+    subgraph before["Before 1 July 2025"]
+        p1["Review months<br/>up to June 2025"]
     end
-    subgraph now["The decision"]
-        r["Heading = target"]
-        j["Justification,<br/>keywords, CN code"]
+    subgraph target["July 2025 to June 2026"]
+        r["Reviews = target"]
     end
-    subgraph future["After the decision"]
-        f1["Later renewals"]
+    subgraph snapshot["Snapshot, June 2026"]
+        s1["number_of_reviews_ltm,<br/>reviews_per_month,<br/>estimated occupancy"]
+        s2["estimated revenue<br/>= occupancy x price"]
     end
-    p1 -->|"allowed: desc_prev_heading"| feat["Feature"]
-    r -.->|"leak: own label"| leaky["Most frequent heading<br/>of all decisions"]
-    f1 -.->|"leak: future"| leaky
-    j -.->|"leak: written with the label"| leaky2["Justification feature"]
+    p1 -->|"allowed"| feat["Demand features"]
+    r -.->|"leak: computed from<br/>the target period"| s1
+    s1 -.->|"leaky demand features"| feat
+    s2 -.->|"leak: contains the price"| pricef["Price features"]
 ```
 
 ### Why it matters
 
-Leakage is dangerous because it is silent: every number in the notebook improves. It only shows on truly new data, on the leaderboard or after deployment.
+Leakage is dangerous because it is silent: every number in the notebook improves. It only shows on truly new data, after deployment.
 
 How to detect it:
 
-- A single feature that predicts "too well", or a feature importance (Session 10) far above all others.
-- A large gap between the validation score and the score on data that were collected later.
-- Asking for each feature: *at which moment would this value be known, and from which rows is it computed?*
-- Checking whether the validation data are built **like the test data**. The leaderboard's test set contains no description that also occurs in the training data (they were removed); a validation set that keeps such rows rewards a lookup that will never fire on the test set.
+- A feature, or a combination of features, that predicts "too well", or a permutation importance (Session 10) far above all others. Revenue alone explains less of the log price than the number of guests; only together with occupancy does it reveal the price, and permutation importance on held-out hosts shows it immediately (practice notebook).
+- A large gap between the validation score and the score on data collected later.
+- Asking for each feature: *at which moment would this value be known, and from which rows is it computed?* Read the data dictionary: Inside Airbnb documents how its derived columns are computed.
 
 ### How it works in Python
 
-First, the justification:
-
 ```python
-just = train["classification_justification"].fillna("")
-names_heading = [h in j for h, j in zip(train["heading"], just)]
-print(round(np.mean(names_heading), 3))                   # 0.699: the heading appears in the text
-first_number = just.str.extract(r"\b(\d{4})\b", expand=False)
-print(round((first_number == train["heading"]).mean(), 3))   # 0.639: "read" the label from the text
+occupied = bnb["estimated_occupancy_l365d"] > 0
+ratio = bnb.loc[occupied, "estimated_revenue_l365d"] / bnb.loc[occupied, "estimated_occupancy_l365d"]
+print(round(occupied.mean(), 3), round((np.abs(ratio / bnb.loc[occupied, "price"] - 1) < 0.01).mean(), 3))
+# 0.871 1.0   <- for every listing with occupancy, revenue / occupancy is exactly the price
+leaky = base.assign(revenue=bnb["estimated_revenue_l365d"], occupancy=bnb["estimated_occupancy_l365d"])
+print(cross_val_score(gbm, leaky, y, cv=cv, groups=hosts, scoring="r2").mean().round(3))      # 0.874
+
+snapshot_cols = ["number_of_reviews_ltm", "reviews_per_month", "estimated_occupancy_l365d"]
+print(cross_val_score(gbm, demand[past_only + snapshot_cols], y_d, cv=cv, groups=demand["host_id"],
+                      scoring="r2").mean().round(3))                                         # 0.999
+print(round((demand["number_of_reviews_ltm"] == demand["target"]).mean(), 3))                # 0.842
+print(cross_val_score(gbm, demand[past_only + ["availability_365", "minimum_nights"]], y_d, cv=cv,
+                      groups=demand["host_id"], scoring="r2").mean().round(3))               # 0.851
 ```
 
-A rule that takes the first four-digit number of the justification gets 64 % of the headings right, without any model. Any classifier given this column looks excellent in validation and fails on the test set, where the column does not exist. In the practice notebook, a linear text classifier fitted on 2017–2021 reaches 0.766 accuracy on 2022–2023 with the description alone; with description plus justification it reaches 0.939 when validated with the justification, and 0.735 when validated without it, as on the test set: worse than not using the column at all.
+| Question | Features | Host-grouped R² | Verdict |
+|---|---|---|---|
+| price | size, location, room type, reviews | 0.599 | honest |
+| price | + estimated revenue and occupancy | 0.874 | leak: revenue ÷ occupancy is the price |
+| demand next year | past-only review aggregates + size | 0.823 | honest |
+| demand next year | + snapshot review columns | 0.999 | leak: `number_of_reviews_ltm` equals the target for 84 % of the listings |
+| demand next year | + availability and minimum stay of June 2026 | 0.851 | subtle leak: measured after the cut-off |
 
-Second, the description lookup. We imitate the leaderboard: decisions up to 2021 are the past, those of 2022–2023 are predicted. The lookup predicts the heading of an earlier decision with the same description and abstains otherwise. Three versions: **leaky** (most frequent heading of all decisions with the description, own row included), **past only** (the expanding version of Section 1, which may use earlier 2022–2023 decisions) and **as of 1 January 2022** (only decisions before the cut-off, as for the leaderboard test set). Finally, we drop the validation rows whose description already occurs before 2022, because the test set was built that way.
+The revenue feature lifts the price model from 0.60 to 0.87; a new listing has no revenue history, and an existing one has its revenue only *because* of its price. The snapshot review columns make the demand model almost perfect, because they count the very reviews we want to predict. The last row is the instructive one: availability looks like a harmless property of the listing, but in June 2026 it partly reflects whether the listing is still active, which is what the model is asked to predict. Three points of R² for a subtle leak is enough to change a model choice.
 
-```python
-cut = pd.Timestamp("2022-01-01")
-past, val = train[train["start_date"] < cut], train[train["start_date"] >= cut]
-most_frequent = train.groupby("description")["heading"].agg(lambda h: h.value_counts().index[0])
-as_of = past.groupby("description")["heading"].last()
-like_test = ~val["description"].isin(past["description"])        # as the leaderboard test set
-lookups = {"leaky (all rows)": val["description"].map(most_frequent),
-           "past only (expanding)": val["desc_prev_heading"],
-           "as of 2022-01-01": val["description"].map(as_of)}
-for name, pred in lookups.items():
-    for rows_name, rows in [("all 2022-2023", slice(None)), ("test-like", like_test)]:
-        p, y = pred[rows], val.loc[rows, "heading"]
-        print(f"{name:22s} {rows_name:14s} answered {p.notna().mean():.3f}  correct {(p == y).mean():.3f}")
-```
-
-| Lookup | Validation rows | Answered | Correct (of all rows) | Interpretation |
-|---|---|---|---|---|
-| leaky | all 2022–2023 | 1.000 | 1.000 | every decision "knows" its own heading |
-| past only | all 2022–2023 | 0.042 | 0.042 | honest, but includes renewals within 2022–2023 |
-| as of 2022 | all 2022–2023 | 0.021 | 0.021 | renewals of 2017–2021 decisions |
-| past only | test-like | 0.021 | 0.021 | only renewals inside the validation period remain |
-| as of 2022 | test-like | 0.000 | 0.000 | on data built like the test set, the lookup never fires |
-
-The leaky lookup is a perfect "model" on the training data and useless in reality. The past-only lookup is legitimate and almost always right when it answers, but it answers for 2–4 % of the decisions, and on data built like the leaderboard's test set it never answers, because the test set contains no description seen in training. A validation set that keeps the repeated descriptions would credit this feature with a gain the leaderboard cannot deliver. That is also why random splits are too optimistic on this data (Session 7): a repeated description lands in the validation fold while its twin, often decided on the same day, sits in the training folds.
+**The same rule in the EBTI case study.** Each training decision has a `classification_justification` written by customs; it names the heading in about 70 % of the decisions, and a rule that reads the first four-digit number from it gets 64 % of the headings right without any model. New requests and the test set do not have it. Session 7 (theory page 03) shows that a classifier using it looks excellent in validation and is *worse* in use. The optional workbook [07-case-study-ebti-past-only-lookups.ipynb](../workbooks/07-case-study-ebti-past-only-lookups.ipynb) adds a past-only aggregate on that data: the heading of an earlier decision with the same description. It is legitimate and almost always right when it answers, but on validation data built like the leaderboard's test set (no description seen in training) it never answers.
 
 ### In practice
 
@@ -217,26 +240,26 @@ The leaky lookup is a perfect "model" on the training data and useless in realit
 - Kapoor and Narayanan (2023) reviewed published machine-learning studies in 17 scientific fields and found data leakage, including features with information from the future, among the main reasons for irreproducible results.
 
 > [!CAUTION]
-> **The case-study rule.** For the heading task, never use `classification_justification`, `keywords`, `cn_code`, `chapter`, `status`, `end_date` or `invalidation_reason` as model inputs. They may be used to explore and read the data (the English keywords are useful for that), and as targets of other questions, but not as features.
+> **The case-study rules.** For a price model, never use `estimated_revenue_l365d` or `estimated_occupancy_l365d`. For any question with a cut-off date, build features from `reviews_monthly` filtered to the past, not from the snapshot columns `number_of_reviews_ltm`, `reviews_per_month` or `last_review`. For the EBTI heading task, never use `classification_justification`, `keywords`, `cn_code`, `chapter`, `status`, `end_date` or `invalidation_reason` as inputs.
 
 > [!WARNING]
-> Out-of-fold encoding (page 1) removes the row's own label but still uses future rows and renewals of the same description. With a time-based split this matters; prefer past-only aggregates for anything that has a timestamp.
+> Out-of-fold encoding (page 1) removes the row's own target but still uses future rows and other listings of the same host. With grouped or time-based validation this matters; prefer past-only aggregates for anything that has a timestamp.
 
 ## Practice
 
-In [06-case-study-justification-leakage.ipynb](../workbooks/06-case-study-justification-leakage.ipynb): show how much of the heading can be read from `classification_justification`, train a model with and without a justification feature and compare the validation scores, then build the past-only description lookup, compare it with the leaky version on a time-based validation that imitates the leaderboard (including the removal of repeated descriptions), and decide which features may enter the leaderboard model.
+**Which listings will be busy next year, and which features would only look good?** In [06-case-study-airbnb-leakage.ipynb](../workbooks/06-case-study-airbnb-leakage.ipynb): build past-only demand features from `reviews_monthly` for a cut-off date, compare them with the leaky snapshot columns, detect the revenue leak in a price model with a "too good to be true" check and permutation importance, add title statistics, and decide which features may enter the price and demand models.
 
 ## Check your understanding
 
-1. A description was decided in 2018 (heading 9405), 2021 (9405) and 2023 (8513). What are `desc_prev_n` and `desc_prev_heading` for each of the three decisions?
-2. Why is `classification_justification` a leak for the heading task, although it is a column of the training data?
-3. In the table of five lookups, which row describes what the lookup will do on the leaderboard, and why?
-4. Why does `shift(1)` within groups give wrong results if the decisions are not sorted by date?
-5. Name one text statistic that you expect to differ between chapter 85 and chapter 61, and how you would check it.
+1. A listing has reviews in March 2025 (2), May 2025 (1) and August 2025 (3). For a prediction on 1 July 2025, what are `rev_total`, `rev_last3` and the target if the target is "reviews in the next 12 months"?
+2. Why is `estimated_revenue_l365d` a leak for the price model, although it is a column of the same snapshot as the price?
+3. In the table of five models, which row describes what a demand model would achieve when it is used in July 2025, and why?
+4. Why is `availability_365` in the June 2026 snapshot a problem for a prediction made in July 2025, but not for a price model built on the snapshot itself?
+5. Name one title statistic that you expect to differ between entire flats and private rooms, and how you would check it.
 
 ## Further reading
 
 - Kaufman, S., Rosset, S., Perlich, C. & Stitelman, O. (2012). Leakage in data mining: formulation, detection, and avoidance. *ACM Transactions on Knowledge Discovery from Data*, 6(4), 15. https://doi.org/10.1145/2382577.2382579
 - Kapoor, S. & Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns*, 4(9), 100804. https://doi.org/10.1016/j.patter.2023.100804
-- pandas developers (2025). *pandas.merge_asof*. pandas API reference. https://pandas.pydata.org/docs/reference/api/pandas.merge_asof.html
+- Inside Airbnb (2026). *Data assumptions* (how occupancy and revenue are estimated). https://insideairbnb.com/data-assumptions/
 - Feast authors (2025). *Point-in-time joins*. Feast documentation. https://docs.feast.dev/getting-started/concepts/point-in-time-joins

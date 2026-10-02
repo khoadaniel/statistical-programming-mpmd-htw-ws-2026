@@ -33,7 +33,7 @@
 - [Retraining triggers and versioning](theory/03-monitoring-and-maintenance.md#retraining-triggers-and-versioning)
 - [Documenting a model in a model card](theory/03-monitoring-and-maintenance.md#documenting-a-model-in-a-model-card)
 
-*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no GB decisions after Brexit, chapter 85 from 14 % to 12 %, a few headings never seen), compare retraining candidates, retrain and make the final leaderboard submission (L4), ranked on the 2025–2026 decisions → [`01-case-study-drift-and-retraining.ipynb`](workbooks/01-case-study-drift-and-retraining.ipynb), then workspace exercises 4–5
+*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no GB decisions after Brexit, chapter 85 from 14 % to 12 %, a few headings never seen), compare retraining candidates, retrain and make the final leaderboard submission (L3), ranked on the 2025–2026 decisions → [`01-case-study-drift-and-retraining.ipynb`](workbooks/01-case-study-drift-and-retraining.ipynb), then workspace exercises 4–5
 
 ## Materials
 
@@ -44,7 +44,7 @@
 | [theory/03-monitoring-and-maintenance.md](theory/03-monitoring-and-maintenance.md) | KS test, PSI, prediction drift, label shift, nomenclature change, retraining, model card | 3 | core |
 | [workspace/](workspace/README.md) | Complete tariff heading service (package `tariff_service`): train script, FastAPI app, tests, Dockerfile, `ci.yml`, `cd.yml`, drift module, model card template, dashboard | 1–3 | core |
 | [workspace/MODEL_CARD.md](workspace/MODEL_CARD.md) | Model card template (Mitchell et al. 2019) | 3 | core |
-| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Own: input and prediction drift, label shift with the 2024 feedback, accuracy by language, retraining candidates, v2, leaderboard round L4 | 3 | core |
+| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Own: input and prediction drift, label shift with the 2024 feedback, accuracy by language, retraining candidates, v2, leaderboard round L3 | 3 | core |
 | [workbooks/02-evidently-data-drift-report.ipynb](workbooks/02-evidently-data-drift-report.ipynb) | Evidently: data drift and data summary reports on a tabular dataset | 3 | optional |
 | [workbooks/make_feedback_2024.py](workbooks/make_feedback_2024.py) | Lecturer only: writes `case-study/data/feedback_2024.csv` (labels of the 2024 decisions) from the hidden solution | 3 | lecturer |
 
@@ -76,4 +76,4 @@ The notebook runs from the repository root:
 uv run --with jupyterlab --with pandas --with pyarrow --with scikit-learn --with scipy --with matplotlib jupyter lab
 ```
 
-It writes `submission_L4.csv` next to itself (do not commit it) and reads the feedback file from `case-study/data/feedback_2024.csv` or from the path in `FEEDBACK_PATH`. Run time about two minutes. The Evidently notebook needs `--with evidently` and downloads the Adult dataset from OpenML.
+It writes `submission_L3.csv` next to itself (do not commit it) and reads the feedback file from `case-study/data/feedback_2024.csv` or from the path in `FEEDBACK_PATH`. Run time about two minutes. The Evidently notebook needs `--with evidently` and downloads the Adult dataset from OpenML.

@@ -167,7 +167,7 @@ The curriculum uses one running case study so that every method is practised on 
 - **A built-in drift example.** Scores fall by about three points from the public to the private test years; the United Kingdom stops issuing decisions after Brexit, and the HS revision of 2022 changed headings. Session 16 uses these to teach monitoring and retraining.
 - **Terms.** Reuse is permitted with acknowledgement of the source (Commission Decision 2011/833/EU); the holders of the decisions are not published. Each student downloads the data with a provided script.
 
-**Secondary dataset.** Tabular classification (churn prediction, named in the module description) is taught on the IBM Telco customer churn sample data (7,043 customers, 26.5 % churn), which is small enough to be computed live in class.
+**Second dataset.** A pilot of all sessions on EBTI alone showed that the numeric topics (statistics, regression, tree-based models, clustering, time series) then rely on contrived questions. These sessions therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
 
 ## 7. Choice of the assessment format
 

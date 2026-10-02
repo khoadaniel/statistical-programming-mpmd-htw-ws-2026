@@ -1,6 +1,6 @@
 # Missing values and univariate outliers
 
-This page covers the second block. Missing values are the most common data quality problem, and how to handle them depends on *why* they are missing. We introduce the three missing-data mechanisms (MCAR, MAR, MNAR), compare simple, KNN and iterative imputation, add missing-value indicators, and finish with three rules for detecting outliers in a single variable: the IQR rule, the z-score and the median absolute deviation. The statistical theory belongs to the statistics module; here we choose, run and interpret the methods. The practice question is whether a missing keyword list is related to the issuing country, the language or the year, and how well imputation recovers hidden values ([workbook 08](../workbooks/08-case-study-missing-keywords.ipynb)).
+This page covers the second block. Missing values are the most common data quality problem, and how to handle them depends on *why* they are missing. We introduce the three missing-data mechanisms (MCAR, MAR, MNAR), compare simple, KNN and iterative imputation, add missing-value indicators, and finish with three rules for detecting outliers in a single variable: the IQR rule, the z-score and the median absolute deviation. The statistical theory belongs to the statistics module; here we choose, run and interpret the methods. The examples use the second course dataset, the Berlin listings of Inside Airbnb (snapshot of 26 June 2026, CC BY 4.0; prepare it with `uv run python case-study/prepare_airbnb.py`), because missing prices, missing ratings and extreme prices are real and consequential there. The practice question is whether a missing price is related to the number of reviews, and how well imputation recovers hidden values ([workbook 08](../workbooks/08-case-study-airbnb-missing-and-outliers.ipynb)).
 
 ```mermaid
 flowchart TD
@@ -74,30 +74,28 @@ for name, miss in [("MCAR", mcar), ("MAR", mar), ("MNAR", mnar)]:
 # MNAR 0.28 3459 42.4   <- biased, and nothing observed explains it fully
 ```
 
-On the case-study data, a **missingness indicator** (1 = missing) compared across groups shows that missing keyword lists are not MCAR:
+On the Airbnb listings, a **missingness indicator** (1 = missing) compared across groups shows that missing prices are not MCAR:
 
 ```python
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train.parquet")
-decisions["keywords_missing"] = decisions["keywords"].isna()
-by_country = decisions.groupby("issuing_country")["keywords_missing"].agg(["mean", "size"])
-print(by_country.query("size >= 1000").sort_values("mean", ascending=False)["mean"].head(4).round(4).to_string())
-# issuing_country
-# SK    0.0433
-# PL    0.0340
-# AT    0.0271
-# BG    0.0081
-print(by_country.loc[["DE", "FR"], "mean"].round(4).to_string())
-# DE    0.0016
-# FR    0.0029
-print(decisions.groupby(decisions["start_date"].dt.year)["keywords_missing"].mean().round(4).to_dict())
-# {2017: 0.0074, 2018: 0.0098, 2019: 0.0019, 2020: 0.0013, 2021: 0.0032, 2022: 0.0027, 2023: 0.0016}
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+listings["price_missing"] = listings["price"].isna()
+print(round(listings["price_missing"].mean(), 3))                              # 0.339
+recent = pd.cut(listings["number_of_reviews_ltm"], [-1, 0, 2, 10, 10_000], labels=["0", "1-2", "3-10", ">10"])
+print(listings.groupby(recent, observed=True)["price_missing"].mean().round(3).to_dict())
+# {'0': 0.601, '1-2': 0.218, '3-10': 0.16, '>10': 0.062}   <- reviews in the last 12 months
+
+blocked = listings["availability_365"].eq(0)                                   # no free night in the next year
+print(listings.groupby(blocked)["price_missing"].mean().round(3).to_dict())    # {False: 0.091, True: 0.999}
+active = listings[~blocked]
+print(active.groupby(active["number_of_reviews_ltm"].eq(0))["price_missing"].mean().round(3).to_dict())
+# {False: 0.042, True: 0.2}   <- even among bookable listings, no recent reviews -> more missing prices
 ```
 
-![Share of decisions without keywords by issuing country, and the structural missingness of the invalidation reason by status and validity](figures/missingness-pattern.png)
+![Share of listings without a price by recent reviews and availability, and the structural missingness of the review score and the price](figures/missingness-pattern.png)
 
-Only 0.4 % of the keyword lists are missing, but a Slovak decision is 27 times as likely to have none as a German one, and 2017–2018 have more gaps than later years. The issuing office and its practice in a given year explain much of the pattern, which makes MAR a reasonable working assumption; whether a list is also missing *because of* the product (MNAR) cannot be decided from these data. The right panel shows a second kind of missing value. The invalidation reason is missing for 85 % of the decisions **by design**: valid decisions and decisions that ran their three years have none. This **structural missingness** is not a mechanism to correct; it is information in itself, for example as a variable "ended early".
+A third of the listings have no price, and listings without a review in the last twelve months lack one ten times as often as busy listings. Taken alone, this suggests "missing prices go with few reviews". The left panel shows the third variable behind it. Inside Airbnb reads the price from the listing page for a bookable date; a listing with **no free night** in the next year shows no price at all (99.9 % missing), and such listings also collect few reviews. Among listings that can be booked, the gap remains (20 % against 4 %): dormant listings often show no price. Availability and recent reviews are observed, so MAR given these variables is a reasonable working assumption; whether a dormant host would charge more or less than others (MNAR) cannot be decided from these data. The right panel shows the extreme case, **structural missingness**: the review score is missing exactly for the 2,573 listings without any review. There is no rating to recover; "no reviews yet" is information in itself. The same holds for the price of a blocked listing.
 
 ### In practice
 
@@ -160,7 +158,7 @@ for imputer in [SimpleImputer(strategy="median"), KNNImputer(n_neighbors=10),
 # IterativeImputer  mean 3690  RMSE 496    <- uses age; recovers the true mean (3686)
 ```
 
-On the case-study data, workbook 08 hides 30 % of the known numbers of keywords and imputes them from simple description features (length, digits, lines, German or not). The features say little about the number of keywords (correlations of 0.24 and below), and model-based imputers barely beat the mean: RMSE 2.29 keywords for the mean, 2.22 for KNN, 2.20 for the iterative imputer, and 2.15 for the median of decisions with the same heading. Imputation cannot create information that the other variables do not contain.
+On the Airbnb listings, `bedrooms` is missing for 27 % of the listings. Workbook 08 takes the 8,081 entire homes with a known number of bedrooms, hides 30 % of the values and imputes them from the number of guests and the distance to the centre. The number of guests is strongly related to the number of bedrooms (r = 0.73), and the imputers that use it roughly halve the error: RMSE 0.87 bedrooms for the mean, 1.02 for the median, 0.62 for KNN, 0.59 for the iterative imputer, and 0.64 for a one-line domain rule (median bedrooms of homes for the same number of guests), which is easier to explain than the iterative imputer and almost as good. Imputation works here because a related variable carries the information; it cannot create information that the other variables do not contain.
 
 ### In practice
 
@@ -172,7 +170,7 @@ On the case-study data, workbook 08 hides 30 % of the known numbers of keywords 
 > Fit the imputer on the training data only, then apply it to validation and test data. Fitting it on all rows lets the test rows influence the imputed values, a form of data leakage (Session 7).
 
 > [!CAUTION]
-> Never impute the **target** variable of a model and then evaluate on it. And do not impute a value that is missing *by definition* (an invalidation reason for a valid decision, a "date of death" for a living patient); use a category or an indicator instead.
+> Never impute the **target** variable of a model and then evaluate on it. And do not impute a value that is missing *by definition* (a review score for a listing without reviews, the price of a listing with no bookable night, a "date of death" for a living patient); use a category or an indicator instead.
 
 ## Missing-value indicators
 
@@ -180,36 +178,34 @@ On the case-study data, workbook 08 hides 30 % of the known numbers of keywords 
 
 Imputation hides the fact that a value was missing. A **missing-value indicator** is an extra 0/1 column that records it: 1 where the original value was missing. In scikit-learn, `MissingIndicator` creates the indicators, and `SimpleImputer(add_indicator=True)` (also `KNNImputer` and `IterativeImputer`) appends them to the imputed columns.
 
-By hand: numbers of keywords `[4, ?, 8]` with median imputation become `[4, 6, 8]` and the indicator `[0, 1, 0]`. A model can now learn "decisions without keywords behave differently", which the imputed 6 alone would hide.
+By hand: review scores `[4.9, ?, 4.7]` with median imputation become `[4.9, 4.8, 4.7]` and the indicator `[0, 1, 0]`. A model can now learn "listings without a rating behave differently", which the imputed 4.8 alone would hide.
 
 ### Why it matters
 
-When missingness is informative (not MCAR), the indicator carries signal: in the case study, a missing keyword list goes with particular issuing countries and with shorter descriptions. For tree-based models (Session 10), an indicator, or simply leaving the value missing for models that support it, is often better than any imputed value.
+When missingness is informative (not MCAR), the indicator carries signal: in the listings, a missing rating means no reviews yet, and those listings have much longer minimum stays (median 92 nights against 2) and more free nights. For tree-based models (Session 10), an indicator, or simply leaving the value missing for models that support it, is often better than any imputed value.
 
 ### How it works in Python
 
 ```python
-import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 
-decisions = pd.read_parquet("case-study/data/train.parquet")
-X = pd.DataFrame({
-    "n_keywords": decisions["keywords"].str.split(",").str.len(),   # NaN where keywords are missing
-    "log_chars": np.log(decisions["description"].str.len()),
-})
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+X = listings[["bedrooms", "review_scores_rating"]]
 
 imp = SimpleImputer(strategy="median", add_indicator=True).fit(X)
 out = pd.DataFrame(imp.transform(X), columns=imp.get_feature_names_out())
 print(out.columns.tolist())
-# ['n_keywords', 'log_chars', 'missingindicator_n_keywords']
-print(imp.statistics_.round(2), out["missingindicator_n_keywords"].mean().round(4))   # [6.   6.38] 0.0041
+# ['bedrooms', 'review_scores_rating', 'missingindicator_bedrooms', 'missingindicator_review_scores_rating']
+print(imp.statistics_, out.filter(like="missingindicator").mean().round(3).tolist())   # [1.   4.86] [0.268, 0.201]
 
-# does the indicator relate to the length of the description?
-print(decisions.groupby(decisions["keywords"].isna())["description"].apply(lambda s: s.str.len().median()).to_string())
-# keywords
-# False    588.0
-# True     479.0
+# do listings without a rating differ? (no rating = no reviews yet)
+no_rating = listings["review_scores_rating"].isna()
+print(listings.groupby(no_rating)[["minimum_nights", "availability_365"]].median().to_string())
+#                       minimum_nights  availability_365
+# review_scores_rating
+# False                            2.0             121.0
+# True                            92.0             184.0
 ```
 
 ### In practice
@@ -239,11 +235,11 @@ A worked example by hand with the values 2, 3, 3, 4, 4, 5, 40:
 - mean = 8.7, SD = 13.8; z(40) = 2.3 → *not* flagged with |z| > 3 (masking).
 - median = 4, MAD = median(2, 1, 1, 0, 0, 1, 36) = 1; z*(40) = 0.6745·36/1 = 24.3 → flagged.
 
-All three rules assume one dense centre. For **skewed** variables such as text lengths, apply them on a log scale; for a variable where **most values are identical** (the validity of a BTI decision is three years for most decisions), the MAD is 0 and the robust rule breaks down.
+All three rules assume one dense centre. For **skewed** variables such as prices, apply them on a log scale. For a variable with **two clusters** (the minimum stay of Airbnb listings: 1–3 nights or exactly 92 nights) or with **mostly identical values**, the MAD is tiny or 0 and the robust rule flags a whole cluster or breaks down.
 
 ### Why it matters
 
-Extreme values change means, standard deviations, correlations and regression lines, and some models (linear models, k-nearest neighbours, PCA) are very sensitive to them. At the same time, extreme cases are often the interesting ones: the very long technical description, the decision revoked after a few days, the fraudulent transaction. A flag is a question, not a verdict: a **data error** (typo, unit mix-up, duplicated record) is corrected or removed; a **genuine extreme value** is kept and handled by the method (log transformation, robust statistics, an indicator).
+Extreme values change means, standard deviations, correlations and regression lines, and some models (linear models, k-nearest neighbours, PCA) are very sensitive to them. At the same time, extreme cases are often the interesting ones: the luxury flat, the hostel dormitory, the fraudulent transaction. A flag is a question, not a verdict: a **data error** (typo, unit mix-up, duplicated record) is corrected or removed; a **genuine extreme value** is kept and handled by the method (log transformation, robust statistics, an indicator).
 
 ### How it works in Python
 
@@ -251,34 +247,38 @@ Extreme values change means, standard deviations, correlations and regression li
 import numpy as np
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-length = decisions["description"].str.len()          # characters per description
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+price = listings["price"].dropna()                     # EUR per night, 8,441 listings
 
-q1, q3 = length.quantile([0.25, 0.75])
+q1, q3 = price.quantile([0.25, 0.75])
 upper = q3 + 1.5 * (q3 - q1)
-print(upper, round((length > upper).mean(), 3))       # 1540.0 0.026  (IQR rule)
+print(upper, round((price > upper).mean(), 3))         # 409.5 0.043  (IQR rule)
 
-z = (length - length.mean()) / length.std()
-print(round((z.abs() > 3).mean(), 3))                 # 0.012         (z-score)
+z = (price - price.mean()) / price.std()
+print(round((z.abs() > 3).mean(), 3))                  # 0.006        (z-score: mean 161, SD 205)
 
-mad = (length - length.median()).abs().median()
-robust_z = 0.6745 * (length - length.median()) / mad
-print(round((robust_z.abs() > 3.5).mean(), 3))        # 0.012         (MAD rule)
+mad = (price - price.median()).abs().median()
+robust_z = 0.6745 * (price - price.median()) / mad
+print(round((robust_z.abs() > 3.5).mean(), 3))         # 0.027        (MAD rule)
 
 # on the log scale the rules flag both tails
-log_len = np.log10(length)
-q1, q3 = log_len.quantile([0.25, 0.75])
-print(round(((log_len < q1 - 1.5 * (q3 - q1)) | (log_len > q3 + 1.5 * (q3 - q1))).mean(), 3))   # 0.019
+log_p = np.log10(price)
+q1, q3 = log_p.quantile([0.25, 0.75])
+low, high = log_p < q1 - 1.5 * (q3 - q1), log_p > q3 + 1.5 * (q3 - q1)
+print(low.sum(), high.sum())                           # 288 26: most flags are very LOW prices
 
-days = (decisions["end_date"] - decisions["start_date"]).dt.days   # validity: mostly exactly 3 years
-days = days[decisions["end_date"].dt.year > 1900]                  # without the placeholder dates
-print((days - days.median()).abs().median(), days.quantile([0.01, 0.05, 0.5, 1.0]).tolist())
-# 0.0 [53.0, 358.0, 1095.0, 1095.0]: the MAD is 0, the robust rule breaks down
+# who are the low prices?
+print(round((listings.loc[listings["price"] < 15, "minimum_nights"] >= 28).mean(), 2))   # 0.98: medium-term
+
+nights = listings["minimum_nights"].dropna()           # minimum stay: two clusters
+print(nights.median(), (nights - nights.median()).abs().median(), round((nights == 92).mean(), 3))
+# 3.0 2.0 0.296: MAD = 2 nights, so every 92-night minimum gets a robust z of 29
+print((listings["maximum_nights"] == 2**31 - 1).sum())  # 2: the largest 32-bit integer, a software default
 ```
 
-![Description length with the upper fences of the IQR rule, the z-score and the MAD rule on the raw and on the log scale](figures/univariate-outliers.png)
+![Price per night with the fences of the IQR rule, the z-score and the MAD rule on the raw and on the log scale](figures/univariate-outliers.png)
 
-On the raw scale, the IQR rule flags 2.6 % of the descriptions, all of them long ones: a consequence of the skewed distribution, not of errors. On the log scale, the rules flag between 0.7 % and 1.9 % in both tails: descriptions of a few characters and descriptions of several thousand. Looking at the flagged rows pays off: among the shortest are "TEST" (with the keyword TEST) and the Italian "prova" (*test*), test entries that reached the public database, while the longest are genuine technical descriptions of conveyor systems (workbook 08). For the validity duration, a rule from the domain works better than any statistical fence: a decision is valid for three years, so "shorter than 1,094 days" means "ended early", and an early end without an invalidation reason (274 decisions) is the real anomaly.
+On the raw scale, the IQR rule flags 4.3 % of the prices, all of them high: a consequence of the skewed distribution, not of errors. The z-score flags only 0.6 %, because the extreme prices inflate the standard deviation to €205 (masking). On the log scale, the picture turns around: most flags are very **low** prices, and the histogram has a second peak around €20. Looking at the flagged rows pays off. Almost all prices under €15 belong to listings with a minimum stay of at least 28 nights (most often exactly 92): an entire flat for about €23 a night is far below any holiday price in Berlin, so the price field of these **medium-term** listings is not comparable with short-stay prices. That is not an outlier to delete one by one but a different population, which later sessions analyse separately. At the top, a few listings ask several thousand euros a night (maximum €10,025 for a loft for seven guests), implausible for their size; they may be typing errors or prices that block bookings. Others are genuine: houseboats for 12 to 16 guests ask €1,800 to €4,500. For the minimum stay, a domain rule ("28 nights or more = medium-term") works better than any statistical fence, and in `maximum_nights` two listings carry 2,147,483,647, the largest 32-bit integer: a software default, not a stay.
 
 ### In practice
 
@@ -287,10 +287,10 @@ On the raw scale, the IQR rule flags 2.6 % of the descriptions, all of them long
 - **Web analytics**: sessions from bots produce page counts far above any human visitor; analytics providers filter known bots before conversion rates are computed.
 
 > [!CAUTION]
-> Do not delete outliers automatically. Look at the flagged rows first. Removing genuine extreme values makes the data look tidier and the conclusions wrong; for example, removing very long descriptions removes many of the most detailed technical decisions, which are among the hardest to classify.
+> Do not delete outliers automatically. Look at the flagged rows first. Removing genuine extreme values makes the data look tidier and the conclusions wrong; for example, seven in ten listings above the IQR fence of €410 sleep six or more guests: removing them removes much of the market for families and groups.
 
 > [!WARNING]
-> With large samples, |z| > 3 is not rare: for 309,529 normally distributed values, about 840 would exceed it by chance. A flag rate tells you about the shape of the distribution as much as about errors.
+> With large samples, |z| > 3 is not rare: for 300,000 normally distributed values, about 810 would exceed it by chance. A flag rate tells you about the shape of the distribution as much as about errors.
 
 ## Check your understanding
 
@@ -298,7 +298,7 @@ On the raw scale, the IQR rule flags 2.6 % of the descriptions, all of them long
 2. Why does mean imputation reduce the standard deviation of a variable? Which analyses are affected?
 3. When is a missing-value indicator useful even if the imputed value itself is poor?
 4. For the values 1, 2, 2, 3, 3, 3, 4, 50, compute the IQR fences and the robust z-score of 50. Which rule flags it?
-5. Why does the MAD rule fail for the validity duration of the decisions, and what would you do instead?
+5. Why does the MAD rule flag more than a third of all minimum stays, and what would you do instead?
 
 ## Further reading
 

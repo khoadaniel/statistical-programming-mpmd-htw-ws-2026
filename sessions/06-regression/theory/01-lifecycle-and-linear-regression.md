@@ -1,6 +1,6 @@
 # The ML lifecycle and linear regression
 
-This page opens the machine-learning part of the course. It places every later session in the **machine-learning lifecycle**, a sequence of ten steps from problem definition to monitoring, and introduces the vocabulary of supervised learning: features, target, training and prediction. Then it covers the first model, **linear regression**: the split into training and test data, simple and multiple regression fitted by least squares, residuals, and the three standard error metrics MAE, RMSE and R². The running example explains the length of the description of goods in a Binding Tariff Information decision (on the log scale) by its language, its section of the nomenclature and its year. This target is chosen for practice, not for the leaderboard: it has clear, interpretable effects and needs no text model.
+This page opens the machine-learning part of the course. It places every later session in the **machine-learning lifecycle**, a sequence of ten steps from problem definition to monitoring, and introduces the vocabulary of supervised learning: features, target, training and prediction. Then it covers the first model, **linear regression**: the split into training and test data, simple and multiple regression fitted by least squares, residuals, and the three standard error metrics MAE, RMSE and R². The running example is a question with a real use: **what drives the nightly price of a short-stay Airbnb listing in Berlin?** A host who wants to price a new flat, and a city analyst who wants to know what a night in each district costs, both need the answer in euros. The data are the Inside Airbnb Berlin listings (snapshot of 26 June 2026, CC BY 4.0; `uv run python case-study/prepare_airbnb.py`) restricted, as in Sessions 4 and 5, to the 6,701 listings with a price and a minimum stay below 28 nights.
 
 ## The ML lifecycle in ten steps
 
@@ -33,11 +33,11 @@ flowchart LR
 
 The arrows back are the point of the diagram: projects loop. An evaluation that fails sends you back to features or data; monitoring that detects a change sends you back to data collection and retraining.
 
-**Problem definition** fixes three things: the **target** (what is predicted), the **metric** (how success is measured) and the **baseline** (the simplest prediction the model must beat). For the course leaderboard (Session 8 onwards): target = four-digit HS heading of a decision (1,114 classes in the training data), metric = accuracy with macro-F1 alongside, baseline = always the most frequent heading 3926, "other articles of plastics" (accuracy 0.041 on the 2024 test decisions).
+**Problem definition** fixes three things: the **target** (what is predicted), the **metric** (how success is measured) and the **baseline** (the simplest prediction the model must beat). For the price model of this page: target = price per night in euros (modelled on the log scale), metric = mean absolute error (MAE) in euros on held-out listings, baseline = the median price of the training listings for every listing (MAE €86). The course leaderboard from Session 8 onwards follows the same steps for a different task: target = four-digit HS heading of a customs decision (EBTI), metric = accuracy with macro-F1 alongside, baseline = always the most frequent heading (accuracy 0.041).
 
 ### Why it matters
 
-Most failed ML projects fail outside the training step: a target that does not match the business decision, data that are not available at prediction time, or a model nobody maintains. Naming the steps makes these risks visible early. Sessions 3–5 already covered steps 02–04 for the EBTI data.
+Most failed ML projects fail outside the training step: a target that does not match the business decision, data that are not available at prediction time, or a model nobody maintains. Naming the steps makes these risks visible early. Sessions 3–5 already covered steps 02–04: data collection and SQL for the EBTI decisions, cleaning (Session 4) and exploration (Session 5) for both datasets.
 
 ### How it works in Python
 
@@ -46,17 +46,15 @@ Step 01 in code: state the target, the metric and the baseline before any model.
 ```python
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]   # comparable prices (Session 4)
+train, test = train_test_split(short, test_size=0.2, random_state=42)
 
-# 01 problem definition for this page: explain log(characters) of a description
-target = np.log(decisions["description"].str.len())
-metric = "MAE"                                     # mean absolute error, in log units
-baseline = np.full(len(target), target.mean())     # predict the mean for every decision
-print(round(np.mean(np.abs(target - baseline)), 3))   # 0.511: every model must beat this
-
-# 01 for the leaderboard task: target = heading, baseline = the most frequent heading
-print(decisions["heading"].value_counts(normalize=True).head(1).round(3).to_dict())   # {'3926': 0.04}
+# 01 problem definition: nightly price of a short-stay listing, metric MAE in EUR, baseline = median price
+baseline = train["price"].median()
+print(baseline, round(np.mean(np.abs(test["price"] - baseline)), 1))   # 156.5 86.4: every model must beat MAE 86 EUR
 ```
 
 ### In practice
@@ -66,15 +64,15 @@ print(decisions["heading"].value_counts(normalize=True).head(1).round(3).to_dict
 - Sculley et al. (2015) at Google described the "hidden technical debt" of ML systems: the model code is a small part of a system dominated by data collection, feature extraction, serving and monitoring.
 
 > [!IMPORTANT]
-> **Practice (block 1, part 1).** Map the heading-classification task of the leaderboard to the ten steps: for each step, write one sentence on what it means for this task and which session covers it. Example for step 02: the data are the published EBTI export; the test set contains only what a trader's request contains (description, country, language, date), so `keywords` and `classification_justification` cannot be features.
+> **Practice (block 1, part 1).** What would it take to turn a Berlin price model into a pricing aid for hosts? Map it to the ten steps: for each step, write one sentence on what it means for this task and which session covers it. Example for step 02: the data are a public snapshot scraped by Inside Airbnb; `estimated_revenue_l365d` is computed by Inside Airbnb *from* the price, so it cannot be a feature (Session 9 calls this leakage); a new host's flat has no reviews yet, so review features would not be available at prediction time either.
 
 ## Supervised learning: features, target, training, prediction
 
 ### Concept
 
-- An **observation** (row, example) is one unit: a decision, a customer.
-- The **features** (inputs, predictors, X) are the information available about it: language, issuing country, date, the description itself.
-- The **target** (outcome, label, y) is what we want to predict: the length of a description (this page), the heading (the leaderboard), churn yes/no.
+- An **observation** (row, example) is one unit: a listing, a customer, a customs decision.
+- The **features** (inputs, predictors, X) are the information available about it: number of guests, room type, location.
+- The **target** (outcome, label, y) is what we want to predict: the nightly price (this page), the HS heading of a decision (the leaderboard), churn yes/no.
 - A **model** is a family of prediction rules with free **parameters**; **training** (fitting) chooses the parameters from labelled examples; **prediction** applies the fitted rule to new observations.
 
 **Supervised learning** learns from examples with a known target. It is **regression** when the target is a number and **classification** when it is a category. **Unsupervised learning** has no target and looks for structure (clusters, Session 11).
@@ -93,7 +91,7 @@ Every scikit-learn model follows this interface: `fit(X, y)` learns, `predict(X)
 
 ### Why it matters
 
-The vocabulary is shared by every library, paper and job description. Being precise about what counts as a feature also prevents **leakage**: a feature that is not known at prediction time (for example the customs' classification justification, which names the heading in about 70 % of the decisions, when predicting the heading) makes a model look better than it can be (Session 7).
+The vocabulary is shared by every library, paper and job description. Being precise about what counts as a feature also prevents **leakage**: a feature that is not known at prediction time (for example `estimated_revenue_l365d`, which Inside Airbnb computes from the price itself, when predicting the price; or the customs' classification justification, which names the heading, in the leaderboard task) makes a model look better than it can be (Session 7).
 
 ### How it works in Python
 
@@ -102,15 +100,16 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-decisions["year"] = decisions["start_date"].dt.year
-decisions["german"] = (decisions["language"] == "de").astype(int)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["entire_home"] = (short["room_type"] == "Entire home/apt").astype(int)
 
-X = decisions[["year", "german"]]                       # features: a table, one column per feature
-y = np.log(decisions["description"].str.len())          # target: one number per decision
-model = LinearRegression().fit(X, y)                    # training: choose the parameters
-print(model.coef_.round(3))                             # [0.021 0.755]
-print(model.predict(X.head(3)).round(2))                # [5.79 5.79 5.79]: three Swedish decisions of 2017
+X = short[["accommodates", "entire_home"]]               # features: a table, one column per feature
+y = np.log(short["price"])                                # target: one number per listing (log EUR)
+model = LinearRegression().fit(X, y)                      # training: choose the parameters
+print(model.coef_.round(3), round(model.intercept_, 3))   # [0.121 0.417] 4.344
+print(np.exp(model.predict(X.head(3))).round(0), short["price"].head(3).tolist())
+# [149. 272. 189.] [160.71, 193.33, 372.67]: predictions (back in EUR) and true prices of three listings
 ```
 
 ### In practice
@@ -128,11 +127,11 @@ print(model.predict(X.head(3)).round(2))                # [5.79 5.79 5.79]: thre
 
 A model is useful if it predicts **new** observations well. To estimate this, hold back part of the labelled data as a **test set**, fit only on the **training set**, and evaluate once on the test set. The score on the training data is optimistic because the model has seen the answers.
 
-`train_test_split` shuffles the rows and splits them, commonly 80/20 or 75/25. A fixed `random_state` makes the split reproducible. For classification, `stratify=y` keeps the class shares equal in both parts. When predictions are about the future, split by time instead (Sessions 7 and 12); the course leaderboard does exactly that (train 2017–2023, test 2024–2026).
+`train_test_split` shuffles the rows and splits them, commonly 80/20 or 75/25. A fixed `random_state` makes the split reproducible. For classification, `stratify=y` keeps the class shares equal in both parts. When predictions are about the future, split by time instead (Sessions 7 and 12); the EBTI leaderboard does exactly that (train 2017–2023, test 2024–2026). A host with many similar flats is another trap: if some of their listings are in the training set and others in the test set, the test score can be optimistic (grouped splits, Session 7).
 
 ### Why it matters
 
-Without a held-out test set, a more complex model always looks better, whether it has learned a pattern or memorised the data ([page 2](02-overfitting-and-robust-regression.md)). The test score is our estimate of performance on next month's decisions.
+Without a held-out test set, a more complex model always looks better, whether it has learned a pattern or memorised the data ([page 2](02-overfitting-and-robust-regression.md)). The test score is our estimate of performance on listings the model has not seen, such as a host's new flat.
 
 ### How it works in Python
 
@@ -141,12 +140,14 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-decisions["log_chars"] = np.log(decisions["description"].str.len())
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["log_price"] = np.log(short["price"])
 
-train, test = train_test_split(decisions, test_size=0.2, random_state=42)
-print(len(train), len(test))                                     # 40000 10000
-print(round(train["log_chars"].mean(), 3), round(test["log_chars"].mean(), 3))   # 6.285 6.269
+train, test = train_test_split(short, test_size=0.2, random_state=42)
+print(len(train), len(test))                                     # 5360 1341
+print(round(train["log_price"].mean(), 3), round(test["log_price"].mean(), 3))   # 5.067 5.08
+print(train["price"].median(), test["price"].median())       # 156.5 159.98: similar, as expected
 ```
 
 ### In practice
@@ -172,9 +173,9 @@ Worked example: points (1, 2), (2, 3), (3, 5). x̄ = 2, ȳ = 10/3. Σ(x − x̄)
 
 A **residual plot** (residuals against fitted values) checks the model: it should show a band without structure around zero.
 
-![Two residual plots: a structureless band for a well-specified model, and a band with a long lower tail for the description-length model](figures/residual-plot.png)
+![Two residual plots: a structureless band for a well-specified model, and the residuals of the Berlin price model with tails on both sides](figures/residual-plot.png)
 
-The right panel shows the description-length model of this page. The band is centred on zero and roughly even in width, but it is not symmetric: the residuals have a long lower tail. Some descriptions are much shorter than the model expects for their language and section (a single line such as a product name), while few are much longer. Because the features are categories, the fitted values also cluster around the typical values of the large languages (German on the right, French and English on the left). The model is a reasonable first approximation, but it misses whatever else makes a description short.
+The right panel shows the price model of this page (log price on guests, room type, distance to the centre and district). The band is centred on zero and roughly even in width, so the log scale has done its job. Both tails are long, though. At the top are listings whose asking price is far above anything comparable (€10,025 for a loft for seven guests, 42 times the fitted price); at the bottom, rooms offered for €9 to €15. These are the extreme prices flagged in Session 4; least squares feels them, which is why [page 2](02-overfitting-and-robust-regression.md#robust-regression-huber) compares it with robust methods. The model is a reasonable first approximation, but it misses whatever else makes a listing cheap or expensive: size in square metres, furnishing, the exact street.
 
 ### Why it matters
 
@@ -191,37 +192,36 @@ import statsmodels.formula.api as smf
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
-decisions = decisions.merge(nomenclature[["heading", "section"]], on="heading")
-decisions["log_chars"] = np.log(decisions["description"].str.len())
-decisions["year"] = decisions["start_date"].dt.year - 2017          # 0 = 2017
-top = decisions["language"].value_counts().index[:8]                 # rare languages -> "other"
-decisions["language"] = decisions["language"].where(decisions["language"].isin(top), "other")
-train, test = train_test_split(decisions, test_size=0.2, random_state=42)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["log_price"] = np.log(short["price"])
+short["km_to_centre"] = 111.2 * np.hypot(short["latitude"] - 52.5219,                 # distance to
+                                         (short["longitude"] - 13.4132) * np.cos(np.radians(52.52)))  # Alexanderplatz
+train, test = train_test_split(short, test_size=0.2, random_state=42)
 
 # statsmodels: formula interface, intercept added automatically, dummies via C()
-simple = smf.ols("log_chars ~ year", data=train).fit()
-print(simple.params.round(3).to_dict())                  # {'Intercept': 6.212, 'year': 0.025}
-fit = smf.ols('log_chars ~ year + C(language, Treatment("de")) + C(section)', data=train).fit()
-lang = fit.params.filter(like="language")
-print({name[-3:-1]: round(value, 2) for name, value in lang.items() if name[-3:-1] in ("en", "fr", "nl")})
-# {'en': -0.89, 'fr': -0.96, 'nl': -0.23}
-print(fit.conf_int().loc["year"].round(3).tolist())      # [0.019, 0.024]
-print(round(simple.rsquared, 3), round(fit.rsquared, 3))   # 0.006 0.442
+simple = smf.ols("log_price ~ accommodates", data=train).fit()
+print(simple.params.round(3).to_dict())                  # {'Intercept': 4.514, 'accommodates': 0.154}
+fit = smf.ols('log_price ~ accommodates + C(room_type) + km_to_centre + C(district, Treatment("Mitte"))',
+              data=train).fit()
+print(fit.params[["accommodates", "km_to_centre", "C(room_type)[T.Private room]"]].round(3).to_dict())
+# {'accommodates': 0.124, 'km_to_centre': -0.02, 'C(room_type)[T.Private room]': -0.398}
+print(round(fit.params['C(district, Treatment("Mitte"))[T.Neukölln]'], 3))   # -0.154
+print(fit.conf_int().loc["accommodates"].round(3).tolist())   # [0.119, 0.129]
+print(round(simple.rsquared, 3), round(fit.rsquared, 3))   # 0.36 0.515
 
 # scikit-learn: the same model with explicit dummy columns, prediction interface
-X = pd.get_dummies(decisions[["year", "language", "section"]], drop_first=True, dtype=float)
-model = LinearRegression().fit(X.loc[train.index], train["log_chars"])
-residuals = test["log_chars"] - model.predict(X.loc[test.index])
-print(round(residuals.mean(), 3))                         # 0.0: centred on zero on test data
+X = pd.get_dummies(short[["accommodates", "km_to_centre", "room_type", "district"]], drop_first=True, dtype=float)
+model = LinearRegression().fit(X.loc[train.index], train["log_price"])
+residuals = test["log_price"] - model.predict(X.loc[test.index])
+print(round(residuals.mean(), 3))                         # 0.012: centred near zero on test data
 ```
 
-Interpretation: the reference language is German. Holding year and section fixed, a French description is on average e^(−0.96) ≈ 0.38 times as long as a German one, that is about 62 % shorter; an English one about 59 % shorter, a Dutch one about 21 % shorter. The year coefficient (about 0.02) means descriptions became roughly 2 % longer per year, at equal language and section. Year alone explains almost nothing (R² 0.006); language and section together explain 44 % of the variance of log length. A coefficient on the log scale reads as a percentage change: e^b − 1.
+Interpretation: the reference categories are entire homes and the district Mitte. Holding room type, distance and district fixed, each additional guest goes with a price about e^0.124 − 1 ≈ 13 % higher (95 % CI 12.6 % to 13.8 %); alone, without the other features, the guest coefficient is 0.154 (17 %), because larger listings are also more often entire homes. A private room costs e^(−0.398) − 1 ≈ 33 % less than an entire home for the same number of guests; each kilometre from Alexanderplatz about 2 % less; a listing in Neukölln about 14 % less than a comparable one in Mitte. The number of guests alone explains 36 % of the variance of log price; with room type, distance and district, 52 %. A coefficient on the log scale reads as a percentage change: e^b − 1.
 
 ### In practice
 
-- Hedonic regression: statistical offices regress prices on product characteristics to adjust price indices for quality change (housing, computers).
+- Hedonic regression: statistical offices regress prices on product characteristics to adjust price indices for quality change (housing, computers); a price model for listings is a small hedonic model.
 - Labour economics: wage equations with education and experience as predictors (Mincer equation).
 - Marketing mix models regress sales on advertising spend per channel, controlling for season and price.
 
@@ -254,34 +254,37 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_error
 from sklearn.model_selection import train_test_split
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-nomenclature = pd.read_parquet("case-study/data/nomenclature.parquet")
-decisions = decisions.merge(nomenclature[["heading", "section"]], on="heading")
-decisions["log_chars"] = np.log(decisions["description"].str.len())
-decisions["year"] = decisions["start_date"].dt.year - 2017
-top = decisions["language"].value_counts().index[:8]
-decisions["language"] = decisions["language"].where(decisions["language"].isin(top), "other")
-X = pd.get_dummies(decisions[["year", "language", "section"]], drop_first=True, dtype=float)
-X_train, X_test, y_train, y_test = train_test_split(X, decisions["log_chars"], test_size=0.2, random_state=42)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["km_to_centre"] = 111.2 * np.hypot(short["latitude"] - 52.5219,
+                                         (short["longitude"] - 13.4132) * np.cos(np.radians(52.52)))
+X = pd.get_dummies(short[["accommodates", "room_type", "km_to_centre", "district"]], drop_first=True, dtype=float)
+X_train, X_test, y_train, y_test = train_test_split(X, np.log(short["price"]), test_size=0.2, random_state=42)
 
-language_cols = ["year"] + [c for c in X if c.startswith("language_")]
-models = {"baseline (mean)": (DummyRegressor(strategy="mean"), ["year"]),
-          "year + language": (LinearRegression(), language_cols),
-          "year + language + section": (LinearRegression(), list(X.columns))}
+room = [c for c in X if c.startswith("room_type_")]
+models = {"baseline (median)": (DummyRegressor(strategy="median"), ["accommodates"]),
+          "guests": (LinearRegression(), ["accommodates"]),
+          "+ room type": (LinearRegression(), ["accommodates"] + room),
+          "+ distance": (LinearRegression(), ["accommodates", "km_to_centre"] + room),
+          "+ district": (LinearRegression(), list(X.columns))}
+price_test = np.exp(y_test)
 for name, (model, cols) in models.items():
     model.fit(X_train[cols], y_train)
-    pred = model.predict(X_test[cols])
-    print(f"{name:26s} MAE {mean_absolute_error(y_test, pred):.3f}  "
-          f"RMSE {root_mean_squared_error(y_test, pred):.3f}  R2 {r2_score(y_test, pred):.3f}")
+    pred = np.exp(model.predict(X_test[cols]))                     # back to EUR: a typical (median) price
+    print(f"{name:18s} MAE {mean_absolute_error(price_test, pred):5.1f}  "
+          f"RMSE {root_mean_squared_error(price_test, pred):5.1f}  "
+          f"median AE {np.median(np.abs(price_test - pred)):5.1f}  R2(log) {r2_score(y_test, np.log(pred)):.3f}")
 ```
 
 ```
-baseline (mean)            MAE 0.510  RMSE 0.654  R2 -0.000
-year + language            MAE 0.390  RMSE 0.512  R2 0.386
-year + language + section  MAE 0.373  RMSE 0.490  R2 0.438
+baseline (median)  MAE  86.4  RMSE 175.7  median AE  57.5  R2(log) -0.002
+guests             MAE  71.3  RMSE 147.5  median AE  41.4  R2(log) 0.324
++ room type        MAE  65.2  RMSE 143.8  median AE  37.5  R2(log) 0.459
++ distance         MAE  63.6  RMSE 147.8  median AE  36.3  R2(log) 0.486
++ district         MAE  63.0  RMSE 147.6  median AE  35.4  R2(log) 0.501
 ```
 
-The language alone explains 39 % of the variance of log length on unseen decisions; the section adds 5 points. An MAE of 0.37 on the log scale means a typical prediction is off by a factor of about e^0.37 ≈ 1.45, that is 45 % too long or too short. The model is far better than the baseline, but descriptions of the same language and section still vary a lot.
+The number of guests alone cuts the typical error from €86 to €71; room type, distance and district bring it to €63, and half of the test listings are predicted within €35 (median absolute error). R² on the log scale rises from 0 to 0.50. The RMSE barely moves (€148) and stays more than twice the MAE: it is dominated by a handful of listings with prices in the thousands, which no model of this kind can predict. Which metric to report depends on the user: a host cares about the typical error (MAE, median AE), a platform that must not misprice expensive listings cares about large errors (RMSE). Predictions are made on the log scale and transformed back with exp, which gives a typical (median-like) price rather than a mean price; for a mean, a correction would be needed.
 
 ### In practice
 
@@ -297,8 +300,8 @@ The language alone explains 39 % of the variance of log length on unseen decisio
 1. Name the ten lifecycle steps and the step where the target, metric and baseline are fixed.
 2. Why is the error on the training data an optimistic estimate of the error on new data?
 3. Compute the least-squares line for the points (0, 1), (1, 3), (2, 5).
-4. The coefficient of French (reference: German) is −0.96 on the log scale. Explain in one sentence what it compares, and translate it into a percentage.
-5. A model has MAE 0.37 and RMSE 0.50 on the same data. What does the gap tell you about the errors?
+4. The coefficient of a private room (reference: entire home) is −0.398 on the log scale. Explain in one sentence what it compares, and translate it into a percentage.
+5. The full price model has MAE €63 and RMSE €148 on the test listings. What does the gap tell you about the errors, and which number would you show a host?
 
 ## Further reading
 

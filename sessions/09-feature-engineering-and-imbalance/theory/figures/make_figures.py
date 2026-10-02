@@ -3,8 +3,7 @@
 Run from the repository root:
     uv run python sessions/09-feature-engineering-and-imbalance/theory/figures/make_figures.py
 
-Deterministic (seeded). The third figure needs the case-study sample
-(case-study/data/train_sample.parquet): footwear decisions of chapter 64.
+Deterministic (seeded). The third figure downloads the IBM Telco churn data from GitHub.
 """
 
 from pathlib import Path
@@ -17,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent
+TELCO = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
@@ -73,7 +73,7 @@ def smote_illustration():
         ax.plot(*np.c_[minority[i], minority[j]], color=BLUE, lw=1.2, ls="--", zorder=2)
     ax.scatter(*minority[i], s=150, color=BLUE, edgecolor=INK, lw=1.5, zorder=4)
     ax.annotate("x: chosen minority row", minority[i], xytext=(minority[i][0] - 4.5, minority[i][1] + 1.8),
-                arrowprops=dict(arrowstyle="->", color=MUTED), color=INK)
+                arrowprops={"arrowstyle": "->", "color": MUTED}, color=INK)
     ax.scatter(*synth.T, s=90, marker="D", color=ORANGE, edgecolor="white", lw=1.5, zorder=5,
                label=r"synthetic rows $x + \lambda\,(x_{nn} - x)$")
     ax.set_xlabel("feature 1")
@@ -90,58 +90,61 @@ def resampling_precision_recall():
     from imblearn.over_sampling import SMOTE, RandomOverSampler
     from imblearn.pipeline import make_pipeline
     from imblearn.under_sampling import RandomUnderSampler
-    from sklearn.decomposition import TruncatedSVD
-    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.compose import make_column_transformer
     from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import accuracy_score, precision_recall_fscore_support
+    from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
     from sklearn.model_selection import StratifiedKFold, cross_val_predict
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-    root = OUT.parents[3]
-    decisions = pd.read_parquet(root / "case-study/data/train_sample.parquet")
-    shoes = decisions[decisions["chapter"] == "64"].reset_index(drop=True)   # footwear task, 6 headings
-    y = shoes["heading"]
-    tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), min_df=3, sublinear_tf=True)
-    X = pd.DataFrame(TruncatedSVD(50, random_state=0).fit_transform(tfidf.fit_transform(shoes["description"])),
-                     columns=[f"svd{i}" for i in range(50)])
+    telco = pd.read_csv(TELCO)
+    telco["TotalCharges"] = pd.to_numeric(telco["TotalCharges"], errors="coerce").fillna(0)
+    y = (telco["Churn"] == "Yes").astype(int)
+    X = telco.drop(columns=["customerID", "Churn"])
+    cat_cols = X.select_dtypes("object").columns.tolist()
+    prep = make_column_transformer((OneHotEncoder(handle_unknown="ignore", sparse_output=False), cat_cols),
+                                   remainder=StandardScaler())
     cv = StratifiedKFold(5, shuffle=True, random_state=0)
 
     def lr(cw=None):
         return LogisticRegression(max_iter=2000, class_weight=cw)
 
     candidates = {
-        "no correction": make_pipeline(StandardScaler(), lr()),
-        "undersampling": make_pipeline(StandardScaler(), RandomUnderSampler(random_state=0), lr()),
-        "oversampling": make_pipeline(StandardScaler(), RandomOverSampler(random_state=0), lr()),
-        "SMOTE": make_pipeline(StandardScaler(), SMOTE(random_state=0), lr()),
-        "class weights": make_pipeline(StandardScaler(), lr("balanced")),
+        "no correction": make_pipeline(prep, lr()),
+        "undersampling": make_pipeline(prep, RandomUnderSampler(random_state=0), lr()),
+        "oversampling": make_pipeline(prep, RandomOverSampler(random_state=0), lr()),
+        "SMOTE": make_pipeline(prep, SMOTE(random_state=0), lr()),
+        "class weights": make_pipeline(prep, lr("balanced")),
     }
-    labels = sorted(y.unique())
     rows = []
     for name, model in candidates.items():
-        pred = cross_val_predict(model, X, y, cv=cv)
-        p, r, f, _ = precision_recall_fscore_support(y, pred, labels=labels, zero_division=0)
-        rows.append((name, accuracy_score(y, pred), f.mean(), p[labels.index("6406")], r[labels.index("6406")]))
-    res = pd.DataFrame(rows, columns=["method", "accuracy", "macro_f1", "precision", "recall"])
+        proba = cross_val_predict(model, X, y, cv=cv, method="predict_proba")[:, 1]
+        if name == "no correction":
+            plain = proba
+        pred = (proba >= 0.5).astype(int)
+        rows.append((name, accuracy_score(y, pred), precision_score(y, pred), recall_score(y, pred), f1_score(y, pred)))
+    pred = (plain >= 0.3).astype(int)
+    rows.append(("no correction,\nthreshold 0.3", accuracy_score(y, pred), precision_score(y, pred),
+                 recall_score(y, pred), f1_score(y, pred)))
+    res = pd.DataFrame(rows, columns=["method", "accuracy", "precision", "recall", "f1"])
 
-    fig, ax = plt.subplots(figsize=(9, 4.6))
+    fig, ax = plt.subplots(figsize=(10, 4.6))
     x = np.arange(len(res))
     width = 0.2
-    series = [("accuracy", "accuracy (6 headings)", BLUE), ("macro_f1", "macro-F1 (6 headings)", YELLOW),
-              ("precision", "precision of 6406", AQUA), ("recall", "recall of 6406", ORANGE)]
+    series = [("accuracy", "accuracy", BLUE), ("precision", "precision (churn)", AQUA),
+              ("recall", "recall (churn)", ORANGE), ("f1", "F1 (churn)", YELLOW)]
     for k, (col, label, color) in enumerate(series):
         bars = ax.bar(x + (k - 1.5) * width, res[col], width - 0.02, color=color, label=label)
-        for b, v in zip(bars, res[col]):
-            ax.text(b.get_x() + b.get_width() / 2, v + 0.01, f"{v:.2f}", ha="center", va="bottom",
+        for bar, v in zip(bars, res[col]):
+            ax.text(bar.get_x() + bar.get_width() / 2, v + 0.01, f"{v:.2f}", ha="center", va="bottom",
                     fontsize=7, color=MUTED)
     ax.set_xticks(x, res["method"])
-    ax.set_ylim(0, 1.08)
+    ax.set_ylim(0, 1.0)
     ax.set_ylabel("score (5-fold cross-validation)")
-    ax.set_title("Footwear headings: corrections raise recall of the rare heading 6406 but lower macro-F1",
+    ax.set_title("Telco churn: corrections trade precision for recall, like a lower threshold",
                  fontsize=11, color=INK)
     ax.grid(axis="y", color=GRID, lw=0.8)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.1))
+    ax.legend(frameon=False, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.12))
     fig.tight_layout()
     fig.savefig(OUT / "resampling_precision_recall.png", dpi=130)
     plt.close(fig)

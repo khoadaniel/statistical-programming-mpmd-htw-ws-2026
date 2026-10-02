@@ -3,7 +3,7 @@
 Run from the repository root:
     uv run python sessions/06-regression/theory/figures/make_figures.py
 
-Uses seeded toy data and the case-study sample in case-study/data/.
+Uses seeded toy data and the Inside Airbnb Berlin listings in case-study/data/airbnb/.
 """
 
 from pathlib import Path
@@ -20,7 +20,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 OUT = Path(__file__).parent
-DATA = Path("case-study/data")
+DATA = Path("case-study/data/airbnb")
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#8C8C8C"
 plt.rcParams.update({
     "figure.dpi": 100,
@@ -35,37 +35,39 @@ plt.rcParams.update({
 
 
 def fig_residuals() -> None:
-    """Residual-versus-fitted plots: a good fit and the description-length model."""
+    """Residual-versus-fitted plots: a good fit and the Berlin price model."""
     rng = np.random.default_rng(0)
     x = rng.uniform(0, 10, 300)
     y = 2 + 0.8 * x + rng.normal(0, 1, 300)
     lin = LinearRegression().fit(x.reshape(-1, 1), y)
     fitted = lin.predict(x.reshape(-1, 1))
 
-    decisions = pd.read_parquet(DATA / "train_sample.parquet")
-    nomenclature = pd.read_parquet(DATA / "nomenclature.parquet")
-    decisions = decisions.merge(nomenclature[["heading", "section"]], on="heading")
-    top = decisions["language"].value_counts().index[:8]
-    decisions["language"] = decisions["language"].where(decisions["language"].isin(top), "other")
-    decisions["year"] = decisions["start_date"].dt.year - 2017
-    lx = pd.get_dummies(decisions[["year", "language", "section"]], drop_first=True, dtype=float)
-    ly = np.log(decisions["description"].str.len())
+    listings = pd.read_parquet(DATA / "listings.parquet")
+    short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+    lat, lon = np.radians(short["latitude"]), np.radians(short["longitude"])
+    lat0, lon0 = np.radians(52.5219), np.radians(13.4132)                    # Alexanderplatz
+    a = np.sin((lat0 - lat) / 2) ** 2 + np.cos(lat) * np.cos(lat0) * np.sin((lon0 - lon) / 2) ** 2
+    short["km_to_centre"] = 2 * 6371 * np.arcsin(np.sqrt(a))
+    lx = pd.get_dummies(short[["accommodates", "km_to_centre", "room_type", "district"]],
+                        drop_first=True, dtype=float)
+    ly = np.log(short["price"])
     model = LinearRegression().fit(lx, ly)
     f2 = model.predict(lx)
     res2 = ly - f2
-    keep = rng.choice(len(lx), 4000, replace=False)
 
     fig, (left, right) = plt.subplots(1, 2, figsize=(11, 3.9), layout="constrained")
     left.scatter(fitted, y - fitted, s=10, alpha=0.6, color=BLUE)
     left.axhline(0, color="black", lw=1)
     left.set(xlabel="fitted value ŷ", ylabel="residual y − ŷ",
              title="Good: a structureless band around zero")
-    right.scatter(f2[keep], res2.iloc[keep], s=5, alpha=0.3, color=GREY)
+    right.scatter(f2, res2, s=5, alpha=0.25, color=GREY)
     right.axhline(0, color="black", lw=1)
-    right.annotate("descriptions much shorter\nthan expected: a long\nlower tail", xy=(6.08, -3.1),
-                   xytext=(5.15, -3.4), arrowprops={"arrowstyle": "->"}, fontsize=9)
-    right.set(xlabel="fitted log(characters)", ylabel="residual",
-              title="Case study: centred on zero, but a long lower tail")
+    top = res2.idxmax()
+    right.annotate("€10,025 for a loft for seven guests:\nresidual +3.7, 42 times the fitted price",
+                   xy=(f2[short.index.get_loc(top)], res2[top]), xytext=(3.4, 3.2),
+                   arrowprops={"arrowstyle": "->"}, fontsize=9)
+    right.set(xlabel="fitted log(price)", ylabel="residual (log scale)", ylim=(-3, 4.5),
+              title="Case study: centred on zero, with tails on both sides")
     fig.savefig(OUT / "residual-plot.png")
     plt.close(fig)
 

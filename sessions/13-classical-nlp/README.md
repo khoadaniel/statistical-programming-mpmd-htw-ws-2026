@@ -24,7 +24,7 @@
 - [TF-IDF](theory/02-tfidf-and-text-classification.md#tf-idf-weighting-words-by-how-informative-they-are) and [n-grams](theory/02-tfidf-and-text-classification.md#n-grams-keeping-short-phrases)
 - [Linear models for text classification](theory/02-tfidf-and-text-classification.md#linear-models-for-text-classification)
 - [Per-class metrics](theory/02-tfidf-and-text-classification.md#per-class-metrics)
-- *Practice:* case study: leaderboard submission (round L3) with a TF-IDF classifier → [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb)
+- *Practice:* case study: leaderboard submission (round L2) with a TF-IDF classifier → [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb)
 
 **2:00–2:45 · Error analysis and the limits of word counts** ([theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md))
 
@@ -39,13 +39,13 @@
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-text-as-data.md](theory/01-text-as-data.md) | Tokens, vocabulary, preprocessing in a multilingual corpus (stemming, compounds), bag-of-words, sparse matrices | 1 | core |
-| [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md) | TF-IDF, word and character n-grams, linear SVM with 1,000 headings, validation by time, per-heading metrics, leaderboard round L3 | 2 | core |
+| [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md) | TF-IDF, word and character n-grams, linear SVM with 1,000 headings, validation by time, per-heading metrics, leaderboard round L2 | 2 | core |
 | [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Footwear confusion matrix, error categories, top n-grams and quoted codes, truncated SVD, limits of counts | 3 | core |
 | [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb) | Case study: reading decisions with keywords, tokens per language, document-term matrix, Zipf's law, preprocessing, compounds | 1 | core |
 | [workbooks/02-data100-text-wrangling-regex.ipynb](workbooks/02-data100-text-wrangling-regex.ipynb) | Data 100: string canonicalisation and regular expressions (Polars) | 1 | optional |
 | [workbooks/03-sklearn-hashing-vs-dict-vectorizer.ipynb](workbooks/03-sklearn-hashing-vs-dict-vectorizer.ipynb) | scikit-learn: vectorisers compared, hashing trick, sparse output | 1 | optional |
 | [workbooks/04-sklearn-text-classification-sparse-features.ipynb](workbooks/04-sklearn-text-classification-sparse-features.ipynb) | scikit-learn: linear classifiers on TF-IDF (20 Newsgroups), confusion matrix, top features | 2 | optional |
-| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Case study: word and character TF-IDF classifiers, per-heading report, `submission-L3-tfidf.csv` for round L3 | 2 | core |
+| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Case study: word and character TF-IDF classifiers, per-heading report, `submission-L2-tfidf.csv` for round L2 | 2 | core |
 | [workbooks/06-sklearn-document-clustering-lsa.ipynb](workbooks/06-sklearn-document-clustering-lsa.ipynb) | scikit-learn: LSA (truncated SVD) and k-means on news texts | 3 | optional |
 | [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Case study: 20 misclassified decisions, top n-grams, quoted heading numbers, improvements | 3 | core |
 

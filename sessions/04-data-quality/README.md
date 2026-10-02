@@ -24,14 +24,14 @@
 - [Simple, KNN and iterative imputation](theory/02-missing-values-and-univariate-outliers.md#simple-knn-and-iterative-imputation)
 - [Missing-value indicators](theory/02-missing-values-and-univariate-outliers.md#missing-value-indicators)
 - [Univariate outliers (IQR rule, z-score, median absolute deviation)](theory/02-missing-values-and-univariate-outliers.md#univariate-outliers-iqr-rule-z-score-median-absolute-deviation)
-- *Practice:* is a missing keyword list related to the issuing country, language or year, and why is the invalidation reason missing by design? Compare imputation methods on hidden values; find outliers in description length and validity duration → [workbook 08](workbooks/08-case-study-missing-keywords.ipynb)
+- *Practice:* a third of the Berlin Airbnb listings show no price. Is a missing price related to the number of reviews, or to availability? Why is the review score missing by design? Recover hidden bedroom counts with three imputers; find the implausible prices and minimum stays → [workbook 08](workbooks/08-case-study-airbnb-missing-and-outliers.ipynb)
 
 **2:00–2:45 · Multivariate outliers, transformations and a cleaning pipeline** ([theory page](theory/03-multivariate-outliers-transformations-pipeline.md))
 
 - [Multivariate outliers with the Mahalanobis distance](theory/03-multivariate-outliers-transformations-pipeline.md#multivariate-outliers-with-the-mahalanobis-distance) (model-based detection follows in Session 11)
 - [Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)](theory/03-multivariate-outliers-transformations-pipeline.md#transformations-logarithm-boxcox-yeojohnson-scaling)
 - [A documented cleaning pipeline](theory/03-multivariate-outliers-transformations-pipeline.md#a-documented-cleaning-pipeline)
-- *Practice:* case study: produce the cleaned decision table with a log of the cleaning decisions → [workbook 14](workbooks/14-case-study-cleaned-decision-table.ipynb)
+- *Practice:* produce the cleaned table of Berlin listings that Sessions 5 and 6 analyse, with a log of every cleaning decision (sentinel values, medium-term listings, structural missingness, licence status, flagged prices) → [workbook 15](workbooks/15-case-study-airbnb-cleaned-listings.ipynb); the same pattern for the BTI decisions → [workbook 14](workbooks/14-case-study-cleaned-decision-table.ipynb) (optional)
 
 ## Materials
 
@@ -48,13 +48,14 @@
 | [workbooks/05-imputation-methods-compared.ipynb](workbooks/05-imputation-methods-compared.ipynb) | scikit-learn: simple, KNN and iterative imputation compared | 2 | core |
 | [workbooks/06-iterative-imputer-variants.ipynb](workbooks/06-iterative-imputer-variants.ipynb) | scikit-learn: IterativeImputer with different estimators | 2 | optional |
 | [workbooks/07-distributions-and-outliers.ipynb](workbooks/07-distributions-and-outliers.ipynb) | Think Stats ch. 2: distributions, spotting outliers | 2 | optional |
-| [workbooks/08-case-study-missing-keywords.ipynb](workbooks/08-case-study-missing-keywords.ipynb) | **Case study**: missing keywords vs country and year, structural missingness, imputation compared, IQR/z/MAD | 2 | core |
+| [workbooks/08-case-study-airbnb-missing-and-outliers.ipynb](workbooks/08-case-study-airbnb-missing-and-outliers.ipynb) | **Case study (Airbnb)**: missing prices vs reviews and availability, structural missingness of ratings, imputation of bedrooms compared, IQR/z/MAD on price and minimum stay | 2 | core |
 | [workbooks/09-mahalanobis-and-robust-covariance.ipynb](workbooks/09-mahalanobis-and-robust-covariance.ipynb) | scikit-learn: classical vs robust (MCD) Mahalanobis distances | 3 | core |
 | [workbooks/10-scalers-and-transformers.ipynb](workbooks/10-scalers-and-transformers.ipynb) | scikit-learn: all scalers and transformers on data with outliers | 3 | core |
 | [workbooks/11-box-cox-and-yeo-johnson.ipynb](workbooks/11-box-cox-and-yeo-johnson.ipynb) | scikit-learn: Box–Cox, Yeo–Johnson and quantile transformation | 3 | core |
 | [workbooks/12-transforming-the-target.ipynb](workbooks/12-transforming-the-target.ipynb) | scikit-learn: transforming the target of a regression | 3 | optional |
 | [workbooks/13-why-scaling-matters.ipynb](workbooks/13-why-scaling-matters.ipynb) | scikit-learn: effect of scaling on k-nearest neighbours and PCA | 3 | optional |
-| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | **Case study**: cleaned decision table and cleaning log | 3 | core |
+| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | **Case study (EBTI)**: cleaned decision table and cleaning log | 3 | optional |
+| [workbooks/15-case-study-airbnb-cleaned-listings.ipynb](workbooks/15-case-study-airbnb-cleaned-listings.ipynb) | **Case study (Airbnb)**: cleaned listings table with a cleaning log and validation | 3 | core |
 
 Origins and licences of third-party files: [source.md](source.md). Workbooks 04 (text CC-BY-NC-ND) and 07 (text CC-BY-NC-SA) may be used for non-commercial teaching only.
 
@@ -62,7 +63,7 @@ Origins and licences of third-party files: [source.md](source.md). Workbooks 04 
 
 **Preparation**
 
-- Make sure `case-study/data/` exists, including `raw/DDS2-EBTI_Full.zip` for section 4 of workbook 03 (see [case-study/README.md](../../case-study/README.md)).
+- Make sure `case-study/data/` exists, including `raw/DDS2-EBTI_Full.zip` for section 4 of workbook 03, and prepare the Airbnb data for blocks 2 and 3 with `uv run python case-study/prepare_airbnb.py` (downloads about 100 MB once; see [case-study/README.md](../../case-study/README.md)).
 - Read the [pandas user guide on missing data](https://pandas.pydata.org/docs/user_guide/missing_data.html) (about 20 minutes).
 - Look at the data quality findings you noticed in Session 3 and bring them along.
 
@@ -77,7 +78,12 @@ Origins and licences of third-party files: [source.md](source.md). Workbooks 04 
 
 ## Setup
 
-The case-study notebooks and the tests run in the course environment from the repository root (`uv sync`, then `uv run jupyter lab`).
+The case-study notebooks and the tests run in the course environment from the repository root (`uv sync`, then `uv run jupyter lab`). Data for the case studies:
+
+```bash
+uv run python case-study/prepare_data.py      # EBTI decisions (block 1, workbook 14)
+uv run python case-study/prepare_airbnb.py    # Inside Airbnb Berlin (blocks 2 and 3, workbooks 08 and 15)
+```
 
 Extra packages for some workbooks:
 
@@ -92,7 +98,7 @@ Run the validation tests from the repository root:
 uv run --with pytest pytest sessions/04-data-quality/workbooks/quality -v
 ```
 
-Before workbook 14 has been run, the tests on the cleaned table are skipped; afterwards they must pass. Workbook 14 writes `case-study/data/decisions_clean.parquet` (about 150 MB) and `cleaning_log.csv`; this folder is not part of the repository. Set `CLEAN_OUT=/some/path/decisions_clean.parquet` to write elsewhere (the tests read the same variable).
+Before workbook 14 has been run, the tests on the cleaned table are skipped; afterwards they must pass. Workbook 14 writes `case-study/data/decisions_clean.parquet` (about 150 MB) and `cleaning_log.csv`; this folder is not part of the repository. Set `CLEAN_OUT=/some/path/decisions_clean.parquet` to write elsewhere (the tests read the same variable). Workbook 15 writes `case-study/data/airbnb/listings_clean.parquet` and `cleaning_log.csv` next to it (small; also not part of the repository); set `AIRBNB_CLEAN_OUT` to write elsewhere.
 
 > [!NOTE]
 > With pandas 3, three cells of workbook 04 that use `fillna(method="ffill")` fail; write `data.ffill()` and `data.bfill()` instead. The first `.sum()` error in workbooks 02 and 04 is intended: it shows that `None` cannot be summed.

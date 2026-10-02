@@ -1,6 +1,6 @@
 # Anomaly detection and unsupervised features
 
-Session 4 flagged outliers one column at a time (IQR fences, z-scores, the median absolute deviation) and in combinations of columns with the Mahalanobis distance. This page continues with two **model-based** detectors that need no assumption of a normal distribution, **Isolation Forest** and the **local outlier factor** (LOF), and compares them with the Mahalanobis distance on the same small example. The second section closes the session: the output of a clustering or a PCA can be fed as **features** into a supervised model, and the case study tests whether that helps.
+Session 4 flagged outliers one column at a time (IQR fences, z-scores, the median absolute deviation) and in combinations of columns with the Mahalanobis distance. This page continues with two **model-based** detectors that need no assumption of a normal distribution, **Isolation Forest** and the **local outlier factor** (LOF), and compares them with the Mahalanobis distance on the same small example. The examples are implausible Airbnb listings in Berlin (prices far from what size and location suggest, extreme minimum stays) and, briefly, BTI decisions that do not fit their heading. The second section closes the session: the output of a clustering or a PCA can be fed as **features** into a supervised model, and we test whether location clusters improve a gradient-boosting price model.
 
 The code blocks build on each other; run them in order from the repository root.
 
@@ -72,45 +72,76 @@ flags = lof.fit_predict(X)
 print(flags[500], round(-lof.negative_outlier_factor_[500], 2))   # -1 4.22
 ```
 
-Now on real data: the Telco customers, scaled as on page 1.
+Now on real data: the Berlin Airbnb listings. A platform, a city office or a data analyst wants to find **implausible listings**: prices far from what the size and location suggest, extreme minimum stays, typing errors. We use the 6,924 listings with a price and a minimum stay below 90 nights; the medium-term rentals found on page 2 have a different kind of price and are left out.
 
 ```python
-url = ("https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/"
-       "master/data/Telco-Customer-Churn.csv")
-telco = pd.read_csv(url)
-telco["TotalCharges"] = pd.to_numeric(telco["TotalCharges"], errors="coerce")
-telco = telco.dropna(subset=["TotalCharges"])
-cols = ["tenure", "MonthlyCharges", "TotalCharges"]
-Z = StandardScaler().fit_transform(telco[cols])
+from sklearn.ensemble import HistGradientBoostingRegressor  # noqa: E402
+from sklearn.model_selection import KFold, cross_val_predict  # noqa: E402
 
-telco["iso"] = -IsolationForest(random_state=0).fit(Z).score_samples(Z)
-lof = LocalOutlierFactor(n_neighbors=20).fit(Z)
-telco["lof"] = -lof.negative_outlier_factor_
-print(telco.nlargest(3, "iso")[cols + ["iso"]].round(2))
-#       tenure  MonthlyCharges  TotalCharges   iso
-# 2115      71          118.65       8477.60  0.66   <- the most expensive, longest customers
-# 4586      72          118.75       8672.45  0.66
-# 6118      72          118.20       8547.15  0.66
-print(telco.nlargest(3, "lof")[cols + ["lof"]].round(2))
-#       tenure  MonthlyCharges  TotalCharges   lof
-# 4262       2            66.4         94.55  4.08   <- total charges low for 2 months of 66.40
-# 4290       1            40.1         40.10  4.06
-# 252        1            40.2         40.20  4.00
+pd.set_option("display.width", 160)
+pd.set_option("display.max_columns", 12)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+lat0, lon0 = 52.5219, 13.4132                                   # Alexanderplatz
+listings["north_km"] = (listings["latitude"] - lat0) * 111.2
+listings["east_km"] = (listings["longitude"] - lon0) * 111.2 * np.cos(np.radians(lat0))
+listings["km_centre"] = np.hypot(listings["north_km"], listings["east_km"])
+short = listings[listings["price"].notna() & (listings["minimum_nights"] < 90)].reset_index(drop=True)
+short["log_price"] = np.log(short["price"])
+short["log_min_nights"] = np.log(short["minimum_nights"])
+print(len(short))                                               # 6924
 
-# a domain check is often sharper: total charges should be close to tenure x monthly charges
-ratio = telco["TotalCharges"] / (telco["tenure"] * telco["MonthlyCharges"])
-print(ratio.quantile([0.001, 0.5, 0.999]).round(2).to_list())      # [0.75, 1.0, 1.31]
+cols = ["log_price", "accommodates", "log_min_nights", "km_centre"]
+Z = StandardScaler().fit_transform(short[cols])
+short["iso"] = -IsolationForest(random_state=0).fit(Z).score_samples(Z)
+short["lof"] = -LocalOutlierFactor(n_neighbors=20).fit(Z).negative_outlier_factor_
+show = ["property_type", "accommodates", "price", "minimum_nights", "km_centre"]
+print(short.nlargest(3, "iso")[show + ["iso"]].round(2))
+#      property_type  accommodates   price  minimum_nights  km_centre   iso
+# 4689     Houseboat            16  4458.0             1.0      22.45  0.75   <- large, expensive, far out
+# 5497   Entire home            16  2296.0             1.0      21.07  0.74
+# 5826     Houseboat            12  2270.4             1.0      22.43  0.72
+print(short.nlargest(3, "lof")[show + ["lof"]].round(2))
+#              property_type  accommodates    price  minimum_nights  km_centre   lof
+# 2405    Entire rental unit             3    72.28            60.0       6.86  2.89   <- 60-night minimum
+# 5410  Shared room in hotel            16    46.00             1.0       3.49  2.61   <- 16 guests for 46 euros
+# 5497           Entire home            16  2296.00             1.0      21.07  2.52
 ```
 
-Isolation Forest ranks the customers at the edge of the data first: they are rare, but not wrong. LOF finds short-tenure customers whose total does not fit their neighbours. A ratio built from domain knowledge (total ≈ tenure × monthly charge) states directly what "inconsistent" means. Model-based detectors produce a ranked list for inspection; they do not decide what is an error.
-
-On the case study, a natural anomaly score needs no detector at all: **the distance of a decision from the centre of its own heading**. Decisions whose description is far from the typical description of their heading are either unusual products, borderline cases between headings, or possible misclassifications. We use the German decisions of chapter 94 (to avoid the language effect of pages 2 and 3), represent each description by 50 SVD components scaled to length 1, average them per heading (the **centroid**) and compute the cosine similarity of every decision to its heading's centroid.
+Isolation Forest ranks the listings at the edge of the data first: houseboats and large houses for 12–16 guests at more than €2,000 a night, 21–22 km from the centre. They are rare, but not necessarily wrong. LOF finds listings that do not fit their neighbours: a 60-night minimum among short stays, a shared room in a hotel for 16 guests at €46 (a dormitory bed, probably, with the room size as "guests"). A sharper check states directly what "implausible" means: **the price compared with the price expected for the size, room type and location**. The expected price comes from a regression model (Sessions 6 and 10); each listing's prediction is made by a model that did not see that listing (`cross_val_predict`), so a listing cannot explain away its own price.
 
 ```python
-from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import Normalizer
+X = pd.get_dummies(short[["accommodates", "bedrooms", "east_km", "north_km", "room_type"]], dtype=float)
+expected = cross_val_predict(HistGradientBoostingRegressor(random_state=0), X, short["log_price"],
+                             cv=KFold(5, shuffle=True, random_state=0))
+short["ratio"] = np.exp(short["log_price"] - expected)          # actual price / expected price
+print(short["ratio"].quantile([0.01, 0.5, 0.99]).round(2).to_list())   # [0.37, 1.0, 2.86]
+print(((short["ratio"] > 3) | (short["ratio"] < 1 / 3)).sum())         # 110 listings off by a factor of 3
+print(short.nlargest(3, "ratio")[show + ["number_of_reviews", "ratio"]].round(2))
+#      property_type  accommodates    price  minimum_nights  km_centre  number_of_reviews  ratio
+# 6858   Entire home             5   7999.2             1.0      15.60                  0  40.79
+# 4024   Entire loft             7  10025.0             2.0      14.50                 68  34.32
+# 5406   Entire home             2    950.0             1.0       9.64                 11   9.66
+print(short.nsmallest(3, "ratio")[show + ["number_of_reviews", "ratio"]].round(2))
+#                     property_type  accommodates  price  minimum_nights  km_centre  number_of_reviews  ratio
+# 95             Entire rental unit             2  14.68             1.0       2.94                 51   0.09
+# 70    Private room in rental unit             2   9.03            25.0       3.59                310   0.09
+# 1858           Entire rental unit             2  18.85             2.0       4.38                 24   0.10
+print((listings["minimum_nights"] > 365).sum(), listings["minimum_nights"].max())   # 10 1125.0
+
+top_iso = set(short.nlargest(100, "iso").index)
+top_ratio = set(short.assign(dev=np.abs(np.log(short["ratio"]))).nlargest(100, "dev").index)
+print(len(top_iso & top_ratio))                                 # 27: the two lists overlap little
+```
+
+Half of the listings cost between 0.81 and 1.25 times their expected price (the median ratio is 1.0); 110 listings are off by a factor of three or more. At the top, a flat for five at €7,999 a night (40 times the expected price) and the €10,025 loft for seven: placeholder prices that block the calendar or typing errors, not market prices. At the bottom, entire flats near the centre for €15–19 a night, a tenth of the expected price: probably monthly rates entered as nightly prices, or discounts that the scraper read as the price. Ten listings in the whole table require a minimum stay of more than a year, up to 1,125 nights; for a short-term rental platform that is a placeholder, not a rule. Only 27 of the top 100 Isolation Forest listings are among the 100 largest price ratios: a generic detector looks for *rare* listings, the domain check for *inconsistent* ones. The domain check is easier to explain and to act on ("price 40 times the expected price; please check"), and it says what to do next: a person checks the listing page, and the price model of Session 10 excludes or caps such rows.
+
+A second example from the main case study shows the same idea on text: **the distance of a BTI decision from the centre of its own heading**. Decisions whose description is far from the typical description of their heading are unusual products, borderline cases between headings or possible misclassifications. We use the German decisions of chapter 94 (one language, so that the language does not dominate the distance), represent each description by 50 SVD components of its TF-IDF vector scaled to length 1 (Session 13), average them per heading (the **centroid**) and compute the cosine similarity of every decision to its heading's centroid.
+
+```python
+from sklearn.decomposition import TruncatedSVD  # noqa: E402
+from sklearn.feature_extraction.text import TfidfVectorizer  # noqa: E402
+from sklearn.pipeline import make_pipeline  # noqa: E402
+from sklearn.preprocessing import Normalizer  # noqa: E402
 
 sample = pd.read_parquet("case-study/data/train_sample.parquet")
 de = sample[(sample["chapter"] == "94") & (sample["language"] == "de")].reset_index(drop=True)
@@ -120,15 +151,13 @@ centroids = pd.DataFrame(Z_text).groupby(de["heading"]).mean()
 own = centroids.loc[de["heading"]].to_numpy()
 de["similarity"] = (Z_text * own).sum(axis=1) / np.linalg.norm(own, axis=1)   # cosine to own centroid
 print(len(de), de["similarity"].quantile([0.01, 0.5]).round(2).to_list())      # 1422 [0.38, 0.71]
-print(de.nsmallest(4, "similarity")[["heading", "similarity", "keywords"]].round(2).to_string())
-#      heading  similarity                                                              keywords
-# 1221    9405        0.27              FOR LIGHTING,HOUSINGS,LED,MOUNTED,PRINTED CIRCUIT BOARDS
-# 1116    9405        0.29          CABLES,CONNECTIONS,HOUSINGS,INSULATED,PRINTED CIRCUIT BOARDS
-# 1134    9405        0.30                   DOORS,LIGHT FITTINGS,NON-ELECTRIC,OF GLASS,OF METAL
-# 925     9405        0.31  DOORS,GATHERED BY HAND,LIGHT FITTINGS,NON-ELECTRIC,OF GLASS,OF METAL
+print(de.nsmallest(2, "similarity")[["heading", "similarity", "keywords"]].round(2).to_string())
+#      heading  similarity                                                  keywords
+# 1221    9405        0.27  FOR LIGHTING,HOUSINGS,LED,MOUNTED,PRINTED CIRCUIT BOARDS
+# 1116    9405        0.29  CABLES,CONNECTIONS,HOUSINGS,INSULATED,PRINTED CIRCUIT BOARDS
 ```
 
-The English keywords make the German decisions readable. The two least typical lamp decisions are LED modules on printed circuit boards with housings and cables: products on the border between lamps (9405) and electrical parts of chapter 85, exactly the kind of case a customs specialist would want to review. The next ones are non-electric light fittings of glass and metal, a rare kind of 9405. None of these is necessarily wrong; the ranking tells an expert where to look first.
+The English keywords (assigned by customs, used here only to read the result) make the German decisions readable. The two least typical lamp decisions (heading 9405) are LED modules on printed circuit boards with housings and cables: products on the border between lamps and the electrical parts of chapter 85, exactly the kind of case a customs specialist would want to review. As with the listings, the ranking tells an expert where to look first; it does not say that a decision is wrong.
 
 ### In practice
 
@@ -140,7 +169,7 @@ The English keywords make the German decisions readable. The two least typical l
 > **The contamination parameter is a guess, not a result.** `contamination=0.01` simply flags the top 1 % of scores. Prefer to look at the ranked scores and choose a threshold with the people who will review the flags (how many can they check per week?).
 
 > [!CAUTION]
-> **Anomalous is not the same as wrong.** The top Isolation Forest rows above are valid, valuable customers. Deleting flagged rows without inspection removes exactly the cases that may matter most (Session 4).
+> **Anomalous is not the same as wrong.** The top Isolation Forest listings above are houseboats and large houses that may well be genuine. Deleting flagged rows without inspection removes exactly the cases that may matter most (Session 4).
 
 > [!TIP]
 > Without labels, evaluate a detector by inspecting a sample of the top-ranked rows. With a few known anomalies, use precision among the top k or the ROC AUC, as in workbook 23.
@@ -154,7 +183,7 @@ Unsupervised outputs can be inputs to a supervised model:
 - **Cluster membership** as a categorical feature (one-hot encoded), or the **distances to each centroid** (`KMeans.transform`), which are numeric and smoother.
 - **Principal component scores** instead of, or in addition to, many correlated columns.
 - **Anomaly scores** as a feature ("how unusual is this transaction?").
-- **Aggregates at another level**, such as the cluster of a whole group of rows (all decisions of a customs office, all products of a seller) attached to each row.
+- **Aggregates at another level**, such as the cluster of a whole group of rows (all listings of a host, all products of a seller) attached to each row.
 
 Like scaling, these are **preparation steps** that are fitted. They belong inside the pipeline and are fitted on the training folds only. Clusters computed on all data, including the test rows, leak information.
 
@@ -177,12 +206,20 @@ A cluster or a component can summarise many columns in a way a model would other
 ### How it works in Python
 
 ```python
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold, cross_val_score
-from sklearn.pipeline import FunctionTransformer, make_pipeline, make_union
+from sklearn.cluster import KMeans  # noqa: E402
+from sklearn.compose import make_column_transformer  # noqa: E402
+from sklearn.decomposition import PCA  # noqa: E402
+from sklearn.linear_model import LogisticRegression  # noqa: E402
+from sklearn.model_selection import GroupKFold, StratifiedKFold, cross_val_score  # noqa: E402
+from sklearn.pipeline import FunctionTransformer, make_pipeline, make_union  # noqa: E402
+from sklearn.preprocessing import OrdinalEncoder  # noqa: E402
 
+url = ("https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/"
+       "master/data/Telco-Customer-Churn.csv")
+telco = pd.read_csv(url)
+telco["TotalCharges"] = pd.to_numeric(telco["TotalCharges"], errors="coerce")
+telco = telco.dropna(subset=["TotalCharges"])
+tcols = ["tenure", "MonthlyCharges", "TotalCharges"]
 y = (telco["Churn"] == "Yes").astype(int)
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 models = {
@@ -194,14 +231,40 @@ models = {
     "2 principal components": make_pipeline(StandardScaler(), PCA(n_components=2), LogisticRegression()),
 }
 for name, model in models.items():
-    auc = cross_val_score(model, telco[cols], y, cv=cv, scoring="roc_auc").mean()
+    auc = cross_val_score(model, telco[tcols], y, cv=cv, scoring="roc_auc").mean()
     print(f"{name:34s} ROC AUC {auc:.3f}")
 # 3 columns                          ROC AUC 0.809
 # 3 columns + 8 centroid distances   ROC AUC 0.814
 # 2 principal components             ROC AUC 0.807
 ```
 
-`make_union(FunctionTransformer(), KMeans(...))` keeps the original columns and appends the eight distances; because it sits inside the pipeline, k-means is refitted in every fold. The centroid distances let the linear model bend its boundary and gain 0.005 ROC AUC, a small effect of the size of the fold-to-fold noise. Two components lose almost nothing compared with three columns. On the case study the effect goes the other way: in the practice notebook, adding the distances to 8 k-means centroids to 50 text components of the chapter-94 decisions changes the validation accuracy of a gradient-boosting model for the heading from 0.898 to 0.891, within the noise. A flexible model on informative features gains nothing from a summary of the same features.
+`make_union(FunctionTransformer(), KMeans(...))` keeps the original columns and appends the eight distances; because it sits inside the pipeline, k-means is refitted in every fold. The centroid distances let the linear model bend its boundary and gain 0.005 ROC AUC, a small effect of the size of the fold-to-fold noise. Two components lose almost nothing compared with three columns.
+
+Now a case where a cluster feature has a plausible job: **location in a price model**. A gradient-boosting model for the log price of the short-stay listings (as in Session 10) knows the district, but Berlin's twelve districts are large and mixed. k-means on the coordinates gives 20 **location clusters**, compact areas of similar size; their centroid distances describe where a listing is more finely than the district. The baseline is the district alone, the competitor the raw coordinates, which a tree can split on directly. Hosts with many similar listings would make random folds optimistic (Session 7), so the folds are grouped by host.
+
+```python
+def price_model(location=None):
+    parts = [(OrdinalEncoder(), ["room_type", "district"]),
+             ("passthrough", ["accommodates", "bedrooms", "minimum_nights"])]
+    if location == "clusters":                                   # 20 centroid distances, refitted per fold
+        parts.append((KMeans(n_clusters=20, n_init=10, random_state=0), ["east_km", "north_km"]))
+    if location == "coordinates":
+        parts.append(("passthrough", ["east_km", "north_km"]))
+    return make_pipeline(make_column_transformer(*parts),
+                         HistGradientBoostingRegressor(categorical_features=[0, 1], random_state=0))
+
+
+for name, location in [("district only", None), ("+ 20 location-cluster distances", "clusters"),
+                       ("+ raw coordinates", "coordinates")]:
+    mae_log = -cross_val_score(price_model(location), short, short["log_price"], groups=short["host_id"],
+                               cv=GroupKFold(n_splits=5), scoring="neg_mean_absolute_error")
+    print(f"{name:32s} MAE (log) {mae_log.mean():.3f} +/- {mae_log.std():.3f}")
+# district only                    MAE (log) 0.299 +/- 0.008
+# + 20 location-cluster distances  MAE (log) 0.291 +/- 0.009
+# + raw coordinates                MAE (log) 0.289 +/- 0.010
+```
+
+An MAE of 0.30 on the log scale means that a typical prediction is off by a factor of about e^0.30 ≈ 1.35. The location clusters reduce the error a little (0.299 to 0.291, about the size of the fold-to-fold spread), but the raw coordinates do as well or slightly better (0.289): a tree can find the expensive areas itself when it gets the coordinates. Cluster features earn their place where the model cannot use the raw information (a linear model cannot use latitude and longitude well), where a summary must be explained to people ("listings in location cluster 7"), or where the same areas are reused in many analyses.
 
 ### In practice
 
@@ -210,21 +273,21 @@ for name, model in models.items():
 - **Geodemographic codes as covariates.** Area classifications such as the ONS Output Area Classification are used as area-level variables in health and social research.
 
 > [!WARNING]
-> **Fit the clustering inside the cross-validation.** Clusters fitted on all rows, then used as a feature in cross-validation, carry information from the validation folds. Use a pipeline, or build the clusters from an earlier period only, as in the case study (clusters fitted on 2017–2021, used for 2022–2023).
+> **Fit the clustering inside the cross-validation.** Clusters fitted on all rows, then used as a feature in cross-validation, carry information from the validation folds. Use a pipeline, as in both examples above, or build the clusters from an earlier period only.
 
 > [!CAUTION]
-> **A small gain in one split is not evidence.** Report the spread across folds or a confidence interval (Session 7) before claiming that clusters improve a model.
+> **A small gain in one split is not evidence.** Report the spread across folds or a confidence interval (Session 7) before claiming that clusters improve a model. And compare with the obvious alternative: here, raw coordinates.
 
-*Practice (block 3):* cluster the decisions of one chapter, visualise them with truncated SVD and t-SNE, rank the decisions that are far from their heading's centroid, and test whether cluster features improve a gradient-boosting model (Session 10) on a time-based split: part B of workbook [24-case-study-decision-clusters.ipynb](../workbooks/24-case-study-decision-clusters.ipynb).
+*Practice (block 3):* case study: which Berlin listings are implausible, and do location clusters improve the price model of Session 10? Rank the listings with Isolation Forest, LOF and the price ratio, inspect the top of each list, and compare the price model with and without cluster features under grouped cross-validation: part C of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb). An optional part D ranks the BTI decisions of chapter 94 by their distance from the heading centroid.
 
 ## Check your understanding
 
 1. Why does Isolation Forest miss the 192 cm / 55 kg person while LOF finds it?
-2. A colleague sets `contamination=0.05` and reports "5 % of our transactions are anomalies". What is wrong with this statement?
-3. The top Isolation Forest customers are the longest and most expensive ones. Should they be removed before training a churn model? Why or why not?
-4. Why must `KMeans` sit inside the pipeline when its distances are used as features in cross-validation?
-5. Adding cluster features raises the ROC AUC from 0.809 to 0.814. What would you need to see before recommending the change?
-6. A decision has a low similarity to its heading's centroid. Name three possible explanations and how you would tell them apart.
+2. A colleague sets `contamination=0.05` and reports "5 % of the Berlin listings are fake". What is wrong with this statement?
+3. The top Isolation Forest listings are houseboats and large houses far from the centre; the top price-ratio listings cost 30–40 times their expected price. Which list would you send to a city office, and why?
+4. Why must the expected price be predicted by a model that did not see the listing (`cross_val_predict`) rather than by a model fitted on all listings?
+5. Location clusters lower the MAE from 0.299 to 0.291, raw coordinates to 0.289. What would you recommend for the Session 10 price model, and when would the clusters still be useful?
+6. A BTI decision has a low similarity to its heading's centroid. Name three possible explanations and how you would tell them apart.
 
 ## Further reading
 

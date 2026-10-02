@@ -56,7 +56,7 @@ for degree in [1, 2, 4, 8, 15]:
 # degree 15  train 0.061  test 0.650
 ```
 
-On the case study, take the decisions that were invalidated before their normal three-year expiry and model how many days they stayed valid from the start date (in years since 2017). The relationship is not a straight line, because many decisions end on fixed dates (31 December 2020 and 31 December 2021 are the most frequent end dates; Session 4 and the notebook look at them). Compare all 5,700 training decisions with a training set of only 60:
+On the Berlin listings, model the log price with a polynomial in two features, the number of guests and the distance to Alexanderplatz. Price does not fall linearly with distance (the centre is a plateau, the outskirts flatten out), so some curvature should help. Compare all 5,360 training listings with a training set of only 60:
 
 ```python
 import numpy as np
@@ -67,35 +67,38 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-early = decisions[decisions["invalidation_reason"].notna()].copy()       # ended before normal expiry
-early["days_valid"] = (early["end_date"] - early["start_date"]).dt.days
-early = early[early["days_valid"] >= 0]                                  # drop impossible values here
-early["start_year"] = (early["start_date"] - pd.Timestamp("2017-01-01")).dt.days / 365.25
-train, test = train_test_split(early, test_size=0.2, random_state=42)
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["log_price"] = np.log(short["price"])
+short["km_to_centre"] = 111.2 * np.hypot(short["latitude"] - 52.5219,
+                                         (short["longitude"] - 13.4132) * np.cos(np.radians(52.52)))
+features = ["accommodates", "km_to_centre"]
+train, test = train_test_split(short, test_size=0.2, random_state=42)
 small = train.sample(60, random_state=0)
 
-for degree in [1, 3, 8, 12]:
-    for name, part in [("5,700", train), ("60", small)]:
+for degree in [1, 2, 3, 5, 8]:
+    for name, part in [("5,360", train), ("60", small)]:
         model = make_pipeline(StandardScaler(), PolynomialFeatures(degree), LinearRegression())
-        model.fit(part[["start_year"]], part["days_valid"])
-        print(f"degree {degree:2d}, {name:>5s} rows: train RMSE "
-              f"{root_mean_squared_error(part['days_valid'], model.predict(part[['start_year']])):6.1f}"
-              f"  test RMSE {root_mean_squared_error(test['days_valid'], model.predict(test[['start_year']])):6.1f}")
+        model.fit(part[features], part["log_price"])
+        print(f"degree {degree}, {name:>5s} rows: train RMSE "
+              f"{root_mean_squared_error(part['log_price'], model.predict(part[features])):6.3f}"
+              f"  test RMSE {root_mean_squared_error(test['log_price'], model.predict(test[features])):9.3f}")
 ```
 
 ```
-degree  1, 5,700 rows: train RMSE  322.3  test RMSE  327.5
-degree  1,    60 rows: train RMSE  303.4  test RMSE  329.6
-degree  3, 5,700 rows: train RMSE  318.5  test RMSE  321.6
-degree  3,    60 rows: train RMSE  301.8  test RMSE  328.3
-degree  8, 5,700 rows: train RMSE  314.6  test RMSE  317.1
-degree  8,    60 rows: train RMSE  285.8  test RMSE  341.1
-degree 12, 5,700 rows: train RMSE  313.8  test RMSE  317.9
-degree 12,    60 rows: train RMSE  265.6  test RMSE  393.1
+degree 1, 5,360 rows: train RMSE  0.468  test RMSE     0.471
+degree 1,    60 rows: train RMSE  0.415  test RMSE     0.475
+degree 2, 5,360 rows: train RMSE  0.453  test RMSE     0.454
+degree 2,    60 rows: train RMSE  0.380  test RMSE     0.466
+degree 3, 5,360 rows: train RMSE  0.449  test RMSE     0.452
+degree 3,    60 rows: train RMSE  0.373  test RMSE     0.538
+degree 5, 5,360 rows: train RMSE  0.447  test RMSE     0.452
+degree 5,    60 rows: train RMSE  0.328  test RMSE     2.018
+degree 8, 5,360 rows: train RMSE  0.445  test RMSE     0.457
+degree 8,    60 rows: train RMSE  0.193  test RMSE  1655.897
 ```
 
-With 5,700 training decisions, more flexibility helps a little up to degree 8 (test RMSE from 328 to 317 days) and degree 12 does not overfit: training and test errors stay close. With 60 training decisions the same degree 12 lowers the training error to 266 days and raises the test error to 393 days, worse than the straight line. Overfitting is a problem of **flexibility relative to the amount of data**. Note also how little the start date explains: an RMSE of about 320 days against a standard deviation of about 330 days. When a decision ends early depends mostly on events outside the data of the decision.
+With 5,360 training listings, a little curvature helps (test RMSE from 0.471 to 0.452 at degree 3) and more does not: from degree 5 on, training and test error stay close and the test error creeps up again. With 60 training listings, the training error falls steadily (to 0.193 at degree 8) while the test error rises from degree 3 on and explodes at degree 8, where the polynomial predicts absurd prices for listings outside the range of the 60 it has seen. Overfitting is a problem of **flexibility relative to the amount of data**. Note also how much remains unexplained: an RMSE of 0.45 on the log scale means typical errors of a factor of about e^0.45 ≈ 1.6. Guests and distance are not enough; room type and district (page 1) help more than any polynomial.
 
 ### In practice
 
@@ -104,7 +107,7 @@ With 5,700 training decisions, more flexibility helps a little up to degree 8 (t
 - Finance: trading strategies backtested over many variants look profitable on past data and fail on new data ("backtest overfitting", Bailey et al., 2014).
 
 > [!IMPORTANT]
-> **Practice (block 2, part 1).** In the case-study notebook, compare training and test error for increasing polynomial degree, first on the toy data, then on the early-invalidation data with all training rows and with a small training set. Where does the test error stop improving?
+> **Practice (block 2, part 1).** In the case-study notebook, compare training and test error for increasing polynomial degree, first on the toy data, then on the Berlin price model with all training listings and with 60. Where does the test error stop improving, and at which degree does the small model break down?
 
 ## The bias–variance trade-off
 
@@ -179,7 +182,7 @@ for degree in [1, 4, 12]:
 
 ### Concept
 
-Least squares squares the residuals, so a few gross errors (typing errors, unit mix-ups, placeholder dates) can pull the whole line towards them.
+Least squares squares the residuals, so a few gross errors (typing errors, unit mix-ups, placeholder values, a nightly price of €10,025) can pull the whole line towards them.
 
 ![Eight gross errors at large x tilt the least-squares line; the Huber line follows the bulk of the data](figures/robust-vs-ols.png)
 
@@ -240,46 +243,48 @@ Many decisions concern a typical case or a tail rather than the average: deliver
 
 ### How it works in Python
 
-The case study contains a real version of the gross errors in the figure. Among the decisions that ended early, 77 in the sample have an end date in the year 1900, about 120 years **before** the start date (a placeholder date; they all carry the same invalidation reason code, 55). Fit the number of days valid on the start date, once with these rows included:
+The listings contain a real version of the gross errors in the figure. A house for five and a loft for seven guests ask €7,999 and €10,025 a night, 15 km from the centre (Session 4 flagged them; they may be typing errors or prices that block bookings). Other high prices are genuine: houseboats for 12 to 16 guests in Treptow-Köpenick, about 16 to 22 km out, ask €1,800 to €4,500. Fit the price in euros (not on the log scale, so that the outliers act fully) on the number of guests and the distance to Alexanderplatz. A host-pricing use case adds a second question: what do the **top 10 %** of comparable listings charge?
 
 ```python
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
 from sklearn.linear_model import HuberRegressor
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-early = decisions[decisions["invalidation_reason"].notna()].copy()
-early["days_valid"] = (early["end_date"] - early["start_date"]).dt.days      # includes the placeholders
-early["start_year"] = (early["start_date"] - pd.Timestamp("2017-01-01")).dt.days / 365.25
-print((early["days_valid"] < 0).sum(), early["days_valid"].min())          # 77 -45175
-train, test = train_test_split(early, test_size=0.2, random_state=42)
-clean_test = test[test["days_valid"] >= 0]                                 # judge on plausible rows
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)].copy()
+short["km_to_centre"] = 111.2 * np.hypot(short["latitude"] - 52.5219,
+                                         (short["longitude"] - 13.4132) * np.cos(np.radians(52.52)))
+train, test = train_test_split(short, test_size=0.2, random_state=42)
+print(train.nlargest(2, "price")[["price", "accommodates", "km_to_centre"]].round(1).to_dict("records"))
 
-fits = {"OLS (mean)": smf.ols("days_valid ~ start_year", train).fit(),
-        "median (q=0.5)": smf.quantreg("days_valid ~ start_year", train).fit(q=0.5),
-        "q=0.9": smf.quantreg("days_valid ~ start_year", train).fit(q=0.9),
-        "OLS, clean rows": smf.ols("days_valid ~ start_year", train[train["days_valid"] >= 0]).fit()}
+formula = "price ~ accommodates + km_to_centre"                    # raw EUR, so the outliers act fully
+fits = {"OLS (mean)": smf.ols(formula, train).fit(),
+        "median (q=0.5)": smf.quantreg(formula, train).fit(q=0.5),
+        "q=0.9": smf.quantreg(formula, train).fit(q=0.9),
+        "OLS, prices < 1,000": smf.ols(formula, train[train["price"] < 1000]).fit()}
 for name, fit in fits.items():
-    pred = fit.predict(clean_test)
-    print(f"{name:15s} intercept {fit.params['Intercept']:7.1f}  slope {fit.params['start_year']:6.1f}  "
-          f"MAE {mean_absolute_error(clean_test['days_valid'], pred):5.0f}  "
-          f"RMSE {root_mean_squared_error(clean_test['days_valid'], pred):5.0f}")
-huber = HuberRegressor(max_iter=1000).fit(train[["start_year"]], train["days_valid"])
-print("Huber           intercept", round(huber.intercept_, 1), " slope", round(huber.coef_[0], 1))
+    pred = fit.predict(test)
+    print(f"{name:20s} intercept {fit.params['Intercept']:6.1f}  per guest {fit.params['accommodates']:5.1f}"
+          f"  per km {fit.params['km_to_centre']:5.2f}  test MAE {mean_absolute_error(test['price'], pred):5.1f}"
+          f"  share of test prices below {np.mean(test['price'] <= pred):.2f}")
+huber = HuberRegressor(max_iter=1000).fit(train[["accommodates", "km_to_centre"]], train["price"])
+print("Huber                intercept", round(huber.intercept_, 1), " per guest", round(huber.coef_[0], 1),
+      " per km", round(huber.coef_[1], 2))
 ```
 
 ```
-77 -45175
-OLS (mean)      intercept   241.4  slope  -74.0  MAE   533  RMSE   621
-median (q=0.5)  intercept   677.6  slope  -45.2  MAE   281  RMSE   328
-q=0.9           intercept  1027.0  slope  -14.8  MAE   455  RMSE   552
-OLS, clean rows intercept   617.5  slope  -26.0  MAE   283  RMSE   327
-Huber           intercept 646.3  slope -37.0
+[{'price': 10025.0, 'accommodates': 7, 'km_to_centre': 14.5}, {'price': 7999.2, 'accommodates': 5, 'km_to_centre': 15.6}]
+OLS (mean)           intercept   59.6  per guest  38.3  per km -0.61  test MAE  70.7  share of test prices below 0.61
+median (q=0.5)       intercept   76.7  per guest  30.7  per km -3.29  test MAE  65.5  share of test prices below 0.49
+q=0.9                intercept  117.3  per guest  54.5  per km -4.64  test MAE 123.6  share of test prices below 0.89
+OLS, prices < 1,000  intercept   93.7  per guest  30.9  per km -3.59  test MAE  66.9  share of test prices below 0.60
+Huber                intercept 81.4  per guest 30.6  per km -3.37
 ```
-The 77 placeholder rows (about 1 % of the training rows) pull the least-squares intercept from 618 to 241 days and nearly triple the slope; its errors on the plausible test rows almost double. The median line (678 days, slope −45) and the Huber line (646 days, slope −37) stay close to the fit on clean rows: both are robust to gross errors in y. The 90th-percentile line answers another question: the longest-lasting early-invalidated decisions run about 1,000 days, almost the full term, and that upper quantile depends little on the start date. Removing the placeholder rows is the right fix here, because they are errors (Session 4); the robust fits show what happens when you have not found them yet.
+
+The extreme prices flatten the least-squares distance effect to €0.61 per km: in the OLS world, location hardly matters. The two most extreme prices alone do most of the damage, because both lie about 15 km from the centre where few listings are: dropping just these two rows moves the OLS slope to €2.64 per km. The median line (€3.29 per km), the Huber line (€3.37) and least squares without the 25 training prices above €1,000 (€3.59) agree: a night costs about €3.30 to €3.60 less per kilometre from Alexanderplatz, and about €31 more per additional guest. The robust fits also predict better (test MAE €65.5 against €70.7). The 90th-percentile line answers the host's other question: at the upper end of the market, each guest adds €54 and each kilometre costs €4.64; 89 % of the test prices lie below it, close to the intended 90 %. A host who wants to price "like the better listings nearby" would use that line; one who wants a typical price, the median line. Removing or correcting the extreme prices is still the right fix once they are confirmed as errors (Session 4); the robust fits show what happens before you have found them.
 
 ### In practice
 
@@ -288,7 +293,7 @@ The 77 placeholder rows (about 1 % of the training rows) pull the least-squares 
 - Engel's law: quantile regression on Engel's 1857 household data, a standard example since Koenker and Bassett (1982), shows that food expenditure rises with income at every quantile, but more steeply at the upper quantiles ([workbook 12](../workbooks/12-quantile-regression-statsmodels.ipynb)).
 
 > [!IMPORTANT]
-> **Practice (block 2, part 2).** Compare least squares with Huber and quantile regression on the days valid of early-invalidated decisions, with and without the 77 placeholder rows. Which model would you use to tell a trader how long a typical decision lasts before early invalidation, and which to describe the decisions that last longest?
+> **Practice (block 2, part 2).** Compare least squares with Huber and quantile regression for the nightly price, with and without the extreme prices. Which model would you use to suggest a typical price to a new host, and which to tell them what the most expensive 10 % of comparable listings charge? Add room type to the model: do the conclusions change?
 
 > [!CAUTION]
 > Quantile lines fitted separately can cross (the 0.9 line below the 0.5 line for some x), especially at the edges of the data. Check a plot before reporting them.
@@ -296,10 +301,10 @@ The 77 placeholder rows (about 1 % of the training rows) pull the least-squares 
 ## Check your understanding
 
 1. A model has training RMSE 0.06 and test RMSE 0.65. Underfitting or overfitting? Name two remedies.
-2. Why does the degree-12 polynomial hardly overfit on the 5,700 training decisions, although it overfits badly on 60?
+2. Why does the degree-8 polynomial hardly overfit on the 5,360 training listings, although it fails completely on 60?
 3. Explain bias and variance with the example of a straight line and a degree-15 polynomial fitted to a curve.
 4. What does the Huber loss do with a residual of 10 compared with least squares?
-5. Why does the least-squares line of days valid move so much when 77 placeholder rows are added, while the median line hardly moves? What question does each line answer?
+5. Why does a handful of extreme prices flatten the least-squares distance effect from about €3.50 to €0.61 per km, while the median line is not affected? What question does the 90th-percentile line answer?
 
 ## Further reading
 

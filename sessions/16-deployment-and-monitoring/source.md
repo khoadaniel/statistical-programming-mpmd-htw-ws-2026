@@ -16,7 +16,7 @@ FastAPI documentation (MIT), Made With ML (MIT), Streamlit documentation and the
 | [theory/02-containers-and-continuous-delivery.md](theory/02-containers-and-continuous-delivery.md) | Block 2 theory | CC-BY-4.0, course team |
 | [theory/03-monitoring-and-maintenance.md](theory/03-monitoring-and-maintenance.md) | Block 3 theory | CC-BY-4.0, course team |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py), `drift-histogram.png`, `psi-explained.png` | Figures from the EBTI case-study data (issuing-country drift, chapter label shift with the released 2024 labels, PSI per country) | CC-BY-4.0, course team |
-| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Practice block 3: drift, label shift, retraining candidates, final submission (L4) | Author: course team, licence CC-BY-4.0 |
+| [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Practice block 3: drift, label shift, retraining candidates, final submission (L3) | Author: course team, licence CC-BY-4.0 |
 | [workbooks/make_feedback_2024.py](workbooks/make_feedback_2024.py) | Lecturer script: releases the 2024 labels (`--out` for another path) | Author: course team, licence MIT |
 | [workspace/](workspace/README.md) | Package `tariff_service`, tests, Dockerfile, workflows, model card template, dashboard | Code: MIT; text: CC-BY-4.0, course team |
 

@@ -1,6 +1,6 @@
 # Clustering and k-means
 
-Until now every model in the course had a target: a heading, a churn flag, a price. This page starts the part of machine learning that works without one. It explains what unsupervised learning can and cannot deliver, why distances and scaling decide the result, how k-means works (computed by hand on six numbers) and how to choose the number of clusters with the elbow method and the silhouette coefficient. The running example is the Telco customer data of Sessions 6 and 8, now used without the churn label.
+Until now every model in the course had a target: a heading, a churn flag, a price. This page starts the part of machine learning that works without one. It explains what unsupervised learning can and cannot deliver, why distances and scaling decide the result, how k-means works (computed by hand on six numbers) and how to choose the number of clusters with the elbow method and the silhouette coefficient. The running example is the Telco customer data of Sessions 6 and 8, now used without the churn label. Pages 2 to 4 turn to the Berlin listings of Inside Airbnb, the second dataset of the course.
 
 The code blocks on this page build on each other; run them in order from the repository root.
 

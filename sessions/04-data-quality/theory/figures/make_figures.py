@@ -30,30 +30,38 @@ def save(fig, name):
     print("saved", name)
 
 
+def load_listings():
+    return pd.read_parquet(DATA / "airbnb" / "listings.parquet")
+
+
 def missingness_pattern():
-    d = pd.read_parquet(DATA / "train.parquet",
-                        columns=["issuing_country", "keywords", "status", "invalidation_reason", "start_date", "end_date"])
-    by_country = d.groupby("issuing_country").agg(share=("keywords", lambda s: s.isna().mean()), n=("keywords", "size"))
-    by_country = by_country[by_country["n"] >= 1000].sort_values("share", ascending=False)
-    days = (d["end_date"] - d["start_date"]).dt.days
-    group = np.select([d["status"].eq("VALID"), days.between(1094, 1096)],
-                      ["valid", "invalid,\nfull 3 years"], "invalid,\nended early")
-    structural = d["invalidation_reason"].isna().groupby(group).mean().reindex(
-        ["valid", "invalid,\nfull 3 years", "invalid,\nended early"])
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4), layout="constrained", width_ratios=[1.5, 1])
+    d = load_listings()
+    d["price_missing"] = d["price"].isna()
+    bands = pd.cut(d["number_of_reviews_ltm"], [-1, 0, 2, 10, 10_000], labels=["0", "1–2", "3–10", "> 10"])
+    avail = np.where(d["availability_365"].eq(0), "no free night in the next year", "at least one free night")
+    by_reviews = d.groupby([bands, avail], observed=True)["price_missing"].mean().unstack()
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 4), layout="constrained", width_ratios=[1.3, 1])
     ax = axes[0]
-    ax.bar(by_country.index, by_country["share"] * 100, color=BLUE, width=0.65)
-    overall = d["keywords"].isna().mean() * 100
-    ax.axhline(overall, color=MUTED, ls="--", lw=1)
-    ax.text(len(by_country) - 0.5, overall + 0.1, f"all: {overall:.1f} %", ha="right", color=MUTED, fontsize=9)
-    ax.set(ylabel="% of decisions without keywords", title="Keywords missing: depends on the issuing country (not MCAR)")
-    ax.tick_params(axis="x", labelsize=8.5)
+    x = np.arange(len(by_reviews))
+    ax.bar(x - 0.2, by_reviews["at least one free night"] * 100, width=0.4, color=BLUE, label="at least one free night")
+    ax.bar(x + 0.2, by_reviews["no free night in the next year"] * 100, width=0.4, color=MUTED,
+           label="no free night in the next year")
+    ax.set_xticks(x, by_reviews.index)
+    ax.set(xlabel="reviews in the last 12 months", ylabel="% of listings without a price", ylim=(0, 128),
+           title="Price missing: depends on availability and on recent reviews")
+    ax.legend(fontsize=8.5, loc="upper center", ncols=2)
     ax = axes[1]
-    ax.bar(structural.index, structural.values * 100, color=ORANGE, width=0.6)
-    for x, v in enumerate(structural.values):
-        ax.text(x, v * 100 + 2, f"{v:.1%}", ha="center", fontsize=9, color=INK)
-    ax.set(ylim=(0, 115), ylabel="% without invalidation reason",
-           title="Invalidation reason: missing by design")
+    labels = ["no reviews", "≥ 1 review", "no free\nnight", "≥ 1 free\nnight"]
+    values = [d.loc[d["number_of_reviews"].eq(0), "review_scores_rating"].isna().mean(),
+              d.loc[d["number_of_reviews"].gt(0), "review_scores_rating"].isna().mean(),
+              d.loc[d["availability_365"].eq(0), "price_missing"].mean(),
+              d.loc[d["availability_365"].gt(0), "price_missing"].mean()]
+    ax.bar(labels, np.array(values) * 100, color=[ORANGE, ORANGE, MUTED, MUTED], width=0.6)
+    for i, v in enumerate(values):
+        ax.text(i, v * 100 + 2, f"{v:.1%}", ha="center", fontsize=9, color=INK)
+    ax.text(0.5, 108, "review score missing", ha="center", fontsize=9, color=ORANGE)
+    ax.text(2.5, 108, "price missing", ha="center", fontsize=9, color=MUTED)
+    ax.set(ylim=(0, 118), ylabel="% missing", title="Missing for a reason (structural)")
     for a in axes:
         a.grid(axis="y", color=GRID, lw=0.8)
         a.set_axisbelow(True)
@@ -73,29 +81,26 @@ def fences(x):
 
 
 def univariate_outliers():
-    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["description"])
-    length = r["description"].str.len().to_numpy()
+    price = load_listings()["price"].dropna().to_numpy()
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.8), layout="constrained")
     styles = {"IQR rule": (ORANGE, "-"), "z-score |z| > 3": (AQUA, "--"), "MAD rule |z*| > 3.5": (INK, ":")}
-    # raw scale
     ax = axes[0]
-    ax.hist(length[length < 4000], bins=80, color="#a9c7ee")
-    for name, (lo, hi) in fences(length).items():
-        share = np.mean((length < lo) | (length > hi))
+    ax.hist(price[price < 1000], bins=80, color="#a9c7ee")
+    for name, (lo, hi) in fences(price).items():
+        share = np.mean((price < lo) | (price > hi))
         ax.axvline(hi, color=styles[name][0], ls=styles[name][1], lw=1.8, label=f"{name}: {share:.1%} flagged")
-    ax.set(title="Description length, raw scale (cut at 4,000)", xlabel="characters", ylabel="decisions")
+    ax.set(title="Price per night, raw scale (cut at €1,000; max €10,025)", xlabel="EUR per night", ylabel="listings")
     ax.legend(fontsize=8.5)
-    # log scale
     ax = axes[1]
-    loglen = np.log10(length)
-    ax.hist(loglen, bins=80, color="#a9c7ee")
-    for name, (lo, hi) in fences(loglen).items():
-        share = np.mean((loglen < lo) | (loglen > hi))
+    logp = np.log10(price)
+    ax.hist(logp, bins=80, color="#a9c7ee")
+    for name, (lo, hi) in fences(logp).items():
+        share = np.mean((logp < lo) | (logp > hi))
         for v in (lo, hi):
             ax.axvline(v, color=styles[name][0], ls=styles[name][1], lw=1.8,
                        label=f"{name}: {share:.1%} flagged" if v == lo else None)
     ax.set_xticks([0, 1, 2, 3, 4], ["1", "10", "100", "1,000", "10,000"])
-    ax.set(title="Description length, log scale: rules flag both tails", xlabel="characters (log scale)")
+    ax.set(title="Price, log scale: the rules flag both tails", xlabel="EUR per night (log scale)")
     ax.set_ylim(0, ax.get_ylim()[1] * 1.45)
     ax.legend(fontsize=8.5, loc="upper left", frameon=True, facecolor="white", edgecolor="white", framealpha=1)
     for a in axes:
@@ -105,15 +110,14 @@ def univariate_outliers():
 
 
 def box_cox():
-    r = pd.read_parquet(DATA / "train_sample.parquet", columns=["description"])
-    length = r["description"].str.len().to_numpy()
-    transformed, lam = stats.boxcox(length)
+    price = load_listings()["price"].dropna().to_numpy()
+    transformed, lam = stats.boxcox(price)
     fig, axes = plt.subplots(2, 2, figsize=(11, 6), layout="constrained")
-    for col, (x, title) in enumerate([(length, "before: description length"),
+    for col, (x, title) in enumerate([(price, "before: price per night"),
                                       (transformed, f"after: Box–Cox, λ = {lam:.2f}")]):
         ax = axes[0, col]
-        ax.hist(x if col else x[x < 4000], bins=70, color=BLUE)
-        ax.set(title=f"{title}  (skewness {stats.skew(x):.2f})", ylabel="decisions")
+        ax.hist(x if col else x[x < 1000], bins=70, color=BLUE)
+        ax.set(title=f"{title}  (skewness {stats.skew(x):.2f})", ylabel="listings")
         ax.grid(axis="y", color=GRID, lw=0.8)
         ax.set_axisbelow(True)
         ax = axes[1, col]
@@ -122,7 +126,8 @@ def box_cox():
         (osm, osr), (slope, intercept, _) = stats.probplot(sub, dist="norm")
         ax.scatter(osm, osr, s=6, color=BLUE, alpha=0.5, linewidths=0)
         ax.plot(osm, slope * osm + intercept, color=ORANGE, lw=1.5)
-        ax.set(xlabel="normal quantiles", ylabel="sample quantiles", title="normal Q–Q plot (2,000 decisions)")
+        ax.set(xlabel="normal quantiles", ylabel="sample quantiles", title="normal Q–Q plot (2,000 listings)")
+    axes[0, 0].set_xlabel("EUR per night (values above €1,000 not shown)")
     save(fig, "box-cox-before-after.png")
 
 

@@ -16,7 +16,7 @@
 - Describing data by variable type: [variable types](theory/01-describing-data.md#variable-types), [distributions](theory/01-describing-data.md#distributions), [centre and spread](theory/01-describing-data.md#centre-and-spread), [robust summaries](theory/01-describing-data.md#robust-summaries), [frequency tables](theory/01-describing-data.md#frequency-tables)
 - Choosing and designing charts with matplotlib, seaborn and Plotly: [choosing a chart](theory/02-chart-design.md#choosing-a-chart-for-the-question), [perception](theory/02-chart-design.md#perception-and-the-dataink-ratio), [matplotlib and annotation](theory/02-chart-design.md#matplotlib-figures-axes-labels-and-annotation), [colour and accessibility](theory/02-chart-design.md#colour-and-accessibility), [seaborn](theory/02-chart-design.md#seaborn-statistical-plots-and-small-multiples), [Plotly](theory/02-chart-design.md#interactive-charts-with-plotly-express)
 
-*Practice:* Languages, description length and number of decisions per month; [improve a poorly designed chart](theory/02-chart-design.md#critique-and-improve-a-chart).
+*Practice:* What does a night in Berlin cost, and where? Price distribution by room type, median price and listings by district, reviews per month since 2015 (Inside Airbnb Berlin); [improve a poorly designed chart](theory/02-chart-design.md#critique-and-improve-a-chart).
 
 ### 1:00–1:45 · Comparing groups
 
@@ -25,7 +25,7 @@
 - [A/B tests as an application](theory/03-comparing-groups-and-tests.md#ab-tests-as-an-application)
 - [Choosing a test from a decision table](theory/03-comparing-groups-and-tests.md#choosing-a-test-from-a-decision-table)
 
-*Practice:* Are German descriptions longer than French ones (Mann–Whitney, effect size)? Issuing country × section and German language × chapter 85 (chi-square, Cramér's V): large, moderate and significant-but-negligible effects.
+*Practice:* How much more does an entire home cost than a private room, and Mitte than Neukölln (Welch, Mann–Whitney, CI, Cohen's d, CLES)? Does superhost status change the price (the two tests disagree)? Multi-listing host × licence entry and district × room type (chi-square, Cramér's V); a simulated A/B test of a listing page.
 
 ### 2:00–2:45 · Relationships and communication
 
@@ -33,7 +33,7 @@
 - [From correlation to the regression line](theory/04-correlation-and-communication.md#from-correlation-to-the-regression-line) (the bridge to Session 6)
 - [Communicating findings in a short report or a Streamlit dashboard](theory/04-correlation-and-communication.md#communicating-findings-a-short-report-or-a-streamlit-dashboard)
 
-*Practice:* Case study: correlation of description length and number of keywords (exploratory), confounding by language; a one-page report or a dashboard of decisions per month by country and chapter for a customs analyst.
+*Practice:* How strongly does the price rise with the number of guests (Pearson, Spearman, log scale)? Do district price differences survive once room type, size and the type of stay are held fixed (a €10 gap that vanishes)? A one-page finding or a Streamlit dashboard of prices by district for a city housing analyst.
 
 ## Materials
 
@@ -60,14 +60,14 @@
 | [workbooks/15-correlation.ipynb](workbooks/15-correlation.ipynb) | Think Stats ch. 7: scatter plots, Pearson, Spearman, causation | 3 | core |
 | [workbooks/16-correlation-and-simple-regression.ipynb](workbooks/16-correlation-and-simple-regression.ipynb) | Pearson, Spearman, Kendall; simple regression | 3 | core |
 | [workbooks/17-seaborn-regression.ipynb](workbooks/17-seaborn-regression.ipynb) | `regplot`, `lmplot`, residual plots in seaborn | 3 | optional |
-| [workbooks/18-case-study-ebti-exploration.ipynb](workbooks/18-case-study-ebti-exploration.ipynb) | **Case study** for all three practice tasks | 1–3 | core |
-| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of EBTI decisions per month by country and chapter, with exercises | 3 | core |
+| [workbooks/18-case-study-airbnb-exploration.ipynb](workbooks/18-case-study-airbnb-exploration.ipynb) | **Case study (Inside Airbnb Berlin)** for all three practice tasks | 1–3 | core |
+| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of short-stay prices and listings by district, with exercises | 3 | core |
 
 Sources and licences of third-party notebooks: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Revise mean, median, standard deviation, confidence interval and p-value from your first-semester statistics module. Run the first two cells of the [case-study notebook](workbooks/18-case-study-ebti-exploration.ipynb) to check that the data load. Optional: read chapter 1 of Healy, *Data Visualization* (link below).
+**Preparation.** Revise mean, median, standard deviation, confidence interval and p-value from your first-semester statistics module. Prepare the Airbnb data once with `uv run python case-study/prepare_airbnb.py` (downloads about 100 MB) and run the first two cells of the [case-study notebook](workbooks/18-case-study-airbnb-exploration.ipynb) to check that the data load. Optional: read chapter 1 of Healy, *Data Visualization* (link below).
 
 **Team project until the next session.** Exploratory and statistical findings of the project, presented in a short team review.
 
@@ -84,6 +84,7 @@ Sources and licences of third-party notebooks: [source.md](source.md).
 The course environment (root `pyproject.toml`) contains everything needed: pandas, pyarrow, matplotlib, seaborn, plotly, scipy, statsmodels, streamlit. From the repository root:
 
 ```bash
+uv run python case-study/prepare_airbnb.py   # Inside Airbnb Berlin, once (case study, figures, dashboard)
 uv run jupyter lab                       # notebooks
 uv run streamlit run sessions/05-eda-and-statistics/workbooks/dashboard_app.py   # dashboard
 uv run python sessions/05-eda-and-statistics/theory/figures/make_figures.py     # regenerate figures

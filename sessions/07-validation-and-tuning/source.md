@@ -45,7 +45,8 @@ Workbooks 10 and 11 download the California housing data with `fetch_california_
 |---|---|---|
 | [theory/01-splits-and-cross-validation.md](theory/01-splits-and-cross-validation.md), [theory/02-regularisation-and-tuning.md](theory/02-regularisation-and-tuning.md), [theory/03-leakage-and-final-test.md](theory/03-leakage-and-final-test.md) | Theory pages of the three blocks. Author: course team | CC-BY-4.0 |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) and its PNGs (`cv_splits.png`, `validation_curve.png`, `learning_curve.png`) | Figures of the theory pages. Author: course team | CC-BY-4.0 |
-| [workbooks/19-case-study-validation.ipynb](workbooks/19-case-study-validation.ipynb) | Case study on the EBTI decisions and Telco churn: CV with bootstrap CIs (description-length regression, churn, heading classifier), tuning ridge and the classifier's alpha, random vs time-based vs grouped validation, word selection outside CV vs Pipeline, the customs' justification and keywords as target leakage. Author: course team | CC-BY-4.0 |
+| [workbooks/19-case-study-validation.ipynb](workbooks/19-case-study-validation.ipynb) | Case study on the EBTI decisions and Telco churn: CV with bootstrap CIs (churn, heading classifier), tuning `C` of the churn model and the classifier's alpha, random vs time-based vs grouped validation, word selection outside CV vs Pipeline, the customs' justification and keywords as target leakage. Author: course team | CC-BY-4.0 |
+| [workbooks/20-case-study-airbnb-price-validation.ipynb](workbooks/20-case-study-airbnb-price-validation.ipynb) | Case study on the Inside Airbnb Berlin listings: random vs host-grouped CV of a price model (ridge, random forest, gradient boosting), held-out hosts with listing and cluster bootstrap intervals, ridge and lasso on 480 columns, validation and learning curves, grid and randomised search. Author: course team | CC-BY-4.0 |
 
 ## Citations
 
@@ -60,6 +61,7 @@ Workbooks 10 and 11 download the California housing data with `fetch_california_
 - Hoerl, A. E. & Kennard, R. W. (1970). Ridge regression: biased estimation for nonorthogonal problems. *Technometrics*, 12(1), 55–67. https://doi.org/10.1080/00401706.1970.10488634
 - European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Frictionless Data / datasets (2026). *Harmonized System nomenclature (HS 2022)*, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
+- Inside Airbnb (2026). *Berlin, Germany: listings, calendar and reviews*, snapshot of 26 June 2026, CC BY 4.0; prepared with `case-study/prepare_airbnb.py` (host names and other personal data removed). https://insideairbnb.com/get-the-data/
 - INRIA (2024). *scikit-learn MOOC*. https://inria.github.io/scikit-learn-mooc/
 - James, G., Witten, D., Hastie, T., Tibshirani, R. & Taylor, J. (2023). *An Introduction to Statistical Learning with Applications in Python*. Springer. https://www.statlearning.com/
 - Kapoor, S. & Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns*, 4(9), 100804. https://doi.org/10.1016/j.patter.2023.100804

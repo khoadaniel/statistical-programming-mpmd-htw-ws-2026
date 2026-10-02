@@ -19,27 +19,27 @@
 - [Time series: trend, seasonality, autocorrelation](theory/01-time-series-and-baselines.md#time-series-trend-seasonality-and-autocorrelation)
 - [Aggregating to regular time intervals with pandas](theory/01-time-series-and-baselines.md#aggregating-to-regular-time-intervals-with-pandas)
 - [Baselines (naive, seasonal naive, moving average)](theory/01-time-series-and-baselines.md#baselines-naive-seasonal-naive-and-moving-average)
-- *Practice:* compute the monthly number of BTI decisions and its baseline forecasts → Part 1 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
+- *Practice:* how busy is Airbnb in Berlin month by month? Build the monthly number of guest reviews (a proxy for stays), check its quality (partial last month, missing listings, the pandemic break) and compute the baseline forecasts → Part 1 of [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb)
 
 **1:00–1:45 · Exponential smoothing and ARIMA** ([theory/02](theory/02-exponential-smoothing-and-arima.md))
 
 - [Exponential smoothing](theory/02-exponential-smoothing-and-arima.md#exponential-smoothing) [with prediction intervals](theory/02-exponential-smoothing-and-arima.md#prediction-intervals)
 - [ARIMA as an outlook](theory/02-exponential-smoothing-and-arima.md#arima-as-an-outlook)
-- *Practice:* fit exponential smoothing and compare it with the baselines → Part 2 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
+- *Practice:* fit exponential smoothing to the review series, decide how to treat the pandemic months (keep, cut, or mark as missing) and compare with the baselines → Part 2 of [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb)
 
 **2:00–2:45 · Lag features, backtesting and metrics** ([theory/03](theory/03-lag-features-and-backtesting.md))
 
 - [Machine learning with lag features (using the tree-based models of Session 10)](theory/03-lag-features-and-backtesting.md#machine-learning-with-lag-features)
 - [Rolling-origin backtesting](theory/03-lag-features-and-backtesting.md#rolling-origin-backtesting)
 - [Forecast metrics: MAE and MASE](theory/03-lag-features-and-backtesting.md#forecast-metrics-mae-and-mase)
-- *Practice:* case study: backtest the models and recommend one with its prediction interval → Part 3 of [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb)
+- *Practice:* case study: how many Airbnb stays should Berlin expect next year? Backtest the models from six forecast origins and recommend one with its 12-month forecast and prediction interval → Part 3 of [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb)
 
 ## Materials
 
 | File | Content | Block | Status |
 |---|---|---|---|
-| [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Components, STL, ACF, resampling, baselines, MAE | 1 | core |
-| [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | SES by hand, Holt–Winters, ETS, prediction intervals, seasonal ARIMA | 2 | core |
+| [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Components, STL, ACF, resampling, data quality of the review series, baselines, MAE (Airbnb reviews) | 1 | core |
+| [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | SES by hand, Holt–Winters, ETS, choosing the history after a break, prediction intervals, seasonal ARIMA with missing months | 2 | core |
 | [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features, rolling-origin backtest, MASE, coverage, recommendation | 3 | core |
 | [workbooks/01-stl-decomposition.ipynb](workbooks/01-stl-decomposition.ipynb) | STL decomposition in statsmodels | 1 | optional |
 | [workbooks/02-statsforecast-quickstart.ipynb](workbooks/02-statsforecast-quickstart.ipynb) | StatsForecast quick start: AutoARIMA with intervals | 2 | optional |
@@ -50,13 +50,14 @@
 | [workbooks/07-time-related-feature-engineering.ipynb](workbooks/07-time-related-feature-engineering.ipynb) | Calendar features: one-hot, cyclical, splines (scikit-learn) | 3 | optional |
 | [workbooks/08-statsforecast-cross-validation.ipynb](workbooks/08-statsforecast-cross-validation.ipynb) | Rolling-origin cross-validation for many series (StatsForecast) | 3 | optional |
 | [workbooks/09-mlforecast-walkthrough.ipynb](workbooks/09-mlforecast-walkthrough.ipynb) | Lag features, LightGBM and backtesting for many series (MLForecast) | 3 | optional |
-| [workbooks/10-case-study-decision-forecast.ipynb](workbooks/10-case-study-decision-forecast.ipynb) | **Practice 1–3:** monthly BTI decisions, baselines, ETS, lag model, backtest, recommendation, forecast of the next 12 months (own) | 1–3 | core |
+| [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb) | **Practice 1–3:** monthly Airbnb reviews in Berlin, baselines, ETS, airline model, lag model, backtest, recommendation, forecast of the next 12 months, district series (own) | 1–3 | core |
+| [workbooks/11-optional-ebti-decision-forecast.ipynb](workbooks/11-optional-ebti-decision-forecast.ipynb) | Optional exercise: the same workflow on the monthly BTI decisions of the main case study (Brexit break) (own) | 1–3 | optional |
 
 Sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-decision-forecast.ipynb). It needs `case-study/data/monthly_counts.parquet` (see [case-study/README.md](../../case-study/README.md)).
+**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-airbnb-review-forecast.ipynb). It needs the Airbnb data in `case-study/data/airbnb/` (see [case-study/README.md](../../case-study/README.md)); the optional workbook 11 needs `case-study/data/monthly_counts.parquet`.
 
 **Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
 
@@ -66,15 +67,24 @@ Sources and licences: [source.md](source.md).
 - Hyndman and Koehler (2006). [Another look at measures of forecast accuracy](https://doi.org/10.1016/j.ijforecast.2006.03.001). *International Journal of Forecasting*.
 - Nixtla. [StatsForecast cross-validation tutorial](https://nixtlaverse.nixtla.io/statsforecast/docs/tutorials/crossvalidation.html) and [MLForecast end-to-end walkthrough](https://nixtlaverse.nixtla.io/mlforecast/docs/getting-started/end_to_end_walkthrough.html).
 - statsmodels. [Time series analysis (`tsa`)](https://www.statsmodels.org/stable/tsa.html).
+- Inside Airbnb. [Data assumptions](https://insideairbnb.com/data-assumptions/): how listings, calendars and reviews are scraped, and what the data cannot show.
 
 ## Setup
 
-The theory pages, the case-study notebook and workbooks 01, 03–07 run in the course environment (`uv run jupyter lab` in the repository root: pandas, statsmodels, scikit-learn, polars).
+Prepare the Airbnb data once from the repository root (downloads the Berlin snapshot of Inside Airbnb, about 100 MB):
+
+```bash
+uv run python case-study/prepare_airbnb.py
+```
+
+The theory pages, the case-study notebooks 10 and 11 and workbooks 01, 03–07 run in the course environment (`uv run jupyter lab` in the repository root: pandas, statsmodels, scikit-learn, polars).
 
 The Nixtla workbooks 02, 08 and 09 need extra packages:
 
 ```bash
 uv run --with statsforecast --with mlforecast --with utilsforecast --with datasetsforecast --with lightgbm jupyter lab
 ```
+
+On macOS, LightGBM needs the OpenMP runtime: `brew install libomp`.
 
 Several workbooks download their example data (CO₂, air passengers, M4, bike sharing from OpenML): an internet connection is needed. To regenerate the theory figures: `uv run python sessions/12-time-series/theory/figures/make_figures.py` from the repository root.

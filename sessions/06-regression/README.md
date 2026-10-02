@@ -20,14 +20,14 @@
 - [Simple and multiple linear regression](theory/01-lifecycle-and-linear-regression.md#simple-and-multiple-linear-regression) (least squares, coefficients, residuals)
 - [Regression metrics (MAE, RMSE, R²)](theory/01-lifecycle-and-linear-regression.md#regression-metrics)
 
-*Practice:* Map the heading-classification task of the leaderboard to the ten steps; split the EBTI data and model the length of the description of goods (log scale) with linear regression.
+*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the ten steps; split the Inside Airbnb listings, fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros against the median-price baseline.
 
 ### 1:00–1:45 · Model complexity and robust regression
 
 - [Underfitting and overfitting: model complexity (polynomial degree), training versus test error](theory/02-overfitting-and-robust-regression.md#underfitting-and-overfitting-model-complexity), [the bias–variance trade-off](theory/02-overfitting-and-robust-regression.md#the-biasvariance-trade-off)
 - Robust regression for data with outliers: [Huber](theory/02-overfitting-and-robust-regression.md#robust-regression-huber), [quantile regression](theory/02-overfitting-and-robust-regression.md#robust-regression-quantile-regression)
 
-*Practice:* Compare training and test error for increasing model complexity; compare least squares and robust regression on the number of days early-invalidated decisions stayed valid (skewed, with placeholder dates as gross errors).
+*Practice:* Compare training and test error for increasing model complexity with 5,360 and with 60 training listings; compare least squares with Huber and quantile regression on prices with extreme asking prices, and give a new host the median and the 90th-percentile price for a comparable listing.
 
 ### 2:00–2:45 · Logistic regression
 
@@ -60,14 +60,14 @@
 | [workbooks/14-theil-sen.ipynb](workbooks/14-theil-sen.ipynb) | Theil–Sen versus least squares and RANSAC | 2 | optional |
 | [workbooks/15-logistic-regression.ipynb](workbooks/15-logistic-regression.ipynb) | Logistic regression in scikit-learn, decision boundary, `predict_proba` (penguins) | 3 | core |
 | [workbooks/16-islp-classification-lab.ipynb](workbooks/16-islp-classification-lab.ipynb) | ISLP lab 4: logistic regression on stock-market data; sections on LDA, QDA, naive Bayes and KNN are beyond this session | 3 | optional |
-| [workbooks/17-case-study-ebti-regression-and-churn.ipynb](workbooks/17-case-study-ebti-regression-and-churn.ipynb) | **Case study** for all three practice tasks: lifecycle of the heading task, description-length regression, complexity and robust fits on early-invalidated decisions, Telco churn | 1–3 | core |
+| [workbooks/17-case-study-airbnb-price-and-churn.ipynb](workbooks/17-case-study-airbnb-price-and-churn.ipynb) | **Case study** for all three practice tasks: lifecycle of a Berlin price model, linear regression of the log price with metrics in euros, complexity curves, OLS vs Huber vs quantile regression (median and 90th percentile), Telco churn | 1–3 | core |
 | [workbooks/data/](workbooks/data/) | `penguins_regression.csv`, `penguins_classification.csv`, `house_prices.csv` for workbooks 01–03 and 15 | – | – |
 
 Sources and licences of third-party notebooks: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Re-read the last section of Session 5, [From correlation to the regression line](../05-eda-and-statistics/theory/04-correlation-and-communication.md#from-correlation-to-the-regression-line). Run the first cell of the [case-study notebook](workbooks/17-case-study-ebti-regression-and-churn.ipynb). Optional: ISLP sections 2.1–2.2 (link below).
+**Preparation.** Re-read the last section of Session 5, [From correlation to the regression line](../05-eda-and-statistics/theory/04-correlation-and-communication.md#from-correlation-to-the-regression-line). Prepare the Airbnb data once (`uv run python case-study/prepare_airbnb.py`) and run the first cell of the [case-study notebook](workbooks/17-case-study-airbnb-price-and-churn.ipynb). Optional: ISLP sections 2.1–2.2 (link below).
 
 **Team project until the next session.** Machine learning teams fit a first model; analytics teams complete their statistical analysis.
 
@@ -87,7 +87,7 @@ uv run jupyter lab
 uv run python sessions/06-regression/theory/figures/make_figures.py   # regenerate figures
 ```
 
-The case-study notebook reads the EBTI sample from `case-study/data/` (see [case-study/README.md](../../case-study/README.md)); its Telco part and the logistic-regression code on the theory page download the IBM Telco data (about 1 MB) from GitHub.
+The case-study notebook, the theory pages and the figures read the Inside Airbnb Berlin listings from `case-study/data/airbnb/`, created by `uv run python case-study/prepare_airbnb.py` (see [case-study/README.md](../../case-study/README.md)); its Telco part and the logistic-regression code on the theory page download the IBM Telco data (about 1 MB) from GitHub.
 
 The two ISLP labs (workbooks 04 and 16) need the `ISLP` package, which pulls in PyTorch (about 1 GB):
 

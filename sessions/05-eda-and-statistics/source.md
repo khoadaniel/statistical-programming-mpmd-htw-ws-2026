@@ -34,29 +34,31 @@ On 2026-10-01 the workbooks were renumbered into teaching order (old 03–09 bec
 
 | File | Covers | Licence |
 |---|---|---|
-| [workbooks/18-case-study-ebti-exploration.ipynb](workbooks/18-case-study-ebti-exploration.ipynb) | Case study (EBTI decisions) for all three practice tasks: variable types, languages and long tail of headings, chart redesign, German vs French description length (t-test/Mann–Whitney, effect sizes), country × section and language × chapter 85 (chi-square, Cramér's V), length vs keywords, confounding by language | Author: course team, licence CC-BY-4.0 |
-| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of EBTI decisions per month by issuing country and chapter | Author: course team, licence CC-BY-4.0 |
+| [workbooks/18-case-study-airbnb-exploration.ipynb](workbooks/18-case-study-airbnb-exploration.ipynb) | Case study (Inside Airbnb Berlin) for all three practice tasks: price distribution by room type and district, reviews per month, chart redesign, entire home vs private room, Mitte vs Neukölln and superhost comparisons (t-test/Mann–Whitney, CI, effect sizes), multi-listing host × licence entry and district × room type (chi-square, Cramér's V), simulated A/B test with sample-ratio check and peeking exercise, price vs guests, confounding by stay type, room type and size | Author: course team, licence CC-BY-4.0 |
+| [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of short-stay prices and listings by district (Inside Airbnb Berlin) | Author: course team, licence CC-BY-4.0 |
 | [theory/](theory/) (four pages) and [theory/figures/make_figures.py](theory/figures/make_figures.py) with its PNGs | Theory pages and figures | Author: course team, licence CC-BY-4.0 |
 
-The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`) in its left panel. All other figures and panels use the course case-study data (EBTI decisions). On 2026-10-02 the case-study material was reworked from the Amazon reviews to the EBTI decisions.
+The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`) in its left panel. All other figures and panels use the Inside Airbnb Berlin data (snapshot of 26 June 2026) or simulated data. On 2026-10-02 the case-study material was reworked from the Amazon reviews to the EBTI decisions, and later the same day from the EBTI decisions to Inside Airbnb Berlin, because the numeric questions of this session (prices, sizes, districts) are real there; the EBTI decisions remain the running text case study of the course.
 
 ## Citations
 
 - Bickel, P. J., Hammel, E. A., & O'Connell, J. W. (1975). Sex bias in graduate admissions: Data from Berkeley. *Science*, 187(4175), 398–404. https://doi.org/10.1126/science.187.4175.398
 - Charig, C. R., Webb, D. R., Payne, S. R., & Wickham, J. E. (1986). Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy. *BMJ*, 292(6524), 879–882. https://doi.org/10.1136/bmj.292.6524.879
 - Cleveland, W. S., & McGill, R. (1984). Graphical perception. *Journal of the American Statistical Association*, 79(387), 531–554. https://doi.org/10.1080/01621459.1984.10478080
-- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Downey, A. B. (2025). *Think Stats: Exploratory Data Analysis in Python* (3rd ed.). O'Reilly. https://allendowney.github.io/ThinkStats/
-- Frictionless Data / datasets (2026). *Harmonized System nomenclature (HS 2022)*, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - Galton, F. (1886). Regression towards mediocrity in hereditary stature. *Journal of the Anthropological Institute*, 15, 246–263.
 - Government Analysis Function (2023). *Data visualisation: charts*. https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-charts/
 - Haslwanter, T. (2022). *An Introduction to Statistics with Python* (2nd ed.). Springer. Code: https://github.com/thomas-haslwanter/statsintro_python
+- Inside Airbnb (2026). *Berlin, Germany*, snapshot of 26 June 2026 (listings and reviews). CC BY 4.0 (second course dataset; personal data removed by `case-study/prepare_airbnb.py`). https://insideairbnb.com/get-the-data/
+- Inside Airbnb. *Data assumptions*. https://insideairbnb.com/data-assumptions/
 - Healy, K. (2018). *Data Visualization: A Practical Introduction*. Princeton University Press. https://socviz.co/
 - Kohavi, R., Tang, D., & Xu, Y. (2020). *Trustworthy Online Controlled Experiments*. Cambridge University Press.
 - Matejka, J., & Fitzmaurice, G. (2017). Same stats, different graphs. *Proceedings of CHI 2017*.
 - Microsoft (2021). *Data Science for Beginners*. https://github.com/microsoft/Data-Science-For-Beginners
 - Miller, E. (2010). *How not to run an A/B test*. https://www.evanmiller.org/how-not-to-run-an-ab-test.html
+- Overgoor, J. (2014). *Experiments at Airbnb*. Airbnb Engineering & Data Science blog.
 - Pearl, J., Glymour, M., & Jewell, N. P. (2016). *Causal Inference in Statistics: A Primer*. Wiley.
+- Regulation (EU) 2024/1028 of the European Parliament and of the Council of 11 April 2024 on data collection and sharing relating to short-term accommodation rental services. https://eur-lex.europa.eu/eli/reg/2024/1028/oj
 - Poldrack, R. A. (2023). *Statistical Thinking for the 21st Century*. https://statsthinking21.github.io/statsthinking21-core-site/
 - Thomke, S. H. (2020). *Experimentation Works: The Surprising Power of Business Experiments*. Harvard Business Review Press.
 - Tufte, E. R. (2001). *The Visual Display of Quantitative Information* (2nd ed.). Graphics Press.

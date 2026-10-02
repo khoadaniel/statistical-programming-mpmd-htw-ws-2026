@@ -2,7 +2,7 @@
 
 This page covers the first block of Session 7. In Session 6 you split the data once into a training and a test set and reported one test score. That score answers the question "how well will the model do on new data?" only roughly: another split gives another number. Here we build the tools that make the answer reliable: a clear role for each part of the data, cross-validation that uses every row for validation once, splitters that respect groups and time, and a bootstrap interval that says how uncertain a score is.
 
-The code blocks on this page build on each other: run them in order from the repository root. The Telco churn data (7,043 customers) are downloaded from IBM's GitHub repository; the EBTI decisions come from `case-study/data/` (see [case-study/README.md](../../../case-study/README.md)).
+The code blocks on this page build on each other: run them in order from the repository root. The Telco churn data (7,043 customers) are downloaded from IBM's GitHub repository. Two case-study datasets come from `case-study/data/` (see [case-study/README.md](../../../case-study/README.md)): the EBTI customs decisions (`uv run python case-study/prepare_data.py`) and the Inside Airbnb listings for Berlin (`uv run python case-study/prepare_airbnb.py`).
 
 ```mermaid
 flowchart LR
@@ -159,12 +159,12 @@ for m in ["accuracy", "roc_auc", "f1"]:
 
 **Concept.** k-fold assumes that rows are independent and that the future looks like a random sample of the past. Two common situations break this.
 
-1. **Groups.** Several rows can belong to the same unit: several visits of the same patient, several transactions of the same customer, or, in the case study, renewed decisions that repeat the same description of goods word for word (4.6 % of the training descriptions repeat). If a group appears in both training and validation folds, the model can recognise the group instead of learning a general pattern. **`GroupKFold`** (or `GroupShuffleSplit` for a single split) assigns whole groups to folds, so no group appears on both sides. It needs a `groups` array, here the normalised description text.
+1. **Groups.** Several rows can belong to the same unit: several visits of the same patient, several transactions of the same customer, several Airbnb listings of the same host, or renewed EBTI decisions that repeat the same description of goods word for word (4.6 % of the training descriptions repeat). If a group appears in both training and validation folds, the model can recognise the group instead of learning a general pattern. **`GroupKFold`** (or `GroupShuffleSplit` for a single split) assigns whole groups to folds, so no group appears on both sides. It needs a `groups` array: the host identifier, or the normalised description text.
 2. **Time.** If the model will predict the future, a random split lets it train on decisions issued *after* the ones it is validated on. This hides changes over time (new products such as face masks in 2020, fewer English decisions after Brexit, the HS 2022 revision of the nomenclature), which are called **drift**. **`TimeSeriesSplit`** needs rows sorted by time. Split *i* trains on the first part and validates on the block that follows; the training window grows with each split (right panel of the figure above). A single **out-of-time** split (train 2017–2021, validate 2022–2023) is the simplest version.
 
 ```mermaid
 flowchart TD
-    Q1{"Will the model be used<br/>on new groups?<br/>(new products, patients)"} -->|yes| G["GroupKFold"]
+    Q1{"Will the model be used<br/>on new groups?<br/>(new hosts, patients)"} -->|yes| G["GroupKFold"]
     Q1 -->|no| Q2{"Will it predict<br/>the future?"}
     Q2 -->|yes| TS["TimeSeriesSplit or<br/>one out-of-time split"]
     Q2 -->|no| Q3{"Classification?"}
@@ -174,7 +174,38 @@ flowchart TD
 
 **Why it matters.** The splitter must reproduce the situation in which the model will be used. Ordinary k-fold measures performance on groups and periods already seen; the real use often involves new ones. The course leaderboard is split by time (training 2017–2023, test 2024–2026, with test descriptions that repeat a training description removed), so time-based validation is the closest imitation of it.
 
-**How it works in Python.** A text classifier for the heading: TF-IDF features of the description and a linear model (Session 13 explains both; here the model is a black box). Three single splits of the 50,000-decision sample with the same validation size: random, grouped by description, and by time.
+**How it works in Python: groups.** A price model for Berlin Airbnb listings: predict the log of the nightly price from size, location, room type and reviews with gradient boosting (Session 10; here a black box). The table is the short-stay table of Sessions 4–6 (6,701 listings with a price and a minimum stay below 28 nights) without the 26 listings priced below €10 or above €1,000, which Session 4 treats as outliers. Listings with a minimum stay of 28 nights or more are medium-term rentals with a different price basis (median €23 a night in this snapshot) and belong to another model. Many hosts offer several similar flats, often in the same building, with similar prices.
+
+```python
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.model_selection import GroupKFold
+
+lst = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+bnb = lst[(lst["minimum_nights"] < 28) & lst["price"].between(10, 1000)].reset_index(drop=True)
+bnb["dist_km"] = np.hypot((bnb["latitude"] - 52.5219) * 111.2,        # km to Alexanderplatz
+                          (bnb["longitude"] - 13.4132) * 68.0)
+cols = ["accommodates", "bedrooms", "beds", "bathrooms", "dist_km", "room_type", "district",
+        "number_of_reviews", "review_scores_rating", "availability_365"]
+X_bnb = pd.get_dummies(bnb[cols], columns=["room_type", "district"], dtype=int)
+y_bnb = np.log(bnb["price"])                                         # log of the nightly price in EUR
+hosts = bnb["host_id"]
+n_per_host = hosts.map(hosts.value_counts())
+print(len(bnb), hosts.nunique(), round((n_per_host > 1).mean(), 3), n_per_host.max())
+# 6675 3737 0.565 83   <- listings, hosts, share of listings whose host has several, largest host
+
+gbm = HistGradientBoostingRegressor(random_state=0)
+random_cv = cross_val_score(gbm, X_bnb, y_bnb, cv=KFold(5, shuffle=True, random_state=0), scoring="r2")
+grouped_cv = cross_val_score(gbm, X_bnb, y_bnb, cv=GroupKFold(5), groups=hosts, scoring="r2")
+print(random_cv.mean().round(3), random_cv.std().round(3))       # 0.636 0.033
+print(grouped_cv.mean().round(3), grouped_cv.std().round(3))     # 0.583 0.022
+```
+
+Random 5-fold cross-validation reports R² = 0.64; folds that keep each host on one side report 0.58. The difference is larger than the fold-to-fold spread, so it is not noise. In a random split, 55 % of the validation listings have a host whose other listings sit in the training folds, and for hosts with several listings the host's average alone explains 70 % of the variance of the log price. The model partly recognises "a flat of this host" instead of learning what size and location are worth. The effect depends on the model: the small linear model of Session 6 (guests, room type, distance, district) scores 0.513 with random and 0.502 with grouped folds, because four features leave little room to memorise hosts; the more flexible a model and the richer its features, the larger the gap (theory page 02 and the workbook). Which number is right depends on the use. A price suggestion for a **new host** should be judged with `GroupKFold`; a tool that only prices further flats of hosts already in the data may use the random estimate. The [Airbnb validation workbook](../workbooks/20-case-study-airbnb-price-validation.ipynb) repeats the comparison for a linear model and a random forest.
+
+> [!NOTE]
+> Inside Airbnb collects these data from public listing pages (CC BY 4.0; snapshot of 26 June 2026). The course copy has no host names. Use `host_id` only as a grouping key and report results in aggregate; never look up or name individual hosts.
+
+**How it works in Python: time.** A text classifier for the heading: TF-IDF features of the description and a linear model (Session 13 explains both; here the model is a black box). Three single splits of the 50,000-decision sample with the same validation size: random, grouped by description, and by time.
 
 ```python
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -269,9 +300,10 @@ With 13,199 validation decisions the accuracy interval is about ±0.007. The mac
 
 1. You tried 30 models and picked the one with the best validation score. Why is that validation score an optimistic estimate, and what number should you report instead?
 2. A 5-fold cross-validation gives accuracies 0.81, 0.79, 0.80, 0.82, 0.78. A colleague's new model gets 0.805 on one split. Is it better? What would you ask for?
-3. For each case, choose a splitter and justify it: (a) predicting next month's churn; (b) a heading classifier for next year's BTI requests; (c) classifying 500 tumour images from 120 patients.
+3. For each case, choose a splitter and justify it: (a) predicting next month's churn; (b) a heading classifier for next year's BTI requests; (c) classifying 500 tumour images from 120 patients; (d) a price suggestion for people who list their first flat on Airbnb.
 4. Why can `StratifiedKFold` not be used with the headings of the sample, and what does that tell you about the rarest headings?
 5. Describe in three steps how to compute a 95 % bootstrap interval for macro-F1 on a test set.
+6. Random cross-validation of the Berlin price model gives R² = 0.64, host-grouped cross-validation 0.58. Explain the gap in two sentences.
 
 ## Further reading
 

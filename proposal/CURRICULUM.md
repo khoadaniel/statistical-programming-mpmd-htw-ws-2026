@@ -2,7 +2,7 @@
 
 **Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
 
-The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on one established NLP dataset with a class leaderboard and applied in a team project with an analytics or a machine learning emphasis.
+The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on real datasets, EU customs decisions and Berlin Airbnb listings, with a class leaderboard.
 
 The analysis behind these decisions (curriculum, labour market, comparable courses, dataset and assessment) is in Part 1, [PREMISE.md](PREMISE.md).
 
@@ -14,7 +14,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Workload | 5 ECTS = 135 h: 40.5 h contact time (54 UE) and about 94.5 h self-study and project work (about 5 h per week) |
 | Participants | 22 students in seven teams (six of three, one of four) |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
-| Running case study | EU customs decisions (European Binding Tariff Information): predict the HS heading of a product from its description, with a leaderboard on a hidden, time-based test set |
+| Datasets | EU customs decisions (EBTI): predict the HS heading of a product from its description, with a leaderboard on a hidden, time-based test set; Inside Airbnb Berlin for the numeric topics; IBM Telco for churn |
 | Assessment | Final project with an analytics or machine learning emphasis, graded in its presentation (100 %) |
 
 ## Contents
@@ -23,7 +23,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 - [2. Module learning outcomes](#2-module-learning-outcomes)
 - [3. Session overview](#3-session-overview)
 - [4. Sessions](#4-sessions)
-- [5. Running case study and leaderboard](#5-running-case-study-and-leaderboard)
+- [5. Datasets and leaderboard](#5-datasets-and-leaderboard)
 - [6. Final project](#6-final-project)
 - [7. Assessment](#7-assessment)
 
@@ -47,7 +47,7 @@ flowchart LR
 - **Shared base (Sessions 1–4).** Every role needs Python, both for analysis in notebooks and for building applications (object-oriented programming, APIs), collaborative development with Git, SQL, Polars for large tables and the preparation of data.
 - **Analytics (Session 5).** Exploration and visualisation together with the statistics recap of the module description: descriptive statistics, tests, contingency tables and correlation, applied in Python. Correlation leads directly into regression, the first model of the next part.
 - **Machine learning (Sessions 6–16).** Built up from the simplest model to the most complex: linear and logistic regression, validation and tuning, classification and its evaluation metrics, feature engineering, tree-based models, unsupervised learning, forecasting, classical NLP, two sessions on large language models (from transformer and embedding models to RAG and agents) and deployment. The ML lifecycle is introduced at the start of this part.
-- **One running case study and one project.** Every method is practised on the same dataset of EU customs decisions, with a class leaderboard from Session 8. Teams then apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation.
+- **Real datasets and one project.** Methods are practised on EU customs decisions and Berlin Airbnb listings, with a class leaderboard from Session 8. Teams then apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation.
 
 ## 2. Module learning outcomes
 
@@ -251,7 +251,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Missing-value indicators
 - Univariate outliers (IQR rule, z-score, median absolute deviation)
 
-*Practice:* Is a missing keyword list related to the issuing country, language or year? Compare imputation methods; find outliers in description length and validity
+*Practice:* A third of the Berlin Airbnb listings show no price. Is a missing price related to reviews or availability? Recover hidden bedroom counts with several imputers; find outliers in price and minimum stay
 
 **2:00–2:45**
 
@@ -259,7 +259,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)
 - A documented cleaning pipeline
 
-*Practice:* Case study: produce the cleaned decision table with a log of the cleaning decisions
+*Practice:* Case study: produce the cleaned table of Berlin listings with a log of every cleaning decision
 
 **Team project until the next session.** Project charter: question, stakeholder, emphasis (analytics or machine learning), metric, baseline, data loaded.
 
@@ -282,7 +282,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Describing data by variable type: distributions, centre and spread, robust summaries, frequency tables
 - Choosing and designing charts with matplotlib, seaborn and Plotly (perception, colour, accessibility, annotation)
 
-*Practice:* Languages, description length and number of decisions per month; improve a poorly designed chart
+*Practice:* What does a night in Berlin cost, and where? Price by room type and district, reviews per month; improve a poorly designed chart
 
 **1:00–1:45**
 
@@ -291,7 +291,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - A/B tests as an application
 - Choosing a test from a decision table
 
-*Practice:* Are German descriptions longer than French ones? Issuing country × section (chi-square, Cramér's V): large, moderate and significant-but-negligible effects
+*Practice:* How much more does an entire home cost than a private room, and Mitte than Neukölln (tests, confidence intervals, effect sizes)? Do hosts with several listings show a registration number more often (chi-square, Cramér's V)?
 
 **2:00–2:45**
 
@@ -299,7 +299,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - From correlation to the regression line (the bridge to Session 6)
 - Communicating findings in a short report or a Streamlit dashboard
 
-*Practice:* Case study: correlation of description length and number of keywords, confounding by language; a one-page report or dashboard of decisions per month for a customs analyst
+*Practice:* Case study: how strongly does the price rise with the number of guests? Do district price differences survive once room type and size are held fixed? A one-page report or a dashboard of prices by district
 
 **Team project until the next session.** Exploratory and statistical findings of the project, presented in a short team review.
 
@@ -331,14 +331,14 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Simple and multiple linear regression (least squares, coefficients, residuals)
 - Regression metrics (MAE, RMSE, R²)
 
-*Practice:* Map the heading-classification task to the ten steps; split the data and model the length of the description (log scale) with linear regression
+*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the ten steps; fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros
 
 **1:00–1:45**
 
 - Underfitting and overfitting: model complexity (polynomial degree), training versus test error, the bias–variance trade-off
 - Robust regression (Huber, quantile regression) for data with outliers
 
-*Practice:* Compare training and test error for increasing model complexity; compare least squares and robust regression on how long early-invalidated decisions stayed valid
+*Practice:* Compare training and test error for increasing model complexity; compare least squares with Huber and quantile regression on prices with extreme asking prices
 
 **2:00–2:45**
 
@@ -370,7 +370,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Grouped and time-series splits
 - Bootstrap confidence interval of a metric
 
-*Practice:* Cross-validate the regression and logistic models of Session 6 and report the scores with confidence intervals
+*Practice:* How well would a price model work for a host listing a first flat in Berlin? Cross-validate the Airbnb price model with random and host-grouped folds and report the error in euros with a bootstrap interval
 
 **1:00–1:45**
 
@@ -379,7 +379,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Validation curves and learning curves to diagnose underfitting and overfitting
 - Hyperparameter tuning with GridSearchCV and RandomizedSearchCV
 
-*Practice:* Tune the ridge penalty and the regularisation of logistic regression; compare random and time-based validation for the heading classifier
+*Practice:* Tune the ridge and lasso penalties of the price model and read its validation and learning curves
 
 **2:00–2:45**
 
@@ -388,7 +388,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Nested cross-validation
 - The final test on held-out data
 
-*Practice:* Demonstrate a leaking workflow, then fix it with a Pipeline and compare the scores
+*Practice:* Demonstrate a leaking workflow on the EBTI decisions (the customs' justification as a feature), then fix it with a Pipeline and compare the scores
 
 **Team project until the next session.** Validation plan for the project model (machine learning teams); uncertainty of key results (analytics teams).
 
@@ -426,7 +426,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Decision thresholds from the costs of errors
 - Calibration of predicted probabilities
 
-*Practice:* Case study: first leaderboard submission, a logistic regression on the simple text features of Session 2
+*Practice:* Case study: first leaderboard submission (L1), a logistic regression on the simple text features of Session 2
 
 **Team project until the next session.** Baseline and first validated model.
 
@@ -448,7 +448,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - High-cardinality categories: grouping rare categories, target encoding and its leakage risk
 - Custom transformers in scikit-learn pipelines
 
-*Practice:* Build date, interaction and target-encoded features for the decisions, validated by time
+*Practice:* Which constructed features help the Berlin price model? Build distance, amenity, date and interaction features and a target-encoded neighbourhood, and measure each one
 
 **1:00–1:45**
 
@@ -456,7 +456,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Target leakage through aggregates
 - Simple text statistics as features
 
-*Practice:* Case study: detect the leaking justification column (it names the heading and is missing in the test data) and replace a leaky description lookup by a past-only one
+*Practice:* Case study: which listings will be busy next year? Build past-only demand features from the monthly reviews and detect the columns that leak the target, such as the revenue estimate
 
 **2:00–2:45**
 
@@ -467,7 +467,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Resampling inside the cross-validation only, never on validation or test data
 - Pipelines with imbalanced-learn
 
-*Practice:* Case study: compare undersampling, oversampling, SMOTE and class weights for rare headings by macro-F1
+*Practice:* Case study: compare undersampling, oversampling, SMOTE, class weights and a tuned threshold for Telco churners, and look at the rare headings the EBTI classifier misses
 
 **Team project until the next session.** Feature set for the project model, documented in the repository.
 
@@ -504,7 +504,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Interpretation of tree-based models with feature importance, permutation importance and SHAP values
 - Comparing a challenger with the current model
 
-*Practice:* Case study: leaderboard submission with gradient boosting on the features of Session 9
+*Practice:* Case study: is a tree ensemble worth replacing the linear price model of Session 6? Compare a random forest and gradient boosting with it on host-grouped folds and interpret the winner
 
 **Team project until the next session.** Interim review (10 minutes per team): model or dashboard, validation, plan to the end.
 
@@ -535,7 +535,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Density-based clustering (DBSCAN)
 - Evaluating and interpreting clusters (silhouette, stability, cluster profiles)
 
-*Practice:* Compare k-means, hierarchical clustering and DBSCAN on the decisions of one chapter
+*Practice:* What kinds of Airbnb offers exist in Berlin? Compare k-means, hierarchical clustering and DBSCAN on the listings and find the hot spots of listings on the map
 
 **2:00–2:45**
 
@@ -544,7 +544,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Model-based anomaly detection with Isolation Forest and local outlier factor, continuing the outliers of Session 4
 - Clusters and components as features
 
-*Practice:* Case study: cluster the decisions of one chapter, map them with truncated SVD and t-SNE, find decisions far from their heading's centroid and test whether cluster features improve the tree-based model of Session 10
+*Practice:* Case study: summarise the listings' amenities with PCA and rank implausible listings (Isolation Forest, local outlier factor, price far from what size and location suggest)
 
 **Team project until the next session.** Segmentation or anomaly detection where it supports the project.
 
@@ -566,14 +566,14 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Aggregating to regular time intervals with pandas
 - Baselines (naive, seasonal naive, moving average)
 
-*Practice:* Compute the monthly number of BTI decisions and its baseline forecasts
+*Practice:* How busy is Airbnb in Berlin month by month? Build the monthly number of guest reviews, check its quality and compute the baseline forecasts
 
 **1:00–1:45**
 
 - Exponential smoothing with prediction intervals
 - ARIMA as an outlook
 
-*Practice:* Fit exponential smoothing and compare it with the baselines
+*Practice:* Fit exponential smoothing, decide how to treat the pandemic months and compare with the baselines
 
 **2:00–2:45**
 
@@ -581,7 +581,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Rolling-origin backtesting
 - Forecast metrics: MAE and MASE
 
-*Practice:* Case study: backtest the models and recommend one with its prediction interval
+*Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models and recommend one with its 12-month forecast and prediction interval
 
 **Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
 
@@ -612,7 +612,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Linear models for text classification
 - Per-class metrics
 
-*Practice:* Case study: leaderboard submission with a TF-IDF classifier
+*Practice:* Case study: second leaderboard submission (L2) with a TF-IDF classifier
 
 **2:00–2:45**
 
@@ -730,7 +730,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 - Retraining triggers and versioning
 - Documenting a model in a model card
 
-*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no decisions from the United Kingdom after Brexit, a lower share of chapter 85, a few unseen headings), retrain and make the final leaderboard submission, ranked on the 2025–2026 decisions
+*Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no decisions from the United Kingdom after Brexit, a lower share of chapter 85, a few unseen headings), retrain and make the final leaderboard submission (L3), ranked on the 2025–2026 decisions
 
 **Team project until the next session.** Release: dashboard or deployed model, repository and documentation complete.
 
@@ -767,30 +767,49 @@ For each session: the guiding question, the learning outcomes and the session pl
 | 2:00–2:25 | Team 7: same format |
 | 2:25–2:45 | Course review; course evaluation (anonymous, in class) |
 
-## 5. Running case study and leaderboard
+## 5. Datasets and leaderboard
 
-The running case study uses decisions from the European Commission's **European Binding Tariff Information (EBTI)** database. A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The course task is to predict the four-digit HS heading of a decision from its description of goods. Why this dataset was chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
+The course works with three datasets. Each session uses the one that fits its topic best.
 
-The prepared data contain 309,529 training decisions (2017–2023) and 113,188 test decisions (2024–2026), with 1,114 headings in the training data. Descriptions are written in the language of the issuing country: 57 % German, 16 % French and the rest in more than 20 other EU languages; each training decision also carries English keywords. A second table holds the HS nomenclature (sections, chapters, headings) in English, and a third the monthly number of decisions since 2004.
+| Dataset | What it is | Used for |
+|---|---|---|
+| **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in more than 20 languages | Data handling, SQL, text, validation and leakage, classification, language models, deployment, the leaderboard |
+| **Inside Airbnb, Berlin** | About 12,800 Berlin listings with price, district, size, ratings and registration number, and the number of reviews per month since 2009 | Missing values and outliers, statistics, regression, features, tree-based models, clustering, time series |
+| **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification basics, trees, imbalance |
 
-| Part | Use of the dataset |
-|---|---|
-| Foundations and data | Loading with pandas and into PostgreSQL; SQL across decisions and nomenclature; Polars on the full export of 1.05 million decisions; data-quality checks (impossible dates, duplicates, code formats); cleaned table |
-| Analytics | Decisions by country, language and chapter; description length across languages; country × section contingency tables; a dashboard of decisions over time |
-| Machine learning | Regression and robust regression on decision durations; validation with time-based splits; a classifier for 1,000+ headings with accuracy, macro-F1 and abstention; features without leakage and the long tail of rare headings; tree-based models; clusters and unusual decisions; forecast of monthly decision counts (with the Brexit break); multilingual TF-IDF; multilingual embeddings and LLMs; a retrieval-based classification assistant; deployed service, drift and retraining |
+**Datasets by session**
+
+| Session | Dataset | Topic it supports |
+|---|---|---|
+| 1 | EBTI | First analysis in pandas; a class that loads and summarises the decisions |
+| 2 | EBTI, GovData API | A class that checks one decision; a small web API; simple text features added through a pull request |
+| 3 | EBTI | SQL queries across decisions and headings; Polars on the full export of 1.05 million decisions |
+| 4 | EBTI, Airbnb | Quality checks on the decisions; missing values, outliers and transformations on listing prices |
+| 5 | Airbnb | Prices by district and room type: tests, effect sizes, contingency tables, a dashboard |
+| 6 | Airbnb, Telco | What drives nightly prices (linear, robust and quantile regression); churn with logistic regression |
+| 7 | EBTI, Airbnb | Validation by time and a leakage example (EBTI); regularisation and tuning of the price model (Airbnb) |
+| 8 | Telco, EBTI | Churn metrics and ROC curves; accuracy and macro-F1 for many headings, abstention, first leaderboard round |
+| 9 | Airbnb, Telco, EBTI | Building features for the price model and a leakage example; imbalanced classes in churn and in rare headings |
+| 10 | Telco, Airbnb | Decision trees on churn; random forests, gradient boosting and their interpretation for price prediction |
+| 11 | Telco, Airbnb, EBTI | Customer segments in the churn data; kinds of Airbnb offers and implausible listings; decisions that may be misclassified |
+| 12 | Airbnb | Forecasting monthly demand, with seasons and the COVID break |
+| 13 | EBTI | Text classification with TF-IDF across languages, error analysis, second leaderboard round |
+| 14 | EBTI | Multilingual embeddings, search across languages, a language model choosing among candidate headings |
+| 15 | EBTI | A classification assistant that cites similar past decisions; an agent with tools |
+| 16 | EBTI | A service that suggests headings, drift and retraining, final leaderboard round |
+
+**EBTI.** A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The prepared data contain 309,529 training decisions (2017–2023) and 113,188 test decisions (2024–2026), with 1,114 headings in the training data. Descriptions are written in the language of the issuing country: 57 % German, 16 % French and the rest in more than 20 other EU languages; each training decision also carries English keywords. Further tables hold the HS nomenclature in English and the monthly number of decisions since 2004. Why these datasets were chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
 
 ### Leaderboard
 
 - **Task:** predict the heading of each test decision from its description, issuing country, language and date.
 - **Split:** decisions of 2024 form the public leaderboard, decisions of 2025–2026 the private leaderboard. Test decisions whose description repeats a training description are removed.
 - **Metric:** accuracy, with macro-F1 reported alongside. Reference values on the public leaderboard: always the most frequent heading 4 %; logistic regression on simple features 8 %; word TF-IDF with a linear model 81 % (50,000-decision sample) and 87 % (full training set); character TF-IDF 88 %. On the private years the same models score about three points lower, an effect of drift that Session 16 takes up.
-- **Rounds:** L1 simple features (Session 8), L2 tree-based models (10), L3 TF-IDF models (13), L4 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18.
+- **Rounds:** L1 simple features (Session 8), L2 TF-IDF models (13), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18.
 - **Platform:** Codabench (free, open source, operated by Université Paris-Saclay; submission of a CSV file; hidden solution; public and private leaderboard). Students register with a pseudonym; alternatively the lecturer submits on behalf of a team.
 
 > [!NOTE]
 > **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; each student downloads them with the provided script. Because decisions can be looked up in the public database, the leaderboard is deliberately not graded.
-
-**Secondary dataset.** Tabular classification, including the churn prediction named in the module description, is taught on the IBM Telco customer churn sample data (7,043 customers, 26.5 % churn), which is small enough for live computation in class.
 
 ## 6. Final project
 

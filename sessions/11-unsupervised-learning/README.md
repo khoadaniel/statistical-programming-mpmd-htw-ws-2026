@@ -24,25 +24,25 @@
 - [Hierarchical clustering and dendrograms](theory/02-hierarchical-dbscan-and-evaluation.md#hierarchical-clustering-and-dendrograms)
 - [Density-based clustering (DBSCAN)](theory/02-hierarchical-dbscan-and-evaluation.md#density-based-clustering-dbscan)
 - [Evaluating and interpreting clusters (silhouette, stability, cluster profiles)](theory/02-hierarchical-dbscan-and-evaluation.md#evaluating-and-interpreting-clusters)
-- *Practice:* compare k-means, hierarchical clustering and DBSCAN on the BTI decisions of one chapter (description and keyword representations) → Part A of [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb)
+- *Practice:* what kinds of Airbnb offers exist in Berlin? Compare k-means, hierarchical clustering and DBSCAN on the listings (price, size, minimum stay, availability, reviews, distance to the centre), find the hot spots of listings on the map and describe the segments by district and room type → Part A of [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb)
 
 **2:00–2:45 · Dimensionality reduction, anomalies and unsupervised features** ([theory/03](theory/03-dimensionality-reduction.md), [theory/04](theory/04-anomaly-detection-and-unsupervised-features.md))
 
 - [Principal component analysis (explained variance, loadings)](theory/03-dimensionality-reduction.md#principal-component-analysis-explained-variance-and-loadings)
 - [t-SNE and UMAP for visualisation](theory/03-dimensionality-reduction.md#t-sne-and-umap-for-visualisation)
-- [A map of decisions: truncated SVD and t-SNE on text](theory/03-dimensionality-reduction.md#a-map-of-decisions-truncated-svd-and-t-sne-on-text)
+- [What do Airbnb listings offer? PCA of amenities](theory/03-dimensionality-reduction.md#what-do-airbnb-listings-offer-pca-of-amenities)
 - [Model-based anomaly detection with Isolation Forest and LOF, continuing the outliers of Session 4](theory/04-anomaly-detection-and-unsupervised-features.md#model-based-anomaly-detection-isolation-forest-and-local-outlier-factor)
 - [Clusters and components as features](theory/04-anomaly-detection-and-unsupervised-features.md#clusters-and-components-as-features)
-- *Practice:* case study: cluster the decisions of one chapter, map them with truncated SVD and t-SNE, rank decisions far from their heading's centroid and test whether cluster features improve the tree-based model of Session 10 → Part B of [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb)
+- *Practice:* case study: what do the listings offer, and which ones are implausible? Summarise the amenities with PCA and map the listings with t-SNE, rank implausible listings (Isolation Forest, LOF, price far from what size and location suggest) and test whether location clusters improve the gradient-boosting price model of Session 10 → Parts B and C of [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb); optional Part D: BTI decisions far from their heading's centroid
 
 ## Materials
 
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-clustering-and-k-means.md](theory/01-clustering-and-k-means.md) | Unsupervised learning, distances and scaling, k-means by hand, elbow and silhouette | 1 | core |
-| [theory/02-hierarchical-dbscan-and-evaluation.md](theory/02-hierarchical-dbscan-and-evaluation.md) | Linkage and dendrograms, DBSCAN, silhouette, stability, profiles | 2 | core |
-| [theory/03-dimensionality-reduction.md](theory/03-dimensionality-reduction.md) | PCA, scree plot, loadings and biplot, t-SNE, UMAP | 3 | core |
-| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, clusters and components as features | 3 | core |
+| [theory/02-hierarchical-dbscan-and-evaluation.md](theory/02-hierarchical-dbscan-and-evaluation.md) | Linkage and dendrograms, DBSCAN (features and map), silhouette, stability, profiles of Airbnb listing segments | 2 | core |
+| [theory/03-dimensionality-reduction.md](theory/03-dimensionality-reduction.md) | PCA, scree plot, loadings and biplot, t-SNE, UMAP, PCA of Airbnb amenities | 3 | core |
+| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, implausible listings, heading-centroid outliers (EBTI), clusters and components as features | 3 | core |
 | [workbooks/01-pdsh-kmeans.ipynb](workbooks/01-pdsh-kmeans.ipynb) | k-means in depth (PDSH 5.11): EM view, limits, digits, colour compression | 1 | core |
 | [workbooks/02-kmeans-assumptions.ipynb](workbooks/02-kmeans-assumptions.ipynb) | Four situations in which k-means fails | 1 | optional |
 | [workbooks/03-kmeans-silhouette-analysis.ipynb](workbooks/03-kmeans-silhouette-analysis.ipynb) | Silhouette plots for k = 2 to 6 | 1 | core |
@@ -66,13 +66,13 @@
 | [workbooks/21-isolation-forest.ipynb](workbooks/21-isolation-forest.ipynb) | Isolation Forest decision boundary and path lengths | 3 | core |
 | [workbooks/22-local-outlier-factor.ipynb](workbooks/22-local-outlier-factor.ipynb) | Local outlier factor scores | 3 | core |
 | [workbooks/23-outlier-detection-benchmark.ipynb](workbooks/23-outlier-detection-benchmark.ipynb) | Isolation Forest and LOF on real benchmark data | 3 | optional |
-| [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb) | **Practice 2 and 3:** clusters of chapter-94 decisions, t-SNE map, heading-centroid anomalies, cluster features in a model (own) | 2, 3 | core |
+| [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb) | **Practice 2 and 3:** segments and hot spots of Berlin Airbnb listings, PCA of amenities, t-SNE map, implausible listings, location clusters in a price model; optional EBTI heading-centroid outliers (own) | 2, 3 | core |
 
 Sources and licences: [source.md](source.md). Workbooks 01, 13 and 15 have a non-commercial, no-derivatives text licence (CC-BY-NC-ND): use them unchanged.
 
 ## Before and after the session
 
-**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure `case-study/data/train_sample.parquet` exists (see [case-study/README.md](../../case-study/README.md)).
+**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure the Airbnb data exist in `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`, see [case-study/README.md](../../case-study/README.md)); the optional Part D of workbook 24 also uses `case-study/data/train_sample.parquet`.
 
 **Team project until the next session.** Segmentation or anomaly detection where it supports the project.
 
@@ -82,6 +82,7 @@ Sources and licences: [source.md](source.md). Workbooks 01, 13 and 15 have a non
 - scikit-learn User Guide: [Clustering](https://scikit-learn.org/stable/modules/clustering.html), [Decomposition](https://scikit-learn.org/stable/modules/decomposition.html), [Outlier detection](https://scikit-learn.org/stable/modules/outlier_detection.html)
 - Wattenberg, Viégas and Johnson (2016). [How to use t-SNE effectively](https://distill.pub/2016/misread-tsne/). *Distill*.
 - Coenen and Pearce (2019). [Understanding UMAP](https://pair-code.github.io/understanding-umap/). Google PAIR.
+- Inside Airbnb. [Data assumptions](https://insideairbnb.com/data-assumptions/): what the scraped listing data can and cannot show.
 
 ## Setup
 
@@ -89,5 +90,5 @@ Everything except workbook 19 runs in the course environment (`uv sync` in the r
 
 - Workbook 19 (ISLP lab) needs the `ISLP` package: `uv run --with ISLP jupyter lab`.
 - The Telco data are read from GitHub, and some scikit-learn examples download datasets (`fetch_openml`, `fetch_lfw_people`, `fetch_kddcup99`): an internet connection is needed the first time.
-- Workbook 24 reads `case-study/data/train_sample.parquet` and `nomenclature.parquet` and finds the repository root by itself; it runs in under a minute.
+- Workbook 24 reads `case-study/data/airbnb/listings.parquet` (Part D also `train_sample.parquet` and `nomenclature.parquet`) and finds the repository root by itself; it runs in under a minute. Prepare the Airbnb data once from the repository root: `uv run python case-study/prepare_airbnb.py` (downloads the Inside Airbnb Berlin snapshot, about 100 MB).
 - To regenerate the figures: `uv run python sessions/11-unsupervised-learning/theory/figures/make_figures.py` from the repository root.

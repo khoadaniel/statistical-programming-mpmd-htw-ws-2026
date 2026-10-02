@@ -1,23 +1,27 @@
 # Lag features, backtesting and forecast metrics
 
-The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test over several years. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. The page ends with a model recommendation and a forecast of the next twelve months of BTI decisions.
+The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing, ARIMA and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test from several forecast origins. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. The page ends with a model recommendation and a forecast of the next twelve months of Airbnb reviews in Berlin.
 
 The code blocks build on each other; run them in order from the repository root.
 
 ```python
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.model_selection import TimeSeriesSplit
 from statsmodels.tsa.exponential_smoothing.ets import ETSModel
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-pd.set_option("display.width", 120)
-counts = pd.read_parquet("case-study/data/monthly_counts.parquet")
-y = (counts[counts["issuing_country"] != "GB"].groupby("month")["n_decisions"].sum()
-     ["2010":"2026-09"].rename("decisions"))
+warnings.filterwarnings("ignore")                       # statsmodels convergence messages
+pd.set_option("display.width", 150)
+pd.set_option("display.max_columns", 10)
+reviews = pd.read_parquet("case-study/data/airbnb/reviews_monthly.parquet")
+y = reviews.groupby("month")["n_reviews"].sum()["2016":"2026-05"].rename("reviews")
 y.index.freq = "MS"
 log_y = np.log(y)
-train, test = y[:"2025-09"], y["2025-10":]
+train, test = y[:"2025-05"], y["2025-06":]
+covid = pd.Series((y.index >= "2020-03-01") & (y.index <= "2021-12-01"), index=y.index)   # the break
 ```
 
 ## Machine learning with lag features
@@ -31,50 +35,53 @@ For a forecast of the next 12 months there are two strategies:
 - **Direct**: use only lags of 12 or more. Then every feature is known for all 12 forecast months, and one model predicts all of them.
 - **Recursive**: predict one month ahead with lags 1, 2, …, then feed the prediction back in as a lag for the next month. Errors can accumulate.
 
-Small example: to predict March 2026 directly from a forecast origin at the end of September 2025, the features are lag 12 (March 2025), lag 13 (February 2025) and lag 24 (March 2024), all known in September 2025. Lag 1 (February 2026) is not known in September 2025 and must not be used.
+Small example: to predict March 2026 directly from a forecast origin at the end of May 2025, the features are lag 12 (March 2025) and lag 24 (March 2024), both known in May 2025. Lag 1 (February 2026) is not known in May 2025 and must not be used.
 
-Tree ensembles (Session 10) cannot predict values outside the range of the training targets: a forest trained on months with at most 4,900 decisions never forecasts 5,500. On trending series this is a real limitation; transforming the target (logs, differences, growth rates) helps.
+Tree ensembles (Session 10) cannot predict values outside the range of the training targets: a forest trained on months with at most 13,000 reviews never forecasts 15,000. On a growing series this is a real limitation. The remedy is to transform the target. Here the target is the **yearly growth** on the log scale, log y_t − log y_{t−12} (0.16 means about 17 % more than the same month a year earlier); the forecast is then last year's value times the predicted growth. Growth rates of the past *do* cover the range of future growth rates.
+
+A break also damages lag features: a row whose target, lag 12 or lag 24 falls into the pandemic months describes a growth that will not repeat. Those rows are dropped, which leaves few rows for training.
 
 ```mermaid
 flowchart LR
-    S["Series y"] --> L["Shift: lag 12, 13, 24"]
+    S["Series y"] --> L["Shift: lag 12, lag 24"]
     S --> C["Calendar: month"]
-    L --> T["Table: one row per month<br/>target = log y"]
+    S --> G["Target: log y - log y lag 12<br/>(yearly growth)"]
+    L --> T["Table: one row per month,<br/>pandemic rows dropped"]
     C --> T
+    G --> T
     T --> M["Gradient boosting<br/>fit on past rows"]
-    M --> F["Predict the next 12 rows<br/>(all features known)"]
+    M --> F["Forecast = last year's value<br/>x predicted growth"]
 ```
 
 ### Why it matters
 
-The table view lets forecasting use everything from Sessions 8–10: many series in one model, external features (prices, promotions, holidays, weather) and gradient boosting. Many top solutions of the M5 competition (Walmart sales, 42,840 series) were gradient-boosted trees on lag features (Makridakis, Spiliotis and Assimakopoulos, 2022). For a single short series, however, there is little for a flexible model to learn.
+The table view lets forecasting use everything from Sessions 8–10: many series in one model, external features (prices, events, holidays, weather) and gradient boosting. Many top solutions of the M5 competition (Walmart sales, 42,840 series) were gradient-boosted trees on lag features (Makridakis, Spiliotis and Assimakopoulos, 2022). For a single short series, however, there is little for a flexible model to learn.
 
 ### How it works in Python
 
 ```python
-frame = pd.DataFrame({"target": log_y})
-for lag in (12, 13, 24):                       # only values known 12 months before the target month
-    frame[f"lag{lag}"] = log_y.shift(lag)
-frame["month"] = frame.index.month
-frame = frame.dropna()                         # the first 24 months have no lag 24
-print(frame.loc["2026-03-01"].round(2).to_dict())
-# {'target': 8.24, 'lag12': 8.26, 'lag13': 8.23, 'lag24': 8.26, 'month': 3.0}
+frame = pd.DataFrame({"target": log_y - log_y.shift(12),            # yearly growth on the log scale
+                      "lag12": log_y.shift(12), "lag24": log_y.shift(24), "month": y.index.month})
+touched = covid | covid.shift(12, fill_value=False) | covid.shift(24, fill_value=False)
+frame = frame[~touched].dropna()                                    # drop rows touched by the break
+print(len(frame), frame.index[0].date(), frame.loc["2026-03-01"].round(2).to_dict())
+# 55 2018-01-01 {'target': 0.16, 'lag12': 9.12, 'lag24': 8.94, 'month': 3.0}
 
-X_train, y_train = frame.loc[:"2025-09"].drop(columns="target"), frame.loc[:"2025-09", "target"]
-X_test = frame.loc["2025-10":].drop(columns="target")
-hgb = HistGradientBoostingRegressor(min_samples_leaf=5, random_state=0).fit(X_train, y_train)
-lag_fc = pd.Series(np.exp(hgb.predict(X_test)), index=test.index)
-print(len(X_train), f"training rows, MAE {np.mean(np.abs(test - lag_fc)):.0f}")
-# 165 training rows, MAE 339
+fit_rows = frame.loc[:"2025-05"]
+hgb = HistGradientBoostingRegressor(min_samples_leaf=5, random_state=0).fit(
+    fit_rows.drop(columns="target"), fit_rows["target"])
+lag_fc = np.exp(frame.loc[test.index, "lag12"] + hgb.predict(frame.loc[test.index].drop(columns="target")))
+print(len(fit_rows), f"training rows, MAE {np.mean(np.abs(test - lag_fc)):.0f}")
+# 43 training rows, MAE 1011
 ```
 
-165 training rows remain. In the hold-out year the lag model (MAE 339) is about as good as the naive forecast (349) and worse than seasonal naive (258) and ETS (282). `min_samples_leaf=5` is needed because the default of 20 leaves almost no splits on so few rows. Workbook 06 (scikit-learn) shows lag features with more data, and workbook 09 (MLForecast) builds them automatically for many series.
+Of 125 months, only 55 rows survive: the first 24 months have no lag 24, and the pandemic touches the targets or lags of every month from March 2020 to December 2023. 43 rows remain for the hold-out fit. In the hold-out year the lag model (MAE 1,011) is about as good as the seasonal naive forecast times growth (1,038) and worse than ETS (851) and the airline model (450). `min_samples_leaf=5` is needed because the default of 20 leaves almost no splits on so few rows. Workbook 06 (scikit-learn) shows lag features with more data, and workbook 09 (MLForecast) builds them automatically for many series.
 
 ### In practice
 
 - **Retail.** Top M5 solutions used LightGBM on lags, rolling means, prices and calendar events across thousands of products and stores, so that one model learns from many series.
 - **Energy.** Load forecasts combine lagged load with temperature forecasts and calendar features (weekday, holidays); the scikit-learn example on bike-sharing demand (workbook 07) shows the same idea for hourly demand.
-- **Hospitals.** Emergency department arrivals are forecast from lags, weekday, holidays and weather.
+- **Hospitality.** Hotel and short-term rental demand models combine booking lags with calendar features such as school holidays, trade fairs and large events.
 
 > [!WARNING]
 > **Lag 1 in a 12-month-ahead forecast is leakage.** In the backtest the true value of last month is available, in reality it is not. Check for every feature: would I know this value on the day I make the forecast?
@@ -88,27 +95,26 @@ print(len(X_train), f"training rows, MAE {np.mean(np.abs(test - lag_fc)):.0f}")
 
 One hold-out year is one sample of forecast performance. **Rolling-origin backtesting** (also called time series cross-validation) repeats the evaluation: fit on all data up to a **forecast origin**, forecast the next h periods, move the origin forward, repeat. Each fold uses only the past to predict the future. With an **expanding window** the training data grow from fold to fold; with a **sliding window** they keep a fixed length.
 
+The origin may move by a full horizon (non-overlapping test years, as `TimeSeriesSplit(n_splits=5, test_size=12)` in scikit-learn does) or by a smaller step, so that the test periods overlap. A smaller step gives more folds from a short history. Here the post-pandemic history is short: the first origin must leave ETS at least two full years since January 2022, so the origins move by three months, from March 2024 to June 2025: six folds of twelve months each, the last being the hold-out year of pages 1 and 2.
+
 ```mermaid
 flowchart LR
     subgraph F1["Fold 1"]
-        A1["Train 2010 to Sep 2021"] --> B1["Test Oct 2021 to Sep 2022"]
+        A1["Train to Feb 2024"] --> B1["Test Mar 2024 to Feb 2025"]
     end
     subgraph F2["Fold 2"]
-        A2["Train 2010 to Sep 2022"] --> B2["Test Oct 2022 to Sep 2023"]
+        A2["Train to May 2024"] --> B2["Test Jun 2024 to May 2025"]
     end
-    subgraph F3["Fold 3"]
-        A3["Train 2010 to Sep 2023"] --> B3["Test Oct 2023 to Sep 2024"]
+    subgraph F3["Folds 3 to 5"]
+        A3["Origin moves<br/>3 months each time"] --> B3["Test 12 months"]
     end
-    subgraph F4["Fold 4"]
-        A4["Train 2010 to Sep 2024"] --> B4["Test Oct 2024 to Sep 2025"]
+    subgraph F6["Fold 6"]
+        A6["Train to May 2025"] --> B6["Test Jun 2025 to May 2026"]
     end
-    subgraph F5["Fold 5"]
-        A5["Train 2010 to Sep 2025"] --> B5["Test Oct 2025 to Sep 2026"]
-    end
-    F1 --> F2 --> F3 --> F4 --> F5
+    F1 --> F2 --> F3 --> F6
 ```
 
-scikit-learn's `TimeSeriesSplit(n_splits=5, test_size=12)` produces exactly these five folds on the 201 months. StatsForecast and MLForecast have `cross_validation` methods that do the same for many series (workbooks 08 and 09).
+StatsForecast and MLForecast have `cross_validation` methods with a `step_size` argument that do the same for many series (workbooks 08 and 09).
 
 ### Why it matters
 
@@ -116,38 +122,49 @@ Forecast accuracy varies strongly from year to year. Backtesting shows how often
 
 ### How it works in Python
 
-The function below returns the forecasts of four models for one fold. The lag model reuses the table `frame` built above; ETS also returns its 95 % interval.
+The function below returns the forecasts of six models for one fold: three baselines, ETS fitted since 2022, the airline model with the pandemic months marked as missing, and the lag model. ETS and the airline model also return their 95 % intervals.
 
 ```python
 def forecasts(y_tr, test_index):
-    ets = ETSModel(np.log(y_tr), error="add", trend="add", damped_trend=True,
+    n = len(test_index)
+    ets = ETSModel(np.log(y_tr["2022":]), error="add", trend="add", damped_trend=True,
                    seasonal="add", seasonal_periods=12).fit(disp=False)
     pred = np.exp(ets.get_prediction(start=test_index[0], end=test_index[-1]).summary_frame(alpha=0.05))
+    log_gap = np.log(y_tr).where(~covid[y_tr.index])                 # pandemic months -> NaN
+    air = SARIMAX(log_gap, order=(0, 1, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False).get_forecast(n)
     rows = frame.loc[:y_tr.index[-1]]
     hgb = HistGradientBoostingRegressor(min_samples_leaf=5, random_state=0).fit(
         rows.drop(columns="target"), rows["target"])
+    last_year = y_tr.iloc[-12:].to_numpy()
     point = {
-        "naive": np.repeat(y_tr.iloc[-1], len(test_index)),
-        "seasonal naive": y_tr.iloc[-12:].to_numpy(),
+        "naive": np.repeat(y_tr.iloc[-1], n),
+        "seasonal naive": last_year,
+        "seasonal naive x growth": last_year * last_year.sum() / y_tr.iloc[-24:-12].sum(),
         "ETS": pred["mean"].to_numpy(),
-        "lag model": np.exp(hgb.predict(frame.loc[test_index].drop(columns="target"))),
+        "airline": np.exp(air.predicted_mean.to_numpy()),
+        "lag model": np.exp(frame.loc[test_index, "lag12"]
+                            + hgb.predict(frame.loc[test_index].drop(columns="target"))),
     }
-    return point, pred[["pi_lower", "pi_upper"]]
+    intervals = {"ETS": pred[["pi_lower", "pi_upper"]].to_numpy(),
+                 "airline": np.exp(air.conf_int(alpha=0.05).to_numpy())}
+    return point, intervals
 ```
 
 ## Forecast metrics: MAE and MASE
 
 ### Concept
 
-- **MAE** = mean |y_t − ŷ_t|, in the units of the series. Easy to explain, but not comparable across series of different size (an error of 100 is large for a product with 50 sales a month and tiny for one with 50,000).
+- **MAE** = mean |y_t − ŷ_t|, in the units of the series. Easy to explain, but not comparable across series of different size (an error of 100 is large for a district with 300 reviews a month and tiny for the city with 12,000).
 - **MASE** (mean absolute scaled error; Hyndman and Koehler, 2006) divides the MAE by the in-sample MAE of the seasonal naive forecast on the **training** data: scale = mean |y_t − y_{t−m}| over the training period. MASE < 1 means the forecast errs less than the seasonal naive forecast did, on average, in the past. MASE is comparable across series and well defined when values are close to zero.
 - **Coverage** of a prediction interval is the share of actual values inside it; a 95 % interval should have coverage close to 0.95 over many forecasts.
 
 Worked example: the training series 10, 12, 14, 11, 13, 15 with m = 3. The seasonal differences are |11 − 10|, |13 − 12|, |15 − 14| = 1, 1, 1, so the scale is 1. A forecast with MAE 1.5 on the test period has MASE 1.5: it errs 50 % more than seasonal naive did in-sample.
 
+With a break in the training data the scale needs care: the seasonal differences of 2020 and 2021 are huge, which would make every model's MASE look small. The scale below uses the training months since January 2022 only, so the first differences are 2023 minus 2022.
+
 ### Why it matters
 
-Scaled errors make results comparable across series and across folds with different levels, which is why forecasting competitions (M4) used MASE. Reporting MAE alongside keeps the result understandable ("about 280 decisions per month off").
+Scaled errors make results comparable across series and across folds with different levels, which is why forecasting competitions (M4) used MASE. Reporting MAE alongside keeps the result understandable ("about 500 reviews per month off").
 
 ### How it works in Python
 
@@ -157,58 +174,70 @@ def mae(actual, forecast):
 
 
 def mase(actual, forecast, y_tr, m=12):
-    history = np.asarray(y_tr)
-    scale = np.mean(np.abs(history[m:] - history[:-m]))     # in-sample seasonal naive MAE
+    history = y_tr["2022":].to_numpy()                        # skip the pandemic years
+    scale = np.mean(np.abs(history[m:] - history[:-m]))       # in-sample seasonal naive MAE
     return mae(actual, forecast) / scale
 
 
 results = []
-for train_idx, test_idx in TimeSeriesSplit(n_splits=5, test_size=12).split(y):
-    y_tr, y_te = y.iloc[train_idx], y.iloc[test_idx]
-    point, interval = forecasts(y_tr, y_te.index)
-    covered = ((y_te >= interval["pi_lower"]) & (y_te <= interval["pi_upper"])).mean()
+for origin in pd.date_range("2024-03-01", "2025-06-01", freq="3MS"):    # six forecast origins
+    test_index = pd.date_range(origin, periods=12, freq="MS")
+    y_tr, y_te = y[:origin - pd.offsets.MonthBegin()], y[test_index]
+    point, intervals = forecasts(y_tr, test_index)
     for name, fc in point.items():
-        results.append({"test from": y_te.index[0].strftime("%Y-%m"), "model": name, "MAE": mae(y_te, fc),
-                        "MASE": mase(y_te, fc, y_tr), "ETS coverage": covered})
+        row = {"test from": origin.strftime("%Y-%m"), "model": name,
+               "MAE": mae(y_te, fc), "MASE": mase(y_te, fc, y_tr)}
+        if name in intervals:
+            lo, hi = intervals[name].T
+            row["coverage"] = np.mean((y_te.to_numpy() >= lo) & (y_te.to_numpy() <= hi))
+        results.append(row)
 bt = pd.DataFrame(results)
 print(bt.pivot(index="test from", columns="model", values="MASE").round(2))
-# model       ETS  lag model  naive  seasonal naive
+# model       ETS  airline  lag model  naive  seasonal naive  seasonal naive x growth
 # test from
-# 2021-10    0.50       0.87   0.90            0.74
-# 2022-10    0.81       0.69   0.80            1.03
-# 2023-10    0.68       0.87   0.91            1.01
-# 2024-10    0.53       0.53   1.15            0.78
-# 2025-10    0.65       0.78   0.80            0.59
-print(bt.groupby("model")[["MAE", "MASE"]].mean().round(2))
-#                    MAE  MASE
+# 2024-03    1.01     0.39       0.48   2.67            1.65                     0.57
+# 2024-06    0.38     0.28       0.39   1.12            1.47                     0.41
+# 2024-09    0.21     0.29       0.60   1.19            1.06                     0.36
+# 2024-12    0.57     0.21       0.67   1.75            0.97                     0.53
+# 2025-03    0.39     0.44       0.80   1.94            0.90                     0.74
+# 2025-06    0.51     0.27       0.61   1.03            0.96                     0.63
+print(bt.groupby("model")[["MAE", "MASE"]].mean().round(2).sort_values("MASE"))
+#                              MAE  MASE
 # model
-# ETS             280.04  0.63
-# lag model       330.42  0.75
-# naive           402.97  0.91
-# seasonal naive  366.68  0.83
-print(bt.groupby("test from")["ETS coverage"].first().round(2).to_list())   # [0.92, 1.0, 0.92, 1.0, 1.0]
+# airline                   482.74  0.31
+# ETS                       768.50  0.51
+# seasonal naive x growth   836.94  0.54
+# lag model                 933.56  0.59
+# seasonal naive           1762.78  1.17
+# naive                    2460.62  1.62
+print(bt.groupby("model")["coverage"].mean().dropna().round(2).to_dict())   # {'ETS': 0.83, 'airline': 1.0}
 ```
 
 ### Reading the backtest and recommending a model
 
-- **ETS is best on average and never bad.** Its mean MASE is 0.63; it is the best or joint best model in three of the five folds, and its worst fold (0.81) is better than the worst fold of every other model. The seasonal naive forecast won the hold-out year of pages 1 and 2, but over five folds it is only third (MASE 0.83): one year would have led to the wrong choice.
-- **The lag model beats the baselines but not ETS** (MASE 0.75). With one short series there is little for a tree ensemble to learn that the seasonal pattern and the level do not already say.
-- **The ETS intervals are close to their promise.** They covered 58 of 60 test months (97 %) for a nominal 95 %: about right, slightly conservative.
+- **The airline model with the pandemic marked as missing is best on average and never bad.** Its mean MASE is 0.31; it is the best model in four of the six folds, and its worst fold (0.44) is better than the average of every other model. It uses the whole history except the break.
+- **ETS fitted since 2022 is second, but unstable.** Its mean MASE is 0.51, it wins two folds, but in the first fold, with only 26 months of training data, it is worse than seasonal naive times growth (1.01 against 0.57). A short history makes the trend estimate fragile.
+- **Simple rules are hard to beat.** Seasonal naive times growth (MASE 0.54) is almost as good as ETS and better than the lag model (0.59). Plain seasonal naive (1.17) and naive (1.62) are worse than the in-sample seasonal naive scale: they ignore growth or season.
+- **The lag model loses to a spreadsheet rule.** With 28 to 43 training rows there is little for gradient boosting to learn beyond what "last year times growth" already says.
+- **The intervals differ in quality.** ETS covered 83 % of the test months for a nominal 95 %: too narrow. The airline intervals covered all of them (100 %), at the cost of being wide.
 
-A defensible recommendation for the monthly decision forecast: **damped ETS on log counts**, reported with its 95 % interval, because it has the lowest error in the backtest, models the December dip explicitly and gives intervals whose coverage has been checked. Report the seasonal naive forecast as a benchmark and refit every month. The forecast for the next twelve months, fitted on all data up to September 2026:
+A defensible recommendation: **the airline model on log counts, with March 2020 to December 2021 marked as missing**, reported with its 95 % interval, because it has the lowest error in all but two folds and its intervals were never too narrow. Report seasonal naive times growth as the benchmark everybody understands, state the assumption about the pandemic months, and refit every month. The forecast for the next twelve months, fitted on all data up to May 2026:
 
 ```python
-final = ETSModel(log_y, error="add", trend="add", damped_trend=True,
-                 seasonal="add", seasonal_periods=12).fit(disp=False)
-outlook = np.exp(final.get_prediction(start="2026-10-01", end="2027-09-01").summary_frame(alpha=0.05))
-print(outlook.loc[["2026-12-01", "2027-03-01"], ["mean", "pi_lower", "pi_upper"]].round(0))
-#               mean  pi_lower  pi_upper
-# 2026-12-01  3293.0    2713.0    3997.0
-# 2027-03-01  4128.0    3370.0    5057.0
-print(round(outlook["mean"].sum()))   # 45085 decisions expected from October 2026 to September 2027
+log_gap = log_y.where(~covid)
+final = SARIMAX(log_gap, order=(0, 1, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+fc = final.get_forecast(12)                                         # June 2026 to May 2027
+outlook = pd.DataFrame({"mean": np.exp(fc.predicted_mean)}).join(np.exp(fc.conf_int(alpha=0.05)))
+outlook.columns = ["mean", "pi_lower", "pi_upper"]
+print(outlook.loc[["2026-07-01", "2026-12-01", "2027-05-01"]].round(0))
+#                mean  pi_lower  pi_upper
+# 2026-07-01  16130.0   13640.0   19074.0
+# 2026-12-01  11307.0    8504.0   15033.0
+# 2027-05-01  17910.0   12420.0   25827.0
+print(round(outlook["mean"].sum()), y["2025-06":].sum())   # 168301 137595: +22 % on the last 12 months
 ```
 
-The intervals are for single months. The interval for the twelve-month total is not the sum of the monthly limits (errors partly cancel); it would need a simulation from the model.
+The model expects about 168,000 reviews from June 2026 to May 2027, 22 % more than in the last twelve months, which continues the growth of recent years. Three caveats belong in the report, next to the numbers. First, reviews are a proxy for stays, and the series overstates growth because listings that left the platform are missing from the snapshot (page 1). Second, May 2026 was unusually high (15,024 reviews, +25 % on May 2025); the airline model reacts strongly to the last months, so a single high month raises the whole forecast. Third, the new EU rules on short-term rental registration apply since 20 May 2026; if they remove listings, the next months will fall below the interval, and the model should be refitted, or the change modelled as a new break. The intervals are for single months. The interval for the twelve-month total is not the sum of the monthly limits (errors partly cancel); it would need a simulation from the model.
 
 ```mermaid
 flowchart TD
@@ -231,17 +260,17 @@ flowchart TD
 > **Never use shuffled k-fold cross-validation on a time series.** It puts later months into the training folds, and the error looks better than it will be in use.
 
 > [!CAUTION]
-> **Tuning on the backtest makes it optimistic.** If you choose hyperparameters (or the model) on the same folds you report, hold out a final period or report the result as a model-selection result, not as an estimate of future accuracy.
+> **Tuning on the backtest makes it optimistic.** If you choose hyperparameters, the model or the treatment of the break on the same folds you report, hold out a final period or report the result as a model-selection result, not as an estimate of future accuracy. The choices of this page (start ETS in 2022, mark March 2020 to December 2021 as missing) were made after looking at the series, so the backtest numbers are somewhat optimistic.
 
-*Practice (block 3):* case study: backtest the models and recommend one with its prediction interval: Part 3 of [10-case-study-decision-forecast.ipynb](../workbooks/10-case-study-decision-forecast.ipynb).
+*Practice (block 3):* case study: backtest the models and recommend one with its prediction interval: Part 3 of [10-case-study-airbnb-review-forecast.ipynb](../workbooks/10-case-study-airbnb-review-forecast.ipynb). The optional workbook [11-optional-ebti-decision-forecast.ipynb](../workbooks/11-optional-ebti-decision-forecast.ipynb) repeats the workflow on the monthly number of BTI decisions of the main case study, a flatter series with a different break (the United Kingdom stops after Brexit).
 
 ## Check your understanding
 
-1. For a forecast made on 30 September 2026 for March 2027, which of these features may be used: lag 1, lag 6, lag 12, the month, a 3-month rolling mean of the shifted series `y.shift(12)`?
-2. Why can a gradient-boosting model trained on months with at most 4,900 decisions not forecast 5,500? How does a log transform or a growth target change this?
+1. For a forecast made at the end of May 2026 for March 2027, which of these features may be used: lag 1, lag 6, lag 12, the month, a 3-month rolling mean of the shifted series `y.shift(12)`?
+2. Why can a gradient-boosting model trained on months with at most 13,000 reviews not forecast 15,000? How does the growth target change this?
 3. Compute the MASE scale for the training series 5, 7, 6, 8, 9, 7 with m = 2.
-4. Seasonal naive won the hold-out year, ETS won the five-fold backtest. Which result do you trust more, and why?
-5. A 95 % interval covers 58 of 60 test months. Is it well calibrated? What would 60 of 60 or 45 of 60 suggest?
+4. Why does the MASE scale on this page skip the years 2020 and 2021? What would happen to the MASE of every model otherwise?
+5. ETS won the hold-out year against seasonal naive times growth, but lost the first fold clearly. Which evidence do you trust more, and why?
 
 ## Further reading
 

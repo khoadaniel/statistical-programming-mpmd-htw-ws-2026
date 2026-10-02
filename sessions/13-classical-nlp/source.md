@@ -19,7 +19,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/01-text-as-data.md](theory/01-text-as-data.md), [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md), [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Theory pages for the three blocks; partly based on the course's earlier lecture notes | CC-BY-4.0, author: course team |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG figures | Multilingual document-term matrix sketch, top words per heading (6403, 6404, 9503), footwear confusion matrix; EBTI case-study data | CC-BY-4.0, author: course team |
 | [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb) | Vocabulary, document-term matrix, Zipf's law, preprocessing on the EBTI decision sample | CC-BY-4.0, author: course team |
-| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Word and character TF-IDF classifiers, per-heading metrics, leaderboard submission (round L3) | CC-BY-4.0, author: course team |
+| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Word and character TF-IDF classifiers, per-heading metrics, leaderboard submission (round L2) | CC-BY-4.0, author: course team |
 | [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Error analysis of 20 misclassified decisions, quoted heading numbers, improvements | CC-BY-4.0, author: course team |
 
 ## Citations

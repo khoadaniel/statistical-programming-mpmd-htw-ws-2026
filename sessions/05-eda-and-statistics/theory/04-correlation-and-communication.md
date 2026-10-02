@@ -31,25 +31,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet").dropna(subset=["keywords"])
-x = np.log10(decisions["description"].str.len())        # log10 of characters: length is right-skewed
-y = decisions["keywords"].str.split(",").str.len()       # number of keywords: a small count
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]   # comparable prices
+x = short["accommodates"]                                # number of guests: a small count
+y = np.log10(short["price"])                             # log10 of the price: price is right-skewed
 rng = np.random.default_rng(0)
 
 fig, (left, right) = plt.subplots(1, 2, figsize=(10, 3.8), layout="constrained")
-left.scatter(x, y + rng.uniform(-0.3, 0.3, len(y)), s=3, alpha=0.1)   # jitter + transparency
-hb = right.hexbin(x, y, gridsize=35, bins="log", cmap="viridis")      # counts per hexagon
-fig.colorbar(hb, ax=right, label="decisions (log scale)")
+left.scatter(x + rng.uniform(-0.3, 0.3, len(x)), y, s=3, alpha=0.1)   # jitter + transparency
+hb = right.hexbin(x, y, gridsize=25, bins="log", cmap="viridis")      # counts per hexagon
+fig.colorbar(hb, ax=right, label="listings (log scale)")
 for ax in (left, right):
-    ax.set(xlabel="log10(characters in description)", ylabel="number of keywords")
-print(y.value_counts().head(3).to_dict())   # {5: 15811, 6: 10738, 7: 6332}: integer values overlap
+    ax.set(xlabel="guests (accommodates)", ylabel="log10(price per night in EUR)")
+print(x.value_counts().head(3).to_dict())   # {2: 2599, 4: 1352, 3: 706}: integer values overlap
 ```
 
 ### In practice
 
 - Gapminder's bubble charts of income against life expectancy (Hans Rosling) made the scatter plot a standard tool of public communication.
 - Quality engineering plots process settings against defect rates to find operating windows.
-- Real-estate analysts plot price against floor area before fitting any model.
+- Real-estate analysts plot price against floor area before fitting any model; the same holds for nightly prices against the number of guests.
 
 > [!TIP]
 > Put the variable you think of as the "cause" or predictor on the x-axis and the outcome on the y-axis. It does not prove anything, but it matches how readers read the plot and how regression is written.
@@ -76,22 +77,27 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet").dropna(subset=["keywords"])
-chars = decisions["description"].str.len()
-keywords = decisions["keywords"].str.split(",").str.len()
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]
+guests, price = short["accommodates"], short["price"]
 
-print(round(stats.pearsonr(chars, keywords).statistic, 3))     # 0.262
-print(round(stats.spearmanr(chars, keywords).statistic, 3))    # 0.245
-res = stats.pearsonr(np.log(chars), keywords)
+print(round(stats.pearsonr(guests, price).statistic, 3))     # 0.408
+print(round(stats.spearmanr(guests, price).statistic, 3))    # 0.642
+res = stats.pearsonr(guests, np.log(price))
 ci = res.confidence_interval()
-print(round(res.statistic, 3), round(ci.low, 3), round(ci.high, 3))   # 0.242 0.233 0.25
+print(round(res.statistic, 3), round(ci.low, 3), round(ci.high, 3))   # 0.594 0.579 0.61
 
-# Is Pearson driven by a few points here? Drop the 5 longest descriptions (up to 6,403 characters)
-keep = ~chars.index.isin(chars.nlargest(5).index)
-print(round(stats.pearsonr(chars[keep], keywords[keep]).statistic, 3))   # 0.262: unchanged
+# Is Pearson driven by a few points? Drop the 5 most expensive listings (up to 10,025 EUR)
+keep = ~price.index.isin(price.nlargest(5).index)
+print(round(stats.pearsonr(guests[keep], price[keep]).statistic, 3))   # 0.573: five points out of 6,701
+
+# rating and price: no monotonic relationship
+rated = short.dropna(subset=["review_scores_rating"])
+print(round(stats.spearmanr(rated["review_scores_rating"], rated["price"]).statistic, 3))                           # 0.036
+print(round(stats.spearmanr(rated["review_scores_rating"], rated["price"] / rated["accommodates"]).statistic, 3))   # 0.175
 ```
 
-All three coefficients agree at about 0.25: longer descriptions tend to come with more keywords, a weak-to-moderate monotonic relationship. Unlike in the worked example, five extreme points change nothing, because 50,000 points and a bounded count (at most 39 keywords) leave no single point much leverage. Always check rather than assume.
+The three coefficients tell different stories about the same scatter plot. Pearson's r on raw prices is 0.41; Spearman's ρ is 0.64; Pearson on the log price is 0.59. The gap is the worked example in real data: five listings with prices in the thousands (out of 6,701) hold down Pearson's r on the raw scale, and removing them raises it from 0.41 to 0.57. Spearman and the log scale are not fooled by them. Larger listings clearly cost more, and the relationship is strong. Ratings, by contrast, are unrelated to the nightly price (ρ = 0.04), and only weakly related to the price per guest (ρ = 0.18): guests rate value for money, not price.
 
 ### In practice
 
@@ -100,7 +106,7 @@ All three coefficients agree at about 0.25: longer descriptions tend to come wit
 - Marketing analysts correlate advertising spend with sales, where both follow the season (see confounding below).
 
 > [!CAUTION]
-> **Correlation is not causation.** Longer descriptions may come with more keywords because they describe more product properties, because some administrations write longer texts and assign more keywords, or because complex goods (machines, chemical mixtures) need both. The correlation alone cannot tell these apart.
+> **Correlation is not causation.** Larger listings may cost more because hosts charge per guest, because large flats are in expensive central buildings, or because entire homes are both larger and pricier than rooms. The correlation alone cannot tell these apart; adding one guest's bed to a flat does not raise its market price by the slope of the line.
 
 ## Confounding and Simpson's paradox
 
@@ -110,9 +116,11 @@ A **confounder** is a third variable that is related to both variables of intere
 
 The classic real case is the 1973 graduate admissions at UC Berkeley (Bickel, Hammel & O'Connell, 1975). Pooled over the six largest departments, 45 % of men and 30 % of women were admitted. Department by department, women were admitted at a higher rate in four of six. Women had applied more often to the departments that rejected most applicants. The department was the confounder.
 
-![Left: Berkeley admission rates by department for men and women. Right: number of keywords against description length, with one least-squares line per language and a flatter pooled line](figures/simpsons-paradox.png)
+![Left: Berkeley admission rates by department for men and women. Right: mean nightly price in Friedrichshain-Kreuzberg and Charlottenburg-Wilmersdorf for short stays, medium-term listings and all listings](figures/simpsons-paradox.png)
 
-We searched the case-study data for a reversal of this kind (for example, description length by year within and across languages, and pairs of issuing countries within product sections) and found none that is clear and robust. What the data do show is a milder form of confounding. Within each of the large languages, longer descriptions come with more keywords. German descriptions, however, are much longer than French ones but carry about the same number of keywords (median 6 and 5). Pooling the languages therefore flattens the relationship: in the right panel the German and French lines are steeper than the pooled line (the English one is flatter). The language confounds the comparison.
+The listings contain a real, milder version. Among all listings with a price, Friedrichshain-Kreuzberg is €10 more expensive than Charlottenburg-Wilmersdorf on average (€158.5 against €148.5). Within each type of stay the gap disappears: short stays cost €188.6 and €190.1, medium-term listings €32.2 and €32.3, both slightly *higher* in Charlottenburg-Wilmersdorf. The pooled gap comes entirely from the mix: 26 % of the priced listings in Charlottenburg-Wilmersdorf are medium-term offers with their low price field, against 19 % in Friedrichshain-Kreuzberg. Strictly, this is a reversal, but within the groups the differences (€0.1 and €1.5) are far too small to matter; the honest summary is "the gap vanishes", not "the order reverses". We searched all district pairs for a reversal that is large and robust and found none; we report what we found.
+
+The type of stay is not the only confounder. Among short-stay listings, Neukölln is 28 % cheaper than Mitte in a regression of log price on district alone, and 20 % cheaper once room type and number of guests are held fixed: about a third of the raw gap reflects that Neukölln has more private rooms and smaller listings.
 
 ### Why it matters
 
@@ -124,27 +132,30 @@ Before acting on any relationship, ask: what else differs between these groups? 
 import numpy as np
 import pandas as pd
 import statsmodels.formula.api as smf
-from scipy import stats
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet").dropna(subset=["keywords"])
-decisions = decisions[decisions["language"].isin(["de", "fr", "en", "nl", "pl"])].copy()
-decisions["log_chars"] = np.log(decisions["description"].str.len())
-decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+priced = listings[listings["price"].notna()].copy()
+priced["stay"] = np.where(priced["minimum_nights"].ge(28), "medium-term", "short")
+pair = priced[priced["district"].isin(["Friedrichshain-Kreuzberg", "Charlottenburg-Wilm."])]
 
-print(decisions.groupby("language")[["log_chars", "n_keywords"]].median().round(2).T)
-# language       de    en    fr    nl    pl
-# log_chars    6.61  5.73  5.61  6.3   6.12
-# n_keywords   6.00  6.00  5.00  6.0   5.00
-print({lang: round(float(stats.spearmanr(g["log_chars"], g["n_keywords"]).statistic), 2)
-       for lang, g in decisions.groupby("language")})
-# {'de': 0.29, 'en': 0.26, 'fr': 0.24, 'nl': 0.15, 'pl': 0.07}
+print(pair.groupby("district")["price"].mean().round(1).to_dict())
+# {'Charlottenburg-Wilm.': 148.5, 'Friedrichshain-Kreuzberg': 158.5}   <- pooled: a 10 EUR gap
+print(pair.groupby(["district", "stay"])["price"].mean().unstack().round(1))
+# stay                      medium-term  short
+# district
+# Charlottenburg-Wilm.             32.3  190.1
+# Friedrichshain-Kreuzberg         32.2  188.6                         <- within each stay type: no gap
+print(pair.groupby("district")["stay"].apply(lambda s: (s == "medium-term").mean()).round(2).to_dict())
+# {'Charlottenburg-Wilm.': 0.26, 'Friedrichshain-Kreuzberg': 0.19}     <- the mix differs
 
-pooled = smf.ols("n_keywords ~ log_chars", data=decisions).fit()
-within = smf.ols("n_keywords ~ log_chars + C(language)", data=decisions).fit()   # language held fixed
-print(round(pooled.params["log_chars"], 2), round(within.params["log_chars"], 2))   # 0.9 1.31
+short = priced[priced["stay"] == "short"].assign(log_price=lambda d: np.log(d["price"]))
+raw = smf.ols('log_price ~ C(district, Treatment("Mitte"))', data=short).fit()
+adjusted = smf.ols('log_price ~ C(district, Treatment("Mitte")) + C(room_type) + accommodates', data=short).fit()
+name = 'C(district, Treatment("Mitte"))[T.Neukölln]'
+print(round(np.exp(raw.params[name]) - 1, 3), round(np.exp(adjusted.params[name]) - 1, 3))   # -0.282 -0.195
 ```
 
-The pooled slope (0.90 keywords per unit of log length) understates the slope within languages (1.31) by about a third. Neither number is "the" effect of length on keywords; the lesson is that a pooled comparison mixes the relationship within groups with the differences between groups.
+The pooled district comparison mixes two things: the price of comparable listings and the composition of each district's offer. Neither "28 % cheaper" nor "20 % cheaper" is "the" effect of the district; the second answers a different question ("for a listing of the same type and size"). Size and room type may not be the only differences: location within the district, flat quality and the share of professional hosts also vary, and the data cannot rule out further confounders.
 
 ### In practice
 
@@ -165,7 +176,7 @@ b₁ = r · s_y / s_x and b₀ = ȳ − b₁ · x̄,
 
 where s_x and s_y are the standard deviations. The line always passes through the point of means (x̄, ȳ). In simple regression, the **R²** of the line equals r².
 
-![Left: a least-squares line with residuals on toy data. Right: number of keywords against log description length with binned means and the least-squares line](figures/regression-line.png)
+![Left: a least-squares line with residuals on toy data. Right: log price against the number of guests for short-stay listings, with the mean per number of guests and the least-squares line](figures/regression-line.png)
 
 Worked example: if r = 0.5, s_x = 2 and s_y = 10, then b₁ = 0.5 × 10 / 2 = 2.5: y rises by 2.5 units per unit of x. The correlation is symmetric in x and y; the slope is not.
 
@@ -179,21 +190,23 @@ The regression line turns "these variables move together" into "how much y chang
 import numpy as np
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet").dropna(subset=["keywords"])
-x = np.log(decisions["description"].str.len())
-y = decisions["keywords"].str.split(",").str.len()
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+short = listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]
+x = short["accommodates"]
+y = np.log(short["price"])           # natural log: coefficients read as approximate percentages
 
 r = np.corrcoef(x, y)[0, 1]
 b1 = r * y.std() / x.std()            # slope from the correlation
 b0 = y.mean() - b1 * x.mean()         # line through the point of means
-print(round(r, 3), round(b1, 3), round(b0, 3))       # 0.242 0.853 0.831
-print(np.polyfit(x, y, deg=1).round(3))              # [0.853 0.831]: numpy agrees
+print(round(r, 3), round(b1, 3), round(b0, 3))       # 0.594 0.151 4.526
+print(np.polyfit(x, y, deg=1).round(3))              # [0.151 4.526]: numpy agrees
 residuals = y - (b0 + b1 * x)
 r2 = 1 - (residuals**2).sum() / ((y - y.mean())**2).sum()
-print(round(r2, 3), round(r**2, 3))                  # 0.058 0.058: R² = r² in simple regression
+print(round(r2, 3), round(r**2, 3))                  # 0.353 0.353: R² = r² in simple regression
+print(round(np.exp(b1) - 1, 3), round(np.exp(b0 + b1 * 2), 0), round(np.exp(b0 + b1 * 4), 0))   # 0.163 125.0 169.0
 ```
 
-With x on the natural-log scale, a slope of 0.85 means: a description twice as long has on average 0.85 × ln 2 ≈ 0.6 more keywords. R² = 0.06: length explains about 6 % of the variation in the number of keywords.
+With y on the natural-log scale, a slope of 0.151 means: each additional guest goes with a price about e^0.151 − 1 ≈ 16 % higher. The line predicts €125 for a listing for two guests and €169 for four (these are typical, geometric-mean prices, not means). R² = 0.35: the number of guests explains about a third of the variation in log price; room type, location and much else explain the rest (Session 6). The binned means in the figure bend below the line for large listings: the relationship flattens above about eight guests.
 
 ### In practice
 
@@ -210,10 +223,10 @@ With x on the natural-log scale, a slope of 0.85 means: a description twice as l
 
 A finding for a non-technical reader follows a fixed order:
 
-1. **the finding first**, as a full sentence ("Since 2021, almost no Binding Tariff Information decision has been written in English");
-2. **one number with its context** (the English share fell from 8.5 % in 2017 to 1.3 % in 2023; the United Kingdom issued about 3,000 decisions a year until 2020 and none after);
-3. **what it means for the reader's decision** (a classifier trained on 2017–2020 sees far more English text than it will meet in 2024);
-4. **one limitation** (decisions of Ireland and Malta are still partly in English; the statement concerns the shares, not the quality of the decisions).
+1. **the finding first**, as a full sentence ("A night in Mitte costs about a fifth more than a comparable night in Neukölln");
+2. **one number with its context** (median short-stay price €187 in Mitte and €130 in Neukölln; holding room type and number of guests fixed, Neukölln is about 20 % cheaper);
+3. **what it means for the reader's decision** (for a city housing analyst: the raw gap overstates the location premium, because Neukölln offers more private rooms);
+4. **one limitation** (listed prices, not paid prices; one snapshot from June 2026; medium-term listings excluded because their price field is not comparable).
 
 A **one-page report** puts three to five such findings on a page, each with one chart. A **dashboard** gives repeated access to the same analysis with the reader's own filters.
 
@@ -221,10 +234,10 @@ A **one-page report** puts three to five such findings on a page, each with one 
 
 ```mermaid
 sequenceDiagram
-    participant U as Customs analyst
+    participant U as Housing analyst
     participant B as Browser
     participant S as Streamlit script
-    U->>B: picks countries and a chapter
+    U->>B: picks districts and a room type
     B->>S: rerun with new widget values
     S->>S: load data (cached), filter
     S-->>B: metrics and charts
@@ -233,7 +246,7 @@ sequenceDiagram
 
 ### Why it matters
 
-Most analyses reach decision makers as one chart and a few sentences. A finding that is correct but not understood has no effect. A dashboard avoids repeated one-off requests ("can you rerun this for chapter 63?") and is one option for the user interface of a deployed model in Session 16.
+Most analyses reach decision makers as one chart and a few sentences. A finding that is correct but not understood has no effect. A dashboard avoids repeated one-off requests ("can you rerun this for private rooms in Pankow?") and is one option for the user interface of a deployed model in Session 16.
 
 ### How it works in Python
 
@@ -247,17 +260,18 @@ import streamlit as st
 
 @st.cache_data                     # read the file once, not on every interaction
 def load() -> pd.DataFrame:
-    return pd.read_parquet("case-study/data/monthly_counts.parquet")
+    listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+    return listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]
 
-counts = load()
-st.title("Binding Tariff Information decisions per month")
-years = st.sidebar.slider("Years", 2004, 2025, (2015, 2025))
-countries = st.sidebar.multiselect("Issuing countries", ["DE", "FR", "NL", "GB", "PL"], default=["DE", "FR", "GB"])
+short = load()
+st.title("Short-stay listings in Berlin: prices by district")
+room_types = st.sidebar.multiselect("Room types", sorted(short["room_type"].unique()), default=["Entire home/apt"])
+max_guests = st.sidebar.slider("Guests up to", 1, 16, 4)
 
-sel = counts[counts["month"].dt.year.between(*years) & counts["issuing_country"].isin(countries)]
-st.metric("Decisions", f"{sel['n_decisions'].sum():,}")
-per_month = sel.groupby(["month", "issuing_country"], as_index=False)["n_decisions"].sum()
-st.plotly_chart(px.line(per_month, x="month", y="n_decisions", color="issuing_country"))
+sel = short[short["room_type"].isin(room_types) & short["accommodates"].le(max_guests)]
+st.metric("Listings", f"{len(sel):,}")
+by_district = sel.groupby("district", as_index=False)["price"].median().sort_values("price")
+st.plotly_chart(px.bar(by_district, x="price", y="district", orientation="h"))
 ```
 
 Run outside Streamlit, the script prints warnings and draws nothing; that is expected. Start it with `streamlit run`.
@@ -269,18 +283,18 @@ Run outside Streamlit, the script prints warnings and draws nothing; that is exp
 - The UK Office for National Statistics and Eurostat publish short statistical bulletins that follow the "main points first" structure.
 
 > [!IMPORTANT]
-> **Practice (block 3).** Compute the correlation of description length and number of keywords (Pearson, Spearman, log scale) as an exploratory finding, check whether the language confounds it, and write a one-page summary for a customs analyst or extend the dashboard of decisions per month by country and chapter. Notebook: [18-case-study-ebti-exploration.ipynb](../workbooks/18-case-study-ebti-exploration.ipynb).
+> **Practice (block 3).** How strongly does the price rise with the number of guests (Pearson, Spearman, log scale), and do district price differences survive once room type, size and the type of stay are taken into account? Write a one-page summary for a city housing analyst, or extend the dashboard of prices and listings by district. Notebook: [18-case-study-airbnb-exploration.ipynb](../workbooks/18-case-study-airbnb-exploration.ipynb).
 
 > [!WARNING]
 > **Dashboards spread mistakes.** A wrong filter or an unlabelled axis in a dashboard is seen by everyone who opens it, every day. Test the numbers against a notebook, label units, and show the data period and the number of observations on the page.
 
 ## Check your understanding
 
-1. Pearson's r between description length and number of keywords is 0.26 with and without the five longest descriptions. Why can one point move Pearson's r in the worked example with four points, but not here?
-2. Name two variables other than the language that could confound the relationship between description length and number of keywords.
+1. Pearson's r between guests and price rises from 0.41 to 0.57 when the five most expensive listings are dropped, while Spearman's ρ is 0.64 either way. Why?
+2. Name two variables other than room type and size that could confound the price difference between Mitte and Neukölln.
 3. In the Berkeley case, what was the confounder and how did it produce the pooled gap?
 4. If r = −0.4, s_x = 5 and s_y = 2, what is the slope of the least-squares line?
-5. Write the four-part summary (finding, number, meaning, limitation) for the comparison of German and French description lengths.
+5. Write the four-part summary (finding, number, meaning, limitation) for the comparison of entire homes and private rooms.
 
 ## Further reading
 
@@ -288,4 +302,3 @@ Run outside Streamlit, the script prints warnings and draws nothing; that is exp
 - Bickel, P. J., Hammel, E. A., & O'Connell, J. W. (1975). Sex bias in graduate admissions: Data from Berkeley. *Science*, 187(4175), 398–404. <https://doi.org/10.1126/science.187.4175.398>
 - Pearl, J., Glymour, M., & Jewell, N. P. (2016). *Causal Inference in Statistics: A Primer*, chapter 1 (Simpson's paradox). Wiley.
 - Streamlit (2026). *Get started: tutorials*. <https://docs.streamlit.io/get-started/tutorials>
-- European Commission. *Binding Tariff Information (BTI)*. <https://taxation-customs.ec.europa.eu/customs-4/calculation-customs-duties/customs-tariff/binding-tariff-information-bti_en>

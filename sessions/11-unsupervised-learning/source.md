@@ -42,12 +42,12 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | File | Covers | Licence |
 |---|---|---|
 | [theory/01-clustering-and-k-means.md](theory/01-clustering-and-k-means.md) | Supervised vs unsupervised, distance and scaling, k-means by hand, elbow and silhouette | CC-BY-4.0, course team |
-| [theory/02-hierarchical-dbscan-and-evaluation.md](theory/02-hierarchical-dbscan-and-evaluation.md) | Hierarchical clustering, DBSCAN, silhouette, stability, profiles | CC-BY-4.0, course team |
-| [theory/03-dimensionality-reduction.md](theory/03-dimensionality-reduction.md) | PCA (explained variance, loadings), t-SNE, UMAP | CC-BY-4.0, course team |
-| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, clusters and components as features | CC-BY-4.0, course team |
-| [theory/figures/](theory/figures/) (`make_figures.py` and 5 PNGs) | k-means iterations, elbow and silhouette, dendrogram, PCA scree plot and biplot, t-SNE map of chapter-94 BTI decisions | CC-BY-4.0, course team |
+| [theory/02-hierarchical-dbscan-and-evaluation.md](theory/02-hierarchical-dbscan-and-evaluation.md) | Hierarchical clustering, DBSCAN (features and map), silhouette, stability, profiles of Berlin Airbnb listing segments | CC-BY-4.0, course team |
+| [theory/03-dimensionality-reduction.md](theory/03-dimensionality-reduction.md) | PCA (explained variance, loadings), t-SNE, UMAP, PCA of Airbnb amenities | CC-BY-4.0, course team |
+| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, implausible Airbnb listings, EBTI heading-centroid outliers, clusters and components as features (Telco, Airbnb price model) | CC-BY-4.0, course team |
+| [theory/figures/](theory/figures/) (`make_figures.py` and 5 PNGs) | k-means iterations, elbow and silhouette, dendrogram, PCA scree plot and biplot, PCA of Airbnb amenities | CC-BY-4.0, course team |
 | [workbooks/04-case-study-telco-segments.ipynb](workbooks/04-case-study-telco-segments.ipynb) | Block 1 practice: k-means segmentation of the Telco customers | CC-BY-4.0, course team |
-| [workbooks/24-case-study-decision-clusters.ipynb](workbooks/24-case-study-decision-clusters.ipynb) | Blocks 2 and 3 practice: clusters of BTI decisions (chapter 94), t-SNE map, heading-centroid anomalies, cluster features in a gradient-boosting model | CC-BY-4.0, course team |
+| [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb) | Blocks 2 and 3 practice: segments and hot spots of Berlin Airbnb listings, PCA of amenities, t-SNE map, implausible listings, location clusters in a gradient-boosting price model; optional EBTI heading-centroid outliers (replaces `24-case-study-decision-clusters.ipynb`) | CC-BY-4.0, course team |
 
 ## Citations
 
@@ -78,6 +78,8 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - VanderPlas, J. (2016). *Python Data Science Handbook*. O'Reilly. https://jakevdp.github.io/PythonDataScienceHandbook/
 - Wattenberg, M., Viégas, F. and Johnson, I. (2016). How to use t-SNE effectively. *Distill*. https://doi.org/10.23915/distill.00002
 - IBM (2019). *Telco customer churn sample data*. https://github.com/IBM/telco-customer-churn-on-icp4d
-- Deerwester, S., Dumais, S. T., Furnas, G. W., Landauer, T. K. and Harshman, R. (1990). Indexing by latent semantic analysis. *Journal of the American Society for Information Science*, 41(6), 391–407. https://doi.org/10.1002/(SICI)1097-4571(199009)41:6<391::AID-ASI1>3.0.CO;2-9
+- Koren, Y., Bell, R. and Volinsky, C. (2009). Matrix factorization techniques for recommender systems. *Computer*, 42(8), 30–37. https://doi.org/10.1109/MC.2009.263
+- OECD (2017). *PISA 2015 Technical Report*, Chapter 16 (the index of economic, social and cultural status, ESCS). OECD Publishing. https://www.oecd.org/pisa/data/2015-technical-report/
+- Inside Airbnb (2026). *Berlin, snapshot of 26 June 2026* (listings), prepared by `case-study/prepare_airbnb.py` (personal data removed). Creative Commons Attribution 4.0 International (CC BY 4.0). https://insideairbnb.com/get-the-data/
 - European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export, retrieved by each student with `case-study/prepare_data.py`; reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Harmonized System nomenclature 2022 (English), datasets/harmonized-system, ODC-PDDL. https://github.com/datasets/harmonized-system

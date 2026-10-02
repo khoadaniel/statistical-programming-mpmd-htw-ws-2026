@@ -161,9 +161,8 @@ timeline
 | Round | Session | Model |
 |---|---|---|
 | L1 | 8 | Logistic regression on simple features |
-| L2 | 10 | Tree-based model on engineered features |
-| L3 | 13 | TF-IDF text classifier |
-| L4 | 16 | Final submission after retraining with the released 2024 labels, any method |
+| L2 | 13 | TF-IDF text classifier |
+| L3 | 16 | Final submission after retraining with the released 2024 labels, any method |
 
 ### Why it matters
 

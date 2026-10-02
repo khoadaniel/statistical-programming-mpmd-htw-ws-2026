@@ -3,7 +3,9 @@
 Run from the repository root:
     uv run python sessions/10-tree-based-models/theory/figures/make_figures.py
 
-Deterministic (seeded). Reads the IBM Telco churn data from GitHub.
+Deterministic (seeded). Reads the IBM Telco churn data from GitHub and the Inside Airbnb Berlin listings
+(case-study/data/airbnb/, `uv run python case-study/prepare_airbnb.py`). LightGBM needs libomp on macOS
+(`brew install libomp`).
 """
 
 from pathlib import Path
@@ -63,7 +65,7 @@ def depth_vs_score(X_tr, y_tr):
     ax.axvline(depths[best], color=MUTED, ls=":", lw=1.2)
     ax.annotate(f"best CV depth = {depths[best]}", (depths[best], cv_acc[best]),
                 xytext=(depths[best] + 2, cv_acc[best] - 0.05), color=INK,
-                arrowprops=dict(arrowstyle="->", color=MUTED))
+                arrowprops={"arrowstyle": "->", "color": MUTED})
     ax.text(20, train_acc[-1] - 0.012, "training", color=BLUE, ha="right", va="top")
     ax.text(20, cv_acc[-1] + 0.008, "cross-validation", color=ORANGE, ha="right", va="bottom")
     ax.set_xlabel("max_depth")
@@ -104,9 +106,62 @@ def boosting_stages():
     plt.close(fig)
 
 
+def price_model_interpretation():
+    """Permutation importance and SHAP dependence of distance for the LightGBM price model (page 4)."""
+    import json
+    import re
+
+    import shap
+    from lightgbm import LGBMRegressor
+    from sklearn.inspection import permutation_importance
+    from sklearn.model_selection import GroupShuffleSplit
+
+    lst = pd.read_parquet(OUT.parents[3] / "case-study/data/airbnb/listings.parquet")
+    bnb = lst[(lst["minimum_nights"] < 28) & lst["price"].between(10, 1000)].reset_index(drop=True)
+    bnb["dist_km"] = np.hypot((bnb["latitude"] - 52.5219) * 111.2, (bnb["longitude"] - 13.4132) * 68.0)
+    amen_lists = bnb["amenities"].map(json.loads)
+    common = amen_lists.explode().value_counts().loc[lambda c: c >= 200].index
+    amen = pd.DataFrame({"am_" + re.sub(r"\W+", "_", a).strip("_").lower(): amen_lists.map(lambda x, a=a: a in x).astype(int)
+                         for a in common})
+    rich_num = ["accommodates", "bedrooms", "beds", "bathrooms", "dist_km", "latitude", "longitude",
+                "minimum_nights", "availability_365", "number_of_reviews", "review_scores_rating"]
+    X = pd.concat([bnb[rich_num], bnb[["room_type", "district", "property_type"]].astype("category"),
+                   amen.assign(n_amenities=amen_lists.map(len))], axis=1)
+    y = np.log(bnb["price"])
+    tr, te = next(GroupShuffleSplit(1, test_size=0.25, random_state=0).split(X, groups=bnb["host_id"]))
+    model = LGBMRegressor(n_estimators=600, learning_rate=0.03, num_leaves=31, subsample=0.8, subsample_freq=1,
+                          colsample_bytree=0.5, verbose=-1, random_state=0).fit(X.iloc[tr], y.iloc[tr])
+    perm = permutation_importance(model, X.iloc[te], y.iloc[te], scoring="r2", n_repeats=5, random_state=0)
+    imp = pd.Series(perm.importances_mean, index=X.columns).nlargest(10)[::-1]
+    sv = shap.TreeExplainer(model)(X.iloc[te])
+    j = list(X.columns).index("dist_km")
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.4), gridspec_kw={"width_ratios": [1, 1.2]})
+    axes[0].barh(imp.index, imp.values, color=BLUE)
+    axes[0].set_xlabel("drop in R² when shuffled (held-out hosts)")
+    axes[0].set_title("Permutation importance", color=INK, loc="left")
+    axes[0].grid(axis="x", color=GRID, lw=0.8)
+    factor = np.exp(sv.values[:, j]) - 1
+    axes[1].scatter(X.iloc[te]["dist_km"], 100 * factor, s=8, alpha=0.5, color=ORANGE, edgecolor="none")
+    axes[1].axhline(0, color=MUTED, lw=1)
+    axes[1].set_xlabel("distance to Alexanderplatz (km)")
+    axes[1].set_ylabel("SHAP contribution as price change (%)")
+    axes[1].set_title("SHAP: what the model adds for location", color=INK, loc="left")
+    axes[1].grid(color=GRID, lw=0.8)
+    fig.suptitle("LightGBM price model for Berlin Airbnb listings", x=0.06, ha="left", color=INK)
+    fig.tight_layout()
+    fig.savefig(OUT / "price_model_interpretation.png", dpi=110)
+    plt.close(fig)
+    near = X.iloc[te]["dist_km"] < 3
+    print("dist SHAP factor: share > 0 within 3 km", round(float((factor[near] > 0).mean()), 3),
+          "| 95th pct within 3 km", round(float(np.percentile(factor[near], 95)), 3),
+          "| max", round(float(factor.max()), 3), "| median beyond 8 km", round(float(np.median(factor[~(X.iloc[te]["dist_km"] < 8)])), 3))
+
+
 if __name__ == "__main__":
     X_tr, X_te, y_tr, y_te = telco()
     tree_depth2(X_tr, y_tr)
     depth_vs_score(X_tr, y_tr)
     boosting_stages()
+    price_model_interpretation()
     print("figures written to", OUT)

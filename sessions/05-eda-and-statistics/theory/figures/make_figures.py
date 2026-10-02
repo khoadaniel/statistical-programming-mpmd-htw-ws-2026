@@ -3,13 +3,14 @@
 Run from the repository root:
     uv run python sessions/05-eda-and-statistics/theory/figures/make_figures.py
 
-Uses the case-study data in case-study/data/ and small built-in tables.
+Uses the Inside Airbnb Berlin data in case-study/data/airbnb/ and small built-in tables.
 Deterministic: every random step is seeded.
 """
 
 from pathlib import Path
 
 import matplotlib
+import matplotlib.ticker
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).parent
-DATA = Path("case-study/data")
+DATA = Path("case-study/data/airbnb")
 
 # Okabe-Ito colours (colour-blind safe); grey for context
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#8C8C8C"
@@ -33,68 +34,65 @@ plt.rcParams.update({
 })
 
 
-def load_sample() -> pd.DataFrame:
-    decisions = pd.read_parquet(DATA / "train_sample.parquet")
-    decisions["n_chars"] = decisions["description"].str.len()
-    decisions["n_keywords"] = decisions["keywords"].str.split(",").str.len()
-    return decisions
+def load_listings() -> pd.DataFrame:
+    return pd.read_parquet(DATA / "listings.parquet")
 
 
-def fig_skewed_distribution(decisions: pd.DataFrame) -> None:
-    """Mean versus median on a right-skewed variable (characters per description)."""
-    chars = decisions["n_chars"]
+def short_stay(listings: pd.DataFrame) -> pd.DataFrame:
+    """Listings with a price and a minimum stay below 28 nights (comparable prices, Session 4)."""
+    return listings[listings["price"].notna() & listings["minimum_nights"].lt(28)]
+
+
+def fig_skewed_distribution(listings: pd.DataFrame) -> None:
+    """Mean versus median on a right-skewed variable (price per night)."""
+    price = short_stay(listings)["price"]
     fig, (lin, log) = plt.subplots(1, 2, figsize=(10, 3.6), layout="constrained")
-    lin.hist(chars.clip(upper=3000), bins=60, color=GREY, edgecolor="white", linewidth=0.5)
+    lin.hist(price.clip(upper=1000), bins=60, color=GREY, edgecolor="white", linewidth=0.5)
     for ax in (lin, log):
-        ax.axvline(chars.mean(), color=ORANGE, lw=2)
-        ax.axvline(chars.median(), color=BLUE, lw=2)
-    lin.text(chars.mean() + 40, lin.get_ylim()[1] * 0.9, f"mean {chars.mean():.0f}", color=ORANGE)
-    lin.text(chars.median() - 40, lin.get_ylim()[1] * 0.75, f"median {chars.median():.0f}",
-             color=BLUE, ha="right")
-    lin.set(xlabel="characters per description (values above 3,000 shown at 3,000)",
-            ylabel="decisions", title="Linear axis: a long right tail")
-    bins = np.logspace(np.log10(chars.min()), np.log10(chars.max()), 45)
-    log.hist(chars, bins=bins, color=GREY, edgecolor="white", linewidth=0.5)
+        ax.axvline(price.mean(), color=ORANGE, lw=2)
+        ax.axvline(price.median(), color=BLUE, lw=2)
+    lin.text(price.mean() + 15, lin.get_ylim()[1] * 0.9, f"mean €{price.mean():.0f}", color=ORANGE,
+             bbox={"facecolor": "white", "edgecolor": "none", "pad": 1})
+    lin.text(price.median() - 15, lin.get_ylim()[1] * 0.75, f"median €{price.median():.0f}",
+             color=BLUE, ha="right", bbox={"facecolor": "white", "edgecolor": "none", "pad": 1})
+    lin.set(xlabel="EUR per night (values above 1,000 shown at 1,000)",
+            ylabel="listings", title="Linear axis: a long right tail")
+    bins = np.logspace(np.log10(price.min()), np.log10(price.max()), 45)
+    log.hist(price, bins=bins, color=GREY, edgecolor="white", linewidth=0.5)
     log.set_xscale("log")
-    log.set(xlabel="characters per description (log scale)", ylabel="decisions",
+    log.set(xlabel="EUR per night (log scale)", ylabel="listings",
             title="Log axis: the shape becomes readable")
-    fig.suptitle(f"The mean ({chars.mean():.0f}) is pulled into the tail; "
-                 f"the median ({chars.median():.0f}) is not", x=0.01, ha="left", fontsize=12)
+    fig.suptitle(f"Short-stay listings in Berlin: the mean (€{price.mean():.0f}) is pulled into the tail; "
+                 f"the median (€{price.median():.0f}) is not", x=0.01, ha="left", fontsize=12)
     fig.savefig(OUT / "skewed-distribution.png")
     plt.close(fig)
 
 
 def fig_good_vs_poor() -> None:
-    """The same data as a poorly designed and a well-designed chart (decisions per year)."""
-    counts = pd.read_parquet(DATA / "monthly_counts.parquet")
-    counts["year"] = counts["month"].dt.year
-    counts = counts[counts["year"].between(2015, 2025)]
-    counts["uk"] = counts["issuing_country"].eq("GB")
-    yearly = counts.pivot_table(index="year", columns="uk", values="n_decisions", aggfunc="sum",
-                                fill_value=0)
-    total = yearly.sum(axis=1)
+    """The same data as a poorly designed and a well-designed chart (reviews per year)."""
+    monthly = pd.read_parquet(DATA / "reviews_monthly.parquet")
+    yearly = monthly.groupby(monthly["month"].dt.year)["n_reviews"].sum().loc[2015:2025]
     fig, (bad, good) = plt.subplots(1, 2, figsize=(11, 3.9), layout="constrained")
 
     # poor: truncated axis, rainbow colours, no units, title that says nothing
-    colours = plt.cm.rainbow(np.linspace(0, 1, len(total)))
-    bad.bar(total.index, total, color=colours)
-    bad.set_ylim(38000, 52500)
-    bad.set_title("Decisions")
+    colours = plt.cm.rainbow(np.linspace(0, 1, len(yearly)))
+    bad.bar(yearly.index, yearly, color=colours)
+    bad.set_ylim(20000, 135000)
+    bad.set_title("Reviews")
     bad.spines[["top", "right"]].set_visible(True)
     bad.grid(True, color="0.6")
-    bad.text(0.02, -0.2, "Poor: bars start at 38,000, rainbow colours, no units, vague title",
+    bad.text(0.02, -0.2, "Poor: bars start at 20,000, rainbow colours, no units, vague title",
              transform=bad.transAxes, color=ORANGE, fontsize=9)
 
     # good: full axis, colour for one distinction, finding as title
-    good.bar(yearly.index, yearly[False], color=GREY, label="other countries")
-    good.bar(yearly.index, yearly[True], bottom=yearly[False], color=ORANGE,
-             label="United Kingdom")
+    colours = [ORANGE if year in (2020, 2021) else GREY for year in yearly.index]
+    good.bar(yearly.index, yearly, color=colours)
     good.yaxis.set_major_formatter("{x:,.0f}")
-    fall = total[2017] - total[2021]
-    good.set(ylabel="decisions per year (start of validity)",
-             title=f"Decisions fell by a fifth from 2017 to 2021;\n"
-                   f"a third of the fall ({yearly.loc[2017, True]:,} of {fall:,}) is the UK leaving")
-    good.legend(frameon=False, loc="lower left", fontsize=9)
+    drop = 1 - yearly[2020] / yearly[2019]
+    good.set(ylabel="reviews per year (today's listings)",
+             title=f"Reviews fell by {drop:.0%} in 2020 and passed\nthe 2019 level only in 2022")
+    good.annotate("pandemic years", xy=(2020.5, yearly[2021] + 3000), xytext=(2016, 95000),
+                  arrowprops={"arrowstyle": "->", "color": ORANGE}, color=ORANGE, fontsize=9)
     good.grid(axis="y", color="0.9")
     good.text(0.02, -0.2, "Better: full axis from 0, one highlight colour, finding as title",
               transform=good.transAxes, color=BLUE, fontsize=9)
@@ -103,7 +101,7 @@ def fig_good_vs_poor() -> None:
 
 
 def fig_simpsons_paradox() -> None:
-    """Simpson's paradox (Berkeley 1973) and milder confounding by language in the case study."""
+    """Simpson's paradox (Berkeley 1973) and confounding by the type of stay in the case study."""
     # UC Berkeley graduate admissions, six largest departments (Bickel et al. 1975;
     # R dataset UCBAdmissions): (admitted, applied)
     berkeley = pd.DataFrame(
@@ -114,12 +112,17 @@ def fig_simpsons_paradox() -> None:
     overall = {g: sum(a for a, _ in berkeley[g]) / sum(n for _, n in berkeley[g])
                for g in ("men", "women")}
 
-    decisions = load_sample().dropna(subset=["keywords"])
-    decisions = decisions[decisions["language"].isin(["de", "fr", "en"])]
-    decisions["log_chars"] = np.log10(decisions["n_chars"])
+    listings = load_listings()
+    priced = listings[listings["price"].notna()].copy()
+    priced["stay"] = np.where(priced["minimum_nights"].ge(28), "medium-term\n(28+ nights)", "short stay")
+    pair = ["Friedrichshain-Kreuzberg", "Charlottenburg-Wilm."]
+    d = priced[priced["district"].isin(pair)]
+    by_stay = d.groupby(["district", "stay"])["price"].mean().unstack()
+    pooled = d.groupby("district")["price"].mean()
+    medium_share = d.groupby("district")["stay"].apply(lambda s: s.str.startswith("medium").mean())
 
     fig, (left, right) = plt.subplots(1, 2, figsize=(11, 4), layout="constrained",
-                                      gridspec_kw={"width_ratios": [1, 1.5]})
+                                      gridspec_kw={"width_ratios": [1, 1.3]})
     x = np.arange(len(rate) + 1)
     labels = list(rate.index) + ["All"]
     left.scatter(x[:-1], rate["men"], color=BLUE, s=45, label="men", marker="o", zorder=3)
@@ -133,31 +136,32 @@ def fig_simpsons_paradox() -> None:
              title="Berkeley 1973: women ahead in 4 of 6\ndepartments, behind overall")
     left.legend(frameon=False, loc="upper right")
 
-    colours = {"de": BLUE, "fr": ORANGE, "en": GREEN}
-    names = {"de": "German", "fr": "French", "en": "English"}
-    edges = np.arange(1.0, 3.81, 0.2)
-    for lang, g in decisions.groupby("language"):
-        bins = pd.cut(g["log_chars"], edges)
-        means = g.groupby(bins, observed=True)[["log_chars", "n_keywords"]].mean()
-        means = means[g.groupby(bins, observed=True).size() >= 30]
-        right.scatter(means["log_chars"], means["n_keywords"], color=colours[lang], s=22, zorder=3)
-        b1, b0 = np.polyfit(g["log_chars"], g["n_keywords"], 1)
-        grid = np.array([g["log_chars"].quantile(0.02), g["log_chars"].quantile(0.98)])
-        right.plot(grid, b0 + b1 * grid, color=colours[lang], lw=2,
-                   label=f"{names[lang]}: slope {b1:.1f}")
-    b1, b0 = np.polyfit(decisions["log_chars"], decisions["n_keywords"], 1)
-    grid = np.array([2.0, 3.4])
-    right.plot(grid, b0 + b1 * grid, color="black", lw=2, ls="--",
-               label=f"three languages pooled: slope {b1:.1f}")
-    right.set(xlabel="log10(characters in description)", ylabel="mean number of keywords",
-              title="Case study: German and French slopes are steeper than\n"
-                    "the pooled slope (long German texts, few extra keywords)")
-    right.legend(frameon=False, loc="upper left", fontsize=8.5)
+    groups = ["short stay", "medium-term\n(28+ nights)", "all listings"]
+    colours = {pair[0]: BLUE, pair[1]: ORANGE}
+    markers = {pair[0]: "o", pair[1]: "s"}
+    names = {pair[0]: "Friedrichshain-Kreuzberg", pair[1]: "Charlottenburg-Wilmersdorf"}
+    for k, district in enumerate(pair):
+        values = [by_stay.loc[district, groups[0]], by_stay.loc[district, groups[1]], pooled[district]]
+        xs = np.arange(3) + (k - 0.5) * 0.18
+        right.scatter(xs, values, color=colours[district], marker=markers[district], s=60, zorder=3,
+                      label=f"{names[district]} ({medium_share[district]:.0%} medium-term)")
+        for xx, v in zip(xs, values):
+            right.text(xx + (0.1 if k else -0.1), v, f"€{v:.0f}", ha="left" if k else "right",
+                       va="center", fontsize=8.5, color=colours[district])
+    right.axvline(1.5, color="0.7", lw=1)
+    right.set_yscale("log")
+    right.set_yticks([25, 50, 100, 200], ["€25", "€50", "€100", "€200"])
+    right.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    right.set_xticks(np.arange(3), groups)
+    right.set_xlim(-0.6, 2.6)
+    right.set(ylabel="mean price per night (log scale)",
+              title="Case study: a €10 gap between two districts vanishes\nwithin each type of stay")
+    right.legend(frameon=False, loc="center", fontsize=8.5)
     fig.savefig(OUT / "simpsons-paradox.png")
     plt.close(fig)
 
 
-def fig_regression_line(decisions: pd.DataFrame) -> None:
+def fig_regression_line() -> None:
     """From a scatter plot to the least-squares line, with residuals."""
     rng = np.random.default_rng(5)
     x = rng.uniform(0, 10, 30)
@@ -177,33 +181,33 @@ def fig_regression_line(decisions: pd.DataFrame) -> None:
              title=f"Least squares: r = {r:.2f}, slope = r · s_y / s_x = {b1:.2f}")
     left.legend(frameon=False, fontsize=8.5, loc="upper left")
 
-    sub = decisions.dropna(subset=["n_keywords"]).sample(4000, random_state=1)
-    lx = np.log(sub["n_chars"])
-    ly = sub["n_keywords"]
-    jitter = rng.uniform(-0.3, 0.3, len(sub))
-    right.scatter(lx, ly + jitter, s=4, alpha=0.25, color=GREY, label="decision (jittered)")
-    bins = pd.cut(lx, np.arange(2, 9.5, 0.5))
-    means = pd.DataFrame({"x": lx, "y": ly}).groupby(bins, observed=True).mean()
-    right.plot(means["x"], means["y"], color=BLUE, marker="o", lw=0, ms=6,
-               label="mean per length bin")
-    full = decisions.dropna(subset=["n_keywords"])
-    c1, c0 = np.polyfit(np.log(full["n_chars"]), full["n_keywords"], 1)   # all 50,000, as on the page
-    grid = np.linspace(lx.min(), lx.max(), 2)
-    right.plot(grid, c0 + c1 * grid, color=ORANGE, lw=2, label=f"OLS line, slope {c1:.2f}")
-    rr = np.corrcoef(np.log(full["n_chars"]), full["n_keywords"])[0, 1]
-    right.set(xlabel="log(characters in description)", ylabel="number of keywords",
-              ylim=(0, 20),
-              title=f"Case study: longer descriptions, more keywords (r = {rr:.2f})")
+    short = short_stay(load_listings())
+    lx = short["accommodates"].to_numpy(dtype=float)
+    ly = np.log(short["price"].to_numpy())
+    jitter = rng.uniform(-0.25, 0.25, len(short))
+    right.scatter(lx + jitter, ly, s=4, alpha=0.15, color=GREY, label="listing (jittered)")
+    means = pd.DataFrame({"x": lx, "y": ly}).groupby("x")["y"].agg(["mean", "size"])
+    means = means[means["size"] >= 30]
+    right.plot(means.index, means["mean"], color=BLUE, marker="o", lw=0, ms=6,
+               label="mean log price per number of guests")
+    c1, c0 = np.polyfit(lx, ly, 1)
+    grid = np.array([1, 12])
+    right.plot(grid, c0 + c1 * grid, color=ORANGE, lw=2, label=f"OLS line, slope {c1:.3f}")
+    rr = np.corrcoef(lx, ly)[0, 1]
+    ticks = [25, 50, 100, 200, 400, 800]
+    right.set_yticks(np.log(ticks), [f"€{t}" for t in ticks])
+    right.set(xlabel="guests (accommodates)", ylabel="price per night (log scale)", xlim=(0.3, 12.7),
+              ylim=(np.log(15), np.log(1500)),
+              title=f"Case study: larger listings cost more (r = {rr:.2f}, log scale)")
     right.legend(frameon=False, fontsize=8.5, loc="upper left")
     fig.savefig(OUT / "regression-line.png")
     plt.close(fig)
 
 
 if __name__ == "__main__":
-    sample = load_sample()
-    fig_skewed_distribution(sample)
+    fig_skewed_distribution(load_listings())
     fig_good_vs_poor()
     fig_simpsons_paradox()
-    fig_regression_line(sample)
+    fig_regression_line()
     for png in sorted(OUT.glob("*.png")):
         print(png.name, png.stat().st_size // 1024, "KB")

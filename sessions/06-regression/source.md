@@ -31,23 +31,22 @@ On 2026-10-01 the robust-regression workbooks were renumbered from 20–27 to 07
 
 | File | Covers | Licence |
 |---|---|---|
-| [workbooks/17-case-study-ebti-regression-and-churn.ipynb](workbooks/17-case-study-ebti-regression-and-churn.ipynb) | Case study: lifecycle mapping of the EBTI heading task, regression of log description length on year, language and section, complexity curves and OLS vs Huber vs quantile regression on the days early-invalidated decisions stayed valid, Telco churn logistic regression with odds ratios and thresholds | Author: course team, licence CC-BY-4.0 |
+| [workbooks/17-case-study-airbnb-price-and-churn.ipynb](workbooks/17-case-study-airbnb-price-and-churn.ipynb) | Case study: lifecycle mapping of a price model for Berlin hosts, regression of the log nightly price on guests, room type, distance to Alexanderplatz and district (metrics in euros against a median baseline, residuals), complexity curves with 5,360 and 60 training listings, OLS vs Huber vs quantile regression (median and 90th percentile) on prices with extreme values, Telco churn logistic regression with odds ratios and thresholds (block 3 unchanged) | Author: course team, licence CC-BY-4.0 |
 | [theory/](theory/) (three pages) and [theory/figures/make_figures.py](theory/figures/make_figures.py) with its PNGs | Theory pages and figures | Author: course team, licence CC-BY-4.0 |
 
-The case-study material uses the EBTI decisions in `case-study/data/`. The IBM Telco customer churn data are downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and are not stored in the repository.
+The case-study material uses the Inside Airbnb Berlin listings in `case-study/data/airbnb/` (snapshot of 26 June 2026, CC BY 4.0, collected from public listing pages; reported in aggregate, hosts never named). Until 2026-10-02 it used a forced regression target from the EBTI decisions (length of the description of goods), which was replaced because the price question is real; the EBTI leaderboard task is mentioned as the second lifecycle example. The IBM Telco customer churn data are downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and are not stored in the repository.
 
 ## Citations
 
 - Bailey, D. H., Borwein, J. M., López de Prado, M., & Zhu, Q. J. (2014). Pseudo-mathematics and financial charlatanism: The effects of backtest overfitting on out-of-sample performance. *Notices of the AMS*, 61(5), 458–471.
 - Chapman, P., et al. (2000). *CRISP-DM 1.0: Step-by-step data mining guide*. SPSS.
 - De Cock, D. (2011). Ames, Iowa: Alternative to the Boston housing data as an end of semester regression project. *Journal of Statistics Education*, 19(3).
-- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export. Reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - Engle, R. F., & Manganelli, S. (2004). CAViaR: Conditional autoregressive value at risk by regression quantiles. *Journal of Business & Economic Statistics*, 22(4), 367–381.
 - Fischler, M. A., & Bolles, R. C. (1981). Random sample consensus. *Communications of the ACM*, 24(6), 381–395.
-- Frictionless Data / datasets (2026). *Harmonized System nomenclature (HS 2022)*, ODC-PDDL-1.0. https://github.com/datasets/harmonized-system
 - Gelman, A., Hill, J., & Vehtari, A. (2020). *Regression and Other Stories*. Cambridge University Press.
 - Gorman, K. B., Williams, T. D., & Fraser, W. R. (2014). Ecological sexual dimorphism and environmental variability within a community of Antarctic penguins (genus *Pygoscelis*). *PLoS ONE*, 9(3), e90081.
 - Huber, P. J., & Ronchetti, E. M. (2009). *Robust Statistics* (2nd ed.). Wiley.
+- Inside Airbnb (2026). *Berlin, Germany*, snapshot of 26 June 2026 (listings). CC BY 4.0 (second course dataset; personal data removed by `case-study/prepare_airbnb.py`). https://insideairbnb.com/get-the-data/
 - IBM (2019). *Telco customer churn on ICP4D* (sample data). https://github.com/IBM/telco-customer-churn-on-icp4d
 - INRIA (2024). *scikit-learn MOOC: Machine learning in Python with scikit-learn*. https://inria.github.io/scikit-learn-mooc/
 - James, G., Witten, D., Hastie, T., Tibshirani, R., & Taylor, J. (2023). *An Introduction to Statistical Learning with Applications in Python*. Springer. https://www.statlearning.com/

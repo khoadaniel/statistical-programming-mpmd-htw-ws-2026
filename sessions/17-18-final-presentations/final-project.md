@@ -94,6 +94,9 @@ Choose a topic from the list or propose your own of comparable scope. Most topic
 
 ### Short-term rentals in Berlin under EU Regulation 2024/1028
 
+> [!NOTE]
+> The course uses the Inside Airbnb Berlin data in Sessions 4–12. A team choosing this topic must go clearly beyond the class exercises, for example with the validation of registration numbers, several snapshots and the before/after comparison around May 2026.
+
 The project analyses short-term rental listings in Berlin at area level in order to support enforcement without identifying individuals. Core scope: validate the registration numbers in the listings, identify hosts who operate several listings commercially, and estimate how many dwellings are withdrawn from the long-term rental market per area. The comparison before and after May 2026 is part of the extension.
 
 - **Stakeholder:** District offices responsible for the Zweckentfremdung (housing-misuse) law, SenSBW (Senate Department for Urban Development), housing journalists

@@ -113,7 +113,7 @@ def build(path: Path) -> dict[str, pd.DataFrame]:
     train = d[d["start_date"].dt.year < TEST_YEAR].copy()
     test = d[d["start_date"].dt.year >= TEST_YEAR].copy()
     # a test description identical to a training description (renewed decisions) could be looked up
-    norm = lambda s: s.str.lower().str.replace(r"\s+", " ", regex=True).str.strip()  # noqa: E731
+    norm = lambda s: s.str.lower().str.replace(r"\s+", " ", regex=True).str.strip()
     test = test[~norm(test["description"]).isin(set(norm(train["description"])))]
     rng = np.random.default_rng(SEED)
     test.insert(0, "id", [f"t{i:06d}" for i in rng.permutation(len(test))])

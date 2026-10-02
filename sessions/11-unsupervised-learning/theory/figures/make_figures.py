@@ -4,8 +4,9 @@ Run from the repository root:
     uv run --with numpy --with matplotlib --with scikit-learn --with scipy \
         python sessions/11-unsupervised-learning/theory/figures/make_figures.py
 
-The first four figures use toy data or built-in scikit-learn data; decision_map uses the
-case-study sample (case-study/data/train_sample.parquet, needs pandas and pyarrow).
+The first four figures use toy data or built-in scikit-learn data; amenities_pca uses the
+Inside Airbnb Berlin listings (case-study/data/airbnb/listings.parquet, made by
+`uv run python case-study/prepare_airbnb.py`; needs pandas and pyarrow).
 All use a fixed random seed.
 """
 
@@ -138,35 +139,45 @@ def pca_scree_biplot():
 
 
 
-def decision_map():
+def amenities_pca():
+    """PCA of the amenity indicators of the Berlin Airbnb listings (Inside Airbnb, CC BY 4.0)."""
+    import json
+
     import pandas as pd
-    from sklearn.decomposition import TruncatedSVD
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.manifold import TSNE
+    from sklearn.preprocessing import MultiLabelBinarizer
 
     root = Path(__file__).resolve().parents[4]
-    sample = pd.read_parquet(root / "case-study" / "data" / "train_sample.parquet")
-    furn = sample[sample["chapter"] == "94"].reset_index(drop=True)
-    X = TfidfVectorizer(min_df=3, sublinear_tf=True).fit_transform(furn["description"])
-    S = TruncatedSVD(50, random_state=0).fit_transform(X)
-    emb = TSNE(perplexity=30, init="pca", random_state=0).fit_transform(S)
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8))
-    palette = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#8e6bd1", "#898781"]
-    lang = furn["language"].where(furn["language"].isin(["de", "fr", "sv", "en"]), "other")
-    heading = furn["heading"].where(furn["heading"].isin(["9401", "9403", "9404", "9405"]), "other")
-    names = {"9401": "9401 seats", "9403": "9403 other furniture", "9404": "9404 mattresses, bedding",
-             "9405": "9405 lamps, light fittings", "other": "other"}
-    for ax, col, title, labels in [(axes[0], lang, "coloured by language", None),
-                                   (axes[1], heading, "coloured by heading", names)]:
-        for k, value in enumerate(sorted(col.unique(), key=lambda v: (v == "other", v))):
-            m = (col == value).to_numpy()
-            ax.scatter(emb[m, 0], emb[m, 1], s=4, color=palette[k] if value != "other" else "#c9c7c0",
-                       label=labels[value] if labels else value)
-        ax.set_title(f"Chapter 94 decisions, t-SNE of 50 SVD components: {title}", fontsize=9)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.legend(frameon=False, fontsize=8, markerscale=3, loc="best")
-    save(fig, "decision_map")
+    listings = pd.read_parquet(root / "case-study" / "data" / "airbnb" / "listings.parquet")
+    mlb = MultiLabelBinarizer()
+    A = pd.DataFrame(mlb.fit_transform(listings["amenities"].apply(json.loads)), columns=mlb.classes_)
+    share = A.mean()
+    A = A.loc[:, (share >= 0.05) & (share <= 0.95)]
+    pca = PCA().fit(A)
+    ratio = pca.explained_variance_ratio_
+    scores = pca.transform(A)[:, :2]
+    fig, (a1, a2, a3) = plt.subplots(1, 3, figsize=(12.5, 4.2), gridspec_kw={"width_ratios": [1, 1.1, 1.2]})
+    n = 15
+    a1.bar(np.arange(1, n + 1), ratio[:n], color=SERIES[0], width=0.7)
+    a1.plot(np.arange(1, n + 1), ratio[:n].cumsum(), color=SERIES[1], marker="o", ms=4, lw=2, label="cumulative")
+    a1.set(title=f"Scree plot: {A.shape[1]} amenity columns", xlabel="principal component",
+           ylabel="share of variance")
+    a1.legend(frameon=False, loc="center right")
+    load = pd.Series(pca.components_[0], index=A.columns).nlargest(10)[::-1]
+    a2.barh(load.index, load.to_numpy(), color=SERIES[2])
+    a2.set(title="Ten largest PC1 loadings", xlabel="loading")
+    a2.tick_params(axis="y", labelsize=8)
+    rng = np.random.default_rng(0)
+    pick = rng.choice(len(A), size=4000, replace=False)
+    rooms = listings["room_type"].to_numpy()[pick]
+    for k, room in enumerate(["Entire home/apt", "Private room", "Hotel room", "Shared room"]):
+        m = rooms == room
+        a3.scatter(*scores[pick][m].T, s=5, alpha=0.5, color=SERIES[k], label=room)
+    a3.set(title="Listings on PC1 and PC2 (random 4,000)", xlabel=f"PC1 ({ratio[0]:.0%}): number of amenities",
+           ylabel=f"PC2 ({ratio[1]:.0%}): 'Heating' vs 'Central heating'")
+    leg = a3.legend(frameon=True, fontsize=8, markerscale=3, loc="upper right", framealpha=0.9)
+    for handle in leg.legend_handles:
+        handle.set_alpha(1)
+    save(fig, "amenities_pca")
 
 
 if __name__ == "__main__":
@@ -174,4 +185,4 @@ if __name__ == "__main__":
     elbow_silhouette()
     dendrogram_figure()
     pca_scree_biplot()
-    decision_map()
+    amenities_pca()

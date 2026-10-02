@@ -155,7 +155,7 @@ logreg = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000)).fit(
 print(auc(gb), auc(hgb), auc(logreg))                    # 0.846 0.844 0.844
 ```
 
-`HistGradientBoostingClassifier` bins each feature into at most 255 intervals before searching splits, the same trick as LightGBM; it is much faster on large data, handles missing values natively and supports `categorical_features` and `class_weight`. On the churn data, boosting (0.846), the random forest (0.844) and a well-specified logistic regression (0.844) are practically equal. The churn effects are few, strong and mostly monotone, so there is little for a flexible model to add. On the review data of the case study, with many weak features and interactions, the gap is larger.
+`HistGradientBoostingClassifier` bins each feature into at most 255 intervals before searching splits, the same trick as LightGBM; it is much faster on large data, handles missing values natively and supports `categorical_features` and `class_weight`. On the churn data, boosting (0.846), the random forest (0.844) and a well-specified logistic regression (0.844) are practically equal. The churn effects are few, strong and mostly monotone, so there is little for a flexible model to add. On the Berlin Airbnb prices with all listing features, many of them weak (122 amenities, reviews, availability), LightGBM prices about €3 a night more accurately than ridge regression on the same features (page 4, Section 4).
 
 ### In practice
 

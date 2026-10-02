@@ -245,7 +245,7 @@ At threshold 0.5 the model is right for 78 % of customers, 4.7 points above the 
 - Spam filters choose a high threshold because a legitimate e-mail in the spam folder (false positive) is worse than a spam e-mail in the inbox.
 
 > [!IMPORTANT]
-> **Practice (block 3).** Predict churn probability for the IBM Telco customers with logistic regression in statsmodels and scikit-learn. Interpret three coefficients as odds ratios, translate one into probabilities for two typical customers, and compare accuracy at thresholds 0.5 and 0.3 with the majority baseline. Notebook: [17-case-study-ebti-regression-and-churn.ipynb](../workbooks/17-case-study-ebti-regression-and-churn.ipynb).
+> **Practice (block 3).** Predict churn probability for the IBM Telco customers with logistic regression in statsmodels and scikit-learn. Interpret three coefficients as odds ratios, translate one into probabilities for two typical customers, and compare accuracy at thresholds 0.5 and 0.3 with the majority baseline. Notebook: [17-case-study-airbnb-price-and-churn.ipynb](../workbooks/17-case-study-airbnb-price-and-churn.ipynb).
 
 > [!CAUTION]
 > **Accuracy on imbalanced data.** When only 1 % of cases are positive, "always negative" has 99 % accuracy and is useless. Session 8 introduces precision, recall, F1 and ROC curves; Session 9 treats class imbalance.

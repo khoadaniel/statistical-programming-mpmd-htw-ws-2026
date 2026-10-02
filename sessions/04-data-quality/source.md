@@ -25,13 +25,16 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/01-data-quality-checks.md](theory/01-data-quality-checks.md) | Block 1: dimensions of data quality, checks for types/ranges/duplicates/consistency, validation rules as tests | CC-BY-4.0 |
 | [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | Block 2: MCAR/MAR/MNAR, simple/KNN/iterative imputation, missing-value indicators, IQR/z-score/MAD | CC-BY-4.0 |
 | [theory/03-multivariate-outliers-transformations-pipeline.md](theory/03-multivariate-outliers-transformations-pipeline.md) | Block 3: Mahalanobis distance (classical and MCD), log/Box–Cox/Yeo–Johnson/scaling, documented cleaning pipeline | CC-BY-4.0 |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `missingness-pattern.png`, `univariate-outliers.png`, `box-cox-before-after.png`, `mahalanobis-ellipses.png` | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `missingness-pattern.png`, `univariate-outliers.png`, `box-cox-before-after.png` (Inside Airbnb Berlin listings) and `mahalanobis-ellipses.png` (simulated) | CC-BY-4.0 |
 | [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | Practice block 1: data quality report for the BTI decisions and the raw export; checks as code; pandera schema | CC-BY-4.0 |
 | [workbooks/quality/test_bti_quality.py](workbooks/quality/test_bti_quality.py) | Validation rules as pytest tests (training table, known problems as `xfail`, cleaned table) | CC-BY-4.0 |
-| [workbooks/08-case-study-missing-keywords.ipynb](workbooks/08-case-study-missing-keywords.ipynb) | Practice block 2: missing keywords vs country and year, chi-square test, missingness model; structural missingness of the invalidation reason; imputation compared on hidden values; IQR/z/MAD on description length and validity duration | CC-BY-4.0 |
-| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | Practice block 3: cleaned decision table with a cleaning log (placeholder dates, text normalisation, flags for codes, renewals and languages, Box–Cox, MAD and robust Mahalanobis flags) | CC-BY-4.0 |
+| [workbooks/08-case-study-airbnb-missing-and-outliers.ipynb](workbooks/08-case-study-airbnb-missing-and-outliers.ipynb) | Practice block 2 (Inside Airbnb Berlin): missing prices vs recent reviews and availability, chi-square test, missingness model; structural missingness of review scores; imputation of bedrooms compared on hidden values; IQR/z/MAD on price and minimum stay; medium-term listings; sentinel values | CC-BY-4.0 |
+| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | Practice block 3, EBTI version (optional): cleaned decision table with a cleaning log (placeholder dates, text normalisation, flags for codes, renewals and languages, Box–Cox, MAD and robust Mahalanobis flags) | CC-BY-4.0 |
+| [workbooks/15-case-study-airbnb-cleaned-listings.ipynb](workbooks/15-case-study-airbnb-cleaned-listings.ipynb) | Practice block 3 (Inside Airbnb Berlin): cleaning pipeline with a log (sentinel values, price and availability indicators, medium-term flag, bedrooms imputed, licence status without the raw text, extreme-price and robust Mahalanobis flags), validation and export | CC-BY-4.0 |
 
 Author of own material: course team.
+
+Data used by the own material: the EBTI decisions in `case-study/data/` (block 1, workbook 14) and the Inside Airbnb Berlin listings in `case-study/data/airbnb/` (blocks 2 and 3, workbooks 08 and 15). Neither dataset is stored in this folder. The Airbnb data come from public listing pages; the materials report them in aggregate and never name hosts.
 
 ## Citations
 
@@ -56,3 +59,5 @@ Author of own material: course team.
 - European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (course dataset; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - European Commission, DG TAXUD (2025). *Administrative guidance on the Binding Tariff Information process* (invalidation codes). https://taxation-customs.ec.europa.eu/document/download/3301552d-3dfd-422b-b6ca-06212d3dd821_en?filename=bti_guidance_en.pdf
 - Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0 (course dataset). https://github.com/datasets/harmonized-system
+- Inside Airbnb (2026). *Berlin, Germany*, snapshot of 26 June 2026 (listings, calendar, reviews). CC BY 4.0 (second course dataset; personal data removed by `case-study/prepare_airbnb.py`). https://insideairbnb.com/get-the-data/
+- Regulation (EU) 2024/1028 of the European Parliament and of the Council of 11 April 2024 on data collection and sharing relating to short-term accommodation rental services. https://eur-lex.europa.eu/eli/reg/2024/1028/oj

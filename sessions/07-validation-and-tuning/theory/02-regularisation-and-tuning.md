@@ -2,7 +2,7 @@
 
 This page covers the second block of Session 7. Most models have settings that are not learned from the data but chosen by us: the penalty of a regularised regression, the number of neighbours of k-NN, the depth of a tree. The page separates these settings (hyperparameters) from the learned parameters, introduces ridge and lasso regression as the standard example of a model whose complexity is controlled by one number, shows how validation and learning curves diagnose underfitting and overfitting, and ends with the systematic search for good settings with `GridSearchCV` and `RandomizedSearchCV`.
 
-The code blocks build on each other; run them in order from the repository root. They use the diabetes data that ship with scikit-learn (442 patients, 10 standardised measurements, target: disease progression after one year) and the Telco churn data.
+The code blocks build on each other; run them in order from the repository root. They use one practical question throughout: **what is a Berlin Airbnb listing worth per night?** The data are the Inside Airbnb listings for Berlin (snapshot of 26 June 2026, `uv run python case-study/prepare_airbnb.py`), restricted as on theory page 01 to 6,675 short-term listings with a price between €10 and €1,000. The target is the log of the nightly price. With size, location, room type, reviews and 257 amenity indicators (dishwasher, elevator, balcony, ...), the model has 480 input columns: a natural case for regularisation. Cross-validation keeps each host's listings in one fold (`GroupKFold`, theory page 01). The regularisation of logistic regression is practised on the Telco churn data in the case-study workbook.
 
 ```mermaid
 flowchart LR
@@ -23,32 +23,48 @@ Example: for k-NN (Session 8) with *k* = 1 the training accuracy is close to 100
 
 **Why it matters.** The same algorithm can underfit or overfit depending on its hyperparameters. Treating them as part of the model to be validated, and choosing them by a reproducible procedure, separates a sound workflow from tuning by hand until the test score looks good.
 
-**How it works in Python.** Every scikit-learn estimator lists its hyperparameters with `get_params()`; learned parameters end with an underscore after `fit`.
+**How it works in Python.** Every scikit-learn estimator lists its hyperparameters with `get_params()`; learned parameters end with an underscore after `fit`. The first block builds the data for the whole page.
 
 ```python
+import json
+
 import numpy as np
 import pandas as pd
 from sklearn.compose import make_column_transformer
-from sklearn.datasets import load_diabetes
-from sklearn.linear_model import Lasso, LinearRegression, LogisticRegression, Ridge
-from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.model_selection import GroupKFold, cross_validate
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import MultiLabelBinarizer, OneHotEncoder, StandardScaler
 
-URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
-df = pd.read_csv(URL)
-df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
-y = (df["Churn"] == "Yes").astype(int)
-X = df.drop(columns=["customerID", "Churn"])
-num = ["tenure", "MonthlyCharges", "TotalCharges", "SeniorCitizen"]
-cat = [c for c in X.columns if c not in num]
-prep = make_column_transformer((StandardScaler(), num), (OneHotEncoder(handle_unknown="ignore"), cat))
-model = make_pipeline(prep, LogisticRegression(max_iter=1000))
+lst = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+bnb = lst[(lst["minimum_nights"] < 28) & lst["price"].between(10, 1000)].reset_index(drop=True)
+bnb["dist_km"] = np.hypot((bnb["latitude"] - 52.5219) * 111.2, (bnb["longitude"] - 13.4132) * 68.0)
 
-print(model.get_params()["logisticregression__C"])   # 1.0  -> a hyperparameter, chosen by us
+mlb = MultiLabelBinarizer()                                   # amenities: list as text -> one 0/1 column each
+amen = pd.DataFrame(mlb.fit_transform(bnb["amenities"].map(json.loads)),
+                    columns=["am_" + a for a in mlb.classes_])
+amen = amen.loc[:, amen.sum() >= 20]                          # amenities listed by at least 20 listings
+num = ["accommodates", "bedrooms", "beds", "bathrooms", "dist_km", "minimum_nights",
+       "availability_365", "number_of_reviews", "review_scores_rating"]
+cat = ["room_type", "district", "neighbourhood", "property_type"]
+X = pd.concat([bnb[num + cat], amen], axis=1)
+y = np.log(bnb["price"])                                      # log of the nightly price in EUR
+hosts = bnb["host_id"]
+prep = make_column_transformer(
+    (make_pipeline(SimpleImputer(strategy="median", add_indicator=True), StandardScaler()), num),
+    (OneHotEncoder(handle_unknown="ignore"), cat),
+    (StandardScaler(), list(amen.columns)))
+cv = GroupKFold(5)                                            # whole hosts per fold (theory page 01)
+
+model = make_pipeline(prep, Ridge())
+print(model.get_params()["ridge__alpha"])          # 1.0  -> a hyperparameter, chosen by us
 model.fit(X, y)
-print(model[-1].coef_.shape)                         # (1, 45) -> parameters, learned from the data
+print(amen.shape[1], model[-1].coef_.shape)        # 257 (480,) -> parameters, learned from the data
 ```
+
+> [!NOTE]
+> The list of amenities (those with at least 20 listings) is chosen on all rows before cross-validation. It does not look at prices, so this shortcut leaks almost nothing; Session 9 shows how to learn such a list inside the pipeline.
 
 **In practice.**
 - Gradient boosting models (Session 10) have a dozen hyperparameters (learning rate, depth, number of trees); industry teams tune them systematically and log every trial, for example with MLflow (Session 16).
@@ -71,29 +87,32 @@ Worked example with one feature: suppose least squares gives b = 4 on a standard
 > [!IMPORTANT]
 > The penalty treats all coefficients alike, so the features must be on the same scale. Always put a `StandardScaler` before `Ridge`, `Lasso` or `LogisticRegression` in a pipeline.
 
-**Why it matters.** Regularisation is the main tool to control the complexity of linear models without removing features by hand. It stabilises coefficients when features are correlated (for example `tenure` and `TotalCharges` in the Telco data), it lets you use many features (polynomial terms, one-hot columns, word counts in Session 13), and the lasso gives sparse, easier-to-read models.
+**Why it matters.** Regularisation is the main tool to control the complexity of linear models without removing features by hand. It stabilises coefficients when features are correlated (for example `accommodates`, `bedrooms` and `beds`, or amenities that come together such as oven, stove and baking sheet), it lets you use many features (amenity indicators, one-hot columns for 135 neighbourhoods, word counts in Session 13), and the lasso gives sparse, easier-to-read models.
 
 **How it works in Python.**
 
 ```python
-Xd, yd = load_diabetes(return_X_y=True, as_frame=True)       # 442 patients, 10 features
-cv = KFold(5, shuffle=True, random_state=0)
+for name, reg in [("OLS", LinearRegression()), ("ridge a=10", Ridge(alpha=10)),
+                  ("lasso a=0.001", Lasso(alpha=0.001, max_iter=5000)),
+                  ("lasso a=0.01", Lasso(alpha=0.01, max_iter=5000))]:
+    m = make_pipeline(prep, reg)
+    res = cross_validate(m, X, y, cv=cv, groups=hosts, scoring="r2", return_train_score=True)
+    coef = m.fit(X, y)[-1].coef_
+    print(f"{name:13s} train {res['train_score'].mean():.3f}  valid {res['test_score'].mean():.3f}  "
+          f"largest |b| {np.abs(coef).max():.2f}  non-zero {(coef != 0).sum()}")
+# OLS           train 0.705  valid 0.597  largest |b| 2.16  non-zero 480
+# ridge a=10    train 0.694  valid 0.605  largest |b| 0.55  non-zero 480
+# lasso a=0.001 train 0.672  valid 0.602  largest |b| 0.74  non-zero 271
+# lasso a=0.01  train 0.602  valid 0.562  largest |b| 0.27  non-zero 80
 
-for name, reg in [("OLS", LinearRegression()), ("ridge a=10", Ridge(alpha=10)), ("lasso a=1", Lasso(alpha=1))]:
-    m = make_pipeline(StandardScaler(), reg).fit(Xd, yd)
-    print(name, m[-1].coef_.round(1), round(cross_val_score(m, Xd, yd, cv=cv, scoring="r2").mean(), 3))
-# OLS        [ -0.5 -11.4  24.7  15.4 -37.7  22.7   4.8   8.4  35.7   3.2] 0.489
-# ridge a=10 [ -0.3 -10.9  24.6  15.1 -11.3   1.8  -6.6   5.6  25.3   3.5] 0.489
-# lasso a=1  [ -0.   -9.3  24.8  14.1  -4.8  -0.  -10.6   0.   24.4   2.6] 0.49
-
-# the lasso removes more features as alpha grows
-for a in [0.1, 1, 5, 10, 20]:
-    m = make_pipeline(StandardScaler(), Lasso(alpha=a)).fit(Xd, yd)
-    print(a, (m[-1].coef_ != 0).sum(), "non-zero coefficients")
-# 0.1 9 | 1 7 | 5 5 | 10 4 | 20 3
+names = model[0].get_feature_names_out()
+lasso = make_pipeline(prep, Lasso(alpha=0.01, max_iter=5000)).fit(X, y)
+b_amen = pd.Series(lasso[-1].coef_, index=names).filter(like="__am_")
+print((b_amen != 0).sum(), b_amen.sort_values().tail(3).round(3).to_dict())
+# 67 {'standardscaler__am_Safe': 0.028, 'standardscaler__am_Elevator': 0.032, 'standardscaler__am_Dishwasher': 0.039}
 ```
 
-The serum measurements s1 and s2 (columns 5 and 6) are strongly correlated. Least squares gives them large coefficients of opposite sign (−37.7 and 22.7) that cancel each other; ridge shrinks both and the lasso drops s2. The cross-validated R² hardly changes: the penalty buys stability and simplicity at no cost in accuracy here. `RidgeCV` and `LassoCV` choose α by built-in cross-validation; ISLP Lab 6 (workbook 08) does the same with `ElasticNetCV`.
+Least squares gives some columns large coefficients (up to 2.16 on the log scale, a factor of e^2.16 ≈ 8.7 per standard deviation): rare neighbourhood and property-type dummies with a handful of listings, which the model fits almost exactly. Ridge with α = 10 shrinks the largest coefficient to 0.55 and gains a little validation R² (0.597 → 0.605). The lasso with α = 0.001 keeps 271 of 480 columns at almost the same score; with α = 0.01 it keeps 80 columns, 67 of them amenities, led by dishwasher, elevator and safe. (Most one-hot columns drop out because the pipeline does not scale them: a rare 0/1 column has a small spread, so the same penalty weighs more heavily on it.) Each coefficient is small: one standard deviation more "dishwasher" raises the predicted price by about 4 %. On data of this size the penalty buys stability and a shorter model rather than accuracy; the next section shows when it buys accuracy as well. `RidgeCV` and `LassoCV` choose α by built-in cross-validation; ISLP Lab 6 (workbook 08) does the same with `ElasticNetCV`.
 
 **In practice.**
 - Genetics: lasso-type models are used to build polygenic risk scores from hundreds of thousands of genetic variants, where most effects are expected to be zero.
@@ -113,40 +132,40 @@ The serum measurements s1 and s2 (columns 5 and 6) are strongly correlated. Leas
 - A **validation curve** shows the training score and the cross-validated validation score as a function of **one hyperparameter**. Where both are low, the model underfits (too simple). Where the training score is high and the validation score much lower, it overfits (too flexible). The best setting is where the validation score peaks.
 - A **learning curve** shows the same two scores as a function of the **number of training rows**. If the curves meet at a low level, more data will not help: the model is too simple (high bias). If a large gap remains and the validation curve is still rising, more data (or a simpler model) will help (high variance).
 
-![Validation curve for ridge regression with all degree-2 polynomial terms of the diabetes data. Small alpha: training R² about 0.6, validation about 0.41 (overfitting). The validation score peaks at alpha about 100 and both scores fall for larger alpha (underfitting).](figures/validation_curve.png)
+![Validation curves for ridge regression of the log price on 480 columns. Left, all 6,675 listings: training R² about 0.70, validation about 0.60, almost flat up to alpha 30. Right, a random subset of 1,000 listings: with little penalty the training R² is 0.84 and the validation R² almost 0; the validation score peaks at about 0.47 near alpha 460 and falls again for larger alpha.](figures/validation_curve.png)
 
-![Learning curves on the Telco churn data with four numeric features. The 5-nearest-neighbour model keeps a gap of about 0.13 AUC between training and validation; logistic regression has almost no gap, and both of its curves are flat at about 0.81.](figures/learning_curve.png)
+![Learning curves for the Berlin price model. Ridge (alpha 10): with 534 training listings the validation R² is below zero; the curves approach each other and meet near 0.6–0.7. Gradient boosting: the training score stays far above the validation score, and the validation score is still rising at 5,340 listings.](figures/learning_curve.png)
 
 **Why it matters.** The two curves tell you *what to do next*. A gap means: regularise more, simplify or collect more data. Two low curves mean: add features or use a more flexible model. Without them, students often try random changes. The curves also make the bias–variance trade-off of Session 6 visible on real data.
 
 **How it works in Python.**
 
 ```python
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import learning_curve, validation_curve
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import PolynomialFeatures
 
-# validation curve: ridge penalty on 65 polynomial features (all squares and products)
-alphas = np.logspace(-3, 4, 8)
-poly_ridge = make_pipeline(PolynomialFeatures(degree=2, include_bias=False), StandardScaler(), Ridge())
-tr, va = validation_curve(poly_ridge, Xd, yd, param_name="ridge__alpha", param_range=alphas, cv=cv, scoring="r2")
-for a, t, v in zip(alphas, tr.mean(1), va.mean(1)):
-    print(f"alpha={a:g}  train={t:.3f}  valid={v:.3f}")
-# alpha=0.001  train=0.606  valid=0.414   <- overfitting: gap of 0.19
-# ...
-# alpha=100    train=0.565  valid=0.475   <- best validation score
-# alpha=1000   train=0.404  valid=0.356
-# alpha=10000  train=0.108  valid=0.094   <- underfitting: both low
+# validation curve: the ridge penalty, once with all listings and once with 1,000 of them
+alphas = np.logspace(-2, 4, 7)
+small = np.random.default_rng(0).choice(len(X), 1000, replace=False)     # a city with 1,000 listings
+for label, rows in [("all 6,675 listings", np.arange(len(X))), ("1,000 listings", small)]:
+    tr, va = validation_curve(make_pipeline(prep, Ridge()), X.iloc[rows], y.iloc[rows], groups=hosts.iloc[rows],
+                              param_name="ridge__alpha", param_range=alphas, cv=cv, scoring="r2")
+    print(label, [f"{a:g}: {t:.2f}/{v:.2f}" for a, t, v in zip(alphas, tr.mean(1), va.mean(1))])
+# all 6,675 listings ['0.01: 0.71/0.60', '0.1: 0.71/0.60', '1: 0.70/0.60', '10: 0.69/0.60', '100: 0.67/0.59',
+#                     '1000: 0.63/0.56', '10000: 0.52/0.48']
+# 1,000 listings     ['0.01: 0.84/0.02', '0.1: 0.84/0.13', '1: 0.83/0.27', '10: 0.79/0.36', '100: 0.73/0.42',
+#                     '1000: 0.61/0.46', '10000: 0.29/0.23']   <- train/valid R²
 
-# learning curve: 5-NN on four numeric Telco features
-knn = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
-sizes, tr, va = learning_curve(knn, X[num], y, train_sizes=[0.05, 0.25, 1.0],
-                               cv=StratifiedKFold(5, shuffle=True, random_state=0), scoring="roc_auc")
-print(sizes, tr.mean(1).round(3), va.mean(1).round(3))
-# [ 281 1408 5634] [0.897 0.902 0.898] [0.754 0.765 0.766]   <- persistent gap: high variance
+# learning curve: ridge versus gradient boosting (Session 10)
+for label, est in [("ridge", make_pipeline(prep, Ridge(alpha=10))),
+                   ("gradient boosting", make_pipeline(prep, HistGradientBoostingRegressor(random_state=0)))]:
+    sizes, tr, va = learning_curve(est, X, y, groups=hosts, cv=cv, train_sizes=[0.1, 0.5, 1.0], scoring="r2")
+    print(label, sizes, tr.mean(1).round(3), va.mean(1).round(3))
+# ridge             [ 534 2670 5340] [0.864 0.737 0.694] [-0.124  0.55   0.605]
+# gradient boosting [ 534 2670 5340] [0.967 0.918 0.85 ] [ 0.455  0.589  0.638]
 ```
 
-The degree-2 ridge model never beats plain linear regression (R² 0.489 above): the extra terms add flexibility that the 442 patients cannot support. A validation curve makes such conclusions visible. The figure script is [figures/make_figures.py](figures/make_figures.py).
+With all listings the penalty hardly matters: 480 columns are few for 6,675 rows, and the validation R² stays near 0.60 from α = 0.01 to 30. With 1,000 listings the same model without penalty memorises the training data (R² 0.84) and predicts new hosts no better than the mean (0.02); a strong penalty (α of several hundred; the finer grid of the figure peaks near 460) lifts the validation R² to about 0.46. The fewer rows per column, the more the penalty matters. The learning curves say what to do next. For ridge, the gap closes as listings are added and both curves level off near 0.6–0.7: more listings of the same kind will help little, better features might. For gradient boosting the gap stays large and the validation curve is still rising: this model would profit from more data, and it already beats ridge at every size. The figure script is [figures/make_figures.py](figures/make_figures.py).
 
 **In practice.**
 - Banko and Brill (2001) plotted learning curves for a word-disambiguation task up to one billion words and showed that simple learners kept improving with more data, which influenced the move towards large training corpora in language technology.
@@ -162,10 +181,10 @@ The degree-2 ridge model never beats plain linear regression (R² 0.489 above): 
 
 **Concept.** Tuning is the systematic search for good hyperparameters by cross-validation.
 
-- **`GridSearchCV`** tries every combination in a grid and cross-validates each. Five values of `C` × two values of `class_weight` × 5 folds = 50 fits.
-- **`RandomizedSearchCV`** draws `n_iter` combinations from distributions, for example `scipy.stats.loguniform(1e-3, 1e2)` for `C`, which spreads the draws evenly over orders of magnitude. Its cost is fixed by `n_iter`, whatever the number of hyperparameters. Bergstra and Bengio (2012) showed that random search finds settings as good as a grid with far fewer trials when only a few hyperparameters matter, which is the usual case.
+- **`GridSearchCV`** tries every combination in a grid and cross-validates each. Six values of the ridge penalty `alpha` × 5 folds = 30 fits; five values of `C` × two values of `class_weight` would already be 50.
+- **`RandomizedSearchCV`** draws `n_iter` combinations from distributions, for example `scipy.stats.loguniform(0.01, 0.3)` for a learning rate, which spreads the draws evenly over orders of magnitude. Its cost is fixed by `n_iter`, whatever the number of hyperparameters. Bergstra and Bengio (2012) showed that random search finds settings as good as a grid with far fewer trials when only a few hyperparameters matter, which is the usual case.
 - Both refit the best setting on all data passed to `fit` (`best_estimator_`), report `best_params_` and `best_score_`, and store every trial in `cv_results_`.
-- Wrapping preprocessing and model in a `Pipeline` lets the search tune both. Hyperparameters of a step are addressed as `step__name`, for example `logisticregression__C`.
+- Wrapping preprocessing and model in a `Pipeline` lets the search tune both. Hyperparameters of a step are addressed as `step__name`, for example `ridge__alpha` or `logisticregression__C`. When the splitter needs groups, pass them to `fit`: `search.fit(X, y, groups=hosts)`.
 
 ```mermaid
 flowchart TD
@@ -179,34 +198,34 @@ flowchart TD
 
 **Why it matters.** Systematic search is reproducible, uses the validation data correctly and makes the effort visible (how many settings were tried). Inspecting `cv_results_` also shows how *flat* the optimum is: if many settings score within one standard deviation of the best, the exact choice does not matter.
 
-**How it works in Python.**
+**How it works in Python.** A grid for the single ridge penalty, and a random search over four hyperparameters of gradient boosting (Session 10 explains them; here they are just knobs):
 
 ```python
-from scipy.stats import loguniform
+from scipy.stats import loguniform, randint
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-skf = StratifiedKFold(5, shuffle=True, random_state=0)
-grid = GridSearchCV(model, {"logisticregression__C": [0.001, 0.01, 0.1, 1, 10],
-                            "logisticregression__class_weight": [None, "balanced"]},
-                    cv=skf, scoring="roc_auc")
-grid.fit(X, y)
-print(grid.best_params_, round(grid.best_score_, 4))
-# {'logisticregression__C': 1, 'logisticregression__class_weight': None} 0.8454
+grid = GridSearchCV(make_pipeline(prep, Ridge()), {"ridge__alpha": [0.1, 1, 3, 10, 30, 100]}, cv=cv, scoring="r2")
+grid.fit(X, y, groups=hosts)
+print(grid.best_params_, round(grid.best_score_, 3))           # {'ridge__alpha': 10} 0.605
+print(pd.DataFrame(grid.cv_results_)[["param_ridge__alpha", "mean_test_score", "std_test_score"]]
+      .round(3).to_string(index=False))
+# alpha 0.1: 0.598 (sd 0.017) | 1: 0.602 | 3: 0.604 | 10: 0.605 (sd 0.015) | 30: 0.600 | 100: 0.588
 
-rand = RandomizedSearchCV(model, {"logisticregression__C": loguniform(1e-3, 1e2),
-                                  "logisticregression__class_weight": [None, "balanced"]},
-                          n_iter=20, cv=skf, scoring="roc_auc", random_state=0)
-rand.fit(X, y)
-best = rand.best_params_
-print(round(best["logisticregression__C"], 2), best["logisticregression__class_weight"], round(rand.best_score_, 4))
-# 1.31 None 0.8454
-
+gbm = make_pipeline(prep, HistGradientBoostingRegressor(random_state=0))
+space = {"histgradientboostingregressor__learning_rate": loguniform(0.01, 0.3),
+         "histgradientboostingregressor__max_leaf_nodes": randint(4, 64),
+         "histgradientboostingregressor__min_samples_leaf": randint(5, 100),
+         "histgradientboostingregressor__l2_regularization": loguniform(1e-3, 10)}
+rand = RandomizedSearchCV(gbm, space, n_iter=15, cv=cv, scoring="r2", random_state=0, n_jobs=-1)
+rand.fit(X, y, groups=hosts)                                    # 15 settings x 5 folds = 75 fits, about 30 s
+print(round(rand.best_score_, 3), {k.split("__")[1]: round(float(v), 3) for k, v in rand.best_params_.items()})
+# 0.641 {'l2_regularization': 0.037, 'learning_rate': 0.172, 'max_leaf_nodes': 12.0, 'min_samples_leaf': 14.0}
 res = pd.DataFrame(rand.cv_results_).sort_values("rank_test_score")
-print(res[["param_logisticregression__C", "mean_test_score", "std_test_score"]].head(3).round(4).to_string())
-# three best C values (about 1.3, 11.5, 15.2) all have mean AUC 0.8453-0.8454 with std of about 0.014
+print(res["mean_test_score"].round(3).tolist())
+# [0.641, 0.636, 0.616, 0.612, 0.609, 0.608, 0.599, 0.585, 0.571, 0.56, 0.554, 0.547, 0.525, 0.522, 0.484]
 ```
 
-The best three settings differ by 0.0001 AUC, far less than the fold-to-fold standard deviation (0.014). For this model `C` hardly matters as long as it is not very small. That is a finding worth reporting.
+The ridge optimum is flat: every α from 1 to 30 scores within 0.005 of the best, far less than the fold-to-fold standard deviation (about 0.015). For this model α hardly matters as long as it is not very large, which is a finding worth reporting. The boosting search is different: the 15 settings range from 0.48 to 0.64, so these hyperparameters matter, and the two best settings (0.641 and 0.636) are again within one standard deviation of each other (0.019). The default setting scored 0.638 in the learning curve above: on this problem the defaults of `HistGradientBoostingRegressor` are already good, and the search mainly shows that some regions of the space are clearly worse. The case-study workbook tunes the regularisation `C` of the Telco logistic regression in the same way.
 
 **In practice.**
 - Bergstra and Bengio (2012) compared grid and random search for neural networks and found that random search reached equal or better settings with a fraction of the trials.
@@ -218,16 +237,16 @@ The best three settings differ by 0.0001 AUC, far less than the fold-to-fold sta
 > [!CAUTION]
 > If the best value lies at the edge of your grid (for example `C=10` when the grid ends at 10), the optimum may be outside. Extend the range before you conclude.
 
-## Practice: tuning on the case study
+## Practice: tuning on the case studies
 
-In the [case-study workbook](../workbooks/19-case-study-validation.ipynb), part B, you tune the ridge penalty for the description-length regression of Session 6 and the regularisation strength `alpha` and the TF-IDF settings of the heading classifier, once with random and once with time-based validation on the EBTI decisions. Ask: does the choice of splitter change the score, the chosen hyperparameter, or both?
+In the [Airbnb validation workbook](../workbooks/20-case-study-airbnb-price-validation.ipynb), part B, you tune the ridge and lasso penalties of the Berlin price model, draw its validation and learning curves and run a randomised search, all with host-grouped folds. In the [EBTI and churn workbook](../workbooks/19-case-study-validation.ipynb), part B, you tune `C` of the Telco logistic regression and the regularisation `alpha` of the heading classifier, once with random and once with time-based validation. Ask in both: does the choice of splitter change the score, the chosen hyperparameter, or both?
 
 ## Check your understanding
 
-1. Name two parameters and two hyperparameters of a logistic regression pipeline with a `StandardScaler`.
+1. Name two parameters and two hyperparameters of the ridge price pipeline (imputer, scaler, one-hot encoder, ridge).
 2. Why must features be standardised before ridge or lasso regression, but not before ordinary least squares?
-3. A validation curve shows a training R² of 0.95 and a validation R² of 0.40 at the smallest penalty. What is the diagnosis and what would you try?
-4. A learning curve shows training and validation AUC both at 0.70 and flat. Will collecting more data help?
+3. With 1,000 listings, the unpenalised price model has a training R² of 0.84 and a validation R² of 0.02. What is the diagnosis, and why is it much milder with 6,675 listings?
+4. A learning curve shows training and validation R² both at 0.62 and flat. Will collecting more listings help? What would you try instead?
 5. A grid search over 200 settings reports `best_score_ = 0.91`. Why will the score on new data probably be lower?
 
 ## Further reading

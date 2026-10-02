@@ -1,16 +1,15 @@
 # Multivariate outliers, transformations and a documented cleaning pipeline
 
-This page covers the third block. Some observations are unusual only in the *combination* of their values; the **Mahalanobis distance** finds them. Skewed variables are made more symmetric with the logarithm, Box–Cox or Yeo–Johnson transformations, and variables on different scales are brought to a common scale. Finally, all decisions are combined into a **cleaning pipeline** that is code, runs in one go and writes a log of every decision. The practice task produces the cleaned table of BTI decisions with a log of every cleaning decision ([workbook 14](../workbooks/14-case-study-cleaned-decision-table.ipynb)). Model-based outlier detection (Isolation Forest, local outlier factor) follows in Session 11.
+This page covers the third block. Some observations are unusual only in the *combination* of their values; the **Mahalanobis distance** finds them. Skewed variables are made more symmetric with the logarithm, Box–Cox or Yeo–Johnson transformations, and variables on different scales are brought to a common scale. Finally, all decisions are combined into a **cleaning pipeline** that is code, runs in one go and writes a log of every decision. The practice task produces the cleaned table of Berlin Airbnb listings with a log of every cleaning decision ([workbook 15](../workbooks/15-case-study-airbnb-cleaned-listings.ipynb)); [workbook 14](../workbooks/14-case-study-cleaned-decision-table.ipynb) applies the same pattern to the BTI decisions, with renewals, placeholder dates and code formats. Model-based outlier detection (Isolation Forest, local outlier factor) follows in Session 11.
 
 ```mermaid
 flowchart LR
-    RAW["train.parquet<br/>309,529 rows"] --> S1["1 remove<br/>template texts"]
-    S1 --> S2["2-3 placeholder dates,<br/>normalise text"]
-    S2 --> S3["4-7 flag codes,<br/>duplicates, languages"]
-    S3 --> S4["8-9 indicators<br/>for missing values"]
-    S4 --> S5["10-12 transform,<br/>flag outliers"]
-    S5 --> V{"validate"}
-    V -->|pass| OUT["decisions_clean.parquet<br/>+ cleaning_log.csv"]
+    RAW["listings.parquet<br/>12,776 rows"] --> S1["1-2 keys,<br/>sentinel values"]
+    S1 --> S2["3-6 flags: price missing,<br/>medium-term, no reviews"]
+    S2 --> S3["7-9 impute bedrooms,<br/>indicators, licence status"]
+    S3 --> S4["10-12 flag extremes,<br/>log price, Mahalanobis"]
+    S4 --> V{"validate"}
+    V -->|pass| OUT["listings_clean.parquet<br/>+ cleaning_log.csv"]
     V -->|fail| S1
 ```
 
@@ -34,7 +33,7 @@ A small example by hand with two standardised, uncorrelated variables: the point
 
 ### Why it matters
 
-Many data errors and many interesting cases show up only in combinations: a plausible age with an implausible diagnosis, a normal transaction amount at an unusual time, a long technical description without a single number. Univariate rules miss them. The robust version matters because real data often contain a *group* of anomalies (a batch of mis-coded records), which would otherwise widen the classical ellipse until it no longer flags them.
+Many data errors and many interesting cases show up only in combinations: a plausible age with an implausible diagnosis, a normal transaction amount at an unusual time, a normal nightly price for a flat that sleeps sixteen. Univariate rules miss them. The robust version matters because real data often contain a *group* of anomalies (a batch of mis-coded records), which would otherwise widen the classical ellipse until it no longer flags them.
 
 ### How it works in Python
 
@@ -64,7 +63,7 @@ for est in [EmpiricalCovariance().fit(X), MinCovDet(random_state=0).fit(X)]:
 
 With the classical estimate, the contaminating group pulls the centre and inflates the covariance: the tall, light person has d = 3.2, below the cut-off √13.8 = 3.7, and is not flagged, and 8 of the 25 group points also escape. With the MCD estimate, the person (d = 6.4) and the whole group are flagged, plus two ordinary points in the tails. The figure above shows the two ellipses.
 
-On the decision data, workbook 14 computes the robust distance on two description features (Box–Cox length, log of 1 + number of digits) and flags 5,299 decisions (1.7 %), for example long descriptions without any number. A first attempt with four features, adding the number of lines and the share of upper-case letters, flagged 23.7 % of all decisions: the share of upper-case letters is bimodal, because about 7.6 % of the descriptions are written in capitals, and MCD then treats the whole minority group as outliers. The distance assumes one elliptical cloud; check that before you trust it.
+On the Airbnb listings with a comparable short-stay price, workbook 15 computes the distance on the log price and the log number of guests. The classical estimate flags 62 listings, the robust one 94 (1.4 %). The flagged combinations are of two kinds: entire homes whose price is implausible for their size (a flat for one guest at €760, a house for five and a loft for seven guests at €8,000 and €10,025), and shared rooms for seven to sixteen guests at €25 to €46 a night, which are hostel dormitories and perfectly genuine. A multivariate flag is a question, not a verdict. Workbook 14 shows a failure case on the BTI decisions: with the share of upper-case letters among the features, which is bimodal (about 7.6 % of descriptions are written in capitals), MCD treated the whole minority group as outliers and flagged 23.7 % of all decisions. The distance assumes one elliptical cloud; check that before you trust it.
 
 ### In practice
 
@@ -76,7 +75,7 @@ On the decision data, workbook 14 computes the robust distance on two descriptio
 > The Mahalanobis distance assumes one roughly elliptical cloud. With strongly skewed variables, transform them first (next section); with several clusters or many zeros, use the model-based methods of Session 11. With many variables relative to rows, the covariance estimate becomes unstable.
 
 > [!CAUTION]
-> MCD needs a covariance matrix that is not singular. A variable that is constant in more than half of the rows (for example the validity duration, which is 1,095 days for most decisions) makes MCD fail or give meaningless distances. Leave such variables out or transform them first.
+> MCD needs a covariance matrix that is not singular. A variable that is constant in more than half of the rows (for example `bedrooms` among entire homes, where 62 % have exactly one bedroom) makes MCD fail or give meaningless distances. Leave such variables out or transform them first.
 
 ## Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)
 
@@ -102,7 +101,7 @@ y = (x^λ − 1) / λ for λ ≠ 0, and y = log(x) for λ = 0.
 | `MinMaxScaler` | (x − min) / (max − min) | bounded inputs, e.g. for neural networks |
 | `RobustScaler` | (x − median) / IQR | data with outliers |
 
-A worked example by hand: description lengths 10, 100 and 1,000 characters. Their mean is 370, dominated by the longest. Their base-10 logarithms are 1, 2 and 3, with mean 2, corresponding to a typical length of 10² = 100 characters (the geometric mean).
+A worked example by hand: nightly prices of €50, €500 and €5,000. Their mean is €1,850, dominated by the most expensive. Their base-10 logarithms are 1.7, 2.7 and 3.7, with mean 2.7, corresponding to a typical price of 10^2.7 = €500 (the geometric mean).
 
 ```mermaid
 flowchart TD
@@ -128,32 +127,31 @@ import pandas as pd
 from scipy.stats import boxcox, skew
 from sklearn.preprocessing import PowerTransformer, RobustScaler, StandardScaler
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-length = decisions["description"].str.len()                   # all > 0: Box-Cox is possible
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+price = listings["price"].dropna()                          # all > 0: Box-Cox is possible
 
-transformed, lam = boxcox(length)
-print(round(lam, 2), round(skew(length), 2), round(skew(np.log(length)), 2), round(skew(transformed), 2))
-# 0.35 1.32 -0.75 -0.0   <- the log over-corrects (skew to the left); Box-Cox finds lambda = 0.35
+transformed, lam = boxcox(price)
+print(round(lam, 2), round(skew(price), 1), round(skew(np.log(price)), 2), round(skew(transformed), 2))
+# 0.23 22.5 -0.68 0.04   <- the log over-corrects (skew to the left); Box-Cox finds lambda = 0.23
 
 # the same with scikit-learn, which stores lambda for new data
-pt = PowerTransformer(method="box-cox").fit(length.to_frame())
-print(pt.lambdas_.round(2))                                     # [0.35]
+pt = PowerTransformer(method="box-cox").fit(price.to_frame())
+print(pt.lambdas_.round(2))                                  # [0.23]
 
-digits = decisions["description"].str.count(r"[0-9]").to_frame("n_digits")   # 13 % zeros: Yeo-Johnson or log1p
-yj = PowerTransformer(method="yeo-johnson").fit(digits)
-print(round(skew(digits["n_digits"]), 1), round(skew(np.log1p(digits["n_digits"])), 2),
-      round(skew(yj.transform(digits).ravel()), 2))
-# 4.4 -0.59 -0.06
+reviews = listings[["number_of_reviews"]]                    # 20 % zeros: Yeo-Johnson or log1p
+yj = PowerTransformer(method="yeo-johnson").fit(reviews)
+print(round(skew(reviews["number_of_reviews"]), 1), round(skew(np.log1p(reviews["number_of_reviews"])), 2),
+      round(skew(yj.transform(reviews).ravel()), 2))
+# 5.4 0.17 0.04
 
-X = pd.DataFrame({"n_chars": length, "n_digits": digits["n_digits"],
-                  "n_lines": decisions["description"].str.count("\n") + 1})
+X = listings.loc[price.index, ["price", "accommodates", "number_of_reviews"]]
 print(StandardScaler().fit_transform(X).std(axis=0).round(2))   # [1. 1. 1.]
-print(RobustScaler().fit(X).scale_)                             # IQR of each column: [468.  17.   7.]
+print(RobustScaler().fit(X).scale_)                             # IQR of each column: [135.   2.  80.]
 ```
 
-![Description length before and after the Box–Cox transformation, with normal Q–Q plots](figures/box-cox-before-after.png)
+![Price per night before and after the Box–Cox transformation, with normal Q–Q plots](figures/box-cox-before-after.png)
 
-After the transformation the histogram is close to symmetric and the points of the Q–Q plot lie close to the line, except in the extreme tails. Description length is a case where the plain logarithm is too strong (the skewness changes sign, from 1.32 to −0.75); Box–Cox with λ = 0.35, between a square root and a cube root, fits better. For the number of digits, with 13 % zeros, Yeo–Johnson and log1p both remove most of the skew.
+The raw price has a skewness of 22.5, driven by a few prices in the thousands. The plain logarithm over-corrects (skewness −0.68), and Box–Cox with λ = 0.23, between the logarithm and a fourth root, brings the skewness to 0.04. The figure shows why a skewness near zero is not the end of the story: the transformed histogram has **two peaks**, and the Q–Q plot bends where they meet. The smaller peak is the medium-term listings of [page 2](02-missing-values-and-univariate-outliers.md#univariate-outliers-iqr-rule-z-score-median-absolute-deviation), a different population that no transformation can merge with the rest. For the number of reviews, with 20 % zeros, Yeo–Johnson and log1p both remove most of the skew.
 
 ### In practice
 
@@ -165,7 +163,7 @@ After the transformation the histogram is close to symmetric and the points of t
 > Fit transformations (λ, mean, SD, median, IQR) on the training data and apply them to the test data unchanged. Estimating λ on all data is a mild form of data leakage.
 
 > [!CAUTION]
-> Results on a transformed scale must be translated back for the reader. The back-transformed mean of log values is the geometric mean, not the arithmetic mean: exp(mean(log length)) is not the average length. Say which one you report.
+> Results on a transformed scale must be translated back for the reader. The back-transformed mean of log values is the geometric mean, not the arithmetic mean: exp(mean(log price)) is not the average price. Say which one you report.
 
 ## A documented cleaning pipeline
 
@@ -180,19 +178,22 @@ A **cleaning pipeline** is a fixed sequence of steps that turns the raw table in
 
 The record of all steps is the **cleaning log**. Together with the code, it lets anyone reproduce the cleaned table from the raw data and understand every difference between them.
 
-Typical decisions for the BTI data, with the counts from workbook 14:
+Typical decisions for the Airbnb listings, with the counts from workbook 15:
 
 | Step | Rule | Rows | Action | Reason |
 |---|---|---|---|---|
-| 1 | description is a database template (`SQL{...}`) | 73 | remove | says nothing about the goods |
-| 2 | end date 1900-01-01 (annulled, code 55) | 510 | set to missing, flag `annulled` | a placeholder is not a date |
-| 3 | Windows line breaks, no-break spaces, repeated spaces | 181,359 | correct | makes lengths comparable; line breaks kept |
-| 4–5 | heading 8803 (deleted in HS 2022); CN code with 4 or 6 digits | 51 / 1,040 | flag | the label is still valid for its time |
-| 6 | description identical to another decision | 23,606 | flag | renewals are real; they matter for validation (Session 7) |
-| 7 | language neither official in the country nor English | 9 | flag | probably a wrong language code |
-| 8–9 | keywords missing; invalidation reason missing | 1,273 / 264,254 | keep NULL, add indicators | not MCAR; structural |
-| 10 | skewed length and digit counts | all | add Box–Cox / log1p columns | raw columns kept |
-| 11–12 | univariate / Mahalanobis outliers | 169 / 5,299 | flag | inspect, do not delete |
+| 1 | duplicated listing id | 0 | remove | one row per listing |
+| 2 | `maximum_nights` = 2,147,483,647 | 2 | set to missing | a software default, not a stay |
+| 3 | price missing; no free night in the next year | 4,335 | keep missing, add indicators | structural; nothing to impute |
+| 4 | minimum stay of 28 nights or more | 4,480 | flag `medium_term` | price not comparable with short stays |
+| 5 | minimum stay above 365 nights | 10 | flag | not a holiday rental; inspect |
+| 6 | review scores missing | 2,573 | keep missing, add indicator | structural: no reviews yet |
+| 7 | bedrooms missing | 3,420 | impute (1 for rooms; median for the same number of guests), flag | rule as good as the iterative imputer |
+| 8 | beds or bathrooms missing | 6,739 | keep missing, add indicators | too many gaps to impute credibly |
+| 9 | licence field | 31 | keep `license_status`, flag registration numbers not in the official format, drop the raw field | the analysis needs only the status |
+| 10–12 | extreme price for the room type; skewed price; unusual price for the number of guests | 67 / all / 94 | flag; add `log_price`; flag | inspect, do not delete |
+
+Step 9 is a data-protection decision as much as a cleaning one. Inside Airbnb collects the data from public listing pages, and in the original file the licence field of many hosts contains their name or the name of their company; `prepare_airbnb.py` already replaces such entries by a category (`private host name`, `legal entity name`, `other`) and adds `license_status`. A registration number still identifies a flat, and the analysis needs only the status, so the raw field does not go into the cleaned table (data minimisation). Berlin requires a registration number for short-term rentals, and an EU regulation on short-term rental data (Regulation (EU) 2024/1028) applies from 20 May 2026; the legal details are not the topic here.
 
 ```mermaid
 stateDiagram-v2
@@ -220,16 +221,17 @@ Good practice:
 
 ### Why it matters
 
-Cleaning decisions change results. Removing duplicates changes counts; removing extreme descriptions changes average lengths; imputing a value changes every statistic computed from it. If decisions are not recorded, results cannot be reproduced or defended, and different team members clean the same data differently. A documented pipeline is also what reviewers, supervisors and future colleagues ask for first.
+Cleaning decisions change results. Removing duplicates changes counts; removing extreme prices changes average prices; imputing a value changes every statistic computed from it. If decisions are not recorded, results cannot be reproduced or defended, and different team members clean the same data differently. A documented pipeline is also what reviewers, supervisors and future colleagues ask for first.
 
 ### How it works in Python
 
-The pattern of workbook 14, reduced to two steps:
+The pattern of workbook 15, reduced to two steps:
 
 ```python
+import numpy as np
 import pandas as pd
 
-raw = pd.read_parquet("case-study/data/train.parquet")
+raw = pd.read_parquet("case-study/data/airbnb/listings.parquet")
 log = []
 
 
@@ -238,29 +240,29 @@ def record(step, rule, affected, action, reason, n_rows):
                 "action": action, "reason": reason, "rows_after": n_rows})
 
 
-def drop_template_descriptions(df):
-    template = df["description"].str.upper().str.contains("SQL{", regex=False)
-    out = df[~template]
-    record("1", "description is a database template", int(template.sum()), "remove",
-           "the text says nothing about the goods", len(out))
-    return out
-
-
-def fix_placeholder_end_date(df):
+def fix_sentinel_max_nights(df):
     out = df.copy()
-    placeholder = out["end_date"].dt.year.eq(1900)
-    out.loc[placeholder, "end_date"] = pd.NaT
-    record("2", "end_date 1900-01-01 (annulled)", int(placeholder.sum()), "set to missing",
-           "a placeholder is a hidden missing value, not a date", len(out))
+    sentinel = out["maximum_nights"].eq(2**31 - 1)
+    out.loc[sentinel, "maximum_nights"] = np.nan
+    record("2", "maximum_nights = 2,147,483,647", int(sentinel.sum()), "set to missing",
+           "the largest 32-bit integer is a software default, not a stay", len(out))
     return out
 
 
-clean = raw.pipe(drop_template_descriptions).pipe(fix_placeholder_end_date)
-assert not clean["end_date"].dt.year.eq(1900).any()                # validate before saving
+def flag_medium_term(df):
+    out = df.copy()
+    out["medium_term"] = out["minimum_nights"].ge(28)
+    record("4", "minimum stay of 28 nights or more", int(out["medium_term"].sum()), "flag",
+           "price not comparable with short stays; analyse separately", len(out))
+    return out
+
+
+clean = raw.pipe(fix_sentinel_max_nights).pipe(flag_medium_term)
+assert not clean["maximum_nights"].eq(2**31 - 1).any()            # validate before saving
 print(pd.DataFrame(log)[["step", "rows_affected", "action", "rows_after"]].to_string(index=False))
 # step  rows_affected         action  rows_after
-#    1             73         remove      309456
-#    2            510 set to missing      309456
+#    2              2 set to missing       12776
+#    4           4480           flag       12776
 ```
 
 ### In practice
@@ -273,15 +275,15 @@ print(pd.DataFrame(log)[["step", "rows_affected", "action", "rows_after"]].to_st
 > The cleaned table can be the input of later analyses. Keep the pipeline and the log in your project repository, and regenerate the table with the code rather than copying it around.
 
 > [!TIP]
-> Write the reason as if for a colleague who disagrees: "flag renewed decisions but keep them, because each is a real decision; keep copies on one side of a validation split" can be discussed; "removed duplicates" cannot.
+> Write the reason as if for a colleague who disagrees: "flag medium-term listings and keep them, because they are real offers; exclude them from price models, because their price field is not comparable" can be discussed; "removed outliers" cannot.
 
 ## Check your understanding
 
 1. Why can a point be a Mahalanobis outlier although its z-score is below 3 in every variable?
-2. Why does the robust (MCD) ellipse in the figure flag the contaminating group while the classical ellipse does not?
-3. Box–Cox estimates λ = 0.35 for the description length. What does that tell you about the transformation compared with the logarithm, and why can it not be applied to the number of digits?
+2. Why does the robust (MCD) ellipse in the figure flag the contaminating group while the classical ellipse does not? Why are the flagged hostel dormitories not errors?
+3. Box–Cox estimates λ = 0.23 for the price. What does that tell you about the transformation compared with the logarithm, and why can it not be applied to the number of reviews?
 4. Which scaler would you choose for a variable with a few extreme values, and why?
-5. For each of the following, decide between remove, correct, flag and keep, and write the log entry: (a) a decision whose description is "TEST"; (b) a description of 8,621 characters for a conveyor system; (c) a decision whose start date is 06/07/2200.
+5. For each of the following, decide between remove, correct, flag and keep, and write the log entry: (a) a loft for seven guests at €10,025 a night; (a2) a houseboat for 16 guests at €4,458; (b) a shared room for 16 guests at €46 a night; (c) a listing whose minimum stay is 1,125 nights; (d) a decision of the BTI data whose start date is 06/07/2200.
 
 ## Further reading
 
