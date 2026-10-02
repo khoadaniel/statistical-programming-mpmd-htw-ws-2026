@@ -1,0 +1,41 @@
+"""Exceptions of the package, organised as a small class hierarchy.
+
+ListingToolsError           base class: catch this to handle any error of the package
+├── ValidationError         a record breaks a rule (also a ValueError)
+└── APIError                a web API answered with an error or could not be reached
+    └── RateLimitError      the API said "too many requests" (HTTP 429)
+"""
+
+from __future__ import annotations
+
+
+class ListingToolsError(Exception):
+    """Base class of all errors raised by listingtools."""
+
+
+class ValidationError(ListingToolsError, ValueError):
+    """A record does not satisfy the rules of its class.
+
+    Attributes:
+        field: name of the offending field, e.g. ``"price"``.
+    """
+
+    def __init__(self, field: str, message: str) -> None:
+        self.field = field
+        super().__init__(f"{field}: {message}")
+
+
+class APIError(ListingToolsError):
+    """A web API returned an error status, an unexpected payload, or did not answer in time."""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        self.status_code = status_code
+        super().__init__(message)
+
+
+class RateLimitError(APIError):
+    """The API refused the request because too many requests were sent (HTTP 429)."""
+
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        self.retry_after = retry_after
+        super().__init__(message, status_code=429)

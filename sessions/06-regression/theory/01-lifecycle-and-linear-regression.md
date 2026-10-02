@@ -33,11 +33,11 @@ flowchart LR
 
 The arrows back are the point of the diagram: projects loop. An evaluation that fails sends you back to features or data; monitoring that detects a change sends you back to data collection and retraining.
 
-**Problem definition** fixes three things: the **target** (what is predicted), the **metric** (how success is measured) and the **baseline** (the simplest prediction the model must beat). For the price model of this page: target = price per night in euros (modelled on the log scale), metric = mean absolute error (MAE) in euros on held-out listings, baseline = the median price of the training listings for every listing (MAE €86). The course leaderboard from Session 8 onwards follows the same steps for a different task: target = four-digit HS heading of a customs decision (EBTI), metric = accuracy with macro-F1 alongside, baseline = always the most frequent heading (accuracy 0.041).
+**Problem definition** fixes three things: the **target** (what is predicted), the **metric** (how success is measured) and the **baseline** (the simplest prediction the model must beat). For the price model of this page: target = price per night in euros (modelled on the log scale), metric = mean absolute error (MAE) in euros on held-out listings, baseline = the median price of the training listings for every listing (MAE €86). The churn model of block 3 follows the same steps for a yes/no target: target = whether a Telco customer cancels, metric = how well the predicted probabilities separate leavers from stayers (Session 8), baseline = the churn share of 26.5 % for every customer.
 
 ### Why it matters
 
-Most failed ML projects fail outside the training step: a target that does not match the business decision, data that are not available at prediction time, or a model nobody maintains. Naming the steps makes these risks visible early. Sessions 3–5 already covered steps 02–04: data collection and SQL for the EBTI decisions, cleaning (Session 4) and exploration (Session 5) for both datasets.
+Most failed ML projects fail outside the training step: a target that does not match the business decision, data that are not available at prediction time, or a model nobody maintains. Naming the steps makes these risks visible early. Sessions 3–5 already covered steps 02–04: data collection and SQL on the listings, calendar and reviews (Session 3), cleaning (Session 4) and exploration (Session 5) of the same listings.
 
 ### How it works in Python
 
@@ -70,9 +70,9 @@ print(baseline, round(np.mean(np.abs(test["price"] - baseline)), 1))   # 156.5 8
 
 ### Concept
 
-- An **observation** (row, example) is one unit: a listing, a customer, a customs decision.
+- An **observation** (row, example) is one unit: a listing, a customer, a month of reviews.
 - The **features** (inputs, predictors, X) are the information available about it: number of guests, room type, location.
-- The **target** (outcome, label, y) is what we want to predict: the nightly price (this page), the HS heading of a decision (the leaderboard), churn yes/no.
+- The **target** (outcome, label, y) is what we want to predict: the nightly price (this page), churn yes/no (block 3).
 - A **model** is a family of prediction rules with free **parameters**; **training** (fitting) chooses the parameters from labelled examples; **prediction** applies the fitted rule to new observations.
 
 **Supervised learning** learns from examples with a known target. It is **regression** when the target is a number and **classification** when it is a category. **Unsupervised learning** has no target and looks for structure (clusters, Session 11).
@@ -91,7 +91,7 @@ Every scikit-learn model follows this interface: `fit(X, y)` learns, `predict(X)
 
 ### Why it matters
 
-The vocabulary is shared by every library, paper and job description. Being precise about what counts as a feature also prevents **leakage**: a feature that is not known at prediction time (for example `estimated_revenue_l365d`, which Inside Airbnb computes from the price itself, when predicting the price; or the customs' classification justification, which names the heading, in the leaderboard task) makes a model look better than it can be (Session 7).
+The vocabulary is shared by every library, paper and job description. Being precise about what counts as a feature also prevents **leakage**: a feature that is not known at prediction time (for example `estimated_revenue_l365d`, which Inside Airbnb computes from the price itself, when predicting the price) makes a model look better than it can be (Session 7).
 
 ### How it works in Python
 
@@ -127,7 +127,7 @@ print(np.exp(model.predict(X.head(3))).round(0), short["price"].head(3).tolist()
 
 A model is useful if it predicts **new** observations well. To estimate this, hold back part of the labelled data as a **test set**, fit only on the **training set**, and evaluate once on the test set. The score on the training data is optimistic because the model has seen the answers.
 
-`train_test_split` shuffles the rows and splits them, commonly 80/20 or 75/25. A fixed `random_state` makes the split reproducible. For classification, `stratify=y` keeps the class shares equal in both parts. When predictions are about the future, split by time instead (Sessions 7 and 12); the EBTI leaderboard does exactly that (train 2017–2023, test 2024–2026). A host with many similar flats is another trap: if some of their listings are in the training set and others in the test set, the test score can be optimistic (grouped splits, Session 7).
+`train_test_split` shuffles the rows and splits them, commonly 80/20 or 75/25. A fixed `random_state` makes the split reproducible. For classification, `stratify=y` keeps the class shares equal in both parts. When predictions are about the future, split by time instead (Sessions 7 and 12); the monthly demand forecast of Session 12 is evaluated that way (train on earlier months, test on later ones). A host with many similar flats is another trap: if some of their listings are in the training set and others in the test set, the test score can be optimistic (grouped splits, Session 7).
 
 ### Why it matters
 
@@ -152,7 +152,7 @@ print(train["price"].median(), test["price"].median())       # 156.5 159.98: sim
 
 ### In practice
 
-- Kaggle competitions and the course leaderboard keep the test labels hidden, so that nobody can fit to them.
+- Kaggle competitions and the course leaderboard of Sessions 13–16 keep the test labels hidden, so that nobody can fit to them.
 - Regulated applications such as credit scoring validate models on data that were not used for development (out-of-time validation).
 - Medical prediction models are judged by external validation: performance on patients from other hospitals.
 

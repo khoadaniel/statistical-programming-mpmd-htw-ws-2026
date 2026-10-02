@@ -18,7 +18,7 @@
 - [Basic queries: SELECT, WHERE, ORDER BY, LIMIT](theory/01-relational-model-and-sql.md#basic-queries-select-where-order-by-limit)
 - [Aggregation with GROUP BY and HAVING](theory/01-relational-model-and-sql.md#aggregation-with-group-by-and-having)
 - [INNER and LEFT JOIN; NULL values in joins and aggregates](theory/01-relational-model-and-sql.md#inner-and-left-join-null-values-in-joins-and-aggregates)
-- *Practice:* answer first questions about the BTI decisions in SQL; decisions per issuing country and year; join the headings to their English names; find headings without any decision (LEFT JOIN) → [workbook 06](workbooks/06-case-study-sql-first-questions.ipynb)
+- *Practice:* answer first questions about the Berlin Airbnb listings in SQL; listings and median price per district; join the listings with their reviews and their availability; find listings without any review (LEFT JOIN) → [workbook 06](workbooks/06-case-study-sql-first-questions.ipynb)
 
 **1:00–1:45 · Advanced SQL, Python access and reproducible loading** ([theory page](theory/02-sql-from-python-and-ingestion.md))
 
@@ -26,7 +26,7 @@
 - [Access from Python with SQLAlchemy and pandas](theory/02-sql-from-python-and-ingestion.md#access-from-python-with-sqlalchemy-and-pandas)
 - [Loading data reproducibly with an ingestion script and constraints](theory/02-sql-from-python-and-ingestion.md#loading-data-reproducibly-with-an-ingestion-script-and-constraints)
 - [Documenting a dataset (data card)](theory/02-sql-from-python-and-ingestion.md#documenting-a-dataset-data-card)
-- *Practice:* case study: load `decisions`, `decisions_test` and `nomenclature` into PostgreSQL with the provided script; rank headings per country and year with a window function; compute running totals per month; write a short data card → [workbook 10](workbooks/10-case-study-postgres-decisions.ipynb), [SQL files](workbooks/sql/), [data card template](workbooks/data-card-template.md)
+- *Practice:* case study: load `listings`, `calendar` and `reviews_monthly` into PostgreSQL with the provided script or a schema-first loader; rank districts by price and compute running totals of reviews with window functions; write a short data card → [workbook 10](workbooks/10-case-study-postgres-listings.ipynb), [SQL files](workbooks/sql/), [data card template](workbooks/data-card-template.md)
 
 **2:00–2:45 · Large tables in Python: Polars and choosing a tool** ([theory page](theory/03-polars-and-choosing-a-tool.md))
 
@@ -34,7 +34,7 @@
 - [Polars: expressions, lazy queries and the query optimiser, streaming, Parquet](theory/03-polars-and-choosing-a-tool.md#polars-expressions-lazy-queries-and-the-query-optimiser-streaming-parquet)
 - [The same query in SQL, pandas and Polars](theory/03-polars-and-choosing-a-tool.md#the-same-query-in-sql-pandas-and-polars)
 - [Choosing a tool: SQL database, pandas or Polars](theory/03-polars-and-choosing-a-tool.md#choosing-a-tool-sql-database-pandas-or-polars)
-- *Practice:* case study: run the same aggregation on the raw EBTI export (1,051,034 decisions, 1.2 GB of CSV) in SQL, pandas and Polars and compare code, runtime and memory use → [workbook 14](workbooks/14-case-study-pandas-vs-polars.ipynb)
+- *Practice:* case study: run the same aggregation on the availability calendar (4.7 million rows, 159 MB of CSV) in SQL, pandas and Polars and compare code, runtime and memory use → [workbook 14](workbooks/14-case-study-pandas-vs-polars.ipynb)
 
 ## Materials
 
@@ -48,17 +48,17 @@
 | [workbooks/03-sql-aggregate-functions.ipynb](workbooks/03-sql-aggregate-functions.ipynb) | Ploomber: aggregate functions, GROUP BY, HAVING | 1 | optional |
 | [workbooks/04-sql-groupby-joins-ctes.ipynb](workbooks/04-sql-groupby-joins-ctes.ipynb) | Data 100: GROUP BY, CASE, joins and CTEs on IMDb data | 1–2 | core |
 | [workbooks/05-sql-joins.ipynb](workbooks/05-sql-joins.ipynb) | Ploomber: INNER, LEFT, RIGHT and FULL joins | 1 | optional |
-| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | **Case study**: first SQL questions on the BTI decisions and the nomenclature (DuckDB) | 1 | core |
+| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | **Case study**: first SQL questions on the listings, their reviews and their calendar (DuckDB) | 1 | core |
 | [workbooks/07-sql-window-functions.ipynb](workbooks/07-sql-window-functions.ipynb) | Ploomber: RANK, DENSE_RANK, moving averages, ROLLUP | 2 | optional |
 | [workbooks/08-postgres-with-python.ipynb](workbooks/08-postgres-with-python.ipynb) | Ploomber: PostgreSQL in Docker with SQLAlchemy and jupysql | 2 | optional |
 | [workbooks/09-jupysql-postgres-connect.ipynb](workbooks/09-jupysql-postgres-connect.ipynb) | JupySQL: connecting to PostgreSQL, loading and plotting | 2 | optional |
-| [workbooks/10-case-study-postgres-decisions.ipynb](workbooks/10-case-study-postgres-decisions.ipynb) | **Case study**: load the decisions into PostgreSQL with constraints, rank headings per country and year, data card | 2 | core |
-| [workbooks/sql/](workbooks/sql/) | `01-schema.sql`, `02-add-constraints.sql`, `03-rank-headings-per-country-year.sql` | 2 | core |
+| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | **Case study**: load listings, calendar and reviews into PostgreSQL (or DuckDB) with keys and constraints, rank districts by price, running totals of reviews, data card | 2 | core |
+| [workbooks/sql/](workbooks/sql/) | `01-schema.sql`, `02-add-constraints.sql`, `03-rank-districts-by-price.sql`, `04-reviews-running-total.sql` | 2 | core |
 | [workbooks/data-card-template.md](workbooks/data-card-template.md) | Data card template for the case study and the team project | 2 | core |
 | [workbooks/11-polars-eda-with-sql-equivalents.ipynb](workbooks/11-polars-eda-with-sql-equivalents.ipynb) | Data 100: first steps in Polars, each with the equivalent SQL | 3 | core |
 | [workbooks/12-polars-getting-started.ipynb](workbooks/12-polars-getting-started.ipynb) | Polars Cookbook ch. 1: DataFrame, LazyFrame, query plans, expressions | 3 | core |
 | [workbooks/13-polars-transformations.ipynb](workbooks/13-polars-transformations.ipynb) | Polars Cookbook ch. 4: group_by, window functions with `over`, UDFs, SQL in Polars | 3 | optional |
-| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | **Case study**: the same aggregation on the raw export in SQL, pandas and Polars; runtime and memory | 3 | core |
+| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | **Case study**: the same aggregation on the raw availability calendar in SQL, pandas and Polars; runtime and memory; CSV against Parquet | 3 | core |
 
 Origins and licences of third-party files: [source.md](source.md).
 
@@ -66,7 +66,7 @@ Origins and licences of third-party files: [source.md](source.md).
 
 **Preparation**
 
-- Run the case-study script once so that `case-study/data/` exists, including the raw export `case-study/data/raw/DDS2-EBTI_Full.zip` (see [case-study/README.md](../../case-study/README.md)). Workbook 14 extracts the export once to a temporary folder (about 1.2 GB; set `EBTI_CSV_DIR` to choose another folder) and needs about 3 GB of free memory.
+- Run `uv run python case-study/prepare_airbnb.py` once so that `case-study/data/airbnb/` and the raw files in `case-study/data/raw/airbnb/` exist (see [case-study/README.md](../../case-study/README.md)). Workbook 14 unpacks the raw calendar once to a temporary folder (159 MB; set `AIRBNB_CSV_DIR` to choose another folder) and needs about 2 GB of free memory.
 - Install [Docker Desktop](https://docs.docker.com/get-docker/) if you can, and check that `docker run hello-world` works. Without Docker, the case-study notebooks fall back to DuckDB.
 - Work through the first half of [SQLBolt](https://sqlbolt.com/) (lessons 1–6), about 45 minutes.
 
@@ -103,3 +103,6 @@ If port 5432 is taken (for example by a local PostgreSQL installation), use `-p 
 
 > [!TIP]
 > No Docker, no PostgreSQL? Leave `DATABASE_URL` unset. Workbook 10 then uses DuckDB in a local file, and all SQL in workbooks 06, 10 and 14 runs unchanged.
+
+> [!NOTE]
+> A second run of `prepare_airbnb.py --postgres` drops and reloads the four tables (with `CASCADE`), which removes the keys and constraints added by `sql/02-add-constraints.sql`. Run the constraints file again after every reload.

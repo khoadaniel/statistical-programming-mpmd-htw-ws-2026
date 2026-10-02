@@ -1,11 +1,11 @@
 # Large tables in Python: Polars and choosing a tool
 
-This page covers the third block. pandas is the default table library in Python and works well for most course data, but it reaches limits when tables grow: it holds everything in memory, uses one processor core for most operations and executes every step immediately. **Polars** is a newer DataFrame library that addresses these limits with expressions, lazy queries, a query optimiser and a streaming engine. We write the same query in SQL, pandas and Polars, and end with a guide for choosing between a database, pandas and Polars. Distributed systems such as Spark belong to the module on big-data technology and are only mentioned here.
+This page covers the third block. The availability calendar of the case study has 4.7 million rows, one per listing and night of the coming year, and the analyst wants monthly summaries of it by district. pandas is the default table library in Python and works well for most course data, but it reaches limits when tables grow: it holds everything in memory, uses one processor core for most operations and executes every step immediately. **Polars** is a newer DataFrame library that addresses these limits with expressions, lazy queries, a query optimiser and a streaming engine. We write the same query in SQL, pandas and Polars, and end with a guide for choosing between a database, pandas and Polars. Distributed systems such as Spark belong to the module on big-data technology and are only mentioned here.
 
 ```mermaid
 flowchart LR
     subgraph Eager["pandas: eager"]
-        A1["read all columns"] --> A2["new columns"] --> A3["groupby"] --> A4["filter groups"]
+        A1["read all columns"] --> A2["merge"] --> A3["new columns"] --> A4["groupby"]
     end
     subgraph Lazy["Polars: lazy"]
         B1["scan: build a plan"] --> B2["optimise plan"] --> B3["collect: run in parallel"]
@@ -20,28 +20,26 @@ Three properties of pandas matter when data grow:
 
 1. **Memory.** A DataFrame lives completely in main memory (RAM). Intermediate results, such as the table after a `merge` or a new column, are additional copies. A common rule of thumb from the pandas author Wes McKinney was that pandas needed 5 to 10 times as much RAM as the size of the dataset. Text columns are especially costly: before pandas 3.0, each string was a separate Python object.
 2. **Single-threaded execution.** Most pandas operations use one processor core, even when the laptop has 8 or 16.
-3. **Eager evaluation.** Each line is executed immediately and completely. When you read a file with 14 columns and later use 3, pandas has already read all 14, unless you said so with `columns=`. pandas cannot look ahead at what you will do with the result.
+3. **Eager evaluation.** Each line is executed immediately and completely. When you read a file with 42 columns and later use 3, pandas has already read all 42, unless you said so with `columns=`. pandas cannot look ahead at what you will do with the result.
 
-A worked example with the case-study data: `train.parquet` is 147 MB on disk (compressed). In memory the 309,529 decisions take about 560 MB in pandas 2.3, almost four times the file size, because four of the 14 columns are long texts. The raw export of the European Commission, 1,051,034 decisions in CSV files of 1.2 GB, takes about 2.1 GB as a pandas DataFrame, and the aggregation of [workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb) reached a peak of about 2.3 GB above the starting point of the Python process.
+A worked example with the case-study data: the calendar takes 2.3 MB as a Parquet file, because its sorted, repetitive columns compress extremely well. In memory, with proper types (integer, date, true/false), pandas needs 117 MB for the same 4.7 million rows. Read from the raw CSV file of Inside Airbnb, where every date and every `t`/`f` is text, it needs 624 MB, more than five times as much, and the aggregation of [workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb) on that file reached a peak of about 1.5 GB above the starting point of the Python process.
 
 ### Why it matters
 
-The limits rarely matter for tens of thousands of rows. They matter when a team project uses several years of data, many text columns or repeated experiments: the notebook becomes slow, the kernel crashes with an out-of-memory error, and people start to sample the data for technical rather than statistical reasons.
+The limits rarely matter for tens of thousands of rows. They matter when a team project uses daily data for several years, many text columns or repeated experiments: the notebook becomes slow, the kernel crashes with an out-of-memory error, and people start to sample the data for technical rather than statistical reasons. Ten Inside Airbnb cities, or a calendar per quarter for five years, already give hundreds of millions of rows.
 
 ### How it works in Python
 
 ```python
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train.parquet")
-print(f"{decisions.memory_usage(deep=True).sum() / 1e6:.0f} MB in memory")     # 557 MB in memory
-print(decisions.memory_usage(deep=True).sort_values(ascending=False).head(3).div(1e6).round(0))
-# description                     257.0   <- the free-text columns dominate
-# classification_justification    125.0
-# keywords                         39.0   (exact values depend on the pandas version)
-
-small = pd.read_parquet("case-study/data/train.parquet", columns=["issuing_country", "heading", "start_date"])
-print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns")  # 35 MB with three columns
+calendar = pd.read_parquet("case-study/data/airbnb/calendar.parquet")
+print(f"{calendar.memory_usage(deep=True).sum() / 1e6:.0f} MB in memory, typed")       # 117 MB in memory, typed
+raw = pd.read_csv("case-study/data/raw/airbnb/calendar.csv.gz")       # the raw file: every value is text
+print(f"{raw.memory_usage(deep=True).sum() / 1e6:.0f} MB in memory, as read from CSV")  # 624 MB in memory, as read from CSV
+print(raw.memory_usage(deep=True).sort_values(ascending=False).head(3).div(1e6).round(0).to_dict())
+# {'date': 277.0, 'available': 235.0, 'listing_id': 38.0}   <- the text columns dominate
+# (exact values depend on the pandas version)
 ```
 
 ### In practice
@@ -51,7 +49,7 @@ print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns") 
 - The **H2O.ai database-like ops benchmark** (continued by DuckDB Labs since 2023) compares group-by and join speed of DataFrame tools on tables from 10 million to 1 billion rows; pandas fails on the largest sizes on a single machine because of memory.
 
 > [!TIP]
-> The cheapest optimisation in pandas is to read only the columns you need (`columns=[...]`) and to use Parquet instead of CSV. Try it before switching tools.
+> The cheapest optimisation in pandas is to read only the columns you need (`columns=[...]`), to give columns their proper types (`parse_dates=`, `True`/`False` instead of `"t"`/`"f"`) and to use Parquet instead of CSV. Try it before switching tools.
 
 ## Polars: expressions, lazy queries and the query optimiser, streaming, Parquet
 
@@ -59,7 +57,7 @@ print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns") 
 
 **Polars** is a DataFrame library written in Rust with a Python interface (first released in 2020 by Ritchie Vink). It stores data in the **Apache Arrow** columnar format: each column is a contiguous block of memory, which is fast to scan and easy to share with other tools.
 
-**Expressions.** In Polars you describe *what* to compute with expressions such as `pl.col("heading").n_unique()`, and pass them to methods such as `select`, `with_columns`, `filter`, `group_by(...).agg(...)`. An expression is a recipe, not a result; Polars can run many expressions in parallel on several cores.
+**Expressions.** In Polars you describe *what* to compute with expressions such as `pl.col("available").mean()`, and pass them to methods such as `select`, `with_columns`, `filter`, `group_by(...).agg(...)`. An expression is a recipe, not a result; Polars can run many expressions in parallel on several cores.
 
 | Task | pandas | Polars |
 |---|---|---|
@@ -79,10 +77,10 @@ print(f"{small.memory_usage(deep=True).sum() / 1e6:.0f} MB with three columns") 
 
 ```mermaid
 flowchart TB
-    Q["Your query:<br/>scan, filter, group_by, agg"] --> P["Logical plan"]
+    Q["Your query:<br/>scan, filter, join, group_by, agg"] --> P["Logical plan"]
     P --> O{"Optimiser"}
-    O -->|"projection pushdown"| C["read 4 of 14 columns"]
-    O -->|"predicate pushdown"| R["skip rows while reading"]
+    O -->|"projection pushdown"| C["read 2 of 42 listing columns"]
+    O -->|"predicate pushdown"| R["skip nights outside July and August"]
     C --> X["Physical plan<br/>(parallel)"]
     R --> X
     X --> E{"Engine"}
@@ -101,55 +99,62 @@ Lazy evaluation lets the library do what an experienced pandas user does by hand
 
 ### How it works in Python
 
+How much of the summer is still free, per district?
+
 ```python
 import polars as pl
 
-lf = pl.scan_parquet("case-study/data/train.parquet")        # LazyFrame: nothing read yet
+listings = pl.scan_parquet("case-study/data/airbnb/listings.parquet")
+calendar = pl.scan_parquet("case-study/data/airbnb/calendar.parquet")    # LazyFrame: nothing read yet
 query = (
-    lf.filter(pl.col("language") == "de")
-      .group_by(pl.col("start_date").dt.year().alias("year"))
-      .agg(n=pl.len(),
-           n_headings=pl.col("heading").n_unique(),
-           median_chars=pl.col("description").str.len_chars().median())
-      .sort("year")
+    calendar.filter(pl.col("date").is_between(pl.date(2026, 7, 1), pl.date(2026, 8, 31)))
+    .join(listings.select("id", "district"), left_on="listing_id", right_on="id")
+    .group_by("district")
+    .agg(nights=pl.len(),
+         listings=pl.col("listing_id").n_unique(),
+         share_free=pl.col("available").mean())
+    .sort("share_free")
 )
-print(query.explain())          # optimised plan: note "PROJECT 4/14 COLUMNS" and the pushed-down SELECTION
+print(query.explain())          # optimised plan: note "PROJECT 2/42 COLUMNS" and the pushed-down SELECTION
 result = query.collect()        # now the work is done, on all cores
-print(result.tail(3))
-# ┌──────┬───────┬────────────┬──────────────┐
-# │ year ┆ n     ┆ n_headings ┆ median_chars │
-# │ 2021 ┆ 23849 ┆ 743        ┆ 750.0        │
-# │ 2022 ┆ 22953 ┆ 721        ┆ 766.0        │
-# │ 2023 ┆ 25851 ┆ 764        ┆ 759.0        │
-# └──────┴───────┴────────────┴──────────────┘
+print(result.head(3))
+# ┌──────────────────────────┬────────┬──────────┬────────────┐
+# │ district                 ┆ nights ┆ listings ┆ share_free │
+# │ Neukölln                 ┆ 79532  ┆ 1308     ┆ 0.256878   │
+# │ Pankow                   ┆ 119050 ┆ 1950     ┆ 0.320311   │
+# │ Friedrichshain-Kreuzberg ┆ 161730 ┆ 2652     ┆ 0.320918   │
+# └──────────────────────────┴────────┴──────────┴────────────┘
 
 streamed = query.collect(engine="streaming")   # batch-wise; same result
 print(streamed.equals(result))                 # True
 ```
 
-Expressions compose. Several aggregations per group, a conditional column and a window expression (`.over()`, the Polars form of `OVER (PARTITION BY ...)`):
+In the printed plan, the filter on the date appears as `SELECTION` inside the scan of the calendar, and the scan of the listings reads `PROJECT 2/42 COLUMNS`: the optimiser moved the filter to the file and dropped the 40 listing columns the query never uses. The result is the same as the SQL join of [block 1](01-relational-model-and-sql.md#how-it-works-in-python-4).
+
+Expressions compose. A conditional column (`when/then/otherwise`) and a window expression (`.over()`, the Polars form of `OVER (PARTITION BY ...)`):
 
 ```python
 import polars as pl
 
-decisions = pl.read_parquet("case-study/data/train_sample.parquet")
+listings = pl.read_parquet("case-study/data/airbnb/listings.parquet")
 out = (
-    decisions.with_columns(
-        n_words=pl.col("description").str.split(" ").list.len(),
-        has_code=pl.when(pl.col("description").str.contains("<CODE>", literal=True))
-                   .then(pl.lit("yes")).otherwise(pl.lit("no")),
-        heading_size=pl.len().over("heading"),          # window expression: decisions per heading
+    listings.filter(pl.col("minimum_nights") < 28, pl.col("price").is_not_null(),
+                    pl.col("room_type") == "Entire home/apt")
+    .with_columns(
+        guests=pl.when(pl.col("accommodates") >= 4).then(pl.lit("4+")).otherwise(pl.lit("1-3")),
+        district_median=pl.col("price").median().over("district"),     # window expression
     )
-    .filter(pl.col("language").is_in(["de", "fr"]))
-    .group_by("language", "has_code")
-    .agg(n=pl.len(), median_words=pl.col("n_words").median(),
-         median_heading_size=pl.col("heading_size").median())
-    .sort("language", "has_code")
+    .with_columns(expensive=pl.col("price") > 1.5 * pl.col("district_median"))
+    .group_by("guests")
+    .agg(n=pl.len(), median_price=pl.col("price").median(), share_expensive=pl.col("expensive").mean())
+    .sort("guests")
 )
 print(out)
-# 4 rows: 3,231 German descriptions quote their own code (<CODE>), but only 3 French ones;
-# French descriptions are about half as long in words (median 43 against 95)
+# guests 1-3: 2,043 entire homes, median €145.92, 5 % cost more than 1.5 times their district's median
+# guests 4+:  2,645 entire homes, median €233.00, 33 % do
 ```
+
+A third of the larger flats cost more than one and a half times the median of their district: "expensive for the district" is mostly "large". Session 5 asks whether district differences survive once size is held fixed.
 
 ### In practice
 
@@ -161,7 +166,7 @@ print(out)
 > Python functions inside Polars (`map_elements`, `map_batches` with a lambda) run row by row in Python, on one core, and the optimiser cannot see inside them. They are as slow as `apply` in pandas. Look for a built-in expression first (`str.*`, `dt.*`, `list.*`, `when/then`).
 
 > [!CAUTION]
-> Polars and pandas differ in details that change results: Polars has no index, `group_by` does not keep the group order unless `maintain_order=True`, missing values are `null` (not `NaN`), and empty text fields may be read as `""` by one tool and as missing by another (see the `INVALIDATION_REASON` example in workbook 14). Compare results when you port code.
+> Polars and pandas differ in details that change results: Polars has no index, `group_by` does not keep the group order unless `maintain_order=True`, missing values are `null` (not `NaN`), and a column such as `available` with the values `t` and `f` is read as text by pandas and Polars but can be read as true/false by DuckDB. A rule such as `available == True` then gives 0 % in two tools and a plausible share in the third (workbook 14). Compare results when you port code.
 
 ## The same query in SQL, pandas and Polars
 
@@ -171,9 +176,9 @@ SQL, pandas and Polars describe the same operations with different words. Knowin
 
 | Operation | SQL | pandas | Polars |
 |---|---|---|---|
-| read | `FROM decisions` | `pd.read_parquet` | `pl.scan_parquet` |
+| read | `FROM calendar` | `pd.read_parquet` | `pl.scan_parquet` |
 | filter rows | `WHERE` | boolean mask, `query` | `filter` |
-| join | `LEFT JOIN ... USING` | `merge(how="left")` | `join(how="left")` |
+| join | `JOIN ... ON` | `merge(how="inner")` | `join(how="inner")` |
 | group and aggregate | `GROUP BY` + `AVG(...)` | `groupby(...).agg(...)` | `group_by(...).agg(...)` |
 | filter groups | `HAVING` | filter after `agg` | `filter` after `agg` |
 | window | `RANK() OVER (PARTITION BY g)` | `groupby(g)[c].rank()` | `pl.col(c).rank().over(g)` |
@@ -181,53 +186,58 @@ SQL, pandas and Polars describe the same operations with different words. Knowin
 
 ### Why it matters
 
-Teams rarely use one tool only. Data are extracted with SQL, prepared in pandas or Polars, and the final numbers are reconciled against the database. Translating between the three is a daily task, and differences in NULL handling or ordering are a common source of disagreeing numbers.
+Teams rarely use one tool only. Data are extracted with SQL, prepared in pandas or Polars, and the final numbers are reconciled against the database. Translating between the three is a daily task, and differences in NULL handling, join type or ordering are a common source of disagreeing numbers.
 
 ### How it works in Python
 
-The question: per issuing country and start year, the number of decisions and the average length of the description, for country-years with at least 500 decisions.
+The question: per district and room type, the number of calendar nights in July and August 2026 and the share still free, for groups with at least 10,000 nights.
 
 ```python
 import duckdb
 import pandas as pd
 import polars as pl
 
-TRAIN = "case-study/data/train.parquet"
+CAL, LST = "case-study/data/airbnb/calendar.parquet", "case-study/data/airbnb/listings.parquet"
 
-# 1. SQL (DuckDB on the file)
+# 1. SQL (DuckDB on the files)
 sql = duckdb.sql(f"""
-    SELECT issuing_country, EXTRACT(YEAR FROM start_date)::int AS year,
-           COUNT(*) AS n, AVG(length(description)) AS avg_chars
-    FROM '{TRAIN}'
-    GROUP BY issuing_country, year
-    HAVING COUNT(*) >= 500
+    SELECT l.district, l.room_type, COUNT(*) AS nights, AVG(c.available::int) AS share_free
+    FROM '{CAL}' AS c JOIN '{LST}' AS l ON l.id = c.listing_id
+    WHERE c.date BETWEEN '2026-07-01' AND '2026-08-31'
+    GROUP BY l.district, l.room_type
+    HAVING COUNT(*) >= 10000
 """).pl()
 
 # 2. pandas
-r = pd.read_parquet(TRAIN, columns=["issuing_country", "start_date", "description"])
-pdf = (r.assign(year=r["start_date"].dt.year, n_chars=r["description"].str.len())
-        .groupby(["issuing_country", "year"], as_index=False)
-        .agg(n=("n_chars", "size"), avg_chars=("n_chars", "mean"))
-        .query("n >= 500"))
+cal = pd.read_parquet(CAL)
+lst = pd.read_parquet(LST, columns=["id", "district", "room_type"])
+summer = cal[cal["date"].between("2026-07-01", "2026-08-31")]
+pdf = (summer.merge(lst, left_on="listing_id", right_on="id")
+       .groupby(["district", "room_type"], as_index=False)
+       .agg(nights=("available", "size"), share_free=("available", "mean"))
+       .query("nights >= 10000"))
 
 # 3. Polars (lazy)
-plf = (pl.scan_parquet(TRAIN)
-         .group_by("issuing_country", pl.col("start_date").dt.year().alias("year"))
-         .agg(n=pl.len(), avg_chars=pl.col("description").str.len_chars().mean())
-         .filter(pl.col("n") >= 500)
-         .collect())
+plf = (pl.scan_parquet(CAL)
+       .filter(pl.col("date").is_between(pl.date(2026, 7, 1), pl.date(2026, 8, 31)))
+       .join(pl.scan_parquet(LST).select("id", "district", "room_type"), left_on="listing_id", right_on="id")
+       .group_by("district", "room_type")
+       .agg(nights=pl.len(), share_free=pl.col("available").mean())
+       .filter(pl.col("nights") >= 10000)
+       .collect())
 
-print(len(sql), len(pdf), len(plf))                      # 74 74 74
-print(sorted(sql["n"].to_list()) == sorted(plf["n"].to_list()) == sorted(pdf["n"].tolist()))  # True
-print(plf.filter(pl.col("issuing_country") == "GB").sort("year"))
-# GB appears for 2017-2020 only: after Brexit, British decisions are no longer EU decisions
+print(len(sql), len(pdf), len(plf))                      # 15 15 15
+print(sorted(sql["nights"].to_list()) == sorted(plf["nights"].to_list()) == sorted(pdf["nights"].tolist()))  # True
+print(plf.filter(pl.col("district") == "Neukölln").sort("room_type"))
+# Neukölln | Entire home/apt | 48416 | 0.238454
+# Neukölln | Private room    | 30682 | 0.278795
 ```
 
-The case-study notebook runs a larger version of this query, with distinct headings and the share of invalidated decisions, on the **raw export**: 1,051,034 decisions in 23 CSV files of together 1.2 GB ([workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb)).
+The case-study notebook runs a larger version of this query, with monthly groups, distinct listings and the share of nights with a minimum stay of 28 nights or more, on the **raw CSV file** of the calendar: 4,692,075 rows in 159 MB of text ([workbook 14](../workbooks/14-case-study-pandas-vs-polars.ipynb)).
 
-![Runtime and peak memory of the same aggregation on the raw EBTI export in DuckDB, pandas and Polars](figures/pandas-polars-benchmark.png)
+![Runtime and peak memory of the same aggregation on the raw calendar file in DuckDB, pandas and Polars](figures/pandas-polars-benchmark.png)
 
-On the course team's laptop (Apple silicon), pandas needed about 9.5 seconds, mostly to parse all 15 text columns; Polars in lazy mode needed about 0.2 seconds, a factor of about 50, because it parses only the 5 columns the query uses and works on all cores. DuckDB took about 0.4 seconds although its CSV reader had to run on one thread (the descriptions contain line breaks inside quoted fields). Memory told a different story: the peak resident memory was about 2.1 to 2.4 GB above the baseline for pandas *and* for every Polars version, and about 1.3 GB for DuckDB. Lazy and streaming execution did not lower the peak here; one likely reason is that Polars maps the CSV files into memory, and mapped pages count as resident memory. The absolute numbers will differ on your machine; the honest summary is "much faster, not smaller".
+On the course team's laptop (Apple silicon, 18 cores, busy with other work during the measurement), pandas needed about 2.2 seconds: it parses the file on one core and builds a merged copy of all rows before grouping. Polars in eager and lazy mode needed about 0.6 to 0.7 seconds, DuckDB and Polars streaming about 0.15 to 0.2 seconds, more than ten times faster than pandas. Memory followed the same order: about 1.5 GB above the baseline for pandas, 1.0 to 1.1 GB for Polars eager and lazy, about 0.5 GB for Polars streaming and 0.24 GB for DuckDB. The default lazy engine did not save memory compared with eager Polars, because it still holds the whole parsed table; the streaming engine did. On the typed Parquet file, the same query ran about twice as fast in pandas and in Polars lazy: the file format mattered as much as the library. A second run gave different absolute times but the same order. The honest summary for this table is "much faster and leaner, but all versions fit on a laptop".
 
 ### In practice
 
@@ -279,12 +289,13 @@ Moving between the tools is cheap because they share the Arrow format:
 import duckdb
 import polars as pl
 
-lf = pl.scan_parquet("case-study/data/train.parquet")
-by_year = lf.group_by(pl.col("start_date").dt.year().alias("year")).agg(n=pl.len()).sort("year").collect()
+lf = pl.scan_parquet("case-study/data/airbnb/reviews_monthly.parquet")
+by_year = lf.group_by(pl.col("month").dt.year().alias("year")).agg(n=pl.col("n_reviews").sum()).sort("year").collect()
 
 pdf = by_year.to_pandas()          # Polars -> pandas (for statsmodels, seaborn, ...)
 back = pl.from_pandas(pdf)         # pandas -> Polars
-print(duckdb.sql("SELECT MAX(n) AS peak FROM by_year").fetchone())   # (51482,): DuckDB reads the Polars frame
+print(duckdb.sql("SELECT year, n FROM by_year WHERE year < 2026 ORDER BY n DESC LIMIT 1").fetchone())
+# (2025, 130357): DuckDB reads the Polars frame by its variable name
 ```
 
 ### In practice
@@ -300,9 +311,9 @@ print(duckdb.sql("SELECT MAX(n) AS peak FROM by_year").fetchone())   # (51482,):
 
 1. Name the three limits of pandas discussed on this page and one way to reduce each within pandas.
 2. What is the difference between `pl.read_parquet` and `pl.scan_parquet`? When does Polars read the data in each case?
-3. What do projection pushdown and predicate pushdown do? Find both in the output of `explain()` for a query of your own.
-4. In workbook 14, the rule `INVALIDATION_REASON IS NOT NULL` gives 100 % invalidated decisions in Polars but plausible shares in pandas and DuckDB. Why, and how do you write a rule that all three tools evaluate the same way?
-5. Your project data are 30 CSV files of 2 GB each from a public portal, updated monthly. Sketch a tool chain and justify each choice.
+3. What do projection pushdown and predicate pushdown do? Find both in the output of `explain()` for the summer query above.
+4. In workbook 14, the rule `available == True` gives 0 % free nights in pandas and Polars on the CSV file. Why, and how do you write a rule that all three tools evaluate the same way?
+5. Your project data are the calendars of 30 European cities, one CSV file per city and quarter, updated every three months. Sketch a tool chain and justify each choice.
 
 ## Further reading
 

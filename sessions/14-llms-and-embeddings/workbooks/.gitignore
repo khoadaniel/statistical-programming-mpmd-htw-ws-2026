@@ -1,0 +1,3 @@
+# caches written by the workbooks; never commit them
+embeddings_cache/
+llm_results/

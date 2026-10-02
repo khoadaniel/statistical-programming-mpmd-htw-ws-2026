@@ -17,11 +17,12 @@ Third-party material in this session, with its origin and licence. Keep the attr
 
 | File | Covers | Licence |
 |---|---|---|
-| [theory/01-from-words-to-vectors.md](theory/01-from-words-to-vectors.md), [theory/02-applications-of-embeddings.md](theory/02-applications-of-embeddings.md), [theory/03-generative-models-through-an-api.md](theory/03-generative-models-through-an-api.md) | Theory pages for the three blocks; partly based on the course's earlier lecture notes | CC-BY-4.0, author: course team |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG figures | Tokenisation example (SentencePiece and BPE, English and German), illustrative attention weights, 2-D UMAP projection of 1,500 EBTI decisions embedded with multilingual-e5-small | CC-BY-4.0, author: course team |
+| [theory/01-from-words-to-vectors.md](theory/01-from-words-to-vectors.md), [theory/02-applications-of-embeddings.md](theory/02-applications-of-embeddings.md), [theory/03-generative-models-through-an-api.md](theory/03-generative-models-through-an-api.md) | Theory pages for the three blocks; partly based on the course's earlier lecture notes; the abstention section reuses the course's earlier page on decision thresholds | CC-BY-4.0, author: course team |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) and the four PNG figures | Tokenisation example (SentencePiece and BPE, English and German), illustrative attention weights, 2-D UMAP projection of 1,500 EBTI decisions embedded with multilingual-e5-small, coverage–accuracy curve of a TF-IDF classifier on the EBTI decisions (abstention) | CC-BY-4.0, author: course team |
 | [workbooks/01-case-study-tokens-and-similarity.ipynb](workbooks/01-case-study-tokens-and-similarity.ipynb) | Token counts per language and cross-lingual semantic similarity on the EBTI decision sample | CC-BY-4.0, author: course team |
 | [workbooks/05-case-study-embeddings-vs-tfidf.ipynb](workbooks/05-case-study-embeddings-vs-tfidf.ipynb) | Embedding features vs TF-IDF, learning curve, cross-lingual nearest-neighbour search | CC-BY-4.0, author: course team |
 | [workbooks/09-case-study-llm-vs-trained-classifier.ipynb](workbooks/09-case-study-llm-vs-trained-classifier.ipynb) | Zero/few-shot LLM choosing among ten candidate headings with structured output vs trained classifier on 200 decisions | CC-BY-4.0, author: course team |
+| [workbooks/10-case-study-leaderboard-l2.ipynb](workbooks/10-case-study-leaderboard-l2.ipynb) | Leaderboard round L2: TF-IDF plus multilingual embeddings with a paired bootstrap against round L1; optional LLM choice for unsure requests with the trained model as fallback | CC-BY-4.0, author: course team |
 
 Models used (downloaded at run time, not stored here): `intfloat/multilingual-e5-small` (MIT, https://huggingface.co/intfloat/multilingual-e5-small); optionally `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (Apache-2.0); via Ollama `qwen2.5:3b` (Qwen research licence, see https://ollama.com/library/qwen2.5) or `llama3.2:3b` (Llama 3.2 Community License, see https://ollama.com/library/llama3.2). Check the model licence before using a model in a project.
 
@@ -61,3 +62,4 @@ Models used (downloaded at run time, not stored here): `intfloat/multilingual-e5
 - Wang, L., Yang, N., Huang, X., Yang, L., Majumder, R. and Wei, F. (2024). Multilingual E5 text embeddings: a technical report. arXiv:2402.05672.
 - Vaswani, A. et al. (2017). Attention is all you need. *NeurIPS 2017*. https://arxiv.org/abs/1706.03762
 - Court and regulatory cases cited on theory page 3: *Mata v. Avianca, Inc.*, No. 22-cv-1461 (S.D.N.Y. 2023); *Moffatt v. Air Canada*, 2024 BCCRT 149; Garante per la protezione dei dati personali, provision of 30 March 2023 on ChatGPT.
+- Xiong, M. et al. (2024). Can LLMs express their uncertainty? An empirical evaluation of confidence elicitation in LLMs. *ICLR 2024*. https://arxiv.org/abs/2306.13063

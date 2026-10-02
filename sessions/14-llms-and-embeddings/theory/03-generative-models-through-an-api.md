@@ -1,6 +1,6 @@
 # Generative models through an API: prompts, structured output and comparison
 
-The decoder models of Block 1 generate text one token at a time. Through an API they can be used for tasks that we have so far solved with trained classifiers: we describe the task in a prompt and read the answer. This page explains how generation works (temperature, context window, costs), how to call a model through an OpenAI-compatible client with a local Ollama server as the default, how to get answers in a fixed format (structured output with pydantic), and why tariff classification needs a trick: a prompt cannot list all 1,229 headings, so the model chooses among **candidate headings** proposed by retrieval or by the trained classifier. The page ends with a fair comparison of such an LLM with the TF-IDF classifier of Session 13 on quality, cost, latency and data protection.
+The decoder models of Block 1 generate text one token at a time. Through an API they can be used for tasks that we have so far solved with trained classifiers: we describe the task in a prompt and read the answer. This page explains how generation works (temperature, context window, costs), how to call a model through an OpenAI-compatible client with a local Ollama server as the default, how to get answers in a fixed format (structured output with pydantic), and why tariff classification needs a trick: a prompt cannot list all 1,229 headings, so the model chooses among **candidate headings** proposed by retrieval or by the trained classifier. It then compares such an LLM fairly with the TF-IDF classifier of Session 13 on quality, cost, latency and data protection, shows how a classifier can **abstain** and route unsure requests to a customs officer, and ends with the second leaderboard round (L2).
 
 > [!IMPORTANT]
 > Code blocks that start with `# requires a model server` need a running language-model server: either Ollama on your own machine (default, free, data stay local) or a hosted provider with an API key. All other blocks run offline. Set up Ollama once:
@@ -379,6 +379,78 @@ print(table.round(4).to_string())
 > [!CAUTION]
 > Hallucination (fluent but false output) is a smaller risk when the answer is restricted to ten candidates, but it does not disappear: the model can still choose a candidate for reasons unrelated to the goods, and an invented justification can sound convincing. Evaluate on labelled decisions, keep the trained baseline, and treat the LLM's choice as a suggestion for a customs officer, not as a decision.
 
+## Abstention: route unsure cases to a customs officer
+
+### Concept
+
+Neither the trained classifier nor an LLM is right often enough to issue binding decisions on its own. Both can still do useful work if they settle the clear cases and pass the others to a person. With more than 1,000 classes there is no single threshold between "yes" and "no" as in Session 8, but there is a natural decision: **accept** the model's heading, or **abstain** and route the request to a customs officer. A simple rule uses the model's **confidence**, its highest predicted probability for the request: accept if it is at least *t*, abstain otherwise. Two numbers describe the result for each *t*:
+
+- **coverage**: the share of requests the model decides on its own;
+- **accuracy on the covered requests** (selective accuracy).
+
+Raising *t* lowers coverage and, if the confidences are informative, raises accuracy. The **coverage–accuracy curve** shows the whole trade-off; the costs decide where to operate. Suppose an officer's check costs 1 unit of work and an accepted wrong heading costs 5 (a dispute, a corrected declaration, wrongly paid duties). Then the cost per request is 1 × (share abstained) + 5 × (share accepted and wrong), and *t* is chosen to minimise it on validation data.
+
+![Coverage–accuracy curve of a TF-IDF text classifier on the EBTI decisions of 2022–2023: at full coverage accuracy is 0.75; when the model decides only the 65 % of cases with confidence of at least 0.5, accuracy on them is 0.96.](figures/coverage_accuracy.png)
+
+### Why it matters
+
+Abstention turns a model that is right three times out of four into a tool an administration can use: it handles about two thirds of the requests at 96 % accuracy and leaves the hard third to experts, which is how classification assistants for customs officers and traders are usually designed. It also answers the question of Block 3 in a practical form: an LLM is worth its cost only on the requests where the trained model is unsure, so the abstained cases are the natural place to try it. Finally, abstention makes visible *whose* requests are hard: the routing below sends most German requests through and most requests in other languages to an officer.
+
+### How it works in Python
+
+A linear SVM gives scores, not probabilities, so we fit the same TF-IDF features with logistic loss (`loss="log_loss"`), which provides `predict_proba`. Fitting takes about 15 seconds; the block uses `decisions`, `train` and `valid` from the comparison above.
+
+```python
+prob_clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                         SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
+prob_clf.fit(train["description"], train["heading"])
+proba = prob_clf.predict_proba(valid["description"])
+confidence = proba.max(axis=1)
+correct = prob_clf.classes_[proba.argmax(axis=1)] == valid["heading"].to_numpy()
+for t in [0.0, 0.3, 0.5, 0.7, 0.9]:
+    accept = confidence >= t
+    print(f"t = {t:.1f}  coverage {accept.mean():.3f}  accuracy on accepted {correct[accept].mean():.3f}")
+# t = 0.0  coverage 1.000  accuracy on accepted 0.749
+# t = 0.3  coverage 0.739  accuracy on accepted 0.920
+# t = 0.5  coverage 0.654  accuracy on accepted 0.961
+# t = 0.7  coverage 0.565  accuracy on accepted 0.986
+# t = 0.9  coverage 0.274  accuracy on accepted 0.999
+
+# choose t from the costs on 2022, check it once on 2023
+REVIEW, ERROR = 1.0, 5.0                   # an officer's check vs an accepted wrong heading
+in_2022 = (valid["start_date"].dt.year == 2022).to_numpy()
+
+
+def cost_per_request(mask, t):
+    accept = confidence[mask] >= t
+    return (REVIEW * (~accept).sum() + ERROR * (accept & ~correct[mask]).sum()) / mask.sum()
+
+
+ts = np.round(np.arange(0, 1.0, 0.05), 2)
+t_best = ts[np.argmin([cost_per_request(in_2022, t) for t in ts])]
+accept_23 = confidence[~in_2022] >= t_best
+print(t_best, round(accept_23.mean(), 3), round(correct[~in_2022][accept_23].mean(), 3))
+# 0.55 0.637 0.964: on 2023 the model decides 64 % of the requests, 96 % of them correctly
+print(round(cost_per_request(~in_2022, t_best), 2), round(cost_per_request(~in_2022, 0.0), 2))
+# 0.48 1.27: about 0.5 units per request, against 1.0 if officers check everything
+#            and 1.27 if every suggestion is accepted
+
+lang = valid["language"].where(valid["language"].isin(["de", "fr", "en"]), "other")
+print(pd.Series(confidence >= 0.5, index=valid.index).groupby(lang).mean().round(2).to_dict())
+# {'de': 0.88, 'en': 0.29, 'fr': 0.42, 'other': 0.26}: share decided by the model, per language
+```
+
+Two remarks. If the probabilities were calibrated, the cost rule would accept when the probability of being right exceeds 1 − 1/5 = 0.8; the empirical optimum is lower (0.55) because this model is **under-confident**: its mean confidence is 0.62 while its accuracy is 0.75 (Session 8 treats calibration). And the leaderboard itself has no abstention: every test decision needs a heading, so abstention is a property of the service (Session 16), not of the submission.
+
+### In practice
+
+- Document-processing systems (invoice or form extraction) route fields with low confidence to manual verification; the threshold is set from the cost of an error and the capacity of the verification team.
+- Statistical offices that code free-text answers into official classifications (occupations, economic activities) accept high-confidence codes automatically and send the rest to human coders.
+- An LLM's own statement of confidence ("high", "medium", "low" in the schema above) can be used the same way, but it must be checked on labelled data like any other score; verbalised confidences of LLMs are often poorly related to their accuracy (Xiong et al., 2024).
+
+> [!WARNING]
+> Choose *t* on validation data and check it once on later data, as above. Abstention needs confidences that **rank** the cases well; it does not need them to be calibrated. If you promise an accuracy ("at least 95 % on accepted requests"), estimate it on data the threshold was not chosen on.
+
 ## Practice: compare an LLM with the trained classifier on 200 decisions
 
 Workbook [09-case-study-llm-vs-trained-classifier.ipynb](../workbooks/09-case-study-llm-vs-trained-classifier.ipynb):
@@ -387,13 +459,50 @@ Workbook [09-case-study-llm-vs-trained-classifier.ipynb](../workbooks/09-case-st
 2. With a model server: let the LLM choose among the ten candidates, zero-shot and few-shot, with structured output; record headings, tokens and seconds. Without a server the notebook skips these cells and fills the LLM rows with "not run".
 3. Fill in the comparison table (accuracy with bootstrap interval, chapter accuracy, invalid answers, seconds per decision, cost per 1,000 decisions, where the data go) and write a recommendation of five sentences for the head of a customs classification unit.
 
+## Practice: leaderboard round L2
+
+Round L2 asks for a submission built with a method of this session, compared honestly with your L1 model on the same validation years. Workbook [10-case-study-leaderboard-l2.ipynb](../workbooks/10-case-study-leaderboard-l2.ipynb) takes the path that runs on every laptop: it places the multilingual e5 embeddings of Block 2 next to the TF-IDF features and refits the linear SVM. If a model server is available, it can also let the LLM choose among the ten candidates for the requests where the SVM is not convinced (top score below 0); without a server those requests keep the SVM's heading, so the notebook always produces a submission.
+
+The core of the default path, on the validation years (encoding the 50,000 sample descriptions takes about 2 minutes with a GPU and 10–15 minutes on a CPU):
+
+```python
+from scipy.sparse import csr_matrix, hstack
+from sentence_transformers import SentenceTransformer
+
+encoder = SentenceTransformer("intfloat/multilingual-e5-small")
+encoder.max_seq_length = 256                       # 17 % of descriptions are longer; halves the time
+E = encoder.encode(("query: " + decisions["description"]).tolist(), batch_size=64, normalize_embeddings=True)
+fit = (year <= 2021).to_numpy()
+tfidf = TfidfVectorizer(min_df=2, sublinear_tf=True).fit(decisions["description"][fit])
+T_fit, T_val = tfidf.transform(decisions["description"][fit]), tfidf.transform(decisions["description"][~fit])
+both_fit, both_val = hstack([T_fit, csr_matrix(E[fit])]).tocsr(), hstack([T_val, csr_matrix(E[~fit])]).tocsr()
+svm = SGDClassifier(loss="hinge", alpha=1e-5, max_iter=20, tol=None, random_state=0, n_jobs=-1)
+y_fit, y_val = decisions["heading"][fit].to_numpy(), decisions["heading"][~fit].to_numpy()
+right_l1 = svm.fit(T_fit, y_fit).predict(T_val) == y_val
+right_l2 = svm.fit(both_fit, y_fit).predict(both_val) == y_val
+print(round(right_l1.mean(), 3), round(right_l2.mean(), 3))     # 0.772 0.791
+
+rng = np.random.default_rng(0)                     # paired bootstrap of the difference
+diffs = [right_l2[i].mean() - right_l1[i].mean()
+         for i in (rng.integers(0, len(y_val), len(y_val)) for _ in range(2000))]
+print(np.percentile(diffs, [2.5, 97.5]).round(3))  # [0.016 0.023]: the gain is not noise
+```
+
+| Model (50,000-decision sample) | Validation 2022–2023 accuracy / macro-F1 | Public 2024 | Private 2025–2026 |
+|---|---|---|---|
+| L1: word TF-IDF + linear SVM (Session 13) | 0.772 / 0.511 | 0.803 | 0.776 |
+| embeddings alone + linear SVM | 0.646 / 0.322 | not submitted | not submitted |
+| L2: word TF-IDF + embeddings + linear SVM | 0.791 / 0.529 | 0.824 | 0.804 |
+
+Three observations. The embeddings alone lose clearly to TF-IDF (Block 2), but next to TF-IDF they add two points of validation accuracy and two to three points on the leaderboard. The gain comes from the smaller languages: German requests improve from 0.942 to 0.944, French from 0.599 to 0.623, and the requests in languages other than German, French and English from 0.468 to 0.528, where the multilingual model can transfer what it learned in other languages. The paired interval shows that the gain is real; the price is about 6 minutes of encoding with a GPU (20–40 minutes on a CPU) for all sample and test descriptions. And the unsure requests, about a third of the validation years, are where the SVM is right only 44 % of the time, while the true heading is among its ten candidates for 74 % of them: this is the room a language model would have to improve on, and the abstention section above is the cheaper alternative of routing them to an officer. The course team had no model server while preparing this page, so no LLM result for L2 is reported.
+
 ## Check your understanding
 
 1. Compute softmax(logits / T) for logits (2, 1, 0) at T = 1 and T = 0.5. What happens as T approaches 0?
 2. A prompt has 150 tokens of instructions, a description of 200 tokens, 10 candidates of 260 tokens and an answer of 40 tokens. At 0.40 USD per million input tokens and 1.60 USD per million output tokens, what does it cost to classify 100,000 decisions?
-3. What does the `enum` of candidates in the schema guarantee, and what does it not guarantee?
-4. The candidate recall at k = 10 is 0.88. Why is this an upper bound for the LLM's accuracy, and how could you raise it?
-5. Give two situations in which you would choose the trained classifier even if the LLM had a slightly higher accuracy.
+3. The candidate recall at k = 10 is 0.88. Why is this an upper bound for the LLM's accuracy, and how could you raise it?
+4. Give two situations in which you would choose the trained classifier even if the LLM had a slightly higher accuracy.
+5. An officer's check costs 1 unit and an accepted wrong heading 5 units. If the model's probabilities were calibrated, above which confidence should a suggestion be accepted? Why is the threshold chosen on validation data lower for the TF-IDF model?
 
 ## Further reading
 

@@ -16,7 +16,7 @@
 - [Dimensions of data quality](theory/01-data-quality-checks.md#dimensions-of-data-quality)
 - [Checks for types, ranges, duplicates and consistency](theory/01-data-quality-checks.md#checks-for-types-ranges-duplicates-and-consistency)
 - [Validation rules as tests](theory/01-data-quality-checks.md#validation-rules-as-tests)
-- *Practice:* write a data quality report for the BTI decisions (dates, placeholder values, code formats, duplicates and renewals, language and country, the raw export) → [workbook 03](workbooks/03-case-study-quality-report.ipynb), [tests](workbooks/quality/test_bti_quality.py)
+- *Practice:* write a data quality report for the Berlin Airbnb listings (prices stored as text, placeholder values, impossible minimum stays, names in the registration field, duplicates and listings of the same host, keys across listings, calendar and reviews) → [workbook 03](workbooks/03-case-study-quality-report.ipynb), [tests](workbooks/quality/test_listings_quality.py)
 
 **1:00–1:45 · Missing values and univariate outliers** ([theory page](theory/02-missing-values-and-univariate-outliers.md))
 
@@ -31,7 +31,7 @@
 - [Multivariate outliers with the Mahalanobis distance](theory/03-multivariate-outliers-transformations-pipeline.md#multivariate-outliers-with-the-mahalanobis-distance) (model-based detection follows in Session 11)
 - [Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)](theory/03-multivariate-outliers-transformations-pipeline.md#transformations-logarithm-boxcox-yeojohnson-scaling)
 - [A documented cleaning pipeline](theory/03-multivariate-outliers-transformations-pipeline.md#a-documented-cleaning-pipeline)
-- *Practice:* produce the cleaned table of Berlin listings that Sessions 5 and 6 analyse, with a log of every cleaning decision (sentinel values, medium-term listings, structural missingness, licence status, flagged prices) → [workbook 15](workbooks/15-case-study-airbnb-cleaned-listings.ipynb); the same pattern for the BTI decisions → [workbook 14](workbooks/14-case-study-cleaned-decision-table.ipynb) (optional)
+- *Practice:* case study: produce the cleaned table of Berlin listings that Sessions 5 and 6 analyse, with a log of every cleaning decision (sentinel values, medium-term listings, structural missingness, licence status, flagged prices) → [workbook 15](workbooks/15-case-study-airbnb-cleaned-listings.ipynb)
 
 ## Materials
 
@@ -42,8 +42,8 @@
 | [theory/03-multivariate-outliers-transformations-pipeline.md](theory/03-multivariate-outliers-transformations-pipeline.md) | Mahalanobis distance, transformations, cleaning pipeline | 3 | core |
 | [workbooks/01-try-pandera.ipynb](workbooks/01-try-pandera.ipynb) | pandera: schemas, runtime validation, failure cases | 1 | core |
 | [workbooks/02-data-cleaning-missing-and-duplicates.ipynb](workbooks/02-data-cleaning-missing-and-duplicates.ipynb) | Microsoft Data Science for Beginners: missing values and duplicates in pandas | 1 | optional |
-| [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | **Case study**: data quality report with checks as code and a pandera schema | 1 | core |
-| [workbooks/quality/test_bti_quality.py](workbooks/quality/test_bti_quality.py) | Validation rules as pytest tests | 1, 3 | core |
+| [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | **Case study (Airbnb)**: data quality report for listings, calendar and reviews with checks as code, the raw file and a pandera schema | 1 | core |
+| [workbooks/quality/test_listings_quality.py](workbooks/quality/test_listings_quality.py) | Validation rules as pytest tests (prepared tables, known problems as `xfail`, cleaned table) | 1, 3 | core |
 | [workbooks/04-missing-values-in-pandas.ipynb](workbooks/04-missing-values-in-pandas.ipynb) | Python Data Science Handbook: `None` and `NaN`, `isnull`, `dropna`, `fillna` | 2 | optional |
 | [workbooks/05-imputation-methods-compared.ipynb](workbooks/05-imputation-methods-compared.ipynb) | scikit-learn: simple, KNN and iterative imputation compared | 2 | core |
 | [workbooks/06-iterative-imputer-variants.ipynb](workbooks/06-iterative-imputer-variants.ipynb) | scikit-learn: IterativeImputer with different estimators | 2 | optional |
@@ -54,7 +54,6 @@
 | [workbooks/11-box-cox-and-yeo-johnson.ipynb](workbooks/11-box-cox-and-yeo-johnson.ipynb) | scikit-learn: Box–Cox, Yeo–Johnson and quantile transformation | 3 | core |
 | [workbooks/12-transforming-the-target.ipynb](workbooks/12-transforming-the-target.ipynb) | scikit-learn: transforming the target of a regression | 3 | optional |
 | [workbooks/13-why-scaling-matters.ipynb](workbooks/13-why-scaling-matters.ipynb) | scikit-learn: effect of scaling on k-nearest neighbours and PCA | 3 | optional |
-| [workbooks/14-case-study-cleaned-decision-table.ipynb](workbooks/14-case-study-cleaned-decision-table.ipynb) | **Case study (EBTI)**: cleaned decision table and cleaning log | 3 | optional |
 | [workbooks/15-case-study-airbnb-cleaned-listings.ipynb](workbooks/15-case-study-airbnb-cleaned-listings.ipynb) | **Case study (Airbnb)**: cleaned listings table with a cleaning log and validation | 3 | core |
 
 Origins and licences of third-party files: [source.md](source.md). Workbooks 04 (text CC-BY-NC-ND) and 07 (text CC-BY-NC-SA) may be used for non-commercial teaching only.
@@ -63,7 +62,7 @@ Origins and licences of third-party files: [source.md](source.md). Workbooks 04 
 
 **Preparation**
 
-- Make sure `case-study/data/` exists, including `raw/DDS2-EBTI_Full.zip` for section 4 of workbook 03, and prepare the Airbnb data for blocks 2 and 3 with `uv run python case-study/prepare_airbnb.py` (downloads about 100 MB once; see [case-study/README.md](../../case-study/README.md)).
+- Prepare the Airbnb data with `uv run python case-study/prepare_airbnb.py` (downloads about 100 MB once and keeps the raw files in `case-study/data/raw/airbnb/`, which section 6 of workbook 03 reads; see [case-study/README.md](../../case-study/README.md)).
 - Read the [pandas user guide on missing data](https://pandas.pydata.org/docs/user_guide/missing_data.html) (about 20 minutes).
 - Look at the data quality findings you noticed in Session 3 and bring them along.
 
@@ -81,8 +80,7 @@ Origins and licences of third-party files: [source.md](source.md). Workbooks 04 
 The case-study notebooks and the tests run in the course environment from the repository root (`uv sync`, then `uv run jupyter lab`). Data for the case studies:
 
 ```bash
-uv run python case-study/prepare_data.py      # EBTI decisions (block 1, workbook 14)
-uv run python case-study/prepare_airbnb.py    # Inside Airbnb Berlin (blocks 2 and 3, workbooks 08 and 15)
+uv run python case-study/prepare_airbnb.py    # Inside Airbnb Berlin (workbooks 03, 08 and 15)
 ```
 
 Extra packages for some workbooks:
@@ -98,7 +96,7 @@ Run the validation tests from the repository root:
 uv run --with pytest pytest sessions/04-data-quality/workbooks/quality -v
 ```
 
-Before workbook 14 has been run, the tests on the cleaned table are skipped; afterwards they must pass. Workbook 14 writes `case-study/data/decisions_clean.parquet` (about 150 MB) and `cleaning_log.csv`; this folder is not part of the repository. Set `CLEAN_OUT=/some/path/decisions_clean.parquet` to write elsewhere (the tests read the same variable). Workbook 15 writes `case-study/data/airbnb/listings_clean.parquet` and `cleaning_log.csv` next to it (small; also not part of the repository); set `AIRBNB_CLEAN_OUT` to write elsewhere.
+Before workbook 15 has been run, the tests on the cleaned table are skipped; afterwards they must pass. Workbook 15 writes `case-study/data/airbnb/listings_clean.parquet` and `cleaning_log.csv` next to it (small; not part of the repository); set `AIRBNB_CLEAN_OUT=/some/path/listings_clean.parquet` to write elsewhere (the tests read the same variable).
 
 > [!NOTE]
 > With pandas 3, three cells of workbook 04 that use `fillna(method="ffill")` fail; write `data.ffill()` and `data.bfill()` instead. The first `.sum()` error in workbooks 02 and 04 is intended: it shows that `None` cannot be summed.

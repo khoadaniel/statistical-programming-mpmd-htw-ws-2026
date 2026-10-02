@@ -77,7 +77,7 @@ The trees have the same shape here but different heights. Cutting the complete-l
 
 ### Why it matters
 
-The dendrogram shows structure at every level at once: a few large groups that split into subgroups. One does not have to fix k in advance; long vertical branches (a large gap between merge heights) suggest a natural number of clusters. Hierarchies are also meaningful in themselves: product categories, biological taxonomies, organisational units, and the HS nomenclature of the main case study (sections, chapters, headings, subheadings).
+The dendrogram shows structure at every level at once: a few large groups that split into subgroups. One does not have to fix k in advance; long vertical branches (a large gap between merge heights) suggest a natural number of clusters. Hierarchies are also meaningful in themselves: product categories, biological taxonomies, organisational units, and Berlin itself (12 districts, each split into the neighbourhoods of the listings).
 
 ### How it works in Python
 
@@ -113,7 +113,7 @@ The **adjusted Rand index** (ARI) used above compares two partitions of the same
 
 - **Gene-expression heat maps.** Eisen et al. (1998, *PNAS*) introduced the clustered heat map with dendrograms on both axes; it remains the standard figure in genomics.
 - **Phylogenetics.** Average linkage (UPGMA) is a classical method for building trees of species from genetic distances.
-- **Document and product taxonomies.** Hierarchical clustering of product descriptions or support tickets proposes a first category tree that people then edit; the HS nomenclature of the main case study is such a tree, built by people.
+- **Document and product taxonomies.** Hierarchical clustering of product descriptions or support tickets proposes a first category tree that people then edit; the customs nomenclature used in Sessions 13–16 is such a tree, built by people.
 
 > [!WARNING]
 > **Hierarchical clustering does not scale to large n.** It needs all pairwise distances: memory grows with n². Up to about 10,000–20,000 rows it is fine; beyond, cluster a sample or use k-means first.
@@ -282,7 +282,7 @@ Reading: a silhouette of 0.29 means weak to moderate separation, in line with th
 
 Three findings deserve a remark. The district table confirms cluster 4 with variables that the clustering did not see: almost no listing in Mitte belongs to it, most listings in Spandau do. And cluster 2 reveals a data problem: a median of €23 a night for entire flats is not a short-stay price. These listings are let for months at a time, and their scraped nightly price is not comparable with the price of a holiday flat. Anyone who models "the price of an Airbnb night" (Sessions 6 and 10) should treat them separately; page 4 does so. Finally, the registration field: 95–99 % of the listings in the short-stay clusters show something in it (including placeholders, Session 4), but only 20 % of the medium-term rentals. Whether that reflects the rules for longer lets or missing registrations cannot be decided from the data; it is a question for the city office, not for the algorithm.
 
-A clustering finds whatever dominates the distance, not necessarily what you care about. Here the six columns were chosen to describe the *offer*; adding ten amenity columns would make "similar" mean "similar equipment". The same happens with text: k-means on TF-IDF vectors of the multilingual EBTI descriptions of the main case study groups them mainly by language, because German and French descriptions share almost no words (Sessions 13 and 14 return to this).
+A clustering finds whatever dominates the distance, not necessarily what you care about. Here the six columns were chosen to describe the *offer*; adding ten amenity columns would make "similar" mean "similar equipment". The same happens with text: k-means on word counts of descriptions written in several languages groups them mainly by language, because German and French texts share almost no words (Sessions 13 and 14 return to this).
 
 ### In practice
 

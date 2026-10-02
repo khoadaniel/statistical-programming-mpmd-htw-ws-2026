@@ -1,7 +1,7 @@
 [project]
-name = "btitools"
+name = "listingtools"
 version = "0.1.0"
-description = "Load and summarise the course data: EU Binding Tariff Information decisions (Session 1 workspace)"
+description = "Load and summarise the Inside Airbnb Berlin listings (Session 1 workspace)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-decision-summary = "btitools.cli:main"
+listing-summary = "listingtools.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.9,<0.12"]

@@ -1,6 +1,6 @@
 # Anomaly detection and unsupervised features
 
-Session 4 flagged outliers one column at a time (IQR fences, z-scores, the median absolute deviation) and in combinations of columns with the Mahalanobis distance. This page continues with two **model-based** detectors that need no assumption of a normal distribution, **Isolation Forest** and the **local outlier factor** (LOF), and compares them with the Mahalanobis distance on the same small example. The examples are implausible Airbnb listings in Berlin (prices far from what size and location suggest, extreme minimum stays) and, briefly, BTI decisions that do not fit their heading. The second section closes the session: the output of a clustering or a PCA can be fed as **features** into a supervised model, and we test whether location clusters improve a gradient-boosting price model.
+Session 4 flagged outliers one column at a time (IQR fences, z-scores, the median absolute deviation) and in combinations of columns with the Mahalanobis distance. This page continues with two **model-based** detectors that need no assumption of a normal distribution, **Isolation Forest** and the **local outlier factor** (LOF), and compares them with the Mahalanobis distance on the same small example. The examples are implausible Airbnb listings in Berlin (prices far from what size and location suggest, extreme minimum stays). The second section closes the session: the output of a clustering or a PCA can be fed as **features** into a supervised model, and we test whether location clusters improve a gradient-boosting price model.
 
 The code blocks build on each other; run them in order from the repository root.
 
@@ -135,30 +135,6 @@ print(len(top_iso & top_ratio))                                 # 27: the two li
 
 Half of the listings cost between 0.81 and 1.25 times their expected price (the median ratio is 1.0); 110 listings are off by a factor of three or more. At the top, a flat for five at €7,999 a night (40 times the expected price) and the €10,025 loft for seven: placeholder prices that block the calendar or typing errors, not market prices. At the bottom, entire flats near the centre for €15–19 a night, a tenth of the expected price: probably monthly rates entered as nightly prices, or discounts that the scraper read as the price. Ten listings in the whole table require a minimum stay of more than a year, up to 1,125 nights; for a short-term rental platform that is a placeholder, not a rule. Only 27 of the top 100 Isolation Forest listings are among the 100 largest price ratios: a generic detector looks for *rare* listings, the domain check for *inconsistent* ones. The domain check is easier to explain and to act on ("price 40 times the expected price; please check"), and it says what to do next: a person checks the listing page, and the price model of Session 10 excludes or caps such rows.
 
-A second example from the main case study shows the same idea on text: **the distance of a BTI decision from the centre of its own heading**. Decisions whose description is far from the typical description of their heading are unusual products, borderline cases between headings or possible misclassifications. We use the German decisions of chapter 94 (one language, so that the language does not dominate the distance), represent each description by 50 SVD components of its TF-IDF vector scaled to length 1 (Session 13), average them per heading (the **centroid**) and compute the cosine similarity of every decision to its heading's centroid.
-
-```python
-from sklearn.decomposition import TruncatedSVD  # noqa: E402
-from sklearn.feature_extraction.text import TfidfVectorizer  # noqa: E402
-from sklearn.pipeline import make_pipeline  # noqa: E402
-from sklearn.preprocessing import Normalizer  # noqa: E402
-
-sample = pd.read_parquet("case-study/data/train_sample.parquet")
-de = sample[(sample["chapter"] == "94") & (sample["language"] == "de")].reset_index(drop=True)
-Z_text = make_pipeline(TfidfVectorizer(min_df=3, sublinear_tf=True), TruncatedSVD(50, random_state=0),
-                       Normalizer()).fit_transform(de["description"])
-centroids = pd.DataFrame(Z_text).groupby(de["heading"]).mean()
-own = centroids.loc[de["heading"]].to_numpy()
-de["similarity"] = (Z_text * own).sum(axis=1) / np.linalg.norm(own, axis=1)   # cosine to own centroid
-print(len(de), de["similarity"].quantile([0.01, 0.5]).round(2).to_list())      # 1422 [0.38, 0.71]
-print(de.nsmallest(2, "similarity")[["heading", "similarity", "keywords"]].round(2).to_string())
-#      heading  similarity                                                  keywords
-# 1221    9405        0.27  FOR LIGHTING,HOUSINGS,LED,MOUNTED,PRINTED CIRCUIT BOARDS
-# 1116    9405        0.29  CABLES,CONNECTIONS,HOUSINGS,INSULATED,PRINTED CIRCUIT BOARDS
-```
-
-The English keywords (assigned by customs, used here only to read the result) make the German decisions readable. The two least typical lamp decisions (heading 9405) are LED modules on printed circuit boards with housings and cables: products on the border between lamps and the electrical parts of chapter 85, exactly the kind of case a customs specialist would want to review. As with the listings, the ranking tells an expert where to look first; it does not say that a decision is wrong.
-
 ### In practice
 
 - **Fraud detection.** Card issuers and payment providers screen transactions with anomaly scores alongside supervised fraud models, because new fraud patterns have no labels yet. The credit-card fraud data of the Université Libre de Bruxelles (Dal Pozzolo et al., 2015), a common public benchmark, has 0.17 % fraudulent transactions.
@@ -278,7 +254,7 @@ An MAE of 0.30 on the log scale means that a typical prediction is off by a fact
 > [!CAUTION]
 > **A small gain in one split is not evidence.** Report the spread across folds or a confidence interval (Session 7) before claiming that clusters improve a model. And compare with the obvious alternative: here, raw coordinates.
 
-*Practice (block 3):* case study: which Berlin listings are implausible, and do location clusters improve the price model of Session 10? Rank the listings with Isolation Forest, LOF and the price ratio, inspect the top of each list, and compare the price model with and without cluster features under grouped cross-validation: part C of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb). An optional part D ranks the BTI decisions of chapter 94 by their distance from the heading centroid.
+*Practice (block 3):* case study: which Berlin listings are implausible, and do location clusters improve the price model of Session 10? Rank the listings with Isolation Forest, LOF and the price ratio, inspect the top of each list, and compare the price model with and without cluster features under grouped cross-validation: part C of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb).
 
 ## Check your understanding
 
@@ -287,7 +263,7 @@ An MAE of 0.30 on the log scale means that a typical prediction is off by a fact
 3. The top Isolation Forest listings are houseboats and large houses far from the centre; the top price-ratio listings cost 30–40 times their expected price. Which list would you send to a city office, and why?
 4. Why must the expected price be predicted by a model that did not see the listing (`cross_val_predict`) rather than by a model fitted on all listings?
 5. Location clusters lower the MAE from 0.299 to 0.291, raw coordinates to 0.289. What would you recommend for the Session 10 price model, and when would the clusters still be useful?
-6. A BTI decision has a low similarity to its heading's centroid. Name three possible explanations and how you would tell them apart.
+6. A listing has a price ratio of 0.1: it costs a tenth of what its size and location suggest. Name three possible explanations and how you would tell them apart.
 
 ## Further reading
 

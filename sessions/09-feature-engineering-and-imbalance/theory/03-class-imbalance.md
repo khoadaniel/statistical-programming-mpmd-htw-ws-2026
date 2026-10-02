@@ -1,8 +1,8 @@
 # Class imbalance: resampling and class weights
 
-A classification problem is **imbalanced** when some classes are much rarer than others. The case study is an extreme case: 1,114 headings, of which the most frequent (3926, other articles of plastics) has 4.2 % of the decisions, while 115 headings occur only once in the 50,000-decision sample. This page covers the third block of Session 9: why accuracy misleads on such data, the two simplest remedies (random undersampling and oversampling), synthetic oversampling with SMOTE, class weights as an alternative, and the rule that resampling happens only on the training folds of a cross-validation, which the pipelines of the imbalanced-learn library enforce. Session 8 introduced precision, recall, F1 and macro-F1; they are the measures used here.
+A classification problem is **imbalanced** when some classes are much rarer than others. The retention team of the telecom company (Session 8) meets the problem directly: 1,869 of the 7,043 IBM Telco customers (26.5 %) left, a model trained on these data predicts "stays" most of the time, and the customers the team most wants to find are the ones the model misses. Fraud, machine failures and rare diseases are far more extreme (often well below 1 %), but the methods and the lessons are the same.
 
-Two natural tasks serve as examples. The **long tail** of the EBTI heading task (Sections 1, 4 and 6) uses a linear classifier on the TF-IDF matrix of the descriptions (Session 13 explains TF-IDF; here it is a black box that turns text into numbers); with hundreds of rare headings, it is the reason the leaderboard reports macro-F1. **Customer churn** (Sections 2 to 6) is the classic binary case: in the IBM Telco data, 1,869 of 7,043 customers (26.5 %) left, and the company wants to find them before they go. The churn rate is moderate; fraud or machine failures are far rarer, but the methods and the lessons are the same.
+This page covers the third block of Session 9: why accuracy misleads on such data, the two simplest remedies (random undersampling and oversampling), synthetic oversampling with SMOTE, class weights as an alternative, and the rule that resampling happens only on the training folds of a cross-validation, which the pipelines of the imbalanced-learn library enforce. Session 8 introduced precision, recall, F1, macro-F1 and cost-based thresholds; they are the measures used here.
 
 > [!NOTE]
 > The code blocks on this page build on each other. Run them in order from the repository root. They need the package `imbalanced-learn` (imported as `imblearn`), which is part of the course environment.
@@ -22,11 +22,11 @@ flowchart TD
 
 ### Concept
 
-**Accuracy** is the share of correct predictions. On imbalanced data a model can reach a high accuracy while ignoring the rare classes. With many classes, the effect is spread over the long tail: a classifier that is good on the 100 most frequent headings and never predicts the rare ones can have a high accuracy and a low **macro-F1** (the unweighted mean of the per-class F1 values), because each of the hundreds of rare headings counts as much as 3926.
+**Accuracy** is the share of correct predictions. On imbalanced data a model can reach a high accuracy while ignoring the rare class: "nobody churns" is right for 73.5 % of the Telco customers. **Recall** of the rare class and **macro-F1** (the unweighted mean of the per-class F1 values, Session 8) expose this, because the rare class counts as much as the frequent one. With many classes the effect is spread over a long tail of rare classes; Session 13 meets a task with more than 1,000 classes.
 
 A learning algorithm that minimises the average loss over all rows behaves similarly: a rare class contributes few rows to the loss, so the model gains little by getting it right.
 
-Worked example with 100 decisions in three headings (80 of A, 15 of B, 5 of C) and the rule "always A":
+Worked example with 100 cases in three classes (80 of A, 15 of B, 5 of C) and the rule "always A":
 
 | | precision | recall | F1 |
 |---|---|---|---|
@@ -38,51 +38,54 @@ Accuracy is 0.80, macro-F1 is 0.89/3 = 0.30.
 
 ### Why it matters
 
-Imbalanced problems are the rule in practice: fraud, machine failures, diseases, churn and complaints are all rare compared with normal cases, and in classification problems with many classes most classes are rare. A metric that rewards ignoring them leads to models that look good in a report. The leaderboard therefore reports macro-F1 next to accuracy.
+Imbalanced problems are the rule in practice: fraud, machine failures, diseases, churn and complaints are all rare compared with normal cases, and in classification problems with many classes most classes are rare. A metric that rewards ignoring them leads to models that look good in a report and fail at the job they were built for.
 
 ### How it works in Python
 
 ```python
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.compose import make_column_transformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score, recall_score
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-counts = decisions["heading"].value_counts()
-print(len(counts), counts.head(3).to_dict(), (counts == 1).sum(), (counts < 20).sum())
-# 934 {'3926': 2009, '9503': 1424, '6307': 1374} 115 588
-print(round(counts.head(10).sum() / len(decisions), 3))           # 0.236: ten headings, a quarter of the rows
+URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
+telco = pd.read_csv(URL)
+telco["TotalCharges"] = pd.to_numeric(telco["TotalCharges"], errors="coerce").fillna(0)
+y_churn = (telco["Churn"] == "Yes").astype(int)                   # 1 = customer left
+X_churn = telco.drop(columns=["customerID", "Churn"])
+cat_cols = X_churn.select_dtypes("object").columns.tolist()          # 15 categorical columns
+print(y_churn.value_counts().to_dict(), round(y_churn.mean(), 3))  # {0: 5174, 1: 1869} 0.265
 
-fit = (decisions["start_date"] < "2022-01-01").to_numpy()          # fit 2017-2021, validate 2022-2023
-val, y = ~fit, decisions["heading"].to_numpy()
-tfidf = TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True)
-X_fit = tfidf.fit_transform(decisions.loc[fit, "description"])
-X_val = tfidf.transform(decisions.loc[val, "description"])
+prep = make_column_transformer((OneHotEncoder(handle_unknown="ignore", sparse_output=False), cat_cols),
+                               remainder=StandardScaler())
+cv = StratifiedKFold(5, shuffle=True, random_state=0)
 
 
 def report(name, pred):
-    print(f"{name:16s} accuracy {accuracy_score(y[val], pred):.3f}  "
-          f"macro-F1 {f1_score(y[val], pred, average='macro', zero_division=0):.3f}")
+    print(f"{name:20s} accuracy {accuracy_score(y_churn, pred):.3f}  recall of churners {recall_score(y_churn, pred):.3f}  "
+          f"macro-F1 {f1_score(y_churn, pred, average='macro'):.3f}")
 
 
-report("always 3926", np.repeat("3926", val.sum()))
-linear = SGDClassifier(loss="hinge", alpha=1e-5, random_state=0, n_jobs=-1).fit(X_fit, y[fit])
-report("linear model", linear.predict(X_val))
-# always 3926      accuracy 0.040  macro-F1 0.000
-# linear model     accuracy 0.766  macro-F1 0.498
+report("nobody churns", np.zeros(len(y_churn), dtype=int))
+plain = make_pipeline(prep, LogisticRegression(max_iter=2000))
+report("logistic regression", cross_val_predict(plain, X_churn, y_churn, cv=cv))     # threshold 0.5
+# nobody churns        accuracy 0.735  recall of churners 0.000  macro-F1 0.424
+# logistic regression  accuracy 0.803  recall of churners 0.546  macro-F1 0.733
 ```
 
-588 of the 934 headings in the sample have fewer than 20 decisions. The linear model is right for 77 % of the 2022–2023 decisions, but its macro-F1 is only 0.50: on many rare headings it is often wrong or never right.
+The logistic regression is 80 % accurate, only 7 points above "nobody churns", and at the default threshold it finds 55 % of the churners: almost every second customer who leaves is missed.
 
 ### In practice
 
 - In the credit-card fraud dataset of the Université Libre de Bruxelles and Worldline (Dal Pozzolo et al., 2015), 492 of 284,807 transactions are fraudulent (0.17 %). A model that never flags fraud is 99.8 % accurate.
-- Coding tasks with large nomenclatures, such as assigning ICD diagnosis codes to clinical notes or occupation codes to survey answers, have the same long tail as the HS headings; their evaluations report micro- and macro-averaged scores side by side.
+- Coding tasks with large nomenclatures, such as assigning ICD diagnosis codes to clinical notes or occupation codes to survey answers, have a long tail of rare codes; their evaluations report micro- and macro-averaged scores side by side.
 
 > [!WARNING]
-> Before correcting imbalance, ask whether the rare classes matter for the decision. If you need well-calibrated probabilities, for example to decide when a customs officer should check a prediction, any correction distorts them (van den Goorbergh et al., 2022). Then fit without correction and choose the decision threshold from the costs instead (Session 8).
+> Before correcting imbalance, ask whether the rare classes matter for the decision. If you need well-calibrated probabilities, for example to forecast the number of churners or to tell a patient their risk, any correction distorts them (van den Goorbergh et al., 2022). Then fit without correction and choose the decision threshold from the costs instead (Session 8).
 
 ## 2. Random undersampling and oversampling
 
@@ -107,13 +110,6 @@ from collections import Counter
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 
-URL = "https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv"
-telco = pd.read_csv(URL)
-telco["TotalCharges"] = pd.to_numeric(telco["TotalCharges"], errors="coerce").fillna(0)
-y_churn = (telco["Churn"] == "Yes").astype(int)                   # 1 = customer left
-X_churn = telco.drop(columns=["customerID", "Churn"])
-print(y_churn.value_counts().to_dict(), round(y_churn.mean(), 3))  # {0: 5174, 1: 1869} 0.265
-
 for sampler in [RandomUnderSampler(random_state=0), RandomOverSampler(random_state=0)]:
     X_res, y_res = sampler.fit_resample(X_churn, y_churn)          # samplers have fit_resample, not transform
     print(type(sampler).__name__, dict(Counter(y_res)))
@@ -121,7 +117,7 @@ for sampler in [RandomUnderSampler(random_state=0), RandomOverSampler(random_sta
 # RandomOverSampler {0: 5174, 1: 5174}
 ```
 
-`sampling_strategy` controls the target proportions, for example `RandomOverSampler(sampling_strategy=0.5)` raises the churners to half the number of loyal customers. For the long tail of the heading task, a dictionary that lifts every heading to at least 20 rows is a gentler choice than full balancing (Section 6). The samplers are only used in `fit_resample` on training data; they have no `transform` method, so they cannot be applied to test data by accident. Random samplers work on any column type, text and categories included, because they only copy or drop whole rows.
+`sampling_strategy` controls the target proportions, for example `RandomOverSampler(sampling_strategy=0.5)` raises the churners to half the number of loyal customers. With many classes, a dictionary such as `{class: max(count, 20)}` lifts every rare class to at least 20 rows, a gentler choice than full balancing. The samplers are only used in `fit_resample` on training data; they have no `transform` method, so they cannot be applied to test data by accident. Random samplers work on any column type, text and categories included, because they only copy or drop whole rows.
 
 ### In practice
 
@@ -156,13 +152,12 @@ Plain `SMOTE` needs numeric features. The churn table mixes numbers (tenure, cha
 ```python
 from imblearn.over_sampling import SMOTENC
 
-cat_cols = X_churn.select_dtypes("object").columns.tolist()          # 15 categorical columns
 X_sm, y_sm = SMOTENC(categorical_features=cat_cols, random_state=0).fit_resample(X_churn, y_churn)
 print(dict(Counter(y_sm)), len(X_sm) - len(X_churn))                 # {0: 5174, 1: 5174} 3305 invented customers
 print(X_sm.iloc[-1][["tenure", "MonthlyCharges", "TotalCharges", "Contract", "InternetService"]].to_dict())
 ```
 
-The last line prints one invented customer: a plausible combination of a short tenure, interpolated charges and categories taken from real churners. SMOTE needs at least *k* + 1 rows per class: with `k_neighbors=5`, a class with 5 rows or fewer raises an error. In the EBTI heading task 333 headings of the 50,000-decision sample have 5 or fewer decisions, so SMOTE cannot even be applied to the long tail without grouping or a smaller *k*. And SMOTE works on numbers: it cannot interpolate between two texts, only between numeric representations of them, and a synthetic point corresponds to no real description. Because SMOTE uses distances, scale the numeric features first: unscaled, `TotalCharges` (up to about 8,700) dominates `tenure` (up to 72). For purely categorical data use `SMOTEN`.
+The last line prints one invented customer: a plausible combination of a short tenure, interpolated charges and categories taken from real churners. SMOTE needs at least *k* + 1 rows per class: with `k_neighbors=5`, a class with 5 rows or fewer raises an error. In a task with many rare classes, SMOTE therefore cannot be applied to the rarest ones without grouping them or lowering *k*. And SMOTE works on numbers: it cannot interpolate between two texts, only between numeric representations of them, and a synthetic point corresponds to no real document. Because SMOTE uses distances, scale the numeric features first: unscaled, `TotalCharges` (up to about 8,700) dominates `tenure` (up to 72). For purely categorical data use `SMOTEN`.
 
 ### In practice
 
@@ -180,7 +175,7 @@ A **class weight** multiplies the loss of every row of a class by a constant. Wi
 
 w_c = n / (K · n_c),
 
-with *n* rows, *K* classes and *n_c* rows in class *c*. Every class then contributes the same total weight. For the churn data (n = 7,043, K = 2): churners get 7,043 / (2 · 1,869) = 1.88, loyal customers 7,043 / (2 · 5,174) = 0.68. A heading of the EBTI sample that occurs once among about 37,000 training decisions and 900 headings gets a weight of about 40.
+with *n* rows, *K* classes and *n_c* rows in class *c*. Every class then contributes the same total weight. For the churn data (n = 7,043, K = 2): churners get 7,043 / (2 · 1,869) = 1.88, loyal customers 7,043 / (2 · 5,174) = 0.68. In the card-fraud data of Section 1 (492 frauds among 284,807 transactions) a fraud gets 284,807 / (2 · 492) ≈ 289: every fraud then counts like 289 normal transactions, and a few unusual frauds can pull the model around.
 
 For a model that minimises a weighted loss, weighting is closely related to oversampling (a weight of 1.88 acts like 1.88 copies of the row), but it needs no extra rows, no randomness and no new library.
 
@@ -195,12 +190,12 @@ from sklearn.utils.class_weight import compute_class_weight
 
 print(compute_class_weight("balanced", classes=np.array([0, 1]), y=y_churn).round(3))   # [0.681 1.884]
 
-weighted = SGDClassifier(loss="hinge", alpha=1e-5, class_weight="balanced", random_state=0, n_jobs=-1)
-report("balanced weights", weighted.fit(X_fit, y[fit]).predict(X_val))
-# balanced weights accuracy 0.738  macro-F1 0.469
+weighted = make_pipeline(prep, LogisticRegression(max_iter=2000, class_weight="balanced"))
+report("balanced weights", cross_val_predict(weighted, X_churn, y_churn, cv=cv))
+# balanced weights     accuracy 0.748  recall of churners 0.803  macro-F1 0.719
 ```
 
-On the full heading task, balanced weights make the linear model *worse* on both measures (accuracy 0.766 → 0.738, macro-F1 0.498 → 0.469). With 934 classes, a heading seen once gets a weight of about 40, so single, possibly unusual decisions pull the model around. Weights are not a free improvement; they must be validated like any other setting.
+With balanced weights the model finds 80 % of the churners instead of 55 %, but its accuracy falls by 5 points and its macro-F1 by 0.014: more churners are found at the price of many more false alarms. Weights are not a free improvement; they must be validated like any other setting, and with very large weights (the fraud example) they can make a model worse.
 
 ### In practice
 
@@ -238,9 +233,8 @@ The effect is not small. With a random forest, which can memorise individual row
 ```python
 from imblearn.pipeline import make_pipeline as make_imb_pipeline
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import cross_val_score
 
-cv = StratifiedKFold(5, shuffle=True, random_state=0)
 rf = RandomForestClassifier(n_estimators=200, random_state=0, n_jobs=-1)
 X_dummies = pd.get_dummies(X_churn, dtype=int)                                     # the forest needs numbers
 
@@ -260,7 +254,7 @@ print(round(wrong, 3), round(right, 3))              # 0.899 0.577
 - The imbalanced-learn user guide has a page on common pitfalls whose main example is data leakage from resampling before splitting, with the pipeline solution shown in the next section.
 
 > [!CAUTION]
-> The same rule applies to the test set and the leaderboard: never resample, deduplicate by label or reweight the data you evaluate on. Resampling is a training technique, not a data-cleaning step.
+> The same rule applies to the test set: never resample, deduplicate by label or reweight the data you evaluate on. Resampling is a training technique, not a data-cleaning step.
 
 ## 6. Pipelines with imbalanced-learn
 
@@ -278,14 +272,7 @@ Five strategies for the churn model, plus the alternative of Session 8: no corre
 
 ```python
 from imblearn.over_sampling import SMOTE
-from sklearn.compose import make_column_transformer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, f1_score, precision_score, recall_score, roc_auc_score
-from sklearn.model_selection import cross_val_predict
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-
-prep = make_column_transformer((OneHotEncoder(handle_unknown="ignore", sparse_output=False), cat_cols),
-                               remainder=StandardScaler())
+from sklearn.metrics import average_precision_score, precision_score, roc_auc_score
 
 
 def logreg(class_weight=None):
@@ -328,8 +315,6 @@ print(pd.DataFrame(rows).set_index("method").round(3).to_string())
 
 An honest result. Every correction does what it promises: the recall of churners rises from 0.55 to about 0.80, at the price of precision (0.66 → 0.52) and accuracy (0.80 → 0.75). F1 of the churn class rises a little (0.60 → about 0.63). But ROC AUC and PR AUC do not change: the corrections do not make the model *rank* customers better, they only move the point at which it says "churn". Lowering the threshold of the uncorrected model to 0.3 reaches the same place (F1 0.636) without resampling, without invented customers and with probabilities that keep their meaning. SMOTE is not better than simply copying churners. For the churn task, the recommendation is: no resampling, choose the threshold from the costs of a missed churner and a wasted retention offer (Session 8).
 
-On the long tail of the heading task the picture is similar (Section 4 and the practice notebook): balanced weights lose 0.03 macro-F1; gently oversampling every heading to at least 20 training rows gains 0.009 macro-F1 at unchanged accuracy (0.766, 0.507); grouping headings with fewer than 5 training rows into one "rare" class loses (0.758, 0.463), because a prediction "rare" is never a correct heading. Better features (Session 13) do far more for the rare headings than any of these methods.
-
 ### In practice
 
 - The imbalanced-learn library (Lemaître, Nogueira & Aridas, 2017) is a scikit-learn-contrib project under the MIT licence and the standard Python implementation of these methods; its examples compare samplers in pipelines as above.
@@ -340,7 +325,7 @@ On the long tail of the heading task the picture is similar (Section 4 and the p
 
 ## Practice
 
-**Which customers will leave, and which rare headings does the classifier miss?** In [13-case-study-imbalance.ipynb](../workbooks/13-case-study-imbalance.ipynb): on the Telco churn data, compare undersampling, oversampling, SMOTE (SMOTENC) and class weights inside imbalanced-learn pipelines with a logistic regression and a random forest, against a tuned threshold, and report precision, recall, F1 and PR AUC; on the EBTI heading task, compare no correction, class weights, oversampling of rare headings to a minimum count and grouping of rare headings by accuracy and macro-F1 with a time-based validation.
+**Which strategy catches Telco churners best, and at what cost?** In [13-case-study-imbalance.ipynb](../workbooks/13-case-study-imbalance.ipynb) you compare undersampling, oversampling, SMOTE (SMOTENC), class weights and a tuned threshold inside imbalanced-learn pipelines, with a logistic regression and a random forest; you report precision, recall, F1 and PR AUC, and the cost of a retention campaign with the costs of Session 8.
 
 ## Check your understanding
 
@@ -348,7 +333,7 @@ On the long tail of the heading task the picture is similar (Section 4 and the p
 2. Compute the balanced class weights for 900 rows of class A and 100 rows of class B.
 3. SMOTE combines x = (1, 1) and its neighbour x_nn = (3, 5) with λ = 0.5. Where is the new point?
 4. Why did oversampling before cross-validation give an F1 of 0.90 instead of 0.58 with a random forest?
-5. Why did all corrections leave the ROC AUC of the churn model unchanged, and what does that suggest about the alternative of moving the threshold? Why can SMOTE with `k_neighbors=5` not be applied to a heading with 4 decisions?
+5. Why did all corrections leave the ROC AUC of the churn model unchanged, and what does that suggest about the alternative of moving the threshold? Why can SMOTE with `k_neighbors=5` not be applied to a class with 4 rows?
 
 ## Further reading
 

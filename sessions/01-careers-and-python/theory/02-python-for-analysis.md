@@ -41,8 +41,8 @@ Results must be reproducible by teammates, reviewers and the lecturer. A committ
 Setting up a project is done in the terminal:
 
 ```bash
-uv init spp-tariff             # Initialized project `spp-tariff`
-cd spp-tariff
+uv init spp-listings           # Initialized project `spp-listings`
+cd spp-listings
 uv add pandas pyarrow          # creates .venv; records pandas and pyarrow in pyproject.toml and uv.lock
 uv add --dev jupyterlab        # a development tool, not needed to run the code
 uv run jupyter lab             # opens JupyterLab; the kernel uses the project's .venv
@@ -80,60 +80,74 @@ print(sys.prefix)                    # the folder of the active environment, e.g
 
 ### Concept
 
-The first-semester module introduced Python scripting. The following summary uses a small customs example that can be checked by hand. A tariff **heading** is a four-digit code such as `9503` (toys); its first two digits are the **chapter** (`95`, toys, games and sports requisites).
+The first-semester module introduced Python scripting. The following summary uses a small example from the case study that can be checked by hand: one Airbnb listing, its room type, its size and its price per night. In the raw file of Inside Airbnb the price is stored as **text** such as `"$1,083.00"`, with a dollar sign (used for every city; Berlin prices are in euros) and a thousands separator.
 
-- A **value** is a single piece of data, such as `2023`, `0.573` or `"9503"`. Every value has a **type**: `int` (whole numbers), `float` (numbers with decimals), `str` (text), `bool` (`True` or `False`) and `None` (no value). A **variable** is a name that refers to a value.
-- A **list** is an ordered, changeable collection: `["9503", "3926", "0901"]`. Indices start at 0; `headings[-1]` is the last element. A **dictionary** (`dict`) maps **keys** to values: `{"language": "de", "heading": "9503"}`. A list of dictionaries with the same keys is already a small table; this is how records arrive from a web API as JSON (Session 2).
+- A **value** is a single piece of data, such as `4`, `160.71` or `"Entire home/apt"`. Every value has a **type**: `int` (whole numbers), `float` (numbers with decimals), `str` (text), `bool` (`True` or `False`) and `None` (no value). A **variable** is a name that refers to a value.
+- A **list** is an ordered, changeable collection: `[160.71, 193.33, 85.0]`. Indices start at 0; `prices[-1]` is the last element. A **dictionary** (`dict`) maps **keys** to values: `{"district": "Pankow", "room_type": "Private room"}`. A list of dictionaries with the same keys is already a small table; this is how records arrive from a web API as JSON (Session 2).
 - A **condition** (`if … elif … else`) runs a block only when an expression is true. A **for loop** repeats a block once per element. Python marks blocks by **indentation** (four spaces).
-- A **function** (`def`) gives a name to a sequence of steps. **Parameters** are its inputs; `return` sends back the result. **Type hints** such as `heading: str` and `-> str` document the expected types; the **docstring** explains what the function does.
+- A **function** (`def`) gives a name to a sequence of steps. **Parameters** are its inputs; `return` sends back the result. **Type hints** such as `text: str` and `-> float` document the expected types; the **docstring** explains what the function does.
 
 ### Why it matters
 
-A rule written once as a function can be applied to one decision or to 300,000, and it can be tested. The chapter rule below groups the 1,114 headings of the training data into 97 chapters, a coarser view that Session 8 uses to analyse errors.
+A rule written once as a function can be applied to one listing or to all 12,776, and it can be tested. The price rule below is exactly the conversion that the preparation script applies to the raw file; Session 2 turns it into a class that checks a whole listing.
 
 ### How it works in Python
 
 ```python
-heading = "9503"                 # str: codes are text, not numbers
-year = 2023                      # int
-share_german = 0.573             # float
-valid = False                    # bool
-print(type(share_german).__name__)   # float
+room_type = "Entire home/apt"    # str
+accommodates = 4                 # int
+price = 160.71                   # float
+instant_bookable = False         # bool
+print(type(price).__name__)      # float
 print(0.1 + 0.2)                 # 0.30000000000000004: floats are approximations
-print(f"heading {heading}, decided in {year}")   # heading 9503, decided in 2023
-print(int("0901"))               # 901: stored as a number, coffee loses its leading zero
+print(f"{room_type} for {accommodates} guests, {price} EUR per night")
+# Entire home/apt for 4 guests, 160.71 EUR per night
+print(int("01067"))              # 1067: stored as a number, the postcode of Dresden loses its leading zero
 
-headings = ["9503", "3926", "0901", "9503", "6307", "8517"]
-print(headings[0], headings[-1], headings[1:3])   # 9503 8517 ['3926', '0901']
+prices = [160.71, 193.33, 85.0, 372.67, 243.5, 49.0]
+print(prices[0], prices[-1], prices[1:3])        # 160.71 49.0 [193.33, 85.0]
 
-decision = {"language": "de", "heading": "9503", "keywords": "TOYS,PLUSH"}
-print(decision["heading"])                 # 9503
-print(decision.get("cn_code", "unknown"))  # unknown: default for a missing key
-
-
-def chapter_of(heading: str) -> str:
-    """Return the two-digit HS chapter of a four-digit heading."""
-    if len(heading) != 4 or not heading.isdigit():
-        raise ValueError(f"not a four-digit heading: {heading!r}")
-    return heading[:2]                     # "0901" -> "09": the leading zero survives in a str
+listing = {"district": "Pankow", "room_type": "Private room", "price": "$97.33"}
+print(listing["district"])                       # Pankow
+print(listing.get("license", "unknown"))         # unknown: default for a missing key
 
 
-chapters = [chapter_of(h) for h in headings]   # a list comprehension: one chapter per heading
-print(chapters)                            # ['95', '39', '09', '95', '63', '85']
+def price_to_number(text: str) -> float:
+    """Convert a price as written in the raw file, such as "$1,083.00", to a number."""
+    cleaned = text.strip().lstrip("$€").replace(",", "")
+    if not cleaned.replace(".", "", 1).isdigit():
+        raise ValueError(f"not a price: {text!r}")
+    return float(cleaned)
+
+
+raw = ["$160.71", "$1,083.00", "$97.33", "$49.00"]
+numbers = [price_to_number(p) for p in raw]      # a list comprehension: one number per text
+print(numbers)                                   # [160.71, 1083.0, 97.33, 49.0]
+
+
+def price_band(price: float) -> str:
+    """Group a price per night into three bands."""
+    if price < 100:
+        return "budget"
+    elif price < 250:
+        return "mid-range"
+    else:
+        return "upper"
+
 
 counts = {}
-for ch in chapters:                        # count with a dictionary
-    counts[ch] = counts.get(ch, 0) + 1
-print(counts)                              # {'95': 2, '39': 1, '09': 1, '63': 1, '85': 1}
+for band in [price_band(p) for p in numbers]:   # count with a dictionary
+    counts[band] = counts.get(band, 0) + 1
+print(counts)                                    # {'mid-range': 1, 'upper': 1, 'budget': 2}
 ```
 
 ### In practice
 
-- The EBTI export of the European Commission arrives as one CSV file per year. The preparation script of the course reads every column as text (`dtype=str`) so that codes such as `0901` keep their leading zero, and converts the dates (`dd/mm/yyyy`) explicitly.
+- Inside Airbnb publishes its files as CSV, a text format without types: prices, percentages (`"98%"`) and true/false values (`"t"`, `"f"`) arrive as text. The preparation script of the course converts each of them explicitly before writing typed Parquet files.
 - German postcodes such as 01067 (Dresden) look like numbers but must be stored as text; stored as `int`, the leading zero disappears. Many data errors are type errors of this kind.
 
 > [!CAUTION]
-> Types are not converted silently: `"Year: " + 2023` raises a `TypeError`. Convert explicitly with `str()`, `int()` or `float()`, or use an f-string. Do not store money as `float` in accounting code: `0.1 + 0.2` is not exactly `0.3`.
+> Types are not converted silently: `"Price: " + 160.71` raises a `TypeError`. Convert explicitly with `str()`, `int()` or `float()`, or use an f-string. Do not store money as `float` in accounting code: `0.1 + 0.2` is not exactly `0.3`.
 
 The workbooks [02](../workbooks/02-python-variables.ipynb) to [07](../workbooks/07-python-errors-and-exceptions.ipynb) (Whirlwind Tour of Python) repeat these topics with exercises.
 
@@ -147,10 +161,10 @@ The typical sequence of an analysis has four steps:
 
 1. **Load**: `pd.read_parquet` reads a Parquet file, a compressed column-wise format that also stores the column types (`pd.read_csv` reads text files).
 2. **Inspect**: `shape` (rows, columns), `dtypes`, `head()`.
-3. **Select and filter**: `df["language"]` selects one column; a comparison such as `df["language"] == "de"` returns a **boolean mask** (one `True`/`False` per row), and `df[mask]` keeps the rows where it is `True`. Conditions are combined with `&` (and), `|` (or), `~` (not), each in parentheses.
-4. **Count and aggregate**: `value_counts()` counts values; `groupby("language")["x"].median()` computes a median per group (split, apply, combine).
+3. **Select and filter**: `df["district"]` selects one column; a comparison such as `df["district"] == "Mitte"` returns a **boolean mask** (one `True`/`False` per row), and `df[mask]` keeps the rows where it is `True`. Conditions are combined with `&` (and), `|` (or), `~` (not), each in parentheses.
+4. **Count and aggregate**: `value_counts()` counts values; `groupby("room_type")["price"].median()` computes a median per group (split, apply, combine).
 
-A small example by hand: for languages `["de", "fr", "de"]`, the mask `language == "de"` is `[True, False, True]`; its sum is 2 (two German decisions) and its mean 2/3 (the share).
+A small example by hand: for districts `["Mitte", "Pankow", "Mitte"]`, the mask `district == "Mitte"` is `[True, False, True]`; its sum is 2 (two listings in Mitte) and its mean 2/3 (the share).
 
 ```mermaid
 flowchart LR
@@ -171,41 +185,47 @@ Run from the repository root after preparing the data:
 ```python
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-print(decisions.shape)                        # (50000, 14): rows, columns
-print(decisions.dtypes["start_date"])         # datetime64[ns]
-print(decisions.loc[0, "keywords"][:44])      # AMPOULES,AS LIQUID,FOOD SUPPLEMENTS,IN AMPOU
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+print(listings.shape)                          # (12776, 42): rows, columns
+print(listings.dtypes["last_review"])          # datetime64[ns]
+print(listings.loc[0, "name"])                 # Fabulous Flat in great Location
 
 # Filter and count
-print(decisions["language"].value_counts(normalize=True).head(4).round(3).to_dict())
-# {'de': 0.573, 'fr': 0.162, 'en': 0.052, 'nl': 0.048}
-is_german = decisions["language"] == "de"     # boolean mask, one value per row
-print(is_german.sum())                        # 28656: True counts as 1
-toys_2020 = decisions[(decisions["heading"] == "9503") & (decisions["start_date"].dt.year == 2020)]
-print(len(toys_2020))                         # 233
+print(listings["room_type"].value_counts(normalize=True).round(3).to_dict())
+# {'Entire home/apt': 0.692, 'Private room': 0.294, 'Hotel room': 0.007, 'Shared room': 0.007}
+in_mitte = listings["district"] == "Mitte"     # boolean mask, one value per row
+print(in_mitte.sum())                          # 2826: True counts as 1
+
+# Prices are only comparable for short stays: a price present and a minimum stay below 28 nights
+short = listings[listings["price"].notna() & (listings["minimum_nights"] < 28)]
+print(len(short))                              # 6701
+cheap = short[(short["district"] == "Friedrichshain-Kreuzberg")
+              & (short["room_type"] == "Entire home/apt") & (short["price"] < 100)]
+print(len(cheap))                              # 37 entire homes under 100 EUR in Friedrichshain-Kreuzberg
 
 # Text columns have string methods under .str
-masks = decisions["keywords"].str.contains("FACE MASK", case=False, na=False)
-print(decisions.loc[masks, "heading"].value_counts().head(3).to_dict())   # {'6307': 16, '3304': 8, '3824': 2}
+balcony = listings["name"].str.contains("balcony|balkon", case=False, na=False)
+print(round(balcony.mean(), 3))                # 0.056: titles that mention a balcony, in English or German
 
-# Group and aggregate: split by language, apply the median, combine
-lengths = decisions["description"].str.len()
-print(lengths.groupby(decisions["language"]).median()[["de", "fr", "en"]].to_dict())
-# {'de': 740.0, 'fr': 272.0, 'en': 309.0}
-print(round(lengths.mean(), 1), lengths.median())   # 644.1 587.0: the mean is pulled up by long texts
+# Group and aggregate: split by room type, apply the median, combine
+print(short.groupby("room_type")["price"].median().round(1).to_dict())
+# {'Entire home/apt': 185.2, 'Hotel room': 174.0, 'Private room': 97.3, 'Shared room': 49.2}
+print(round(short["price"].mean(), 1), short["price"].median())   # 193.7 157.0: the mean is pulled up
 ```
 
-The last line shows why the median is the better summary of text length. The distribution is skewed: most descriptions are a few hundred characters long, a few run to several thousand. The keyword filter also shows why the English `keywords` column helps: it lets you find face masks (heading 6307, made-up textile articles) without reading German, French or Polish. Keywords are assigned by customs together with the decision, so they help you *read* the data but are not available as model input (Session 9).
+The last line shows why the median is the better summary of prices. The distribution is skewed: half of the short stays cost between €107 and €232 a night, but a few ask for more than €1,000 (one even €10,025), and they pull the mean up. The 28-night rule matters as well: 4,480 listings can only be booked for a month or longer (most for 92 nights), and their price field is not comparable with that of a weekend stay. Session 4 examines both problems.
 
-![Histogram of description length for the five most frequent languages on a log scale, with the median and mean marked; the mean lies above the median in every language and German descriptions are the longest](figures/description_length_by_language.png)
+![Histograms of the price per night of short-stay listings on a log scale, for entire homes and for private rooms, with the median and mean marked; in both room types the mean lies above the median, and entire homes cost about twice as much as private rooms](figures/price_by_room_type.png)
+
+![Two bar charts by district: the number of listings, highest in Mitte, Friedrichshain-Kreuzberg and Pankow, and the median short-stay price, highest in Mitte and lowest in Reinickendorf](figures/listings_by_district.png)
 
 ### In practice
 
-- Trade-compliance teams filter the public EBTI database by keyword and heading in the same way, to see how similar products were classified before they file a request of their own.
+- City and district housing offices filter listing data by district and minimum stay in the same way, to estimate how many flats are let to tourists instead of residents.
 - Public statistics offices such as Destatis publish tables that analysts load and aggregate with pandas or R; the GENESIS database offers downloads as CSV.
 
 > [!WARNING]
-> `df[df["heading"] == "9503" & df["language"] == "de"]` without parentheses fails or gives wrong results, because `&` binds more strongly than `==`. Put each condition in its own parentheses.
+> `df[df["district"] == "Mitte" & df["price"] < 100]` without parentheses fails or gives wrong results, because `&` binds more strongly than `==`. Put each condition in its own parentheses.
 
 > [!NOTE]
 > pandas 3 changes two defaults. Since version 3.0, text columns have their own `str` type and *Copy-on-Write* is always on: a selection never changes the original DataFrame. Older tutorials that use `inplace=True` or chained assignment (`df["a"][0] = 1`) may behave differently.
@@ -237,30 +257,33 @@ Assistants speed up routine code, but only a person who can read and test the co
 ### How it works in Python
 
 ```python
-# Asked an assistant: "function for the share of texts that contain the placeholder <CODE>"
-def share_with_code(texts: list[str]) -> float:
-    return sum("<CODE>" in t for t in texts) / len(texts)
+# Asked an assistant: "function for the share of listing titles that mention a word"
+def share_mentioning(titles: list[str], word: str) -> float:
+    return sum(word in t.lower() for t in titles) / len(titles)
 
 
 # 1. Verify on a case you can compute by hand
-assert share_with_code(["see <CODE>", "toy", "<CODE>, plastic", "bag"]) == 0.5
+assert share_mentioning(["Flat with balcony", "Room", "BALCONY view", "Loft"], "balcony") == 0.5
 
 # 2. Probe an edge case the suggestion did not mention
 try:
-    share_with_code([])
+    share_mentioning([], "balcony")
 except ZeroDivisionError as err:
     print("empty input:", err)        # empty input: division by zero
 
-# 3. Only then apply it to the real data
+# 3. Only then apply it to the real data, and check that the result answers the question
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-print(round(share_with_code(decisions["description"].tolist()), 3))   # 0.068
+titles = pd.read_parquet("case-study/data/airbnb/listings.parquet")["name"].tolist()
+print(round(share_mentioning(titles, "balcony"), 3))   # 0.04
+print(round(share_mentioning(titles, "balkon"), 3))    # 0.016: German titles were missed
 
 # 4. Document, e.g. one line in AI_USE.md:
-# 2026-10-08 | assistant: <tool> | prompt: share of texts with <CODE> |
-# accepted: share_with_code | checked: hand case; fails on [] (guarded by caller)
+# 2026-10-08 | assistant: <tool> | prompt: share of titles with a word |
+# accepted: share_mentioning | checked: hand case; fails on [] (guarded by caller); English only
 ```
+
+The function was correct for the case in the prompt and still answered a narrower question than intended: many Berlin hosts write their titles in German, so "balcony" alone finds only 4.0 % instead of 5.6 % of the listings.
 
 ### In practice
 
@@ -268,33 +291,33 @@ print(round(share_with_code(decisions["description"].tolist()), 3))   # 0.068
 - Meta introduced interviews in which candidates may use an AI assistant; they are assessed on problem solving, code quality, verification and communication. Verification is part of the skill, not an extra.
 
 > [!CAUTION]
-> Do not paste personal data, passwords, API keys or confidential company data into an online assistant. The EBTI export does not name the holders of decisions, but descriptions can contain brand and product names; treat a company's own, unpublished product data as confidential.
+> Do not paste personal data, passwords, API keys or confidential company data into an online assistant. The course data contain no host names, but a listing's title and exact coordinates can still point to a flat; treat a company's own, unpublished customer data as confidential.
 
 > [!TIP]
 > Ask the assistant for tests as well as code, then check that the tests would actually fail on a wrong answer: change one expected value and run them.
 
-## Practice: five questions about the decisions
+## Practice: five questions about the listings
 
-Download the data with the provided script (once, from the repository root):
+Download the data with the provided script (once, from the repository root, about 100 MB):
 
 ```bash
-uv run python case-study/prepare_data.py
+uv run python case-study/prepare_airbnb.py
 ```
 
 Then open [workbooks/12-case-study-five-questions.ipynb](../workbooks/12-case-study-five-questions.ipynb) and answer, each in one sentence below the code:
 
-1. How many decisions are there per year and issuing country, and which period do the start dates cover?
-2. What share of decisions is written in each language?
-3. Which five headings are most frequent, and what are their English names (join `nomenclature.parquet`)?
-4. What is the median length of the description in characters for each language?
-5. What share of decisions is still valid, and why does it depend so strongly on the start year?
+1. **How many?** How many listings and hosts are there, and how many listings belong to hosts with more than one?
+2. **Where?** How many listings are there in each district?
+3. **What type?** What share are entire homes, private rooms, shared rooms and hotel rooms?
+4. **What price?** What does a night cost by room type and district, and why do we compare only short stays?
+5. **How many reviews?** How many reviews does a typical listing have, and what share has none?
 
 ## Check your understanding
 
 1. What is the difference between `pyproject.toml` and `uv.lock`, and which command uses the lockfile?
 2. A notebook works on your laptop but fails for a teammate with `NameError`. What is a likely cause, and how do you check for it?
-3. What does `(decisions["language"] == "de").mean()` compute, and why does it work?
-4. Why must the heading `0901` be stored as text and not as an integer?
+3. What does `(listings["district"] == "Mitte").mean()` compute, and why does it work?
+4. Why must the postcode `01067` be stored as text and not as an integer, and why must the raw price `"$1,083.00"` be converted before you compute a median?
 5. An assistant proposes a function that passes the example in your prompt. Name two further checks before you use it.
 
 ## Further reading

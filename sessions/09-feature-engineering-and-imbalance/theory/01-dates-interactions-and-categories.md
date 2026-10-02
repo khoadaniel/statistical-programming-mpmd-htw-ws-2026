@@ -218,7 +218,7 @@ for k in [None, 20, 100]:
 
 **Target encoding** (also called mean encoding) replaces each category by the mean of the target in the training rows of that category. For the log price, the neighbourhood Alexanderplatz with 557 listings and a mean log price of 5.24 gets the value 5.24 (about €188 a night). One numeric column replaces 135 dummy columns, and it orders the neighbourhoods by price.
 
-For a **multiclass** target, target encoding creates one column per class: the share of each class among the rows of the category. With the 1,114 EBTI headings that would be 1,114 columns per encoded feature, as many as the one-hot encoding we wanted to avoid; one then encodes against a coarser target. For a numeric target such as the price, one column suffices.
+For a **multiclass** target, target encoding creates one column per class: the share of each class among the rows of the category. For a target with four classes, such as the room type of a listing, that would be four columns; with a target of a thousand classes it would be a thousand columns per encoded feature, as many as the one-hot encoding we wanted to avoid, and one then encodes against a coarser target. For a numeric target such as the price, one column suffices.
 
 Two problems arise.
 
@@ -285,7 +285,7 @@ The workbooks [03-target-encoder.ipynb](../workbooks/03-target-encoder.ipynb) an
 > `TargetEncoder.fit(X, y).transform(X)` is **not** the same as `fit_transform(X, y)`. The first encodes the training rows with means that include their own labels (the naive leak); only `fit_transform` cross-fits. Inside a `Pipeline`, scikit-learn calls `fit_transform` during training and `transform` during prediction, which is correct.
 
 > [!WARNING]
-> Cross-fitting protects against the row's own target, not against **groups** or the **future**: a host's other listings, or a renewed EBTI decision with the same description, can sit in another fold and carry almost the same target. Validate with groups or by time (Session 7), and for anything with a timestamp, aggregate with past data only (page 2).
+> Cross-fitting protects against the row's own target, not against **groups** or the **future**: a host's other listings, or a customer's earlier orders, can sit in another fold and carry almost the same target. Validate with groups or by time (Session 7), and for anything with a timestamp, aggregate with past data only (page 2).
 
 ## 5. Custom transformers in scikit-learn pipelines
 

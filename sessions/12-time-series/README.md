@@ -32,7 +32,7 @@
 - [Machine learning with lag features (using the tree-based models of Session 10)](theory/03-lag-features-and-backtesting.md#machine-learning-with-lag-features)
 - [Rolling-origin backtesting](theory/03-lag-features-and-backtesting.md#rolling-origin-backtesting)
 - [Forecast metrics: MAE and MASE](theory/03-lag-features-and-backtesting.md#forecast-metrics-mae-and-mase)
-- *Practice:* case study: how many Airbnb stays should Berlin expect next year? Backtest the models from six forecast origins and recommend one with its 12-month forecast and prediction interval → Part 3 of [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb)
+- *Practice:* case study: how many Airbnb stays should Berlin expect next year? Backtest the models from six forecast origins, test whether the Berlin weather from Session 2 adds anything, and recommend one with its 12-month forecast and prediction interval → Part 3 of [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb)
 
 ## Materials
 
@@ -40,7 +40,7 @@
 |---|---|---|---|
 | [theory/01-time-series-and-baselines.md](theory/01-time-series-and-baselines.md) | Components, STL, ACF, resampling, data quality of the review series, baselines, MAE (Airbnb reviews) | 1 | core |
 | [theory/02-exponential-smoothing-and-arima.md](theory/02-exponential-smoothing-and-arima.md) | SES by hand, Holt–Winters, ETS, choosing the history after a break, prediction intervals, seasonal ARIMA with missing months | 2 | core |
-| [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features, rolling-origin backtest, MASE, coverage, recommendation | 3 | core |
+| [theory/03-lag-features-and-backtesting.md](theory/03-lag-features-and-backtesting.md) | Lag features, rolling-origin backtest, MASE, coverage, the Berlin weather as a regressor, recommendation | 3 | core |
 | [workbooks/01-stl-decomposition.ipynb](workbooks/01-stl-decomposition.ipynb) | STL decomposition in statsmodels | 1 | optional |
 | [workbooks/02-statsforecast-quickstart.ipynb](workbooks/02-statsforecast-quickstart.ipynb) | StatsForecast quick start: AutoARIMA with intervals | 2 | optional |
 | [workbooks/03-exponential-smoothing.ipynb](workbooks/03-exponential-smoothing.ipynb) | SES, Holt and Holt–Winters in statsmodels | 2 | core |
@@ -50,14 +50,13 @@
 | [workbooks/07-time-related-feature-engineering.ipynb](workbooks/07-time-related-feature-engineering.ipynb) | Calendar features: one-hot, cyclical, splines (scikit-learn) | 3 | optional |
 | [workbooks/08-statsforecast-cross-validation.ipynb](workbooks/08-statsforecast-cross-validation.ipynb) | Rolling-origin cross-validation for many series (StatsForecast) | 3 | optional |
 | [workbooks/09-mlforecast-walkthrough.ipynb](workbooks/09-mlforecast-walkthrough.ipynb) | Lag features, LightGBM and backtesting for many series (MLForecast) | 3 | optional |
-| [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb) | **Practice 1–3:** monthly Airbnb reviews in Berlin, baselines, ETS, airline model, lag model, backtest, recommendation, forecast of the next 12 months, district series (own) | 1–3 | core |
-| [workbooks/11-optional-ebti-decision-forecast.ipynb](workbooks/11-optional-ebti-decision-forecast.ipynb) | Optional exercise: the same workflow on the monthly BTI decisions of the main case study (Brexit break) (own) | 1–3 | optional |
+| [workbooks/10-case-study-airbnb-review-forecast.ipynb](workbooks/10-case-study-airbnb-review-forecast.ipynb) | **Practice 1–3:** monthly Airbnb reviews in Berlin, baselines, ETS, airline model, lag model, backtest, does the weather help, recommendation, forecast of the next 12 months, district series (own) | 1–3 | core |
 
 Sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-airbnb-review-forecast.ipynb). It needs the Airbnb data in `case-study/data/airbnb/` (see [case-study/README.md](../../case-study/README.md)); the optional workbook 11 needs `case-study/data/monthly_counts.parquet`.
+**Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-airbnb-review-forecast.ipynb). It needs the Airbnb data and the Berlin weather in `case-study/data/airbnb/` (see [case-study/README.md](../../case-study/README.md)).
 
 **Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
 
@@ -71,13 +70,13 @@ Sources and licences: [source.md](source.md).
 
 ## Setup
 
-Prepare the Airbnb data once from the repository root (downloads the Berlin snapshot of Inside Airbnb, about 100 MB):
+Prepare the Airbnb data once from the repository root (downloads the Berlin snapshot of Inside Airbnb, about 100 MB, and the daily Berlin weather from Open-Meteo):
 
 ```bash
 uv run python case-study/prepare_airbnb.py
 ```
 
-The theory pages, the case-study notebooks 10 and 11 and workbooks 01, 03–07 run in the course environment (`uv run jupyter lab` in the repository root: pandas, statsmodels, scikit-learn, polars).
+The theory pages, the case-study notebook 10 and workbooks 01, 03–07 run in the course environment (`uv run jupyter lab` in the repository root: pandas, statsmodels, scikit-learn, polars).
 
 The Nixtla workbooks 02, 08 and 09 need extra packages:
 

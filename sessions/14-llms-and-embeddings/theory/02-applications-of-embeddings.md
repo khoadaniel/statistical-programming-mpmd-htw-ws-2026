@@ -131,7 +131,7 @@ The figure shows what the embeddings capture. Colour by chapter (left): footwear
 
 ### Why it matters
 
-Clustering embeddings is a fast way to discover what a large text collection is about: which product types appear within a chapter, which decisions look unusual, how the requests of different countries differ. It supports exploration and reporting and can reveal problems in the labels (Session 11 uses distances to the heading centroid for anomaly detection). Because language also shapes the space, clusters must be checked for whether they reflect goods or only languages.
+Clustering embeddings is a fast way to discover what a large text collection is about: which product types appear within a chapter, which decisions look unusual, how the requests of different countries differ. It supports exploration and reporting and can reveal problems in the labels: a decision far from the other decisions of its heading is worth a second look, the same idea as the distance-based anomaly detection of Session 11. Because language also shapes the space, clusters must be checked for whether they reflect goods or only languages.
 
 ### How it works in Python
 

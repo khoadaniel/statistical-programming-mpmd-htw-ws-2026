@@ -1,6 +1,6 @@
 # Object-oriented programming, errors and tests
 
-This page covers the first block of Session 2. Session 1 introduced classes, objects, attributes and methods. Here we use them in practice: how classes are combined (composition and inheritance), how dataclasses remove boilerplate, how type hints and docstrings document a contract, how exceptions report broken contracts, and how automated tests with pytest check that the code keeps its promises. The running example is a class that validates and cleans the record of one Binding Tariff Information (BTI) decision of the course case study, `DecisionRecord`, in the [workspace](../workspace/README.md).
+This page covers the first block of Session 2. Session 1 introduced classes, objects, attributes and methods. Here we use them in practice: how classes are combined (composition and inheritance), how dataclasses remove boilerplate, how type hints and docstrings document a contract, how exceptions report broken contracts, and how automated tests with pytest check that the code keeps its promises. The running example is a class that validates and cleans one Airbnb listing of the course case study, `ListingRecord`, in the [workspace](../workspace/README.md). The raw file of Inside Airbnb stores the price as text (`"$1,083.00"`), and nothing stops a row from having coordinates outside Berlin or an unknown room type; a class that checks every listing once, when it is created, protects all code that uses it.
 
 ```mermaid
 flowchart LR
@@ -17,12 +17,12 @@ flowchart LR
 
 A **class** bundles data (**attributes**) and behaviour (**methods**). Two ways of building larger classes from smaller ones:
 
-- **Composition** ("has a"): an object holds other objects as attributes and delegates work to them. A `FeatureSet` *has* a list of features; the open-data client of the workspace *has* an HTTP client.
+- **Composition** ("has a"): an object holds other objects as attributes and delegates work to them. A `FeatureSet` *has* a list of features; the weather client of the workspace *has* an HTTP client.
 - **Inheritance** ("is a"): a **subclass** takes over all attributes and methods of its **base class** (or parent) and adds or replaces some. `DigitCount` *is a* `Feature`. Replacing a method of the parent is called **overriding**. Code that works with `Feature` objects works with every subclass: this is **polymorphism**.
 
 A **dataclass** is a class whose main purpose is to hold data. The decorator `@dataclass` reads the annotated class attributes (the **fields**) and writes `__init__`, `__repr__` and `__eq__` automatically. The special method `__post_init__` runs right after `__init__` and is the place to check and clean the fields. `frozen=True` makes the objects read-only.
 
-A small example by hand: `FeatureSet([WordCount(), DigitCount()])` applied to the description `"Plush toy, 30 cm"` asks each feature in turn: four words, two digits, so the result is `{"n_words": 4, "n_digits": 2}`.
+A small example by hand: `FeatureSet([WordCount(), DigitCount()])` applied to the listing title `"Cosy flat, 45 m²"` asks each feature in turn: four words, two digits (the ² is not a digit), so the result is `{"n_words": 4, "n_digits": 2}`.
 
 ```mermaid
 classDiagram
@@ -48,7 +48,7 @@ classDiagram
 
 ### Why it matters
 
-Composition keeps classes small and replaceable: the HTTP client inside the open-data client can be swapped for a fake one in tests. Inheritance lets many classes share one interface, so that the code that uses them does not need to know which one it has. Dataclasses make data-holding classes short enough to read at a glance. Used carelessly, deep inheritance trees become hard to follow; a common rule is *prefer composition, inherit only for a true "is a" relation*.
+Composition keeps classes small and replaceable: the HTTP client inside the weather client can be swapped for a fake one in tests. Inheritance lets many classes share one interface, so that the code that uses them does not need to know which one it has. Dataclasses make data-holding classes short enough to read at a glance. Used carelessly, deep inheritance trees become hard to follow; a common rule is *prefer composition, inherit only for a true "is a" relation*.
 
 ### How it works in Python
 
@@ -90,7 +90,7 @@ class FeatureSet:                          # composition: a FeatureSet has featu
 
 
 features = FeatureSet([WordCount(), DigitCount()])
-print(features.transform("Plush toy, 30 cm"))  # {'n_words': 4, 'n_digits': 2}
+print(features.transform("Cosy flat, 45 m²"))  # {'n_words': 4, 'n_digits': 2}
 print(isinstance(WordCount(), Feature))        # True
 try:
     Feature()                                  # an abstract class cannot be instantiated
@@ -99,20 +99,20 @@ except TypeError as err:
 
 
 @dataclass
-class Decision:
+class Listing:
     """A dataclass: __init__, __repr__ and __eq__ are generated from the fields."""
 
-    bti_reference: str
-    heading: str
-    description: str = ""
+    id: int
+    room_type: str
+    name: str = ""
 
     def __post_init__(self) -> None:           # runs after the generated __init__
-        self.description = " ".join(self.description.split())
+        self.name = " ".join(self.name.split())
 
 
-d = Decision("DE1", "9503", "  Plush   toy ")
-print(d)                                       # Decision(bti_reference='DE1', heading='9503', description='Plush toy')
-print(d == Decision("DE1", "9503", "Plush toy"))   # True: fields are compared
+flat = Listing(3176, "Entire home/apt", "  Fabulous   Flat ")
+print(flat)                                    # Listing(id=3176, room_type='Entire home/apt', name='Fabulous Flat')
+print(flat == Listing(3176, "Entire home/apt", "Fabulous Flat"))   # True: fields are compared
 ```
 
 ### In practice
@@ -124,7 +124,7 @@ print(d == Decision("DE1", "9503", "Plush toy"))   # True: fields are compared
 > A mutable default such as `features: list = []` in a dataclass raises `ValueError` (in a normal function default it would be silently shared between all calls). Use `field(default_factory=list)`.
 
 > [!TIP]
-> Before you write a subclass, ask whether "B is an A" is true in the domain. A `DecisionTable` *has* decisions; it is not a kind of decision. When in doubt, use composition.
+> Before you write a subclass, ask whether "B is an A" is true in the domain. A `ListingTable` *has* listings; it is not a kind of listing. When in doubt, use composition.
 
 The workbooks [01-classes-and-objects.ipynb](../workbooks/01-classes-and-objects.ipynb) (composition, equivalence, copying) and [02-inheritance.ipynb](../workbooks/02-inheritance.ipynb) (*Think Python*) practise both patterns with exercises.
 
@@ -139,16 +139,16 @@ A function or class is a **contract**: given inputs of a stated kind, it returns
 
 ### Why it matters
 
-Hints and docstrings tell a teammate (and an AI assistant) how to call the code without reading its body. Type checkers catch a class of bugs before any test runs, for example passing a whole DataFrame where one text is expected. In code review, a missing or wrong docstring is as much a defect as a wrong line.
+Hints and docstrings tell a teammate (and an AI assistant) how to call the code without reading its body. Type checkers catch a class of bugs before any test runs, for example passing a whole DataFrame where one title is expected. In code review, a missing or wrong docstring is as much a defect as a wrong line.
 
 ### How it works in Python
 
 ```python
-def share_with(texts: list[str], char: str = "%") -> float | None:
+def share_with(texts: list[str], char: str = "!") -> float | None:
     """Share of texts that contain ``char``.
 
     Args:
-        texts: descriptions of goods.
+        texts: listing titles.
         char: the character to look for.
 
     Returns:
@@ -159,12 +159,12 @@ def share_with(texts: list[str], char: str = "%") -> float | None:
     return sum(char in t for t in texts) / len(texts)
 
 
-print(share_with(["100 % cotton", "Plush toy"]))   # 0.5
+print(share_with(["Best view!", "Quiet room"]))   # 0.5
 print(share_with([]))                          # None
 print(share_with.__annotations__["return"])    # float | None
 print(share_with.__doc__.splitlines()[0])      # Share of texts that contain ``char``.
 try:
-    share_with(["100 % cotton"], char=5)       # the hint says str; Python does not stop the call
+    share_with(["Best view!"], char=5)         # the hint says str; Python does not stop the call
 except TypeError as err:
     print("TypeError:", err)                   # TypeError: 'in <string>' requires string as left operand, not int
 ```
@@ -184,7 +184,7 @@ uvx ty check src/          # or: uvx mypy src/
 > `from __future__ import annotations` at the top of a module (used in the workspace) stores hints as text and allows the newer syntax such as `str | None` on older Python versions.
 
 > [!CAUTION]
-> A hint is a promise, not a check. `heading: str` does not stop someone from passing the integer `901`, which has already lost the leading zero of `"0901"`. Values that come from outside (files, forms, APIs) must be checked explicitly, which is the job of the validation in `__post_init__`.
+> A hint is a promise, not a check. `price: float` does not stop someone from passing the text `"$85"` from the raw file; `price + 10` then raises a `TypeError`, and `price * 2` silently gives `"$85$85"`. Values that come from outside (files, forms, APIs) must be checked explicitly, which is the job of the validation in `__post_init__`.
 
 ## Exceptions and error handling
 
@@ -194,7 +194,7 @@ An **exception** is Python's signal that an operation cannot be completed. Built
 
 - `raise ValueError("message")` signals a broken contract deliberately.
 - `try: … except ValueError as err: …` **handles** an expected exception; `else:` runs if no exception occurred; `finally:` always runs (for example to close a file).
-- Exceptions are classes and form a hierarchy. Defining your own subclasses, such as `ValidationError(BtiToolsError, ValueError)`, lets callers catch exactly what they can handle.
+- Exceptions are classes and form a hierarchy. Defining your own subclasses, such as `ValidationError(ListingToolsError, ValueError)`, lets callers catch exactly what they can handle.
 - `raise NewError(...) from err` keeps the original cause in the traceback.
 
 Two styles: *Look before you leap* (LBYL) checks first (`if key in d:`); *Easier to ask forgiveness than permission* (EAFP) tries and handles the exception. Python code often uses EAFP for conversions such as `int(value)`.
@@ -216,14 +216,11 @@ A clear error at the place where the problem occurs saves hours compared with a 
 ### How it works in Python
 
 ```python
-from datetime import date, datetime
-
-
-class BtiToolsError(Exception):
+class ListingToolsError(Exception):
     """Base class of the package's errors."""
 
 
-class ValidationError(BtiToolsError, ValueError):
+class ValidationError(ListingToolsError, ValueError):
     """A record breaks a rule; also a ValueError for callers that expect one."""
 
     def __init__(self, field: str, message: str) -> None:
@@ -231,29 +228,30 @@ class ValidationError(BtiToolsError, ValueError):
         super().__init__(f"{field}: {message}")
 
 
-def parse_start_date(value: object) -> date:
-    """Parse a date in the format of the EBTI export, day first: 10/05/2023."""
+def parse_price(value: object) -> float:
+    """Parse a price as written in the raw Inside Airbnb file: "$1,083.00"."""
+    text = str(value).strip().lstrip("$").replace(",", "")
     try:
-        parsed = datetime.strptime(str(value).strip(), "%d/%m/%Y").date()   # EAFP
+        price = float(text)                                         # EAFP
     except ValueError as err:
-        raise ValidationError("start_date", f"expected dd/mm/yyyy, got {value!r}") from err
-    if not 1990 <= parsed.year <= 2035:
-        raise ValidationError("start_date", f"implausible year {parsed.year}")
-    return parsed
+        raise ValidationError("price", f"expected a price such as $85.00, got {value!r}") from err
+    if not price > 0:
+        raise ValidationError("price", f"must be above 0, got {price}")
+    return price
 
 
 good, bad = [], []
-for raw in ["10/05/2023", "2023-05-10", "31/02/2023", "15/06/2200", "01/12/2022"]:
+for raw in ["$160.71", "85 EUR", "$1,083.00", "$0.00", "$97.33"]:
     try:
-        start = parse_start_date(raw)
+        price = parse_price(raw)
     except ValidationError as err:               # handle only the error we expect
         bad.append((err.field, str(err)))
     else:
-        good.append(start.isoformat())
+        good.append(price)
 
-print(good)        # ['2023-05-10', '2022-12-01']
-print(bad[0])      # ('start_date', "start_date: expected dd/mm/yyyy, got '2023-05-10'")
-print(bad[2])      # ('start_date', 'start_date: implausible year 2200')
+print(good)        # [160.71, 1083.0, 97.33]
+print(bad[0])      # ('price', "price: expected a price such as $85.00, got '85 EUR'")
+print(bad[1])      # ('price', 'price: must be above 0, got 0.0')
 ```
 
 ### In practice
@@ -276,7 +274,7 @@ A **unit test** is a small function that calls the code with a known input and a
 - `with pytest.raises(ValidationError):` checks that the code raises the expected exception.
 - `@pytest.mark.skip` skips a test (the workspace uses it for exercises).
 
-Good tests are **small** (one behaviour each), **independent** (no shared state, any order), **fast** and **deterministic** (no network, no randomness without a seed). They cover normal cases, **edge cases** (empty text, the first and the last chapter, a heading with a leading zero) and invalid input.
+Good tests are **small** (one behaviour each), **independent** (no shared state, any order), **fast** and **deterministic** (no network, no randomness without a seed). They cover normal cases, **edge cases** (empty text, a price with a thousands separator, a listing exactly on the city boundary) and invalid input.
 
 ```mermaid
 stateDiagram-v2
@@ -294,43 +292,46 @@ Tests turn "it worked when I tried it" into a check that runs on every change, o
 
 ### How it works in Python
 
-Save as `test_chapter.py` and run `uv run --with pytest pytest -q test_chapter.py`, or run the file directly with Python (the last two lines start pytest):
+Save as `test_price.py` and run `uv run --with pytest pytest -q test_price.py`, or run the file directly with Python (the last two lines start pytest):
 
 ```python
 import pytest
 
 
-def chapter_of(heading: str) -> str:
-    if not (isinstance(heading, str) and len(heading) == 4 and heading.isdigit()):
-        raise ValueError(f"expected a four-digit heading, got {heading!r}")
-    return heading[:2]
+def price_to_number(text: str) -> float:
+    if not isinstance(text, str):
+        raise ValueError(f"expected a price as text, got {text!r}")
+    try:
+        return float(text.strip().lstrip("$").replace(",", ""))
+    except ValueError:
+        raise ValueError(f"expected a price as text, got {text!r}") from None
 
 
 @pytest.fixture
-def headings() -> list[str]:
-    return ["9503", "3926", "0901", "6307", "8517"]
+def raw_prices() -> list[str]:
+    return ["$160.71", "$1,083.00", "$49.00"]
 
 
-def test_chapters_of_fixture(headings):
-    assert [chapter_of(h) for h in headings] == ["95", "39", "09", "63", "85"]
+def test_prices_of_fixture(raw_prices):
+    assert [price_to_number(p) for p in raw_prices] == [160.71, 1083.0, 49.0]
 
 
-@pytest.mark.parametrize(("heading", "expected"), [("0101", "01"), ("0901", "09"), ("9706", "97")])
-def test_boundaries(heading, expected):
-    assert chapter_of(heading) == expected
+@pytest.mark.parametrize(("text", "expected"), [("$0.50", 0.5), (" $85 ", 85.0), ("$10,025.00", 10025.0)])
+def test_edge_cases(text, expected):
+    assert price_to_number(text) == expected
 
 
-@pytest.mark.parametrize("heading", ["950", "95031", "toys", 9503])
-def test_malformed_heading_raises(heading):
-    with pytest.raises(ValueError, match="four-digit"):
-        chapter_of(heading)
+@pytest.mark.parametrize("text", ["", "abc", "85 EUR", None, 85])
+def test_malformed_price_raises(text):
+    with pytest.raises(ValueError, match="expected a price"):
+        price_to_number(text)
 
 
 if __name__ == "__main__":
-    raise SystemExit(pytest.main([__file__, "-q"]))   # 8 passed
+    raise SystemExit(pytest.main([__file__, "-q"]))   # 9 passed
 ```
 
-In the workspace, tests live in `tests/` and import the package: `from btitools import DecisionRecord`. Run them with `uv run pytest -q` in the workspace folder.
+In the workspace, tests live in `tests/` and import the package: `from listingtools import ListingRecord`. Run them with `uv run pytest -q` in the workspace folder.
 
 ### In practice
 
@@ -343,40 +344,41 @@ In the workspace, tests live in `tests/` and import the package: `from btitools 
 > [!TIP]
 > When you fix a bug, first write a test that reproduces it. The test fails, you fix the code, the test passes, and the bug can never come back unnoticed (a **regression test**).
 
-## Practice: a class that validates and cleans a decision record
+## Practice: a class that validates and cleans one listing
 
 Work in the [workspace](../workspace/README.md), exercises 1 and 2:
 
-1. Read `src/btitools/records.py`: which fields does `DecisionRecord` have, which rules does `__post_init__` apply (reference present, two-letter country code, EU language code, plausible start date, non-empty description, four-digit heading), and what does `from_dict` add?
+1. Read `src/listingtools/records.py`: which fields does `ListingRecord` have, which rules does `__post_init__` apply (price stored as text becomes a number, coordinates inside Berlin's bounding box, room type one of the four known values, `accommodates` at least 1), and what does `from_dict` add?
 2. Run `uv run pytest -q tests/test_records.py` and read one parametrized test.
-3. Complete the TODO: `end_date` is optional, but if present it must be a valid date that does not lie before `start_date`. Activate `test_end_date_rules`.
+3. Complete the TODO: `maximum_nights` is optional, but if present it must not be smaller than `minimum_nights`; the raw file's sentinel 2,147,483,647 means "no limit". Activate the two tests of `maximum_nights`.
 4. Add two tests of your own for rules that are not yet tested.
 
 ```python
 import sys
 
 sys.path.insert(0, "sessions/02-software-engineering/workspace/src")   # uv run in the workspace does this
-from btitools import DecisionRecord, ValidationError
+from listingtools import ListingRecord, ValidationError
 
-raw = {"bti_reference": " DE42 ", "issuing_country": "de", "language": "DE",
-       "start_date": "10/05/2023", "description": "Plüschtier,  30 cm ", "heading": "9503"}
-record = DecisionRecord.from_dict(raw)
-print(record.bti_reference, record.issuing_country, record.language, record.start_date)
-# DE42 DE de 2023-05-10
-print(record.description, "|", record.chapter)   # Plüschtier, 30 cm | 95
+raw = {"id": "3176", "name": " Fabulous  Flat ", "neighbourhood_group_cleansed": "Pankow",
+       "latitude": "52.53574", "longitude": 13.41734, "room_type": "entire home/apt",
+       "accommodates": 2, "price": "$1,160.50", "minimum_nights": "2"}
+record = ListingRecord.from_dict(raw)
+print(record.id, record.name, record.district, record.room_type)
+# 3176 Fabulous Flat Pankow Entire home/apt
+print(record.price, record.price_per_guest, record.is_short_stay)   # 1160.5 580.25 True
 try:
-    DecisionRecord.from_dict({**raw, "heading": 901})
+    ListingRecord.from_dict({**raw, "latitude": 48.137})            # Munich
 except ValidationError as err:
-    print(err.field, "|", err)   # heading | heading: expected text, got int
+    print(err.field, "|", err)   # latitude | latitude: 48.137 lies outside Berlin (52.33 to 52.68)
 ```
 
 ## Check your understanding
 
-1. The open-data client holds an `httpx.Client` as an attribute. Is this composition or inheritance, and why does it make testing easier?
+1. The weather client holds an `httpx.Client` as an attribute. Is this composition or inheritance, and why does it make testing easier?
 2. What does `@dataclass` generate, and what is `__post_init__` for?
-3. A function has the hint `heading: str`. What happens when it is called with the integer `901`?
-4. Why does `ValidationError` inherit from both `BtiToolsError` and `ValueError`?
-5. Name three kinds of cases a good set of tests for `parse_start_date` should contain.
+3. A function has the hint `price: float`. What happens when it is called with the text `"$85.00"`?
+4. Why does `ValidationError` inherit from both `ListingToolsError` and `ValueError`?
+5. Name three kinds of cases a good set of tests for `parse_price` should contain.
 
 ## Further reading
 

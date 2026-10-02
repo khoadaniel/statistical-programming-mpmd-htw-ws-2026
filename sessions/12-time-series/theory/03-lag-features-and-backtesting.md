@@ -1,6 +1,6 @@
 # Lag features, backtesting and forecast metrics
 
-The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing, ARIMA and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test from several forecast origins. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. The page ends with a model recommendation and a forecast of the next twelve months of Airbnb reviews in Berlin.
+The last block brings forecasting back to the machine-learning tools of Sessions 8–10. A regression model can forecast once the series is turned into a table of **lag features**. To decide between the baselines, exponential smoothing, ARIMA and the machine-learning model, one hold-out year is not enough: **rolling-origin backtesting** repeats the test from several forecast origins. The errors are summarised with **MAE** and the scaled **MASE**, and the coverage of the prediction intervals is checked. A short test asks whether the Berlin weather of Session 2 improves the forecast. The page ends with a model recommendation and a forecast of the next twelve months of Airbnb reviews in Berlin.
 
 The code blocks build on each other; run them in order from the repository root.
 
@@ -213,12 +213,89 @@ print(bt.groupby("model")[["MAE", "MASE"]].mean().round(2).sort_values("MASE"))
 print(bt.groupby("model")["coverage"].mean().dropna().round(2).to_dict())   # {'ETS': 0.83, 'airline': 1.0}
 ```
 
+### Does the Berlin weather add anything?
+
+Session 2 fetched the daily Berlin weather from the Open-Meteo API with the question whether the weather explains how busy the Airbnb market is. `case-study/prepare_airbnb.py` stores the same data as `weather_daily.parquet` (temperature, rain and sunshine per day since 2016). The season of the weather is already in every model of this page: July is warm and busy every year, and the month feature, the seasonal naive rule and the seasonal part of ETS and of the airline model capture that. The question is whether the *deviations* help: does a warmer or drier month than usual bring more stays than the season alone suggests?
+
+Two things must be separated. To **explain** the past, the observed weather of each month can be used. To **forecast** twelve months ahead, it cannot: weather forecasts reach about two weeks, so at the forecast origin the only honest value for next March is the usual March weather, the monthly mean of the training years (the **climate**). The backtest below runs both versions. With the observed weather of the test months it is an upper bound that no real forecast can reach; with the climate it is what a forecaster could actually do.
+
+Two models get the weather. The lag model gets the change of monthly mean temperature and monthly rain against the same month a year earlier (its target is the growth against that month). The airline model gets the deviation from the usual month as exogenous variables (`exog` in `SARIMAX`); with the climate, the future deviation is zero.
+
+```python
+daily = pd.read_parquet("case-study/data/airbnb/weather_daily.parquet").set_index("date")
+wx = daily.resample("MS").agg({"temperature_2m_mean": "mean", "precipitation_sum": "sum"}).loc[y.index]
+wx.columns = ["temp", "rain"]                                       # °C (monthly mean), mm (monthly total)
+pairs = pd.concat([(log_y - log_y.shift(12)).rename("growth"), wx - wx.shift(12)], axis=1)[~touched].dropna()
+print(len(pairs), pairs.corr()["growth"].round(2).to_dict())        # growth against change of the weather
+# 67 {'growth': 1.0, 'temp': 0.08, 'rain': 0.06}
+
+
+def weather_change(y_tr, known):
+    """Weather minus the same month a year earlier. After the origin the weather is the observed one
+    (known="actual": not available when the forecast is made) or the monthly mean of the training years."""
+    w = wx.copy()
+    later = w.index > y_tr.index[-1]
+    if known == "climate":
+        past = wx[:y_tr.index[-1]]
+        w.loc[later] = past.groupby(past.index.month).mean().loc[w.index[later].month].to_numpy()
+    return (w - wx.shift(12)).add_prefix("change_")
+
+
+def lag_model_weather(y_tr, test_index, known):
+    table = frame.join(weather_change(y_tr, known))
+    rows = table.loc[:y_tr.index[-1]]
+    hgb = HistGradientBoostingRegressor(min_samples_leaf=5, random_state=0).fit(
+        rows.drop(columns="target"), rows["target"])
+    return np.exp(table.loc[test_index, "lag12"] + hgb.predict(table.loc[test_index].drop(columns="target")))
+
+
+def airline_weather(y_tr, test_index, known):
+    past = wx[:y_tr.index[-1]]
+    anomaly = wx - past.groupby(past.index.month).mean().loc[wx.index.month].to_numpy()   # vs the usual month
+    future = anomaly.loc[test_index] if known == "actual" else 0 * anomaly.loc[test_index]
+    log_gap = np.log(y_tr).where(~covid[y_tr.index])
+    air = SARIMAX(log_gap, exog=anomaly.loc[y_tr.index], order=(0, 1, 1),
+                  seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+    return np.exp(air.forecast(len(test_index), exog=future))
+
+
+rows = []
+for origin in pd.date_range("2024-03-01", "2025-06-01", freq="3MS"):    # the same six folds
+    test_index = pd.date_range(origin, periods=12, freq="MS")
+    y_tr, y_te = y[:origin - pd.offsets.MonthBegin()], y[test_index]
+    for known in ("actual", "climate"):
+        rows.append({"model": f"airline + weather ({known})",
+                     "MASE": mase(y_te, airline_weather(y_tr, test_index, known), y_tr)})
+        rows.append({"model": f"lag model + weather ({known})",
+                     "MASE": mase(y_te, lag_model_weather(y_tr, test_index, known), y_tr)})
+with_weather = pd.concat([bt.loc[bt["model"].isin(["airline", "lag model"]), ["model", "MASE"]], pd.DataFrame(rows)])
+print(with_weather.groupby("model")["MASE"].agg(["mean", "max"]).round(2))
+#                                mean   max
+# model
+# airline                        0.31  0.44
+# airline + weather (actual)     0.36  0.69
+# airline + weather (climate)    0.36  0.69
+# lag model                      0.59  0.80
+# lag model + weather (actual)   0.63  0.85
+# lag model + weather (climate)  0.64  0.89
+
+anomaly = wx - wx.groupby(wx.index.month).transform("mean")
+fit = SARIMAX(log_y.where(~covid), exog=anomaly, order=(0, 1, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+print(fit.params[["temp", "rain"]].round(4).to_dict(), fit.pvalues[["temp", "rain"]].round(2).to_dict())
+# {'temp': 0.0039, 'rain': -0.0002} {'temp': 0.21, 'rain': 0.38}
+```
+
+**The weather does not improve the forecast, not even with the weather that actually happened.** The yearly growth of the reviews hardly moves with the change of the weather (correlations 0.08 and 0.06 over 67 months). In the backtest, both models get slightly *worse* with weather (airline 0.36 instead of 0.31 mean MASE, lag model 0.63–0.64 instead of 0.59); the observed and the climate version are almost equal, so the weather values themselves carry almost no information, and the extra parameters only make the fit less stable (the airline fold from March 2025 rises from 0.44 to 0.69). Fitted on all months, a month 1 °C warmer than usual comes with 0.4 % more reviews (p = 0.21), while the typical one-month-ahead error of the model is about 7 %.
+
+Plausible reasons, worth stating in a report: most stays are booked weeks or months ahead, when the weather of the stay is not yet known; a month is a long time, so a few rainy days hardly change its mean; Berlin is visited for the city, events and trade fairs more than for the beach; and reviews are written days after the stay, which blurs the link further. The test also has limits: monthly totals and six folds can only detect a large effect. Daily data (bookings from the `calendar` table, rain on the day) could show a short-term effect that the monthly series hides, and for that the forecast of the coming two weeks would be usable. The decision for this forecast is clear: **leave the weather out**, and say in the report that it was tested.
+
 ### Reading the backtest and recommending a model
 
 - **The airline model with the pandemic marked as missing is best on average and never bad.** Its mean MASE is 0.31; it is the best model in four of the six folds, and its worst fold (0.44) is better than the average of every other model. It uses the whole history except the break.
 - **ETS fitted since 2022 is second, but unstable.** Its mean MASE is 0.51, it wins two folds, but in the first fold, with only 26 months of training data, it is worse than seasonal naive times growth (1.01 against 0.57). A short history makes the trend estimate fragile.
 - **Simple rules are hard to beat.** Seasonal naive times growth (MASE 0.54) is almost as good as ETS and better than the lag model (0.59). Plain seasonal naive (1.17) and naive (1.62) are worse than the in-sample seasonal naive scale: they ignore growth or season.
 - **The lag model loses to a spreadsheet rule.** With 28 to 43 training rows there is little for gradient boosting to learn beyond what "last year times growth" already says.
+- **The weather adds nothing.** Neither the observed weather nor the climate improves the airline or the lag model (previous section).
 - **The intervals differ in quality.** ETS covered 83 % of the test months for a nominal 95 %: too narrow. The airline intervals covered all of them (100 %), at the cost of being wide.
 
 A defensible recommendation: **the airline model on log counts, with March 2020 to December 2021 marked as missing**, reported with its 95 % interval, because it has the lowest error in all but two folds and its intervals were never too narrow. Report seasonal naive times growth as the benchmark everybody understands, state the assumption about the pandemic months, and refit every month. The forecast for the next twelve months, fitted on all data up to May 2026:
@@ -262,7 +339,7 @@ flowchart TD
 > [!CAUTION]
 > **Tuning on the backtest makes it optimistic.** If you choose hyperparameters, the model or the treatment of the break on the same folds you report, hold out a final period or report the result as a model-selection result, not as an estimate of future accuracy. The choices of this page (start ETS in 2022, mark March 2020 to December 2021 as missing) were made after looking at the series, so the backtest numbers are somewhat optimistic.
 
-*Practice (block 3):* case study: backtest the models and recommend one with its prediction interval: Part 3 of [10-case-study-airbnb-review-forecast.ipynb](../workbooks/10-case-study-airbnb-review-forecast.ipynb). The optional workbook [11-optional-ebti-decision-forecast.ipynb](../workbooks/11-optional-ebti-decision-forecast.ipynb) repeats the workflow on the monthly number of BTI decisions of the main case study, a flatter series with a different break (the United Kingdom stops after Brexit).
+*Practice (block 3):* case study: backtest the models, test whether the Berlin weather adds anything, and recommend one with its prediction interval: Part 3 of [10-case-study-airbnb-review-forecast.ipynb](../workbooks/10-case-study-airbnb-review-forecast.ipynb).
 
 ## Check your understanding
 
@@ -270,7 +347,8 @@ flowchart TD
 2. Why can a gradient-boosting model trained on months with at most 13,000 reviews not forecast 15,000? How does the growth target change this?
 3. Compute the MASE scale for the training series 5, 7, 6, 8, 9, 7 with m = 2.
 4. Why does the MASE scale on this page skip the years 2020 and 2021? What would happen to the MASE of every model otherwise?
-5. ETS won the hold-out year against seasonal naive times growth, but lost the first fold clearly. Which evidence do you trust more, and why?
+5. A colleague reports that the forecast improves a lot when the observed temperature of the test months is added. Why is that comparison not fair, and which weather values could the forecast really use at the origin?
+6. ETS won the hold-out year against seasonal naive times growth, but lost the first fold clearly. Which evidence do you trust more, and why?
 
 ## Further reading
 

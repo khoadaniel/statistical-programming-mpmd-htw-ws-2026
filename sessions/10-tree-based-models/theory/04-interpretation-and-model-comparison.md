@@ -338,7 +338,7 @@ Shuffling `accommodates` costs 0.138 of R², property type 0.103, bedrooms 0.092
 **What drives nightly prices in Berlin, and is a tree ensemble worth it?** In [20-case-study-airbnb-price-trees.ipynb](../workbooks/20-case-study-airbnb-price-trees.ipynb): compare the Session 6 linear model with a random forest, scikit-learn's gradient boosting and LightGBM on the Berlin listings with host-grouped folds; tune the booster with early stopping and a randomised search; decide between current model and challenger with paired fold differences and a bootstrap interval on held-out hosts; and interpret the challenger with permutation importance and SHAP, including a check that catches the revenue leak of Session 9.
 
 > [!NOTE]
-> For text the picture reverses. On the EBTI heading task, where the input is a description of goods, a linear classifier on sparse TF-IDF features (Session 13) is far stronger than boosting on compressed text, so the leaderboard has no tree-based round.
+> For text the picture reverses: on the customs decisions of Sessions 13–16, a linear classifier on sparse TF-IDF features (Session 13) is far stronger than boosting on compressed text.
 
 ## Check your understanding
 

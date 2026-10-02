@@ -56,9 +56,9 @@ Git is used from the terminal (or from the Git panel of VS Code). A first reposi
 git config --global user.name "Ada Example"        # once per computer
 git config --global user.email "ada@example.org"
 
-git init -b main tariff-features && cd tariff-features
+git init -b main title-features && cd title-features
 printf '.venv/\n__pycache__/\ndata/\n*.parquet\n.env\n' > .gitignore   # never commit these
-echo "# Text features of descriptions of goods" > README.md
+echo "# Simple features of listing titles" > README.md
 git status --short                  # ?? .gitignore   ?? README.md   (untracked)
 git add .gitignore README.md        # stage
 git commit -m "Add README and .gitignore"
@@ -287,7 +287,7 @@ The pull request is the point where a second person checks correctness, readabil
 ```bash
 git switch -c feature/n-digits
 # ... implement, test: uv run pytest -q; lint: uvx ruff check . ...
-git add src/btitools/text_features.py tests/test_text_features.py
+git add src/listingtools/text_features.py tests/test_text_features.py
 git commit -m "Add n_digits with tests"
 git push -u origin feature/n-digits   # -u: remember origin as upstream for this branch
 # GitHub prints a link: open the pull request, describe what and why, request a reviewer
@@ -302,7 +302,7 @@ A short PR description that reviewers appreciate:
 Adds `n_digits(text)` to `text_features.py` and to `FEATURE_NAMES`.
 
 ## Why
-Needed for the simple-features baseline (Session 8). Closes #4.
+Hosts of large flats often write the size into the title; digits are a first, simple signal to test in the price model. Closes #4.
 
 ## How tested
 Parametrized test with 4 cases incl. empty text; `uv run pytest -q` passes locally.
@@ -418,9 +418,9 @@ print(share(["a!", "b"]))   # 0.5; ruff reports: F401 `os` imported but unused
 
 ## Practice: a tested module through a reviewed pull request
 
-In pairs, with the [workspace](../workspace/README.md) copied into a GitHub repository (exercises 6–8):
+Case study: contribute a tested module of simple features of listing titles (`text_features.py`: number of digits, share of upper-case letters) through a reviewed pull request. Hosts write titles such as "WOHNUNG IN BERLIN ★ MITTE" or "Loft 110 qm, Mauerpark"; capitals and digits are simple, measurable signals. Work in pairs, with the [workspace](../workspace/README.md) copied into a GitHub repository (exercises 6–8):
 
-1. Person A implements `n_digits`, person B `upper_share` in `src/btitools/text_features.py`, each on a branch, each with tests, each adding the name to `FEATURE_NAMES`.
+1. Person A implements `n_digits`, person B `upper_share` in `src/listingtools/text_features.py`, each on a branch, each with tests, each adding the name to `FEATURE_NAMES`.
 2. Each opens a pull request; the partner reviews with at least one line comment; the author responds.
 3. Merge the first PR when CI is green. The second PR now has a conflict in `FEATURE_NAMES`: resolve it as in the exercise above.
 4. Teams set up their project repository from the template with `ci.yml` and a ruleset for `main` (PR required, one approval, check `test` required).

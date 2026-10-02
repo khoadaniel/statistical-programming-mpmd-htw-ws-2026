@@ -37,14 +37,16 @@ Data downloaded at run time (not stored in the repository): UCI Bank Marketing d
 | [theory/01-relational-model-and-sql.md](theory/01-relational-model-and-sql.md) | Block 1: relational model, PostgreSQL, SELECT/WHERE/ORDER BY/LIMIT, GROUP BY/HAVING, joins and NULL | CC-BY-4.0 |
 | [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | Block 2: CTEs and window functions, SQLAlchemy and pandas, ingestion with constraints, data cards | CC-BY-4.0 |
 | [theory/03-polars-and-choosing-a-tool.md](theory/03-polars-and-choosing-a-tool.md) | Block 3: limits of pandas, Polars (expressions, lazy, optimiser, streaming, Parquet), SQL/pandas/Polars side by side, choosing a tool | CC-BY-4.0 |
-| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `join-types.png`, `decisions-per-year-window.png`, `pandas-polars-benchmark.png` (benchmark values measured with workbook 14) | CC-BY-4.0 |
-| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | Practice block 1: first SQL questions on the BTI decisions with DuckDB (decisions per country and year, headings with English names, headings without decisions, the deleted heading 8803) | CC-BY-4.0 |
-| [workbooks/10-case-study-postgres-decisions.ipynb](workbooks/10-case-study-postgres-decisions.ipynb) | Practice block 2: load the decisions into PostgreSQL (Docker) or DuckDB with constraints, headings ranked per country and year, running totals, data card | CC-BY-4.0 |
-| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | Practice block 3: the same aggregation on the raw EBTI export (23 CSV files, 1,051,034 decisions) in SQL, pandas and Polars; code, runtime and peak memory | CC-BY-4.0 |
-| [workbooks/sql/01-schema.sql](workbooks/sql/01-schema.sql), [02-add-constraints.sql](workbooks/sql/02-add-constraints.sql), [03-rank-headings-per-country-year.sql](workbooks/sql/03-rank-headings-per-country-year.sql) | Schema with keys and constraints; constraints for tables written by `prepare_data.py --postgres`; window-function ranking | CC-BY-4.0 |
+| [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `join-types.png`, `reviews-per-year-window.png` (Inside Airbnb Berlin reviews), `pandas-polars-benchmark.png` (benchmark values measured with workbook 14) | CC-BY-4.0 |
+| [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | Practice block 1: first SQL questions on the Berlin listings with DuckDB (keys, filters, listings and median price per district, joins with reviews and calendar, listings without reviews, rows of vanished listings, NULL in left joins) | CC-BY-4.0 |
+| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | Practice block 2: schema-first loading of listings, calendar, monthly reviews and weather into PostgreSQL (Docker, with `COPY`) or DuckDB, documented loading decisions, constraints at work, districts ranked by price, running totals of reviews, data card | CC-BY-4.0 |
+| [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | Practice block 3: the same district-month aggregation on the raw availability calendar (4,692,075 rows, 159 MB of CSV) in SQL, pandas and Polars (eager, lazy, streaming); code, runtime, peak memory; CSV against Parquet | CC-BY-4.0 |
+| [workbooks/sql/01-schema.sql](workbooks/sql/01-schema.sql), [02-add-constraints.sql](workbooks/sql/02-add-constraints.sql), [03-rank-districts-by-price.sql](workbooks/sql/03-rank-districts-by-price.sql), [04-reviews-running-total.sql](workbooks/sql/04-reviews-running-total.sql) | Schema with keys and constraints; constraints for tables written by `prepare_airbnb.py --postgres`; districts ranked by price; running totals of reviews | CC-BY-4.0 |
 | [workbooks/data-card-template.md](workbooks/data-card-template.md) | Data card template | CC-BY-4.0 |
 
 Author of own material: course team.
+
+Data used by the own material: the Inside Airbnb Berlin snapshot of 26 June 2026 in `case-study/data/airbnb/` and the raw calendar in `case-study/data/raw/airbnb/` (CC BY 4.0), and the daily Berlin weather from the Open-Meteo archive (CC BY 4.0, table `weather_daily`), all prepared by `case-study/prepare_airbnb.py` and not stored in this folder.
 
 ## Citations
 
@@ -60,7 +62,8 @@ Author of own material: course team.
 - The PostgreSQL Global Development Group. *PostgreSQL documentation*. https://www.postgresql.org/docs/current/
 - Polars developers. *Polars user guide*. https://docs.pola.rs/user-guide/
 - SQLAlchemy. *SQLAlchemy 2.0 documentation*. https://docs.sqlalchemy.org/en/20/
-- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export (course dataset; reuse under Commission Decision 2011/833/EU). https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
-- Open Knowledge Foundation / datasets (2026). *Harmonized System (HS) nomenclature*, HS 2022, ODC-PDDL-1.0 (course dataset). https://github.com/datasets/harmonized-system
+- Inside Airbnb (2026). *Berlin, Germany*, snapshot of 26 June 2026 (listings, calendar, reviews). CC BY 4.0 (course dataset; personal data removed by `case-study/prepare_airbnb.py`). https://insideairbnb.com/get-the-data/
+- Inside Airbnb. *Data assumptions*. https://insideairbnb.com/data-assumptions/
+- Open-Meteo. *Historical weather API* (daily Berlin weather, table `weather_daily`). CC BY 4.0. https://open-meteo.com/en/docs/historical-weather-api
 - Moro, S., Rita, P., & Cortez, P. (2014). Bank Marketing [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C5K306
 - Berka, P. (1999). Guide to the financial data set. PKDD'99 Discovery Challenge.

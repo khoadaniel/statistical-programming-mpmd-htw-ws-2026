@@ -18,7 +18,7 @@ Neural-network theory stays conceptual here; module 3.4 covers it in depth.
 - From words to vectors: [tokens](theory/01-from-words-to-vectors.md#tokens-how-a-language-model-splits-text), [embeddings](theory/01-from-words-to-vectors.md#embeddings-words-and-texts-as-vectors), [attention and pre-training](theory/01-from-words-to-vectors.md#attention-and-pre-training-conceptual) at a conceptual level
 - [Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models](theory/01-from-words-to-vectors.md#encoder-decoder-and-encoderdecoder-models)
 - [Embedding models (sentence-transformers)](theory/01-from-words-to-vectors.md#embedding-models-sentence-transformers)
-- *Practice:* tokenise descriptions of goods and compare token counts across languages; compute semantic similarity between descriptions of the same goods in different languages → [workbooks/01-case-study-tokens-and-similarity.ipynb](workbooks/01-case-study-tokens-and-similarity.ipynb)
+- *Practice:* tokenise descriptions and compare token counts across languages; compute semantic similarity between descriptions of the same goods in different languages → [workbooks/01-case-study-tokens-and-similarity.ipynb](workbooks/01-case-study-tokens-and-similarity.ipynb)
 
 **1:00–1:45 · Applications of embedding models** ([theory/02-applications-of-embeddings.md](theory/02-applications-of-embeddings.md))
 
@@ -29,10 +29,11 @@ Neural-network theory stays conceptual here; module 3.4 covers it in depth.
 
 **2:00–2:45 · Generative models through an API** ([theory/03-generative-models-through-an-api.md](theory/03-generative-models-through-an-api.md))
 
-- [Prompts, temperature, context window and costs](theory/03-generative-models-through-an-api.md#how-a-generative-model-produces-text-temperature-context-window-and-costs) · [the chat API](theory/03-generative-models-through-an-api.md#prompts-and-the-chat-api)
+- Applications of generative models: [prompts, temperature, context window and costs](theory/03-generative-models-through-an-api.md#how-a-generative-model-produces-text-temperature-context-window-and-costs) · [the chat API](theory/03-generative-models-through-an-api.md#prompts-and-the-chat-api)
 - [Zero-shot and few-shot classification with structured output](theory/03-generative-models-through-an-api.md#zero-shot-and-few-shot-classification-with-structured-output)
 - [Comparison with a trained model on quality, cost, latency and data protection](theory/03-generative-models-through-an-api.md#comparison-with-a-trained-model-quality-cost-latency-and-data-protection)
-- *Practice:* case study: compare an LLM (choosing among ten candidate headings) with the trained classifier on 200 decisions → [workbooks/09-case-study-llm-vs-trained-classifier.ipynb](workbooks/09-case-study-llm-vs-trained-classifier.ipynb)
+- [Abstention: route unsure cases to a customs officer](theory/03-generative-models-through-an-api.md#abstention-route-unsure-cases-to-a-customs-officer)
+- *Practice:* case study: compare an LLM, choosing among ten candidate headings, with the trained classifier on 200 decisions → [workbooks/09-case-study-llm-vs-trained-classifier.ipynb](workbooks/09-case-study-llm-vs-trained-classifier.ipynb); second leaderboard submission (L2) → [workbooks/10-case-study-leaderboard-l2.ipynb](workbooks/10-case-study-leaderboard-l2.ipynb)
 
 ## Materials
 
@@ -40,7 +41,7 @@ Neural-network theory stays conceptual here; module 3.4 covers it in depth.
 |---|---|---|---|
 | [theory/01-from-words-to-vectors.md](theory/01-from-words-to-vectors.md) | Subword tokens in many languages, embeddings, attention, pre-training, model families, multilingual sentence-transformers | 1 | core |
 | [theory/02-applications-of-embeddings.md](theory/02-applications-of-embeddings.md) | Cross-lingual semantic search, clustering, embedding features vs TF-IDF | 2 | core |
-| [theory/03-generative-models-through-an-api.md](theory/03-generative-models-through-an-api.md) | Temperature, context, costs, chat API, candidate headings and structured output, comparison with a trained model | 3 | core |
+| [theory/03-generative-models-through-an-api.md](theory/03-generative-models-through-an-api.md) | Temperature, context, costs, chat API, candidate headings and structured output, comparison with a trained model, abstention with a coverage–accuracy curve, leaderboard round L2 | 3 | core |
 | [workbooks/01-case-study-tokens-and-similarity.ipynb](workbooks/01-case-study-tokens-and-similarity.ipynb) | Case study: token counts per language with SentencePiece and BPE; similarity of descriptions across languages | 1 | core |
 | [workbooks/02-hf-course-tokenizers.ipynb](workbooks/02-hf-course-tokenizers.ipynb) | Hugging Face course: loading tokenisers, encoding and decoding | 1 | optional |
 | [workbooks/03-hf-course-bpe-tokenization.ipynb](workbooks/03-hf-course-bpe-tokenization.ipynb) | Hugging Face course: byte-pair encoding implemented step by step | 1 | optional |
@@ -50,6 +51,7 @@ Neural-network theory stays conceptual here; module 3.4 covers it in depth.
 | [workbooks/07-openai-cookbook-clustering.ipynb](workbooks/07-openai-cookbook-clustering.ipynb) | OpenAI Cookbook: k-means on precomputed embeddings of food reviews (third-party data), t-SNE plot | 2 | optional (last part needs an OpenAI key) |
 | [workbooks/08-openai-cookbook-structured-outputs.ipynb](workbooks/08-openai-cookbook-structured-outputs.ipynb) | OpenAI Cookbook: structured outputs with JSON schema and pydantic | 3 | optional (needs an OpenAI key, or adapt `base_url`) |
 | [workbooks/09-case-study-llm-vs-trained-classifier.ipynb](workbooks/09-case-study-llm-vs-trained-classifier.ipynb) | Case study: zero/few-shot LLM with ten candidate headings vs TF-IDF on 200 decisions; quality, cost, latency table | 3 | core |
+| [workbooks/10-case-study-leaderboard-l2.ipynb](workbooks/10-case-study-leaderboard-l2.ipynb) | Case study: round L2, TF-IDF plus multilingual embeddings against round L1 with a paired bootstrap; optional LLM for the unsure requests (trained model as fallback); `submission-L2-embeddings.csv` | 3 | core |
 
 Sources and licences of third-party files: [source.md](source.md).
 
@@ -60,7 +62,7 @@ Sources and licences of third-party files: [source.md](source.md).
 - Install the embedding dependencies once (`uv sync --group embeddings` at the repository root, about 1 GB with PyTorch) and run the second cell of workbook 01 so that the multilingual model `intfloat/multilingual-e5-small` (about 470 MB) is downloaded before class.
 - For Block 3, install [Ollama](https://ollama.com) and run `ollama pull qwen2.5:3b` (about 2 GB; `llama3.2:3b` also works). Without it, the workbook runs but skips the LLM calls.
 - Read Alammar's *The Illustrated Transformer* (link below), sections on self-attention.
-- Revise TF-IDF and the error analysis of Session 13, k-means and UMAP of Session 11, and the bootstrap of Session 7.
+- Revise TF-IDF, the metrics for many classes and the error analysis of Session 13 (bring your validation and leaderboard scores of round L1), k-means and UMAP of Session 11, the bootstrap of Session 7 and the decision threshold of Session 8.
 
 **Team project until the next session.** Decide with evidence whether a language-model component improves the project.
 
@@ -92,4 +94,4 @@ uv run --with sentence-transformers --with tiktoken --with umap-learn jupyter la
 export LLM_BASE_URL="https://api.openai.com/v1" LLM_MODEL="gpt-4o-mini" LLM_API_KEY="..."
 ```
 
-The Hugging Face and sentence-transformers workbooks (02, 03, 04, 06) start with `pip install` cells written for Google Colab; in the course environment skip those cells. Workbook 04 downloads several models, some larger than 1 GB: run it on Colab or pick the small models named in its cells. The figures of the theory pages are made by [theory/figures/make_figures.py](theory/figures/make_figures.py).
+The Hugging Face and sentence-transformers workbooks (02, 03, 04, 06) start with `pip install` cells written for Google Colab; in the course environment skip those cells. Workbook 04 downloads several models, some larger than 1 GB: run it on Colab or pick the small models named in its cells. Workbook 10 (round L2) encodes all 163,188 sample and test descriptions once: about 6 minutes with a GPU, 20–40 minutes on a laptop CPU; the vectors are cached in `workbooks/embeddings_cache/` (about 250 MB, not for the repository), and later runs take a few minutes. The figures of the theory pages are made by [theory/figures/make_figures.py](theory/figures/make_figures.py).

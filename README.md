@@ -33,9 +33,12 @@ Each session folder contains a **README** (plan, materials, preparation), **theo
 | 📍 16 | [Deployment, monitoring and maintenance](sessions/16-deployment-and-monitoring/) | FastAPI service, Docker, CI/CD, drift, retraining, model card |
 | 📍 17–18 | [Final project presentations](sessions/17-18-final-presentations/) | Presentations of the seven team projects (graded) |
 
-## Running case study and leaderboard
+## Datasets and leaderboard
 
-All sessions use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. Your task is to predict the four-digit HS heading of a decision from its description of goods, written in one of more than 20 EU languages. From Session 8 your team submits predictions to an ungraded class leaderboard, scored on decisions from 2024–2026 that you have not seen. The numeric topics (statistics, regression, tree-based models, clustering, demand over time) use a second dataset, the Berlin listings of **Inside Airbnb**. Details, downloads and scoring: [case-study/README.md](case-study/README.md).
+- **Sessions 1–12** use the Berlin listings of **Inside Airbnb** (prices, districts, availability, reviews) together with Berlin weather from the **Open-Meteo** API, and the **IBM Telco** churn data for classification.
+- **Sessions 13–16** use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. The task is to predict the four-digit HS heading from the description of goods, written in one of 23 EU languages. In these sessions your team submits predictions to an ungraded class leaderboard, scored on decisions from 2024–2026 that you have not seen.
+
+Details, downloads and scoring: [case-study/README.md](case-study/README.md).
 
 ## Final project
 
@@ -47,8 +50,8 @@ You need [uv](https://docs.astral.sh/uv/getting-started/installation/), Git and 
 
 ```bash
 uv sync                                   # creates .venv with the course packages
-uv run python case-study/prepare_data.py    # downloads the EBTI data (about 400 MB, once)
-uv run python case-study/prepare_airbnb.py  # downloads the Inside Airbnb Berlin data (about 100 MB, once)
+uv run python case-study/prepare_airbnb.py  # Inside Airbnb Berlin and Berlin weather (about 100 MB, once; Sessions 1–12)
+uv run python case-study/prepare_data.py    # EBTI customs decisions (about 400 MB, once; Sessions 13–16)
 uv run jupyter lab                        # opens the notebooks
 ```
 

@@ -33,7 +33,7 @@
 - [From correlation to the regression line](theory/04-correlation-and-communication.md#from-correlation-to-the-regression-line) (the bridge to Session 6)
 - [Communicating findings in a short report or a Streamlit dashboard](theory/04-correlation-and-communication.md#communicating-findings-a-short-report-or-a-streamlit-dashboard)
 
-*Practice:* How strongly does the price rise with the number of guests (Pearson, Spearman, log scale)? Do district price differences survive once room type, size and the type of stay are held fixed (a €10 gap that vanishes)? A one-page finding or a Streamlit dashboard of prices by district for a city housing analyst.
+*Practice:* Case study: how strongly does the price rise with the number of guests (Pearson, Spearman, log scale)? Do district price differences survive once room type, size and the type of stay are held fixed (a €10 gap that vanishes)? A one-page finding or a Streamlit dashboard of prices by district for a city housing analyst.
 
 ## Materials
 

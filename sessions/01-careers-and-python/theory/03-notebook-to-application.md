@@ -5,8 +5,8 @@ This page covers the third block. Analysis code in a notebook answers a question
 ```mermaid
 flowchart LR
   N["Notebook<br/>cells, global variables"] --> F["Functions<br/>named steps"]
-  F --> M["Module<br/>decisions.py"]
-  M --> P["Package<br/>src/btitools/"]
+  F --> M["Module<br/>listings.py"]
+  M --> P["Package<br/>src/listingtools/"]
   P --> T["Tests<br/>tests/"]
   P --> U["Users<br/>notebooks, scripts,<br/>a web service"]
 ```
@@ -40,8 +40,8 @@ The first step is to replace notebook cells that depend on global variables by a
 import pandas as pd
 
 # Notebook style: depends on a global variable `df` and a hard-coded column
-df = pd.DataFrame({"language": ["de", "fr", "de", "en"]})
-print(df["language"].value_counts(normalize=True)["de"])   # 0.5
+df = pd.DataFrame({"room_type": ["Entire home/apt", "Private room", "Entire home/apt", "Shared room"]})
+print(df["room_type"].value_counts(normalize=True)["Entire home/apt"])   # 0.5
 
 
 # Application style: explicit inputs, a documented result, no hidden state
@@ -52,8 +52,8 @@ def share_of(values: pd.Series, value: str) -> float:
     return float((values == value).mean())
 
 
-print(share_of(df["language"], "de"))      # 0.5
-print(share_of(pd.Series([], dtype=str), "de"))   # 0.0
+print(share_of(df["room_type"], "Entire home/apt"))          # 0.5
+print(share_of(pd.Series([], dtype=str), "Entire home/apt"))  # 0.0
 ```
 
 ### In practice
@@ -69,20 +69,20 @@ print(share_of(pd.Series([], dtype=str), "de"))   # 0.0
 ### Concept
 
 - A **script** is a `.py` file that is run from top to bottom: `python summarise.py`. It always starts from a clean state, which makes it reproducible.
-- A **module** is a `.py` file whose functions and classes can be **imported** by other code. `import decisions` runs the file once and gives access to its names as `decisions.name`. The block `if __name__ == "__main__":` contains code that runs only when the file is executed as a script, not when it is imported.
-- A **package** is a folder of modules with an `__init__.py` file. `from btitools.decisions import DecisionTable` looks for the package `btitools`, the module `decisions` inside it and the name `DecisionTable` in the module.
+- A **module** is a `.py` file whose functions and classes can be **imported** by other code. `import listings` runs the file once and gives access to its names as `listings.name`. The block `if __name__ == "__main__":` contains code that runs only when the file is executed as a script, not when it is imported.
+- A **package** is a folder of modules with an `__init__.py` file. `from listingtools.listings import ListingTable` looks for the package `listingtools`, the module `listings` inside it and the name `ListingTable` in the module.
 - Python finds modules on its **search path** (`sys.path`): the folder of the script, the installed packages of the environment, and folders added explicitly. Installing your own package into the environment (uv does this in *editable* mode) makes it importable everywhere, and changes to the code take effect without reinstalling.
 
 ```mermaid
 flowchart TB
-  subgraph pkg["package btitools/"]
+  subgraph pkg["package listingtools/"]
     I["__init__.py"]
-    R["decisions.py<br/>class DecisionTable"]
+    R["listings.py<br/>class ListingTable"]
     C["cli.py<br/>def main()"]
   end
-  NB["notebook"] -- "from btitools import DecisionTable" --> R
-  TE["tests/test_decisions.py"] -- import --> R
-  SH["terminal: decision-summary"] --> C
+  NB["notebook"] -- "from listingtools import ListingTable" --> R
+  TE["tests/test_listings.py"] -- import --> R
+  SH["terminal: listing-summary"] --> C
   C -- import --> R
 ```
 
@@ -100,21 +100,21 @@ import tempfile
 from pathlib import Path
 
 folder = Path(tempfile.mkdtemp())
-(folder / "hscodes.py").write_text(
-    '"""Helpers for codes of the Harmonized System."""\n'
+(folder / "prices.py").write_text(
+    '"""Helpers for prices in the raw Inside Airbnb files."""\n'
     "\n"
-    "def chapter_of(heading: str) -> str:\n"
-    "    return heading[:2]\n"
+    "def price_to_number(text: str) -> float:\n"
+    '    return float(text.lstrip("$").replace(",", ""))\n'
     "\n"
     'if __name__ == "__main__":\n'
     '    print("run as a script")\n'
 )
 sys.path.insert(0, str(folder))     # normally not needed: the module sits next to your code
 
-import hscodes                      # runs hscodes.py once; the __main__ block is skipped
+import prices                       # runs prices.py once; the __main__ block is skipped
 
-print(hscodes.chapter_of("9503"), hscodes.chapter_of("0901"))   # 95 09
-print(hscodes.__doc__)              # Helpers for codes of the Harmonized System.
+print(prices.price_to_number("$160.71"), prices.price_to_number("$1,083.00"))   # 160.71 1083.0
+print(prices.__doc__)               # Helpers for prices in the raw Inside Airbnb files.
 ```
 
 ### In practice
@@ -137,16 +137,16 @@ The workbook [13-python-modules-and-packages.ipynb](../workbooks/13-python-modul
 A **project structure** is the agreed layout of folders and files, so that every team member and every tool knows where things are. The course uses the **src layout**, which `uv init --package` creates:
 
 ```
-btitools/                    project folder (= Git repository)
+listingtools/                project folder (= Git repository)
 ├── pyproject.toml           name, Python version, dependencies, tool settings
 ├── uv.lock                  exact versions (generated, committed)
 ├── README.md                what the project does and how to run it
 ├── .gitignore               files never committed: .venv/, data/, secrets
-├── src/btitools/            the package: importable code only
+├── src/listingtools/        the package: importable code only
 │   ├── __init__.py
-│   └── decisions.py
+│   └── listings.py
 ├── tests/                   automated tests (Session 2)
-│   └── test_decisions.py
+│   └── test_listings.py
 ├── notebooks/               exploration that imports the package
 └── data/                    local data, ignored by Git
 ```
@@ -160,13 +160,13 @@ A fixed layout removes questions ("where is the cleaning code?") and lets tools 
 ### How it works in Python
 
 ```bash
-uv init --package btitools         # creates pyproject.toml, src/btitools/__init__.py, README.md
-cd btitools
+uv init --package listingtools     # creates pyproject.toml, src/listingtools/__init__.py, README.md
+cd listingtools
 uv add pandas pyarrow
 uv add --dev pytest ruff
 mkdir tests notebooks
-uv run python -c "import btitools; print(btitools.__file__)"
-# .../btitools/src/btitools/__init__.py: the package is installed in editable mode
+uv run python -c "import listingtools; print(listingtools.__file__)"
+# .../listingtools/src/listingtools/__init__.py: the package is installed in editable mode
 ```
 
 The Session 1 [workspace](../workspace/) is a finished example of this layout.
@@ -186,64 +186,67 @@ The Session 1 [workspace](../workspace/) is a finished example of this layout.
 **Object-oriented programming** (OOP) groups data and the functions that work on them into one unit.
 
 - A **class** is a blueprint: it defines what data an object holds and what it can do. By convention, class names use `CamelCase`.
-- An **object** (or **instance**) is one thing built from the class: `DecisionTable(data)` creates an object.
+- An **object** (or **instance**) is one thing built from the class: `ListingTable(data)` creates an object.
 - **Attributes** are the data stored in an object, accessed with a dot: `table.data`.
-- **Methods** are functions defined inside the class; they receive the object itself as the first parameter, called `self`: `table.language_shares()`.
+- **Methods** are functions defined inside the class; they receive the object itself as the first parameter, called `self`: `table.room_type_shares()`.
 - `__init__` is the special method that runs when an object is created; it stores the attributes. `__repr__` defines how the object is shown; `__len__` makes `len(table)` work.
 
 Python's built-in types are classes too: a `str` object has the method `.lower()`, a DataFrame has the attribute `.shape` and the method `.head()`. Writing your own class means creating such a type for your domain.
 
-A worked example by hand: `Decision(heading="9503", description="Plush toy in the shape of a bear")` creates one object. Its attribute `heading` is `"9503"`; its method `chapter()` applies the rule "the first two digits are the chapter" and returns `"95"`.
+A worked example by hand: `Listing(room_type="Entire home/apt", accommodates=4, price=160.0)` creates one object. Its attribute `price` is `160.0`; its method `price_per_guest()` applies the rule "price divided by the number of guests" and returns `40.0`.
 
 ```mermaid
 classDiagram
-  class Decision {
-    +str heading
-    +str description
-    +chapter() str
-    +n_words() int
+  class Listing {
+    +str room_type
+    +int accommodates
+    +float price
+    +price_per_guest() float
+    +is_entire_home() bool
   }
-  class DecisionTable {
+  class ListingTable {
     +DataFrame data
-    +from_parquet(path) DecisionTable
-    +date_range() tuple
-    +language_shares() Series
-    +top_headings(n) DataFrame
+    +from_parquet(path) ListingTable
+    +n_hosts() int
+    +by_district() DataFrame
+    +short_stays() ListingTable
+    +price_by_room_type() DataFrame
     +summary() dict
   }
-  DecisionTable o-- "many" Decision : rows describe
+  ListingTable o-- "many" Listing : rows describe
 ```
 
 ### Why it matters
 
-A class keeps data and behaviour together, so the user of `DecisionTable` does not need to know column names or pandas details: `table.summary()` is enough. The class can check its input once (in `__init__`) instead of every function checking it again. Session 2 extends this to dataclasses, inheritance and validation.
+A class keeps data and behaviour together, so the user of `ListingTable` does not need to know column names, pandas details or the 28-night rule: `table.summary()` is enough. The class can check its input once (in `__init__`) instead of every function checking it again. Session 2 extends this to dataclasses, inheritance and validation.
 
 ### How it works in Python
 
 ```python
-class Decision:
-    """One BTI decision: a description of goods and its tariff heading."""
+class Listing:
+    """One Airbnb listing: its room type, how many guests it sleeps and its price per night."""
 
-    def __init__(self, heading: str, description: str) -> None:
-        self.heading = heading          # attributes: data stored in the object
-        self.description = description
+    def __init__(self, room_type: str, accommodates: int, price: float) -> None:
+        self.room_type = room_type      # attributes: data stored in the object
+        self.accommodates = accommodates
+        self.price = price
 
-    def chapter(self) -> str:           # a method: a function that uses self
-        return self.heading[:2]
+    def price_per_guest(self) -> float:   # a method: a function that uses self
+        return self.price / self.accommodates
 
-    def n_words(self) -> int:
-        return len(self.description.split())
+    def is_entire_home(self) -> bool:
+        return self.room_type == "Entire home/apt"
 
     def __repr__(self) -> str:
-        return f"Decision(heading={self.heading!r}, description={self.description!r})"
+        return f"Listing({self.room_type!r}, accommodates={self.accommodates}, price={self.price})"
 
 
-d = Decision(heading="9503", description="Plush toy in the shape of a bear")   # an instance
-print(d)               # Decision(heading='9503', description='Plush toy in the shape of a bear')
-print(d.heading, d.chapter(), d.n_words())       # 9503 95 8
+flat = Listing(room_type="Entire home/apt", accommodates=4, price=160.0)   # an instance
+print(flat)            # Listing('Entire home/apt', accommodates=4, price=160.0)
+print(flat.price, flat.price_per_guest(), flat.is_entire_home())   # 160.0 40.0 True
 
-decisions = [Decision("3926", "Storage box of plastics"), Decision("0901", "Roasted coffee"), d]
-print([x.chapter() for x in decisions])          # ['39', '09', '95']
+offers = [Listing("Private room", 2, 97.0), Listing("Shared room", 1, 49.0), flat]
+print([x.price_per_guest() for x in offers])     # [48.5, 49.0, 40.0]
 ```
 
 The workspace class wraps a whole DataFrame. Run from the repository root:
@@ -252,12 +255,16 @@ The workspace class wraps a whole DataFrame. Run from the repository root:
 import sys
 
 sys.path.insert(0, "sessions/01-careers-and-python/workspace/src")   # uv run --project does this for you
-from btitools import DecisionTable
+from listingtools import ListingTable
 
-table = DecisionTable.from_parquet("case-study/data/train_sample.parquet")
-print(table)                         # DecisionTable(50000 decisions)
-print(table.language_shares().head(3).round(3).to_dict())   # {'de': 0.573, 'fr': 0.162, 'en': 0.052}
-print(table.top_headings(3)["heading"].tolist())            # ['3926', '9503', '6307']
+table = ListingTable.from_parquet("case-study/data/airbnb/listings.parquet")
+print(table)                                   # ListingTable(12776 listings)
+print(table.n_hosts())                         # 8182
+print(table.by_district()["n_listings"].head(3).to_dict())
+# {'Mitte': 2826, 'Friedrichshain-Kreuzberg': 2652, 'Pankow': 1950}
+print(table.short_stays())                     # ListingTable(6701 listings): a method can return a new object
+print(table.price_by_room_type()["median_price"].to_dict())
+# {'Entire home/apt': 185.25, 'Hotel room': 174.0, 'Private room': 97.33, 'Shared room': 49.2}
 ```
 
 ### In practice
@@ -266,10 +273,10 @@ print(table.top_headings(3)["heading"].tolist())            # ['3926', '9503', '
 - pandas itself is object-oriented: `DataFrame` and `Series` are classes, and every `df.groupby(...)` returns a `DataFrameGroupBy` object with its own methods.
 
 > [!WARNING]
-> Forgetting `self` is the most common error with first classes. A method defined as `def chapter():` raises `TypeError: chapter() takes 0 positional arguments but 1 was given`, because Python always passes the object as the first argument.
+> Forgetting `self` is the most common error with first classes. A method defined as `def price_per_guest():` raises `TypeError: Listing.price_per_guest() takes 0 positional arguments but 1 was given`, because Python always passes the object as the first argument.
 
 > [!TIP]
-> Start with functions. Introduce a class when several functions share the same data (here: the decisions DataFrame) or when you need several objects of the same kind.
+> Start with functions. Introduce a class when several functions share the same data (here: the listings DataFrame) or when you need several objects of the same kind.
 
 The workbooks [14-classes-and-functions.ipynb](../workbooks/14-classes-and-functions.ipynb) and [15-classes-and-methods.ipynb](../workbooks/15-classes-and-methods.ipynb) (*Think Python*, 3rd edition) introduce classes step by step with exercises.
 
@@ -308,16 +315,16 @@ After the move, the notebook contains only calls and their results, while the lo
 import sys
 
 sys.path.insert(0, "sessions/01-careers-and-python/workspace/src")
-from btitools import DecisionTable
+from listingtools import ListingTable
 
-summary = DecisionTable.from_parquet("case-study/data/train_sample.parquet").summary()
-print(summary["n_decisions"], summary["top_headings"][0])   # 50000 {'heading': '3926', 'n_decisions': 2009}
+summary = ListingTable.from_parquet("case-study/data/airbnb/listings.parquet").summary()
+print(summary["n_listings"], summary["n_short_stays"], summary["median_short_stay_price"])   # 12776 6701 157.0
 ```
 
 ### In practice
 
 - Many data teams use notebooks for exploration and reporting but require that code feeding dashboards or models lives in reviewed modules; the Netflix example above is one documented case.
-- Tools such as Jupytext and marimo store notebooks as plain `.py` files, which makes them easier to review in Git; the workspace file `notebooks/explore_decisions.py` uses the same `# %%` cell format.
+- Tools such as Jupytext and marimo store notebooks as plain `.py` files, which makes them easier to review in Git; the workspace file `notebooks/explore_listings.py` uses the same `# %%` cell format.
 
 > [!CAUTION]
 > Notebooks with outputs are large and change on every run, which makes Git conflicts likely (Session 2). Clear outputs before committing, or keep notebooks small and let them import the package.
@@ -326,17 +333,17 @@ print(summary["n_decisions"], summary["top_headings"][0])   # 50000 {'heading': 
 
 Work in the Session 1 [workspace](../workspace/README.md):
 
-1. Compare `notebooks/explore_decisions.py` (notebook style) with `src/btitools/decisions.py` (the class `DecisionTable`).
-2. Implement the two missing methods `median_description_length_by_language` and `valid_share_by_year` (questions 4 and 5 of the case-study notebook).
+1. Compare `notebooks/explore_listings.py` (notebook style) with `src/listingtools/listings.py` (the class `ListingTable`, which loads and summarises the listings).
+2. Implement the two missing methods `median_price_by_district` and `review_summary` (questions 4 and 5 of the case-study notebook).
 3. Activate their tests and run `uv run pytest -q` in the workspace folder.
-4. Add the results to `summary()` and run `decision-summary` on the sample.
+4. Add the results to `summary()` and run `listing-summary` on the listings.
 
 ## Check your understanding
 
 1. Name two properties of notebook code that make it hard for others to reuse.
 2. What is the difference between a module and a package, and what does `if __name__ == "__main__":` do?
 3. Why does the course put the package in `src/` rather than next to the tests?
-4. In `table.language_shares()`, what is the object, what is the method, and what does `self` refer to inside the method?
+4. In `table.room_type_shares()`, what is the object, what is the method, and what does `self` refer to inside the method?
 5. A colleague needs your cleaning code in a nightly job. Notebook or module? Why?
 
 ## Further reading

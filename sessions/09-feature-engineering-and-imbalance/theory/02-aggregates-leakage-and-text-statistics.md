@@ -1,6 +1,6 @@
 # Aggregates from joined tables, target leakage and text statistics
 
-Many useful features do not sit in the row we predict on. They come from another table, grouped by a key and summarised: how many reviews a listing received in the last twelve months, how long ago its last review was, what similar listings in the neighbourhood cost. This page covers the second block of Session 9: how to compute such **aggregates** only from data that existed at the time of each prediction, how features **leak the target** when that rule is broken, and how simple statistics of a text become numeric features. The examples use the Inside Airbnb data for Berlin: the listings table and the monthly review counts per listing, a proxy for stays (snapshot of 26 June 2026). A second, shorter example comes from the EBTI case study.
+Many useful features do not sit in the row we predict on. They come from another table, grouped by a key and summarised: how many reviews a listing received in the last twelve months, how long ago its last review was, what similar listings in the neighbourhood cost. This page covers the second block of Session 9: how to compute such **aggregates** only from data that existed at the time of each prediction, how features **leak the target** when that rule is broken, and how simple statistics of a text become numeric features. The examples use the Inside Airbnb data for Berlin: the listings table and the monthly review counts per listing, a proxy for stays (snapshot of 26 June 2026).
 
 > [!NOTE]
 > The code blocks on this page build on each other. Run them in order from the repository root. They need `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`). Review counts are a proxy for demand: not every guest writes a review, and the share who do may change over time.
@@ -112,7 +112,7 @@ Worked example: the title `"Bright 2-room flat, 65 m², Mitte"` has 32 character
 
 ### Why it matters
 
-These features are cheap, transparent and available for every listing, including a new one: the host writes the title before the first guest arrives. They are also a first test of whether text helps at all before investing in a text model. In the EBTI case study the same kind of statistics form the inputs of the first leaderboard model (L1 in Session 8); there they reach only 7.6 % accuracy, because statistics *about* a description cannot tell a shoe from a lamp, which is why Session 13 uses the words themselves.
+These features are cheap, transparent and available for every listing, including a new one: the host writes the title before the first guest arrives. They are also a first test of whether text helps at all before investing in a text model. Their limit is equally clear: statistics *about* a text cannot tell a loft from a shared room, which is why Session 13 uses the words themselves.
 
 ### How it works in Python
 
@@ -171,7 +171,7 @@ Hosts who state the floor area or use luxury words ask for much higher prices (m
 
 1. **Columns derived from the target.** Inside Airbnb estimates each listing's occupancy from its reviews and computes `estimated_revenue_l365d` as occupancy × price. For a price model, a revenue feature contains the price.
 2. **Aggregates that include the target period.** The snapshot columns `number_of_reviews_ltm` (reviews in the last twelve months), `reviews_per_month` and `estimated_occupancy_l365d` were computed in June 2026. For the demand question of Section 1 they cover exactly the period to be predicted. Even `availability_365` (free nights in the coming year, measured in June 2026) describes a time after the cut-off.
-3. **Information written with or after the label**, such as the customs' justification in the EBTI case study (below), or a "reason for cancellation" in a churn table.
+3. **Information written with or after the label**, such as a "reason for cancellation" in a churn table, or the written justification that accompanies an expert's decision (Session 13 meets one in the customs case study).
 
 The result is a feature that is much more strongly related to the target in the training data than it will ever be at prediction time.
 
@@ -231,8 +231,6 @@ print(cross_val_score(gbm, demand[past_only + ["availability_365", "minimum_nigh
 
 The revenue feature lifts the price model from 0.60 to 0.87; a new listing has no revenue history, and an existing one has its revenue only *because* of its price. The snapshot review columns make the demand model almost perfect, because they count the very reviews we want to predict. The last row is the instructive one: availability looks like a harmless property of the listing, but in June 2026 it partly reflects whether the listing is still active, which is what the model is asked to predict. Three points of R² for a subtle leak is enough to change a model choice.
 
-**The same rule in the EBTI case study.** Each training decision has a `classification_justification` written by customs; it names the heading in about 70 % of the decisions, and a rule that reads the first four-digit number from it gets 64 % of the headings right without any model. New requests and the test set do not have it. Session 7 (theory page 03) shows that a classifier using it looks excellent in validation and is *worse* in use. The optional workbook [07-case-study-ebti-past-only-lookups.ipynb](../workbooks/07-case-study-ebti-past-only-lookups.ipynb) adds a past-only aggregate on that data: the heading of an earlier decision with the same description. It is legitimate and almost always right when it answers, but on validation data built like the leaderboard's test set (no description seen in training) it never answers.
-
 ### In practice
 
 - In the KDD Cup 2008 on breast-cancer detection, patient identifiers turned out to be predictive of the label because of how the data had been assembled; Rosset et al. (2010) and Kaufman et al. (2012) describe this and similar competition leaks.
@@ -240,7 +238,7 @@ The revenue feature lifts the price model from 0.60 to 0.87; a new listing has n
 - Kapoor and Narayanan (2023) reviewed published machine-learning studies in 17 scientific fields and found data leakage, including features with information from the future, among the main reasons for irreproducible results.
 
 > [!CAUTION]
-> **The case-study rules.** For a price model, never use `estimated_revenue_l365d` or `estimated_occupancy_l365d`. For any question with a cut-off date, build features from `reviews_monthly` filtered to the past, not from the snapshot columns `number_of_reviews_ltm`, `reviews_per_month` or `last_review`. For the EBTI heading task, never use `classification_justification`, `keywords`, `cn_code`, `chapter`, `status`, `end_date` or `invalidation_reason` as inputs.
+> **The case-study rules.** For a price model, never use `estimated_revenue_l365d` or `estimated_occupancy_l365d`. For any question with a cut-off date, build features from `reviews_monthly` filtered to the past, not from the snapshot columns `number_of_reviews_ltm`, `reviews_per_month` or `last_review`. The same check (does this column exist when the prediction is made?) applies to every project table.
 
 > [!WARNING]
 > Out-of-fold encoding (page 1) removes the row's own target but still uses future rows and other listings of the same host. With grouped or time-based validation this matters; prefer past-only aggregates for anything that has a timestamp.

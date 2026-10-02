@@ -49,7 +49,7 @@ A score is its margin: above 0 the model votes for the heading, below 0 it is no
 Scores are not probabilities. For the boot request above, version 1 answers 6404 with score −0.28 and has
 the correct heading 6403 only in third place (−0.68): short descriptions, unlike the long descriptions of real
 decisions, give the model little to go on. A service would show such low-score answers as suggestions only and
-route them to an officer (Session 8, abstention).
+route them to an officer (Session 14, abstention).
 
 **Model size.** With about 900 headings and 80,000 words, the dense coefficient matrix takes about 600 MB.
 `train.py` sets coefficients with |w| < 0.05 to zero and stores them sparsely (`--prune`): about 1 % of the

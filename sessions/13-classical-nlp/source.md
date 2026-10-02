@@ -16,11 +16,11 @@ Third-party material in this session, with its origin and licence. Keep the attr
 
 | File | Covers | Licence |
 |---|---|---|
-| [theory/01-text-as-data.md](theory/01-text-as-data.md), [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md), [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Theory pages for the three blocks; partly based on the course's earlier lecture notes | CC-BY-4.0, author: course team |
+| [theory/01-text-as-data.md](theory/01-text-as-data.md), [theory/02-tfidf-and-text-classification.md](theory/02-tfidf-and-text-classification.md), [theory/03-error-analysis-and-limits.md](theory/03-error-analysis-and-limits.md) | Theory pages for the three blocks; partly based on the course's earlier lecture notes and on the course's earlier pages on many-class metrics and leakage | CC-BY-4.0, author: course team |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG figures | Multilingual document-term matrix sketch, top words per heading (6403, 6404, 9503), footwear confusion matrix; EBTI case-study data | CC-BY-4.0, author: course team |
 | [workbooks/01-case-study-vocabulary-and-dtm.ipynb](workbooks/01-case-study-vocabulary-and-dtm.ipynb) | Vocabulary, document-term matrix, Zipf's law, preprocessing on the EBTI decision sample | CC-BY-4.0, author: course team |
-| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Word and character TF-IDF classifiers, per-heading metrics, leaderboard submission (round L2) | CC-BY-4.0, author: course team |
-| [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Error analysis of 20 misclassified decisions, quoted heading numbers, improvements | CC-BY-4.0, author: course team |
+| [workbooks/05-case-study-tfidf-leaderboard.ipynb](workbooks/05-case-study-tfidf-leaderboard.ipynb) | Word and character TF-IDF classifiers, metrics for many classes (macro-F1, per-heading, top-k, time versus random split), leaderboard submission (round L1) | CC-BY-4.0, author: course team |
+| [workbooks/07-case-study-error-analysis.ipynb](workbooks/07-case-study-error-analysis.ipynb) | Error analysis of 20 misclassified decisions, quoted heading numbers, the justification leak, improvements | CC-BY-4.0, author: course team |
 
 ## Citations
 
@@ -32,6 +32,8 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - European Commission. *European Binding Tariff Information (EBTI)* database, full export (case-study data). Reuse with acknowledgement under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
 - datasets/harmonized-system: *Harmonized System nomenclature (HS 2022)*, ODC Public Domain Dedication and Licence. https://github.com/datasets/harmonized-system
 - Jurafsky, D. and Martin, J. H. (2026). *Speech and Language Processing*, 3rd ed. draft. https://web.stanford.edu/~jurafsky/slp3/ (linked only)
+- Kapoor, S. and Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns*, 4(9), 100804. https://doi.org/10.1016/j.patter.2023.100804
+- Kaufman, S., Rosset, S., Perlich, C. and Stitelman, O. (2012). Leakage in data mining: formulation, detection, and avoidance. *ACM Transactions on Knowledge Discovery from Data*, 6(4), 15.
 - Landauer, T. K. and Dumais, S. T. (1997). A solution to Plato's problem: the latent semantic analysis theory of acquisition, induction, and representation of knowledge. *Psychological Review*, 104(2), 211–240.
 - Manning, C. D., Raghavan, P. and Schütze, H. (2008). *Introduction to Information Retrieval*. Cambridge University Press. https://nlp.stanford.edu/IR-book/
 - Mosteller, F. and Wallace, D. L. (1964). *Inference and Disputed Authorship: The Federalist*. Addison-Wesley.
@@ -40,6 +42,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - Pedregosa, F. et al. (2011). Scikit-learn: machine learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
 - Porter, M. F. (1980). An algorithm for suffix stripping. *Program*, 14(3), 130–137.
 - Ribeiro, M. T., Singh, S. and Guestrin, C. (2016). "Why should I trust you?": explaining the predictions of any classifier. *Proceedings of KDD 2016*, 1135–1144.
+- Rosenthal, S., Farra, N. and Nakov, P. (2017). SemEval-2017 Task 4: sentiment analysis in Twitter. *Proceedings of SemEval-2017*, 502–518.
 - Slapin, J. B. and Proksch, S.-O. (2008). A scaling model for estimating time-series party positions from texts. *American Journal of Political Science*, 52(3), 705–722.
 - Spärck Jones, K. (1972). A statistical interpretation of term specificity and its application in retrieval. *Journal of Documentation*, 28(1), 11–21.
 - Wang, S. and Manning, C. D. (2012). Baselines and bigrams: simple, good sentiment and topic classification. *Proceedings of ACL 2012*, 90–94.

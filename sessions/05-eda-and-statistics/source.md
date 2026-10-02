@@ -28,7 +28,6 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [workbooks/17-seaborn-regression.ipynb](workbooks/17-seaborn-regression.ipynb) | `regplot`, `lmplot`, residual plots, conditioning on other variables | [mwaskom/seaborn, doc/_tutorial](https://raw.githubusercontent.com/mwaskom/seaborn/master/doc/_tutorial/regression.ipynb) | [BSD-3-Clause](https://github.com/mwaskom/seaborn/blob/master/LICENSE.md) | 2026-10-01 | Renamed from `regression.ipynb`; content unchanged |
 | [workbooks/data/SOCR_MLB.tsv](workbooks/data/SOCR_MLB.tsv) | Data for workbook 02 (MLB heights and weights) | [microsoft/Data-Science-For-Beginners](https://github.com/microsoft/Data-Science-For-Beginners/tree/main/data); originally SOCR, UCLA | [MIT](https://github.com/microsoft/Data-Science-For-Beginners/blob/main/LICENSE) | 2026-09-26 | Unchanged |
 
-On 2026-10-01 the workbooks were renumbered into teaching order (old 03–09 became 10–16).
 
 ## Own material
 
@@ -38,7 +37,7 @@ On 2026-10-01 the workbooks were renumbered into teaching order (old 03–09 bec
 | [workbooks/dashboard_app.py](workbooks/dashboard_app.py) | Streamlit dashboard of short-stay prices and listings by district (Inside Airbnb Berlin) | Author: course team, licence CC-BY-4.0 |
 | [theory/](theory/) (four pages) and [theory/figures/make_figures.py](theory/figures/make_figures.py) with its PNGs | Theory pages and figures | Author: course team, licence CC-BY-4.0 |
 
-The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`) in its left panel. All other figures and panels use the Inside Airbnb Berlin data (snapshot of 26 June 2026) or simulated data. On 2026-10-02 the case-study material was reworked from the Amazon reviews to the EBTI decisions, and later the same day from the EBTI decisions to Inside Airbnb Berlin, because the numeric questions of this session (prices, sizes, districts) are real there; the EBTI decisions remain the running text case study of the course.
+The figure `simpsons-paradox.png` uses the published Berkeley admission counts (Bickel et al., 1975; R dataset `UCBAdmissions`) in its left panel. All other figures and panels use the Inside Airbnb Berlin data (snapshot of 26 June 2026) or simulated data.
 
 ## Citations
 

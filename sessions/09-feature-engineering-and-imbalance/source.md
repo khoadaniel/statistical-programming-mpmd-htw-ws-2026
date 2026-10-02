@@ -24,8 +24,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) and the three PNG files | Cyclical month encoding, SMOTE illustration, effect of resampling and of a lower threshold on Telco churn | CC-BY-4.0 |
 | [workbooks/05-case-study-airbnb-features.ipynb](workbooks/05-case-study-airbnb-features.ipynb) | Practice 1: date, distance, interaction, category and amenity features for a Berlin Airbnb price model, host-grouped feature-group comparison. Author: course team | CC-BY-4.0 |
 | [workbooks/06-case-study-airbnb-leakage.ipynb](workbooks/06-case-study-airbnb-leakage.ipynb) | Practice 2: past-only demand features from monthly reviews, snapshot and revenue leaks, title statistics. Author: course team | CC-BY-4.0 |
-| [workbooks/07-case-study-ebti-past-only-lookups.ipynb](workbooks/07-case-study-ebti-past-only-lookups.ipynb) | Optional: the justification leak and past-only description lookups in the EBTI decisions. Author: course team | CC-BY-4.0 |
-| [workbooks/13-case-study-imbalance.ipynb](workbooks/13-case-study-imbalance.ipynb) | Practice 3: imbalance strategies for Telco churn and the long tail of EBTI headings. Author: course team | CC-BY-4.0 |
+| [workbooks/13-case-study-imbalance.ipynb](workbooks/13-case-study-imbalance.ipynb) | Practice 3: imbalance strategies and a cost-tuned threshold for Telco churn. Author: course team | CC-BY-4.0 |
 
 ## Citations
 
@@ -52,5 +51,3 @@ Third-party material in this session, with its origin and licence. Keep the attr
 - Rosset, S., Perlich, C., Świrszcz, G., Melville, P. & Liu, Y. (2010). Medical data mining: insights from winning two competitions. *Data Mining and Knowledge Discovery*, 20, 439–468. https://doi.org/10.1007/s10618-009-0158-x
 - Santos, M. S., Soares, J. P., Abreu, P. H., Araújo, H. & Santos, J. (2018). Cross-validation for imbalanced datasets: avoiding overoptimistic and overfitting approaches. *IEEE Computational Intelligence Magazine*, 13(4), 59–76. https://doi.org/10.1109/MCI.2018.2866730
 - van den Goorbergh, R., van Smeden, M., Timmerman, D. & Van Calster, B. (2022). The harm of class imbalance corrections for risk prediction models. *JAMIA*, 29(9), 1525–1534. https://doi.org/10.1093/jamia/ocac093
-- European Commission (2026). *European Binding Tariff Information (EBTI) database*, full export, retrieved by each student with `case-study/prepare_data.py`; reuse under Commission Decision 2011/833/EU. https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en
-- World Customs Organization (2022). *Harmonized System nomenclature, 2022 edition* (English headings via the datasets/harmonized-system repository, ODC-PDDL). https://github.com/datasets/harmonized-system

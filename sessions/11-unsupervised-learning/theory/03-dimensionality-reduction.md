@@ -203,7 +203,7 @@ Three readings. **PC1 (21 % of the variance) is the size of the amenity list**: 
 > **A component can encode the data-collection process.** Changes of a form, a scraper or a coding scheme create correlated columns, and PCA will find them as a strong direction. Before naming a component, look at its loadings and ask whether they describe the objects or the way they were recorded.
 
 > [!TIP]
-> For very wide sparse tables (text, thousands of amenity labels), use `TruncatedSVD`, which works on sparse matrices without centring them; Session 13 uses it for TF-IDF vectors of the EBTI descriptions.
+> For very wide sparse tables (text, thousands of amenity labels), use `TruncatedSVD`, which works on sparse matrices without centring them; Session 13 uses it for TF-IDF vectors of texts.
 
 *Practice (block 3):* summarise the amenities of the Berlin listings with PCA and map the listings with t-SNE: part B of workbook [24-case-study-airbnb-listing-segments.ipynb](../workbooks/24-case-study-airbnb-listing-segments.ipynb).
 

@@ -25,7 +25,6 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | [workbooks/data/penguins_regression.csv](workbooks/data/penguins_regression.csv), [penguins_classification.csv](workbooks/data/penguins_classification.csv) | Data for workbooks 01, 02, 15 (subset of Palmer penguins) | [INRIA/scikit-learn-mooc/datasets](https://github.com/INRIA/scikit-learn-mooc/tree/main/datasets); original data Gorman et al. (2014), palmerpenguins | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) (repository); palmerpenguins data [CC0](https://github.com/allisonhorst/palmerpenguins/blob/main/LICENSE.md) | 2026-10-01 | Unchanged |
 | [workbooks/data/house_prices.csv](workbooks/data/house_prices.csv) | Data for workbook 03 (Ames housing, 460 KB) | [INRIA/scikit-learn-mooc/datasets](https://github.com/INRIA/scikit-learn-mooc/tree/main/datasets); original data De Cock (2011) | [CC-BY-4.0](https://github.com/INRIA/scikit-learn-mooc/blob/main/LICENSE) (repository); original published for educational use in the *Journal of Statistics Education* | 2026-10-01 | Unchanged |
 
-On 2026-10-01 the robust-regression workbooks were renumbered from 20–27 to 07–14, and new material was placed before and after them.
 
 ## Own material
 
@@ -34,7 +33,7 @@ On 2026-10-01 the robust-regression workbooks were renumbered from 20–27 to 07
 | [workbooks/17-case-study-airbnb-price-and-churn.ipynb](workbooks/17-case-study-airbnb-price-and-churn.ipynb) | Case study: lifecycle mapping of a price model for Berlin hosts, regression of the log nightly price on guests, room type, distance to Alexanderplatz and district (metrics in euros against a median baseline, residuals), complexity curves with 5,360 and 60 training listings, OLS vs Huber vs quantile regression (median and 90th percentile) on prices with extreme values, Telco churn logistic regression with odds ratios and thresholds (block 3 unchanged) | Author: course team, licence CC-BY-4.0 |
 | [theory/](theory/) (three pages) and [theory/figures/make_figures.py](theory/figures/make_figures.py) with its PNGs | Theory pages and figures | Author: course team, licence CC-BY-4.0 |
 
-The case-study material uses the Inside Airbnb Berlin listings in `case-study/data/airbnb/` (snapshot of 26 June 2026, CC BY 4.0, collected from public listing pages; reported in aggregate, hosts never named). Until 2026-10-02 it used a forced regression target from the EBTI decisions (length of the description of goods), which was replaced because the price question is real; the EBTI leaderboard task is mentioned as the second lifecycle example. The IBM Telco customer churn data are downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and are not stored in the repository.
+The case-study material uses the Inside Airbnb Berlin listings in `case-study/data/airbnb/` (snapshot of 26 June 2026, CC BY 4.0, collected from public listing pages; reported in aggregate, hosts never named). The IBM Telco customer churn data are downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and are not stored in the repository.
 
 ## Citations
 

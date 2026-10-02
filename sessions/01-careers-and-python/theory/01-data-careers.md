@@ -38,7 +38,7 @@ A **role** is a bundle of recurring tasks, not a job title. Job titles differ be
 
 The roles form a chain. A data engineer makes data available; an analyst describes it; a data scientist builds a model; an ML engineer runs that model as a service. In small organisations one person covers several links of the chain. A further role sits between analyst and engineer: the **analytics engineer**, who models data in the warehouse (often with SQL and dbt) so that analysts can use it.
 
-A worked example: a customs authority receives thousands of requests in which traders ask how their product is classified in the customs tariff. The **data engineer** loads the published decisions into a database every night. The **analyst** counts decisions per product group and month and shows them in a dashboard. The **data scientist** trains a classifier that proposes a tariff heading from the description of the goods. The **ML engineer** deploys that classifier so that a proposal appears within seconds of a new request, and monitors whether its accuracy drops, for example after the tariff is revised.
+A worked example: a holiday-rental platform such as Airbnb lists thousands of flats in Berlin. The **data engineer** loads every new listing, booking and review into the warehouse each night. The **analyst** counts listings and bookings per district and month and shows them in a dashboard for the city team. The **data scientist** trains a model that suggests a price per night from the size, location and reviews of a flat. The **ML engineer** deploys that model so that a suggestion appears within seconds when a host creates a listing, and monitors whether its error grows, for example after a change in the city's rules on holiday rentals.
 
 ```mermaid
 flowchart LR
@@ -154,51 +154,60 @@ timeline
 | Delivery | 10 % |
 | Collaboration and presentation (per member) | 20 % |
 
-**Running case study.** Every method is practised on the same data: European Binding Tariff Information (EBTI) decisions. A trader who is unsure how a product is classified in the customs tariff asks an EU customs authority for a Binding Tariff Information (BTI) decision; customs states the product's code, and the European Commission publishes all decisions in the EBTI database. The codes follow the Harmonized System (HS): 21 sections, 97 chapters (two digits), about 1,200 headings (four digits) and finer subheadings; the EU's Combined Nomenclature adds digits 7–8. The task of the course is to predict the **four-digit heading** of a decision from its description of goods, for example `9503` (toys). The training data are 309,529 decisions that started between 2017 and 2023, in 23 languages (57 % German, 16 % French); a random sample of 50,000 decisions is used in class.
+**Running case study.** Methods are practised on real data that stay the same over many weeks, so that each new method changes the answer to familiar questions. Each session uses the dataset that fits its topic best:
 
-**Leaderboard.** From Session 8, teams predict the heading of 113,188 decisions from 2024 to 2026 whose headings are hidden; 2024 forms the public leaderboard, 2025–2026 the private one. The score is **accuracy** (the share of correct headings), reported together with **macro-F1**, the average F1 score over all headings, in which a rare heading counts as much as a frequent one. The training data contain 1,114 different headings, so the two numbers tell different stories (Session 8). The leaderboard is not graded; it gives every method the same, comparable test.
+| Dataset | What it is | Sessions |
+|---|---|---|
+| **Inside Airbnb, Berlin** | 12,776 Berlin listings (snapshot of 26 June 2026) with district, room type, size, price per night, minimum stay, ratings and registration number; the availability calendar for the next 365 days; the number of reviews per listing and month since 2009 as a measure of demand | 1–12 |
+| **Open-Meteo** (web API) | Daily Berlin weather (temperature, rain, sunshine) since 2016, fetched from a web API | 2 and 12 |
+| **IBM Telco churn** | 7,043 customers of a telecom provider and whether they cancelled their contract | 6, 8–11 |
+| **EBTI** (EU customs decisions) | 309,529 binding decisions in 23 languages in which customs states the four-digit tariff heading of a product, for example `9503` (toys); the task is to predict the heading from the description of the goods | 13–16 |
+
+The Airbnb data carry the first twelve sessions: SQL across listings, calendar and reviews (S3), data quality (S4), statistics on prices by district (S5), price models (S6, S7, S9, S10), kinds of offers (S11) and monthly demand with the weather (S12). Telco is the classic churn task for classification. EBTI is a text task across many languages and more than 1,000 classes, which is what Sessions 13–16 need for text models, language models and deployment.
+
+**Leaderboard.** In Sessions 13–16, teams predict the heading of 113,188 customs decisions from 2024 to 2026 whose headings are hidden; 2024 forms the public leaderboard, 2025–2026 the private one. The score is **accuracy** (the share of correct headings), reported together with **macro-F1**, the average F1 score over all headings, in which a rare heading counts as much as a frequent one. The training data contain 1,114 different headings, so the two numbers tell different stories (Session 13). The leaderboard is not graded; it gives every method the same, comparable test.
 
 | Round | Session | Model |
 |---|---|---|
-| L1 | 8 | Logistic regression on simple features |
-| L2 | 13 | TF-IDF text classifier |
+| L1 | 13 | TF-IDF text classifier |
+| L2 | 14 | Embeddings or a language model, any method of the session |
 | L3 | 16 | Final submission after retraining with the released 2024 labels, any method |
 
 ### Why it matters
 
-One dataset across 18 sessions means that students do not spend each week learning a new table; they see how each new method changes the answer to the same questions. The leaderboard makes the comparison concrete: a reference model that always predicts the most frequent heading (3926, other articles of plastics) is right for 4.1 % of the 2024 decisions; a logistic regression on simple features such as text length and language reaches 7.6 %, which shows that the words matter; a linear model on TF-IDF features of the description reaches about 88 %.
+Staying with one dataset for twelve weeks means that students do not spend each week learning a new table; they see how each new method changes the answer to the same questions, for example what drives the price of a night in Berlin: first as a median per district (S5), then as a regression (S6), a validated and tuned model (S7), and a gradient-boosted model with explanations (S10). The leaderboard of Sessions 13–16 makes a comparison concrete in the same way: a reference model that always predicts the most frequent heading (3926, other articles of plastics) is right for 4.1 % of the 2024 decisions; a linear model on TF-IDF features of the description reaches about 88 %.
 
 ### How it works in Python
 
-The data are not distributed with the course material. Each student downloads them from the official source with the provided script, run once from the repository root (about 400 MB download):
+The data are not distributed with the course material. Each student downloads them from the original source with the provided script, run once from the repository root (about 100 MB download, plus the weather from the Open-Meteo archive):
 
 ```bash
-uv run python case-study/prepare_data.py
+uv run python case-study/prepare_airbnb.py
 ```
 
-A first look confirms that the data are in place:
+The EBTI data for Sessions 13–16 are prepared in the same way later (`case-study/prepare_data.py`). A first look confirms that the listings are in place:
 
 ```python
 import pandas as pd
 
-decisions = pd.read_parquet("case-study/data/train_sample.parquet")
-print(decisions.shape)                                  # (50000, 14)
-print(decisions["heading"].nunique())                   # 934 different headings in the sample
-print(decisions["heading"].value_counts().head(3).to_dict())
-# {'3926': 2009, '9503': 1424, '6307': 1374}: plastics articles, toys, made-up textile articles
+listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+print(listings.shape)                                   # (12776, 42)
+print(listings["district"].nunique())                   # 12 districts
+print(listings["room_type"].value_counts().to_dict())
+# {'Entire home/apt': 8846, 'Private room': 3754, 'Hotel room': 89, 'Shared room': 87}
 ```
 
 ### In practice
 
-- Shared benchmark tasks with hidden test sets are standard in research and industry: Kaggle competitions and the open-source platform Codabench (Université Paris-Saclay), which the course uses, work the same way.
-- The time-based split (train 2017–2023, test 2024–2026) mirrors deployment: a model is always trained on the past and used on the future.
-- Traders and customs officers search the public EBTI database for decisions on similar products before they classify a new one; a model that proposes a heading automates the first step of exactly this search.
+- Inside Airbnb, an independent project, publishes the listings of more than 100 cities every quarter so that cities, researchers and journalists can see how holiday rentals affect housing. Berlin has restricted holiday rentals since 2014 (*Zweckentfremdungsverbot*) and has required a registration number for every listing since 2018; the registration field of the data shows how well this works.
+- Shared benchmark tasks with hidden test sets are standard in research and industry: Kaggle competitions and the open-source platform Codabench (Université Paris-Saclay), which the course uses for the leaderboard, work the same way.
+- The leaderboard's time-based split (train 2017–2023, test 2024–2026) mirrors deployment: a model is always trained on the past and used on the future.
 
 > [!IMPORTANT]
-> The EBTI data may be reused with acknowledgement of the source (European Commission, Commission Decision 2011/833/EU). The course still does not redistribute them: each student downloads them with the script, and the data files (several hundred MB) never go into a Git repository.
+> Inside Airbnb and Open-Meteo publish their data under CC BY 4.0: reuse is allowed with attribution. The listings were collected from public web pages, so the preparation script removes host names, profile texts, photos and review texts, and names that hosts typed into the registration field. Report results in aggregate and never try to identify a host. Each student downloads the data with the script, and data files never go into a Git repository.
 
 > [!CAUTION]
-> Every decision of the test set can be looked up in the public EBTI database. A high leaderboard rank therefore earns no marks; what counts is that methods are applied and compared correctly.
+> Every decision of the leaderboard's test set can be looked up in the public EBTI database. A high leaderboard rank therefore earns no marks; what counts is that methods are applied and compared correctly.
 
 **AI tools.** Using AI coding assistants is permitted. Students remain responsible for all code they submit, must be able to explain and test it, and declare the tools they used (HTW declaration; in team repositories a file `AI_USE.md`). [Page 2](02-python-for-analysis.md#tips-for-using-ai-coding-assistants) gives practical rules.
 
@@ -218,14 +227,14 @@ Teams of three are formed and shortlist three project topics from the [project l
 ## Check your understanding
 
 1. A job advertisement titled "Data Scientist" asks for SQL, Power BI and stakeholder reporting, but not for machine learning. Which role does it describe?
-2. Name one task in the customs example that belongs to the data engineer and one that belongs to the ML engineer.
+2. Name one task in the holiday-rental example that belongs to the data engineer and one that belongs to the ML engineer.
 3. Why are working-student positions a more realistic entry route than junior positions in Berlin in 2026?
-4. The most frequent heading covers only 4 % of the decisions, yet 1,114 headings occur. Why does the leaderboard report macro-F1 next to accuracy?
-5. Why must the case-study data not be committed to a public repository?
+4. In the leaderboard of Sessions 13–16, the most frequent heading covers only 4 % of the decisions, yet 1,114 headings occur. Why does the leaderboard report macro-F1 next to accuracy?
+5. The Airbnb data are licensed CC BY 4.0. Why should they still not be committed to a public repository, and why are host names removed?
 
 ## Further reading
 
 - Grewal, E. (2018). *One Data Science Job Doesn't Fit All*. Airbnb Tech Blog. https://www.linkedin.com/pulse/one-data-science-job-doesnt-fit-all-elena-grewal/
 - Beauchemin, M. (2017). *The Rise of the Data Engineer*. freeCodeCamp. https://www.freecodecamp.org/news/the-rise-of-the-data-engineer-91be18f1e603/
 - swyx (2023). *The Rise of the AI Engineer*. Latent Space. https://www.latent.space/p/ai-engineer
-- World Customs Organization (2026). *What is the Harmonized System (HS)?* https://www.wcoomd.org/en/topics/nomenclature/overview/what-is-the-harmonized-system.aspx
+- Inside Airbnb (2026). *About Inside Airbnb*; *Get the data*. https://insideairbnb.com/about/

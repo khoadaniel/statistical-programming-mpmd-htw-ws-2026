@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from btitools.api import app
+from listingtools.api import DISTRICTS, app, slug
 
 client = TestClient(app)
 
@@ -14,43 +14,62 @@ def test_health():
     assert response.json() == {"status": "ok"}
 
 
-def test_headings_lists_the_extract():
-    assert "9503" in client.get("/headings").json()["headings"]
+def test_districts_lists_all_twelve_largest_first():
+    rows = client.get("/districts").json()["districts"]
+    assert len(rows) == 12
+    assert rows[0]["district"] == "Mitte"
+    assert sum(row["n_listings"] for row in rows) == 12776
 
 
-@pytest.mark.parametrize(("heading", "chapter"), [("0901", "09"), ("6404", "64"), ("9503", "95")])
-def test_heading_details(heading, chapter):
-    body = client.get(f"/headings/{heading}").json()
-    assert body["heading"] == heading
-    assert body["chapter"] == chapter
-    assert body["description"]
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("Mitte", "mitte"),
+        ("Tempelhof - Schöneberg", "tempelhof-schöneberg"),
+        ("Charlottenburg-Wilm.", "charlottenburg-wilm"),
+    ],
+)
+def test_slug(name, expected):
+    assert slug(name) == expected
 
 
-def test_unknown_heading_is_404():
-    assert client.get("/headings/9999").status_code == 404
+@pytest.mark.parametrize("district", ["neukölln", "Neukölln", "tempelhof-schöneberg"])
+def test_district_details(district):
+    body = client.get(f"/districts/{district}").json()
+    assert body["district"] in DISTRICTS
+    assert body["n_short_stays"] <= body["n_listings"]
+    assert body["median_price"] > 0
 
 
-@pytest.mark.parametrize("heading", ["950", "95031", "toys"])
-def test_malformed_heading_is_422(heading):
-    assert client.get(f"/headings/{heading}").status_code == 422
+def test_unknown_district_is_404():
+    assert client.get("/districts/atlantis").status_code == 404
 
 
-def test_validate_decision_returns_cleaned_record(raw_decision):
-    response = client.post("/decisions/validate", json=raw_decision)
+def test_district_with_digits_is_422():
+    assert client.get("/districts/10115").status_code == 422
+
+
+def test_validate_listing_returns_cleaned_record(raw_listing):
+    response = client.post("/listings/validate", json=raw_listing)
     assert response.status_code == 200
     body = response.json()
-    assert body["bti_reference"] == "DE0001/23-1"
-    assert body["start_date"] == "2023-05-10"
-    assert body["chapter"] == "95"
+    assert body["id"] == 3176
+    assert body["price"] == pytest.approx(1160.5)
+    assert body["room_type"] == "Entire home/apt"
 
 
-def test_validate_decision_reports_the_field(raw_decision):
-    raw_decision["issuing_country"] = "Germany"
-    response = client.post("/decisions/validate", json=raw_decision)
+def test_validate_listing_reports_the_field(raw_listing):
+    raw_listing["latitude"] = 48.137  # Munich
+    response = client.post("/listings/validate", json=raw_listing)
     assert response.status_code == 422
-    assert response.json()["detail"]["field"] == "issuing_country"
+    assert response.json()["detail"]["field"] == "latitude"
 
 
 def test_features():
-    response = client.get("/features", params={"text": "Plush toy\nsee <CODE>"})
-    assert response.json() == {"n_chars": 20, "n_words": 4, "n_lines": 2, "has_code": 1}
+    response = client.get("/features", params={"title": "Sunny loft, 75 m²!"})
+    assert response.json() == {
+        "n_chars": 18,
+        "n_words": 4,
+        "has_exclamation": 1,
+        "mentions_size": 1,
+    }

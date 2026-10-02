@@ -218,7 +218,7 @@ The words "disposable" and "nonwoven" pull in fabrics, headgear and mops; none o
 
 `ORDER BY embedding <=> query LIMIT 5` returns the five chunks with the smallest cosine distance, that is, the highest similarity. Without an index, PostgreSQL compares the query with every row (**exact search**). An **approximate nearest-neighbour (ANN) index** such as **HNSW** (hierarchical navigable small world, a graph in which each vector is linked to its near neighbours) finds almost the same neighbours much faster on large tables, at the cost of occasionally missing one. The index must be built for the distance used in the query.
 
-In this course, PostgreSQL runs in a Docker container with the extension already installed (Session 3 loaded the tables `decisions` and `nomenclature` into the same kind of database):
+In this course, PostgreSQL runs in a Docker container with the extension already installed (`case-study/prepare_data.py --postgres` loads the tables `decisions`, `decisions_test` and `nomenclature` into the same kind of database):
 
 ```bash
 docker run --name pgvector -e POSTGRES_PASSWORD=course -p 5432:5432 -d pgvector/pgvector:pg17

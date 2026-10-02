@@ -2,7 +2,7 @@
 
 This page covers the first block of Session 7. In Session 6 you split the data once into a training and a test set and reported one test score. That score answers the question "how well will the model do on new data?" only roughly: another split gives another number. Here we build the tools that make the answer reliable: a clear role for each part of the data, cross-validation that uses every row for validation once, splitters that respect groups and time, and a bootstrap interval that says how uncertain a score is.
 
-The code blocks on this page build on each other: run them in order from the repository root. The Telco churn data (7,043 customers) are downloaded from IBM's GitHub repository. Two case-study datasets come from `case-study/data/` (see [case-study/README.md](../../../case-study/README.md)): the EBTI customs decisions (`uv run python case-study/prepare_data.py`) and the Inside Airbnb listings for Berlin (`uv run python case-study/prepare_airbnb.py`).
+The code blocks on this page build on each other: run them in order from the repository root. The Telco churn data (7,043 customers) are downloaded from IBM's GitHub repository and serve as a small warm-up. The main example is the Inside Airbnb listings for Berlin in `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`, see [case-study/README.md](../../../case-study/README.md)).
 
 ```mermaid
 flowchart LR
@@ -25,7 +25,7 @@ flowchart LR
 
 A worked example. A bank has 10,000 past loan applications with known outcomes. It keeps 2,000 applications aside as the test set. Of the remaining 8,000 it uses 6,000 to fit three candidate models and 2,000 to compare them. Model B wins on the validation rows. Only now does the bank score model B on the 2,000 test applications: 81 % accuracy. This number is an honest estimate because no decision depended on the test rows. The validation score of model B (say 83 %) is slightly optimistic: B was chosen *because* it did well on those rows.
 
-**Why it matters.** Each time a score is used to make a decision, the rows behind it stop being "new data". If you choose a model by its test score, the test score is no longer an unbiased estimate; with enough candidates one of them will look good by chance. Keeping the three roles apart is the basic discipline of all model evaluation. In this course the leaderboard (Session 8 onwards) plays the role of the test set: its labels are hidden, so nobody can tune on them.
+**Why it matters.** Each time a score is used to make a decision, the rows behind it stop being "new data". If you choose a model by its test score, the test score is no longer an unbiased estimate; with enough candidates one of them will look good by chance. Keeping the three roles apart is the basic discipline of all model evaluation. In this course the leaderboard of Sessions 13–16 plays the role of the test set: its labels are hidden, so nobody can tune on them.
 
 **How it works in Python.** Two calls of `train_test_split` give a 60/20/20 split. `stratify=y` keeps the share of churners equal in all three parts.
 
@@ -159,8 +159,8 @@ for m in ["accuracy", "roc_auc", "f1"]:
 
 **Concept.** k-fold assumes that rows are independent and that the future looks like a random sample of the past. Two common situations break this.
 
-1. **Groups.** Several rows can belong to the same unit: several visits of the same patient, several transactions of the same customer, several Airbnb listings of the same host, or renewed EBTI decisions that repeat the same description of goods word for word (4.6 % of the training descriptions repeat). If a group appears in both training and validation folds, the model can recognise the group instead of learning a general pattern. **`GroupKFold`** (or `GroupShuffleSplit` for a single split) assigns whole groups to folds, so no group appears on both sides. It needs a `groups` array: the host identifier, or the normalised description text.
-2. **Time.** If the model will predict the future, a random split lets it train on decisions issued *after* the ones it is validated on. This hides changes over time (new products such as face masks in 2020, fewer English decisions after Brexit, the HS 2022 revision of the nomenclature), which are called **drift**. **`TimeSeriesSplit`** needs rows sorted by time. Split *i* trains on the first part and validates on the block that follows; the training window grows with each split (right panel of the figure above). A single **out-of-time** split (train 2017–2021, validate 2022–2023) is the simplest version.
+1. **Groups.** Several rows can belong to the same unit: several visits of the same patient, several transactions of the same customer, several Airbnb listings of the same host. If a group appears in both training and validation folds, the model can recognise the group instead of learning a general pattern. **`GroupKFold`** (or `GroupShuffleSplit` for a single split) assigns whole groups to folds, so no group appears on both sides. It needs a `groups` array, here the host identifier.
+2. **Time.** If the model will predict the future, a random split lets it train on rows recorded *after* the ones it is validated on. This hides changes over time (the COVID break in Berlin's Airbnb market, a new registration rule, new kinds of offers), which are called **drift**. **`TimeSeriesSplit`** needs rows sorted by time. Split *i* trains on the first part and validates on the block that follows; the training window grows with each split (right panel of the figure above). A single **out-of-time** split (train on the older years, validate on the most recent one) is the simplest version. Session 12 uses this scheme to backtest the demand forecast, and Session 13 compares random and time-based validation for the customs text classifier of the leaderboard.
 
 ```mermaid
 flowchart TD
@@ -172,7 +172,7 @@ flowchart TD
     Q3 -->|no| K["KFold (shuffle=True)"]
 ```
 
-**Why it matters.** The splitter must reproduce the situation in which the model will be used. Ordinary k-fold measures performance on groups and periods already seen; the real use often involves new ones. The course leaderboard is split by time (training 2017–2023, test 2024–2026, with test descriptions that repeat a training description removed), so time-based validation is the closest imitation of it.
+**Why it matters.** The splitter must reproduce the situation in which the model will be used. Ordinary k-fold measures performance on groups and periods already seen; the real use often involves new ones: a price suggestion is most useful for a host who has never listed before, and a forecast is always about next month.
 
 **How it works in Python: groups.** A price model for Berlin Airbnb listings: predict the log of the nightly price from size, location, room type and reviews with gradient boosting (Session 10; here a black box). The table is the short-stay table of Sessions 4–6 (6,701 listings with a price and a minimum stay below 28 nights) without the 26 listings priced below €10 or above €1,000, which Session 4 treats as outliers. Listings with a minimum stay of 28 nights or more are medium-term rentals with a different price basis (median €23 a night in this snapshot) and belong to another model. Many hosts offer several similar flats, often in the same building, with similar prices.
 
@@ -205,44 +205,7 @@ Random 5-fold cross-validation reports R² = 0.64; folds that keep each host on 
 > [!NOTE]
 > Inside Airbnb collects these data from public listing pages (CC BY 4.0; snapshot of 26 June 2026). The course copy has no host names. Use `host_id` only as a grouping key and report results in aggregate; never look up or name individual hosts.
 
-**How it works in Python: time.** A text classifier for the heading: TF-IDF features of the description and a linear model (Session 13 explains both; here the model is a black box). Three single splits of the 50,000-decision sample with the same validation size: random, grouped by description, and by time.
-
-```python
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import GroupKFold, GroupShuffleSplit, TimeSeriesSplit
-
-dec = pd.read_parquet("case-study/data/train_sample.parquet").sort_values("start_date", ignore_index=True)
-norm = dec["description"].str.lower().str.replace(r"\s+", " ", regex=True).str.strip()   # renewal groups
-text_model = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
-                           SGDClassifier(alpha=1e-5, random_state=0, n_jobs=-1))
-
-is_new = (dec["start_date"].dt.year >= 2022).to_numpy()        # 26 % of the sample
-idx = np.arange(len(dec))
-splits = {"random": train_test_split(idx, test_size=is_new.mean(), random_state=0),
-          "grouped": next(GroupShuffleSplit(1, test_size=is_new.mean(), random_state=0).split(idx, groups=norm)),
-          "by time": (idx[~is_new], idx[is_new])}
-for name, (tr, va) in splits.items():
-    text_model.fit(dec["description"].iloc[tr], dec["heading"].iloc[tr])
-    pred = text_model.predict(dec["description"].iloc[va])
-    seen = norm.iloc[va].isin(set(norm.iloc[tr])).mean()         # validation texts also in training
-    print(f"{name:8s} seen {seen:.3f}  accuracy {accuracy_score(dec['heading'].iloc[va], pred):.3f}  "
-          f"macro-F1 {f1_score(dec['heading'].iloc[va], pred, average='macro'):.3f}")
-# random   seen 0.018  accuracy 0.806  macro-F1 0.574
-# grouped  seen 0.000  accuracy 0.806  macro-F1 0.567
-# by time  seen 0.007  accuracy 0.768  macro-F1 0.511
-
-# the splitters for cross-validation: whole groups per fold, or past -> future
-print(len(list(GroupKFold(5).split(idx, groups=norm))), len(list(TimeSeriesSplit(5).split(idx))))   # 5 5
-for tr, va in TimeSeriesSplit(5).split(idx):
-    print(dec["start_date"].iloc[tr].max().date(), "->", dec["start_date"].iloc[va].max().date(), len(tr), len(va))
-# 2017-12-22 -> 2019-02-18 8335 8333
-# ...
-# 2022-09-30 -> 2023-12-30 41667 8333
-```
-
-The honest finding has two parts. Grouping by description changes little in the sample, because a random sample of 50,000 contains few renewal pairs (1.8 % of the validation texts also occur in training). On the full training set the effect is larger: in a run with the same model, 6.2 % of the validation texts also occurred in training and accuracy fell from 0.904 (random) to 0.897 (grouped). The time split matters more: training on 2017–2021 and validating on 2022–2023 costs about 4 points of accuracy and 6 points of macro-F1 (0.855 accuracy on the full training set), because new products and wordings appear. The leaderboard is a time split, so the time-based estimate is the one to trust. The [case-study workbook](../workbooks/19-case-study-validation.ipynb) repeats the comparison with cross-validation.
+**How it works in Python: time.** `TimeSeriesSplit(5)` on rows sorted by date returns five splits in which every training index lies before every validation index. The listings snapshot is a single day and has no time order to respect, so this page does not use it; the [splitter workbook](../workbooks/03-cross-validation-splitters.ipynb) shows the indices, and Session 12 applies the scheme to monthly demand.
 
 **In practice.**
 - Medical imaging: the CheXNet study (Rajpurkar et al., 2017) split the ChestX-ray14 images by patient so that no patient appeared in both training and test data; otherwise a model can recognise the patient rather than the disease.
@@ -253,35 +216,41 @@ The honest finding has two parts. Grouping by description changes little in the 
 > `TimeSeriesSplit` uses the row order. Sort by date first (`sort_values("date", ignore_index=True)`); otherwise the "past" and "future" are arbitrary.
 
 > [!CAUTION]
-> Grouping and time can both apply. For the leaderboard the test descriptions are both new (no exact repeat of a training description) and later in time, so the closest imitation is a time split from which renewed descriptions are removed. Decide which situation matters for your project and say so in the validation plan.
+> Grouping and time can both apply. A model for next year's prices of *new* hosts would need both: hosts kept together and the latest period held out. Decide which situation matters for your project and say so in the validation plan.
 
 ## Bootstrap confidence interval of a metric
 
 **Concept.** The **bootstrap** (Efron, 1979; recap in Session 5) estimates the uncertainty of a statistic from one sample: draw *n* rows **with replacement** from the *n* rows, recompute the statistic, and repeat about 1,000 times. The spread of the recomputed values approximates the sampling variability. For a model, the predictions stay fixed and only the test rows are resampled. The 2.5 % and 97.5 % percentiles of the bootstrap values form a 95 % **percentile confidence interval** for the test metric.
 
-A tiny example by hand. Five test decisions with correct (1) and wrong (0) predictions: [1, 1, 0, 1, 1], accuracy 0.8. One bootstrap sample draws positions 2, 2, 3, 5, 1 → [1, 1, 0, 1, 1] → 0.8; another draws 3, 3, 4, 1, 3 → [0, 0, 1, 1, 0] → 0.4. Repeating this many times gives a distribution of accuracies; with only five rows it is very wide, which is the honest answer.
+A tiny example by hand. Five test listings with absolute price errors of €10, €20, €30, €40 and €100: the mean absolute error (MAE) is €40. One bootstrap sample draws positions 2, 2, 3, 5, 1 → €20, €20, €30, €100, €10 → MAE €36; another draws 5, 5, 4, 1, 5 → €100, €100, €40, €10, €100 → €70. Repeating this many times gives a distribution of MAEs; with only five rows it is very wide, which is the honest answer.
 
-**Why it matters.** A score without an interval cannot tell whether a difference between two models, or between a validation score and the leaderboard, is larger than chance. The bootstrap works for any metric, including macro-F1 and ROC AUC, for which no simple formula exists.
+**Why it matters.** A score without an interval cannot tell whether a difference between two models, or between a validation score and a later test score, is larger than chance. The bootstrap works for any metric, including MAE in euros, macro-F1 and ROC AUC, for which no simple formula exists.
 
-**How it works in Python.** Train on the decisions of 2017–2021, validate on 2022–2023 (13,199 decisions of the sample), and bootstrap accuracy and macro-F1:
+**How it works in Python.** The question of the practice: how far off would the price model be for a host who lists for the first time? Lock away 20 % of the hosts with all their listings, fit the gradient-boosting model on the other hosts, and compute the MAE in euros on the locked hosts. Then bootstrap it twice: once resampling listings, once resampling **hosts** (a **cluster bootstrap**, because listings of the same host are not independent).
 
 ```python
-tr, va = splits["by time"]
-text_model.fit(dec["description"].iloc[tr], dec["heading"].iloc[tr])
-y_true, y_pred = dec["heading"].iloc[va].to_numpy(), text_model.predict(dec["description"].iloc[va])
-print(round(accuracy_score(y_true, y_pred), 3), round(f1_score(y_true, y_pred, average="macro"), 3))   # 0.768 0.511
+from sklearn.model_selection import GroupShuffleSplit
+
+dev, test = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=0).split(X_bnb, y_bnb, groups=hosts))
+gbm.fit(X_bnb.iloc[dev], y_bnb.iloc[dev])                      # trained on 80 % of the hosts
+price = bnb["price"].iloc[test].to_numpy()
+abs_err = np.abs(price - np.exp(gbm.predict(X_bnb.iloc[test])))  # error in euros per listing
+print(len(test), hosts.iloc[test].nunique(), round(abs_err.mean(), 1), np.median(price))
+# 1254 748 50.8 160.0   <- test listings, test hosts, MAE in EUR, median price of the test listings
 
 rng = np.random.default_rng(0)
-boot_acc, boot_f1 = [], []
-for _ in range(300):                                        # resample validation decisions with replacement
-    i = rng.integers(0, len(y_true), len(y_true))
-    boot_acc.append(accuracy_score(y_true[i], y_pred[i]))
-    boot_f1.append(f1_score(y_true[i], y_pred[i], average="macro"))
-print(np.percentile(boot_acc, [2.5, 97.5]).round(3))        # [0.76  0.775]
-print(np.percentile(boot_f1, [2.5, 97.5]).round(3))         # [0.5   0.534]
+boot_rows = [abs_err[rng.integers(0, len(abs_err), len(abs_err))].mean() for _ in range(1000)]
+by_host = pd.DataFrame({"host": hosts.iloc[test].to_numpy(), "err": abs_err}).groupby("host")["err"]
+sums, counts = by_host.sum().to_numpy(), by_host.count().to_numpy()
+boot_hosts = []
+for _ in range(1000):                                           # draw hosts with replacement
+    pick = rng.integers(0, len(sums), len(sums))
+    boot_hosts.append(sums[pick].sum() / counts[pick].sum())
+print(np.percentile(boot_rows, [2.5, 97.5]).round(1))           # [47.4 54.8]  listings resampled
+print(np.percentile(boot_hosts, [2.5, 97.5]).round(1))          # [45.5 56.5]  hosts resampled
 ```
 
-With 13,199 validation decisions the accuracy interval is about ±0.007. The macro-F1 interval is more than twice as wide: it averages over hundreds of headings, many with only a handful of validation decisions, so a few decisions more or less of a rare heading move it. A model that scores 0.515 instead of 0.511 macro-F1 on this set is not demonstrably better.
+For a new host the model is off by about €51 a night on average, with a 95 % interval of roughly €46 to €57: about a third of the median price of €160. The interval that resamples listings is narrower (±€3.7 against ±€5.5) because it treats 1,254 listings as independent although they come from only 748 hosts, and a host's listings tend to be all well or all badly priced by the model. A model that reaches €49 instead of €51 on this test set is not demonstrably better.
 
 > [!NOTE]
 > Two related summaries are easy to confuse. The **standard deviation across CV folds** describes how much the score varies between training sets and validation folds. The **bootstrap interval on a test set** describes the uncertainty from the finite test sample for one fitted model. Both are useful; say which one you report.
@@ -294,15 +263,15 @@ With 13,199 validation decisions the accuracy interval is about ±0.007. The mac
 > Resample the *test rows*, not the training rows, when you want the uncertainty of a test score. Refitting the model inside every bootstrap round answers a different question (the variability of the training procedure) and is far slower.
 
 > [!CAUTION]
-> The bootstrap assumes that the test rows are independent. If they come in groups (renewed decisions with the same description, many decisions of one trader), resample whole groups (a **cluster bootstrap**), otherwise the interval is too narrow.
+> The bootstrap assumes that the test rows are independent. If they come in groups (listings of one host, visits of one patient, purchases of one customer), resample whole groups as above, otherwise the interval is too narrow.
 
 ## Check your understanding
 
 1. You tried 30 models and picked the one with the best validation score. Why is that validation score an optimistic estimate, and what number should you report instead?
 2. A 5-fold cross-validation gives accuracies 0.81, 0.79, 0.80, 0.82, 0.78. A colleague's new model gets 0.805 on one split. Is it better? What would you ask for?
-3. For each case, choose a splitter and justify it: (a) predicting next month's churn; (b) a heading classifier for next year's BTI requests; (c) classifying 500 tumour images from 120 patients; (d) a price suggestion for people who list their first flat on Airbnb.
-4. Why can `StratifiedKFold` not be used with the headings of the sample, and what does that tell you about the rarest headings?
-5. Describe in three steps how to compute a 95 % bootstrap interval for macro-F1 on a test set.
+3. For each case, choose a splitter and justify it: (a) predicting next month's churn; (b) next month's number of Airbnb reviews in Berlin; (c) classifying 500 tumour images from 120 patients; (d) a price suggestion for people who list their first flat on Airbnb.
+4. `StratifiedKFold` needs at least *k* rows of every class. What would you do with a classification target whose rarest class has only three rows?
+5. Describe in three steps how to compute a 95 % cluster-bootstrap interval for the MAE of the price model on held-out hosts.
 6. Random cross-validation of the Berlin price model gives R² = 0.64, host-grouped cross-validation 0.58. Explain the gap in two sentences.
 
 ## Further reading

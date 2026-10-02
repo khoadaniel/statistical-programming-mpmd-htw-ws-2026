@@ -1,6 +1,6 @@
 # Error analysis, model inspection and the limits of word counts
 
-A score tells us how often a model fails, not why. This page shows how to analyse the errors of a text classifier with about 1,000 classes: with a confusion matrix for a group of neighbouring headings, by reading misclassified decisions next to their English keywords and the English text of the headings, and by inspecting the n-grams the model relies on most. It then introduces truncated singular value decomposition (SVD), which compresses the sparse document-term matrix into a few dense dimensions, and ends with the limits of word counts (synonyms, other languages, word order, unknown words) that motivate the language models of Session 14. The practice task is to analyse 20 misclassified decisions and use the findings to improve the classifier.
+A score tells us how often a model fails, not why. This page shows how to analyse the errors of a text classifier with about 1,000 classes: with a confusion matrix for a group of neighbouring headings, by reading misclassified decisions next to their English keywords and the English text of the headings, and by inspecting the n-grams the model relies on most. It then measures a trap that error analysis can hide: a text column that contains the answer but exists only after the decision (the customs' justification). The page then introduces truncated singular value decomposition (SVD), which compresses the sparse document-term matrix into a few dense dimensions, and ends with the limits of word counts (synonyms, other languages, word order, unknown words) that motivate the language models of Session 14. The practice task is to analyse 20 misclassified decisions and use the findings to improve the classifier.
 
 The code blocks on this page build on each other; run them in order from the repository root. The first block refits the word model of [Block 2](02-tfidf-and-text-classification.md) on the decisions of 2017–2021 and predicts the validation years 2022–2023 (about 30 seconds).
 
@@ -117,11 +117,67 @@ Eleven of twenty errors (borderline, material versus function, sets) depend on c
 ### In practice
 
 - Andrew Ng's *Machine Learning Yearning* (2018) recommends reading about 100 misclassified development-set examples by hand and counting error categories before deciding what to improve.
-- Customs classification is reviewed by people: an officer checks a suggested code, and BTI decisions themselves are binding only after a customs expert has classified the goods. A model that reports its confidence can route uncertain cases to an expert (Session 8, abstention).
+- Customs classification is reviewed by people: an officer checks a suggested code, and BTI decisions themselves are binding only after a customs expert has classified the goods. A model that reports its confidence can route uncertain cases to an expert (Session 14, abstention).
 - Northcutt, Athalye and Mueller (2021) found label errors in the test sets of ten widely used benchmark datasets; confident errors of a model were their main tool for finding them. In the EBTI data, some "errors" may also be decisions that were later revoked (`invalidation_reason`).
 
 > [!TIP]
 > Fix the random seed when you sample errors (`random_state=1`), so that the whole team discusses the same decisions, and write the category of each one into a column. A spreadsheet of 20–100 categorised errors is one of the most useful artefacts of a text project.
+
+## Leakage through the customs' justification
+
+### Concept
+
+**Target leakage** (Sessions 7 and 9, with the leaking revenue columns of the Airbnb price model) means that a feature contains information about the label that will not be available when the model is used. Every training decision has a column `classification_justification`, the text in which customs explain their classification. It is written *with* the decision, and it usually names the result:
+
+> CLASSIFICATION HAS BEEN DETERMINED IN ACCORDANCE WITH THE FOLLOWING: GIR 1 HAS BEEN USED TO CLASSIFY THE PRODUCT BY THE TERMS OF HEADING 4303 - ARTICLES OF APPAREL, CLOTHING ACCESSORIES AND OTHER ARTICLES OF FURSKIN ...
+
+In the sample, 70 % of the justifications contain the decision's own heading, and a rule that simply reads the first four-digit number of the justification gets 64 % of the headings right, without any model. A new request has no justification, and the test set does not contain the column. The same holds for `keywords` and `cn_code`.
+
+### Why it matters
+
+No validation scheme detects this kind of leak, because the justification is present in every validation decision as well. A model that uses it looks excellent in validation and fails in use. The only protection is to ask, for every column, *"would I have this value at the moment of prediction?"*, and to answer it from how the data are produced, not from the scores. For an officer, the consequence would be concrete: a tool that was validated at 96 % and is wrong for three requests in ten.
+
+### How it works in Python
+
+Append the justification to the description and validate as a careless notebook would, with a random split inside the training years. Then apply the model where it will be used: to the decisions of 2022–2023, which, like a new request, have only a description.
+
+```python
+from sklearn.model_selection import train_test_split
+
+just = decisions["classification_justification"].fillna("")
+print(round(np.mean([h in j for h, j in zip(decisions["heading"], just)]), 2))   # 0.7
+first_number = just.str.extract(r"\b(\d{4})\b", expand=False)
+print(round((first_number == decisions["heading"]).mean(), 2))   # 0.64: the answer, without a model
+
+with_just = decisions["description"] + " " + just
+past = (year <= 2021).to_numpy()
+tr, va = train_test_split(np.flatnonzero(past), test_size=0.2, random_state=0)   # within 2017-2021
+later = np.flatnonzero(~past)                                                    # 2022-2023
+leak_model = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                           SGDClassifier(alpha=1e-5, random_state=0, n_jobs=-1))
+for name, X in [("description only", decisions["description"]), ("+ justification", with_just)]:
+    leak_model.fit(X.iloc[tr], decisions["heading"].iloc[tr])
+    acc_val = accuracy_score(decisions["heading"].iloc[va], leak_model.predict(X.iloc[va]))
+    acc_use = accuracy_score(decisions["heading"].iloc[later],
+                             leak_model.predict(decisions["description"].iloc[later]))   # no justification
+    print(f"{name:17s} validation {acc_val:.3f}   in use (2022-2023, description only) {acc_use:.3f}")
+# description only  validation 0.804   in use (2022-2023, description only) 0.753
+# + justification   validation 0.957   in use (2022-2023, description only) 0.707
+```
+
+Validation reports a jump from 0.80 to 0.96. In use, where only the description exists, the leaking model is *worse* than the honest one (0.707 against 0.753): it has learned to rely on a text that is missing, and it learned less from the description itself.
+
+### In practice
+
+- KDD Cup 2008 (breast cancer detection): patient identifiers were predictive of the label because of how the data had been assembled; Kaufman et al. (2012) use it as a textbook case of leakage.
+- Hospital data: a feature such as "antibiotic prescribed" can reveal the diagnosis a model is supposed to predict, because it is recorded after the doctor suspected it.
+- Churn data: fields such as "reason for leaving" are filled only for customers who have already left.
+
+> [!WARNING]
+> A large jump in the validation score from one new column is a warning sign, not a success. Check when and by whom that column is written before you celebrate. For the leaderboard: never use `classification_justification`, `keywords`, `cn_code`, `chapter`, `status`, `end_date` or `invalidation_reason` as inputs.
+
+> [!NOTE]
+> Reading the keywords and the justification **during error analysis** is fine, as in the previous section: they help a person understand a decision. The rule concerns model inputs only.
 
 ## The most informative n-grams per class
 
@@ -290,14 +346,15 @@ Workbook [07-case-study-error-analysis.ipynb](../workbooks/07-case-study-error-a
 1. Fit the Block 2 classifier on 2017–2021, draw the 20 errors with `random_state=1`, read each one with its keywords and the English heading texts, and write a category for each.
 2. Count the categories and choose one change that addresses the largest fixable category (for example: character n-grams, `min_df`, `alpha`, class weights for rare headings, or more training data).
 3. Re-validate on 2022–2023, report accuracy and macro-F1 separately for descriptions with and without a quoted heading number, and, if the change helps, submit again.
+4. Measure the justification leak yourself: train with and without `classification_justification` and compare the validation score with the score on 2022–2023 descriptions alone.
 
 ## Check your understanding
 
 1. In the footwear confusion matrix, what share of the decisions predicted as 6405 are truly 6405 (precision)? Which off-diagonal cell is the largest, and why could that be?
 2. Name two error categories that a better text representation could fix and one that it cannot fix.
-3. Descriptions that quote their heading number are 98 % correct. Is this leakage? Explain with the definition of leakage from Session 9.
+3. Descriptions that quote their heading number are 98 % correct. Is this leakage? Compare it with the justification of the leakage section: when is each text written?
 4. Why does the first SVD component of the case study separate French from German rather than toys from shoes?
-5. Give an example pair of descriptions for each of the four limits of word counts.
+5. A teammate adds `keywords` to the description and reports 0.93 validation accuracy. What do you expect on the leaderboard, and how do you show it without submitting?
 
 ## Further reading
 

@@ -33,7 +33,7 @@
 - [What do Airbnb listings offer? PCA of amenities](theory/03-dimensionality-reduction.md#what-do-airbnb-listings-offer-pca-of-amenities)
 - [Model-based anomaly detection with Isolation Forest and LOF, continuing the outliers of Session 4](theory/04-anomaly-detection-and-unsupervised-features.md#model-based-anomaly-detection-isolation-forest-and-local-outlier-factor)
 - [Clusters and components as features](theory/04-anomaly-detection-and-unsupervised-features.md#clusters-and-components-as-features)
-- *Practice:* case study: what do the listings offer, and which ones are implausible? Summarise the amenities with PCA and map the listings with t-SNE, rank implausible listings (Isolation Forest, LOF, price far from what size and location suggest) and test whether location clusters improve the gradient-boosting price model of Session 10 → Parts B and C of [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb); optional Part D: BTI decisions far from their heading's centroid
+- *Practice:* case study: what do the listings offer, and which ones are implausible? Summarise the amenities with PCA and map the listings with t-SNE, rank implausible listings (Isolation Forest, LOF, price far from what size and location suggest) and test whether location clusters improve the gradient-boosting price model of Session 10 → Parts B and C of [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb)
 
 ## Materials
 
@@ -42,7 +42,7 @@
 | [theory/01-clustering-and-k-means.md](theory/01-clustering-and-k-means.md) | Unsupervised learning, distances and scaling, k-means by hand, elbow and silhouette | 1 | core |
 | [theory/02-hierarchical-dbscan-and-evaluation.md](theory/02-hierarchical-dbscan-and-evaluation.md) | Linkage and dendrograms, DBSCAN (features and map), silhouette, stability, profiles of Airbnb listing segments | 2 | core |
 | [theory/03-dimensionality-reduction.md](theory/03-dimensionality-reduction.md) | PCA, scree plot, loadings and biplot, t-SNE, UMAP, PCA of Airbnb amenities | 3 | core |
-| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, implausible listings, heading-centroid outliers (EBTI), clusters and components as features | 3 | core |
+| [theory/04-anomaly-detection-and-unsupervised-features.md](theory/04-anomaly-detection-and-unsupervised-features.md) | Isolation Forest, LOF, implausible listings, clusters and components as features | 3 | core |
 | [workbooks/01-pdsh-kmeans.ipynb](workbooks/01-pdsh-kmeans.ipynb) | k-means in depth (PDSH 5.11): EM view, limits, digits, colour compression | 1 | core |
 | [workbooks/02-kmeans-assumptions.ipynb](workbooks/02-kmeans-assumptions.ipynb) | Four situations in which k-means fails | 1 | optional |
 | [workbooks/03-kmeans-silhouette-analysis.ipynb](workbooks/03-kmeans-silhouette-analysis.ipynb) | Silhouette plots for k = 2 to 6 | 1 | core |
@@ -66,13 +66,13 @@
 | [workbooks/21-isolation-forest.ipynb](workbooks/21-isolation-forest.ipynb) | Isolation Forest decision boundary and path lengths | 3 | core |
 | [workbooks/22-local-outlier-factor.ipynb](workbooks/22-local-outlier-factor.ipynb) | Local outlier factor scores | 3 | core |
 | [workbooks/23-outlier-detection-benchmark.ipynb](workbooks/23-outlier-detection-benchmark.ipynb) | Isolation Forest and LOF on real benchmark data | 3 | optional |
-| [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb) | **Practice 2 and 3:** segments and hot spots of Berlin Airbnb listings, PCA of amenities, t-SNE map, implausible listings, location clusters in a price model; optional EBTI heading-centroid outliers (own) | 2, 3 | core |
+| [workbooks/24-case-study-airbnb-listing-segments.ipynb](workbooks/24-case-study-airbnb-listing-segments.ipynb) | **Practice 2 and 3:** segments and hot spots of Berlin Airbnb listings, PCA of amenities, t-SNE map, implausible listings, location clusters in a price model (own) | 2, 3 | core |
 
 Sources and licences: [source.md](source.md). Workbooks 01, 13 and 15 have a non-commercial, no-derivatives text licence (CC-BY-NC-ND): use them unchanged.
 
 ## Before and after the session
 
-**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure the Airbnb data exist in `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`, see [case-study/README.md](../../case-study/README.md)); the optional Part D of workbook 24 also uses `case-study/data/train_sample.parquet`.
+**Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure the Airbnb data exist in `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`, see [case-study/README.md](../../case-study/README.md)).
 
 **Team project until the next session.** Segmentation or anomaly detection where it supports the project.
 
@@ -90,5 +90,5 @@ Everything except workbook 19 runs in the course environment (`uv sync` in the r
 
 - Workbook 19 (ISLP lab) needs the `ISLP` package: `uv run --with ISLP jupyter lab`.
 - The Telco data are read from GitHub, and some scikit-learn examples download datasets (`fetch_openml`, `fetch_lfw_people`, `fetch_kddcup99`): an internet connection is needed the first time.
-- Workbook 24 reads `case-study/data/airbnb/listings.parquet` (Part D also `train_sample.parquet` and `nomenclature.parquet`) and finds the repository root by itself; it runs in under a minute. Prepare the Airbnb data once from the repository root: `uv run python case-study/prepare_airbnb.py` (downloads the Inside Airbnb Berlin snapshot, about 100 MB).
+- Workbook 24 reads `case-study/data/airbnb/listings.parquet` and finds the repository root by itself; it runs in under a minute. Prepare the Airbnb data once from the repository root: `uv run python case-study/prepare_airbnb.py` (downloads the Inside Airbnb Berlin snapshot, about 100 MB).
 - To regenerate the figures: `uv run python sessions/11-unsupervised-learning/theory/figures/make_figures.py` from the repository root.

@@ -24,7 +24,7 @@
 - [A refresher of the fundamentals (types, lists and dictionaries, conditions, loops, functions)](theory/02-python-for-analysis.md#a-refresher-of-the-fundamentals)
 - [Tabular data with pandas in a notebook](theory/02-python-for-analysis.md#tabular-data-with-pandas-in-a-notebook)
 - [Tips for using AI coding assistants](theory/02-python-for-analysis.md#tips-for-using-ai-coding-assistants)
-- *Practice:* case study: download the EBTI decisions with the provided script and answer five questions about them in [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb)
+- *Practice:* case study: download the Berlin Airbnb listings with the provided script and answer five questions about them in a notebook (how many listings, where, of what type, at what price, with how many reviews): [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb)
 
 **2:00–2:45 · From notebook to application** ([theory](theory/03-notebook-to-application.md))
 
@@ -33,13 +33,13 @@
 - [Project structure](theory/03-notebook-to-application.md#project-structure)
 - [A first introduction to object-oriented programming (classes, objects, attributes, methods)](theory/03-notebook-to-application.md#a-first-introduction-to-object-oriented-programming)
 - [When to use a notebook and when an application](theory/03-notebook-to-application.md#when-to-use-a-notebook-and-when-an-application)
-- *Practice:* turn the notebook analysis into a module with a small class that loads and summarises the decisions, in the [workspace](workspace/README.md)
+- *Practice:* turn the notebook analysis into a module with a small class that loads and summarises the listings, in the [workspace](workspace/README.md)
 
 ## Materials
 
 | File | Content | Block | Status |
 |---|---|---|---|
-| [theory/01-data-careers.md](theory/01-data-careers.md) | Data roles, skills, entry routes; course organisation, assessment, case study, leaderboard | 1 | core |
+| [theory/01-data-careers.md](theory/01-data-careers.md) | Data roles, skills, entry routes; course organisation, assessment, datasets, leaderboard | 1 | core |
 | [theory/02-python-for-analysis.md](theory/02-python-for-analysis.md) | uv, Jupyter, VS Code; Python refresher; pandas; AI coding assistants | 2 | core |
 | [theory/03-notebook-to-application.md](theory/03-notebook-to-application.md) | Scripts, modules, packages; src layout; first classes; notebook or application | 3 | core |
 | [workbooks/01-jupyter-introduction.ipynb](workbooks/01-jupyter-introduction.ipynb) | How Jupyter notebooks work (*Think Python*) | 2 | core |
@@ -53,27 +53,29 @@
 | [workbooks/09-pandas-indexing-and-selection.ipynb](workbooks/09-pandas-indexing-and-selection.ipynb) | loc, iloc, boolean masks | 2 | core |
 | [workbooks/10-pandas-merge-and-join.ipynb](workbooks/10-pandas-merge-and-join.ipynb) | Joining tables with `pd.merge` | 2 | optional (prepares S3) |
 | [workbooks/11-pandas-groupby.ipynb](workbooks/11-pandas-groupby.ipynb) | Aggregation, split-apply-combine | 2 | core |
-| [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb) | Case study: five questions about the BTI decisions (own) | 2 | core (practice) |
+| [workbooks/12-case-study-five-questions.ipynb](workbooks/12-case-study-five-questions.ipynb) | Case study: five questions about the Berlin Airbnb listings (own) | 2 | core (practice) |
 | [workbooks/13-python-modules-and-packages.ipynb](workbooks/13-python-modules-and-packages.ipynb) | import forms, standard library, third-party packages | 3 | core |
 | [workbooks/14-classes-and-functions.ipynb](workbooks/14-classes-and-functions.ipynb) | Programmer-defined types, attributes, objects (*Think Python*) | 3 | core |
 | [workbooks/15-classes-and-methods.ipynb](workbooks/15-classes-and-methods.ipynb) | Methods, `__init__`, `__str__`, operator overloading (*Think Python*) | 3 | optional |
-| [workspace/](workspace/README.md) | Package `btitools` with the class `DecisionTable`, tests and exercises | 3 | core (practice) |
+| [workspace/](workspace/README.md) | Package `listingtools` with the class `ListingTable`, tests and exercises | 3 | core (practice) |
 
 Sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Before.** Install [uv](https://docs.astral.sh/uv/getting-started/installation/), [VS Code](https://code.visualstudio.com/) and [Git](https://git-scm.com/downloads). Clone the course repository and generate the case-study data once from the repository root (downloads about 400 MB and writes about 220 MB of Parquet files):
+**Before.** Install [uv](https://docs.astral.sh/uv/getting-started/installation/), [VS Code](https://code.visualstudio.com/) and [Git](https://git-scm.com/downloads). Clone the course repository and generate the case-study data of Sessions 1–12 once from the repository root (downloads the Berlin snapshot of Inside Airbnb, about 100 MB, and the Berlin weather from Open-Meteo; writes about 6 MB of Parquet files to `case-study/data/airbnb/`):
 
 ```bash
-uv run python case-study/prepare_data.py
+uv run python case-study/prepare_airbnb.py
 ```
+
+The EBTI customs data of Sessions 13–16 are prepared later with `case-study/prepare_data.py`.
 
 If Python is new to you after the summer, work through workbooks 02–06.
 
 **Team project until the next session.** Teams of three are formed and shortlist three project topics.
 
-**After.** Repeat the five questions on the full training file `case-study/data/train.parquet` (309,529 decisions) and finish the workspace exercises.
+**After.** Repeat questions 4 and 5 for the district you live in or know best and compare it with the city as a whole, and finish the workspace exercises.
 
 **Further reading (optional).**
 

@@ -3,12 +3,14 @@
 Run from the repository root:
     uv run --with sentence-transformers python sessions/14-llms-and-embeddings/theory/figures/make_figures.py
 
-Writes tokenisation.png, attention.png and embedding_space.png next to this script.
+Writes tokenisation.png, attention.png, embedding_space.png and coverage_accuracy.png next to this
+script; pass figure names to make only some of them, for example `... make_figures.py coverage_accuracy`.
 embedding_space.png encodes 1,500 EBTI decisions of five chapters with intfloat/multilingual-e5-small
 (about 470 MB download on first use). Everything is seeded and deterministic up to
 floating-point differences between machines.
 """
 
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -136,8 +138,42 @@ def embedding_space() -> None:
     plt.close(fig)
 
 
+def coverage_accuracy() -> None:
+    """Abstention: accept the predicted heading only if the model's confidence reaches a threshold."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import SGDClassifier
+    from sklearn.pipeline import make_pipeline
+
+    d = pd.read_parquet(DATA)
+    past = d["start_date"].dt.year <= 2021
+    clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
+                        SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
+    clf.fit(d.loc[past, "description"], d.loc[past, "heading"])
+    proba = clf.predict_proba(d.loc[~past, "description"])
+    correct = clf.classes_[proba.argmax(axis=1)] == d.loc[~past, "heading"].to_numpy()
+    conf = proba.max(axis=1)
+    ts = np.linspace(0, 0.95, 96)              # above 0.95 almost no case is left
+    cov = np.array([(conf >= t).mean() for t in ts])
+    acc = np.array([correct[conf >= t].mean() for t in ts])
+    fig, ax = plt.subplots(figsize=(6.8, 4.2), dpi=130)
+    ax.plot(cov, acc, color=PALETTE[0], lw=2.5)
+    for t in (0.0, 0.3, 0.5, 0.7, 0.9):
+        k = conf >= t
+        ax.plot(k.mean(), correct[k].mean(), "o", color=PALETTE[1], ms=6)
+        ax.annotate(f"t = {t:.1f}", (k.mean(), correct[k].mean()), (8, -14), textcoords="offset points",
+                    fontsize=9)
+    ax.set(xlabel="coverage: share of decisions the model decides itself",
+           ylabel="accuracy on the decided cases", xlim=(0, 1.02), ylim=(0.7, 1.01))
+    ax.set_title("Abstention: TF-IDF heading classifier, EBTI 2022–2023\n"
+                 "(trained on 2017–2021 of the 50,000-decision sample)", loc="left", fontsize=10)
+    fig.tight_layout()
+    fig.savefig(OUT / "coverage_accuracy.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
-    tokenisation()
-    attention()
-    embedding_space()
+    figures = {"tokenisation": tokenisation, "attention": attention, "embedding_space": embedding_space,
+               "coverage_accuracy": coverage_accuracy}
+    for name in sys.argv[1:] or list(figures):
+        figures[name]()
     print("figures written to", OUT)
