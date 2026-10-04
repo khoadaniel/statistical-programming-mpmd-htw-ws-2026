@@ -5,7 +5,7 @@
 
 **Learning outcomes.** Students are able to
 
-- construct features from dates, interactions, high-cardinality categories and joined tables
+- construct features from dates, interactions, high-cardinality categories and related tables
 - implement feature construction in pipelines without leakage
 - handle class imbalance with undersampling, oversampling and class weights, applied only to the training data
 
@@ -20,8 +20,8 @@
 
 **1:00–1:45 · Aggregates, leakage and text statistics** ([theory page 2](theory/02-aggregates-leakage-and-text-statistics.md))
 
-- [Aggregates from joined tables, computed only from past data](theory/02-aggregates-leakage-and-text-statistics.md#1-aggregates-computed-only-from-past-data)
-- [Target leakage through aggregates and late information](theory/02-aggregates-leakage-and-text-statistics.md#3-target-leakage-through-aggregates-and-late-information)
+- [Aggregation features from related tables](theory/02-aggregates-leakage-and-text-statistics.md#1-aggregation-features-from-related-tables)
+- [Target leakage](theory/02-aggregates-leakage-and-text-statistics.md#3-target-leakage)
 - [Simple text statistics as features](theory/02-aggregates-leakage-and-text-statistics.md#2-simple-text-statistics-as-features)
 - *Practice:* Case study: which listings will be busy next year? Build past-only demand features from the monthly reviews and detect the columns that leak the target, such as the revenue estimate → [06-case-study-airbnb-leakage.ipynb](workbooks/06-case-study-airbnb-leakage.ipynb)
 

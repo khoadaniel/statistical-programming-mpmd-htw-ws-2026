@@ -5,7 +5,7 @@
 
 **Learning outcomes.** Students are able to
 
-- describe the ten steps of the ML lifecycle and relate them to the earlier sessions
+- describe the stages of the machine learning lifecycle, from problem definition to monitoring, and relate them to the earlier sessions
 - split data into training and test sets and fit, interpret and evaluate a linear regression
 - recognise underfitting and overfitting and use robust regression for data with outliers
 - fit and interpret a logistic regression for a binary outcome
@@ -14,13 +14,13 @@
 
 ### 0:00–0:45 · From the lifecycle to linear regression
 
-- [The ML lifecycle in ten steps](theory/01-lifecycle-and-linear-regression.md#the-ml-lifecycle-in-ten-steps), from problem definition (target, metric, baseline) to maintenance, and how Sessions 3–5 already covered data collection, cleaning and exploration
+- [The machine learning lifecycle](theory/01-lifecycle-and-linear-regression.md#the-machine-learning-lifecycle), from problem definition (target, metric, baseline) to monitoring and maintenance, and how Sessions 3–5 already covered data collection, cleaning and exploration
 - [Supervised learning: features, target, training, prediction](theory/01-lifecycle-and-linear-regression.md#supervised-learning-features-target-training-prediction)
 - [The data split into training and test sets](theory/01-lifecycle-and-linear-regression.md#the-data-split-into-training-and-test-sets)
 - [Simple and multiple linear regression](theory/01-lifecycle-and-linear-regression.md#simple-and-multiple-linear-regression) (least squares, coefficients, residuals)
 - [Regression metrics (MAE, RMSE, R²)](theory/01-lifecycle-and-linear-regression.md#regression-metrics)
 
-*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the ten steps; split the Inside Airbnb listings, fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros against the median-price baseline.
+*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the stages of the lifecycle; split the Inside Airbnb listings, fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros against the median-price baseline.
 
 ### 1:00–1:45 · Model complexity and robust regression
 

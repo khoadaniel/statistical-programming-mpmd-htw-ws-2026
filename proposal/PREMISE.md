@@ -20,7 +20,7 @@ This document sets out the analysis behind the course: the module as defined in 
 
 Statistical Programming is elective WP 5 of the MPMD programme (5 ECTS, 4 WSH). The study and examination regulations define its purpose (AMBl. 15/2025, WP 5): students *implement statistical methods professionally in a suitable programming language and environment and distribute programming tasks within programming teams*.
 
-The module description lists the topics that must be taught: well-structured programming in Python, databases, visualisation, teamwork with Git, a recap of basic statistics, robust regression, outlier detection, transformations and imputation, dimensionality reduction, cross-validation and bootstrap, hyperparameter search, tree packages (XGBoost, LightGBM, CatBoost), deployment and monitoring, churn prediction, NLP, embeddings and LLMs, retrieval-augmented generation and time series forecasting. The curriculum covers every topic; the session plans in [CURRICULUM.md](CURRICULUM.md#4-sessions) show where each one is taught.
+The module description lists the topics that must be taught: well-structured programming in Python, databases, visualisation, teamwork with Git, a recap of basic statistics, robust regression, outlier detection, transformations and imputation, dimensionality reduction, cross-validation and bootstrap, hyperparameter search, tree packages (XGBoost, LightGBM, CatBoost), deployment and monitoring, churn prediction, NLP, embeddings and LLMs, retrieval-augmented generation and time series forecasting. The curriculum covers every topic; the session plans in [CURRICULUM.md](CURRICULUM.md#3-sessions) show where each one is taught.
 
 The list is broad for 54 UE. The analysis in this document determines how the time is divided: which topics are taught in depth, which are recapped because another module teaches their theory, and which are added because the labour market requires them.
 
@@ -47,7 +47,7 @@ The regulations define the purpose of the module (AMBl. 15/2025, WP 5): students
 - **2.2 Data Mining:** WP 5 uses algorithms as tools and focuses on validation, features and deployment; their theory stays in 2.2.
 - **3.2 Big Data:** WP 5 applies database concepts in SQL and uses Polars for large tables on a single machine; database technology beyond relational databases, data warehousing and big-data technology (Hadoop, distributed processing) stay in 3.2.
 - **3.4 NLP and Neural Networks:** WP 5 uses text as features and pre-trained models and LLMs as components under evaluation; linguistic methods and neural networks stay in 3.4.
-- **3.3 Responsible Data Management in Practice and WP 4 Data Ethics:** WP 5 applies documentation (data card, model card) as engineering practice; governance, ethics and regulation, including the EU AI Act, stay in 3.3 and WP 4.
+- **3.3 Responsible Data Management in Practice and WP 4 Data Ethics:** WP 5 applies documentation of data and models (model card) as engineering practice; governance, ethics and regulation, including the EU AI Act, stay in 3.3 and WP 4.
 - **WP 7 Current Topics in Data Science:** forecasting there focuses on financial markets; WP 5 covers general forecasting and its evaluation.
 
 </details>

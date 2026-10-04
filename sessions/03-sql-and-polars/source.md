@@ -35,14 +35,13 @@ Data downloaded at run time (not stored in the repository): UCI Bank Marketing d
 | File | Covers | Licence |
 |---|---|---|
 | [theory/01-relational-model-and-sql.md](theory/01-relational-model-and-sql.md) | Block 1: relational model, PostgreSQL, SELECT/WHERE/ORDER BY/LIMIT, GROUP BY/HAVING, joins and NULL | CC-BY-4.0 |
-| [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | Block 2: CTEs and window functions, SQLAlchemy and pandas, ingestion with constraints, data cards | CC-BY-4.0 |
+| [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | Block 2: CTEs and window functions, SQLAlchemy and pandas, loading the case-study data | CC-BY-4.0 |
 | [theory/03-polars-and-choosing-a-tool.md](theory/03-polars-and-choosing-a-tool.md) | Block 3: limits of pandas, Polars (expressions, lazy, optimiser, streaming, Parquet), SQL/pandas/Polars side by side, choosing a tool | CC-BY-4.0 |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `join-types.png`, `reviews-per-year-window.png` (Inside Airbnb Berlin reviews), `pandas-polars-benchmark.png` (benchmark values measured with workbook 14) | CC-BY-4.0 |
 | [workbooks/06-case-study-sql-first-questions.ipynb](workbooks/06-case-study-sql-first-questions.ipynb) | Practice block 1: first SQL questions on the Berlin listings with DuckDB (keys, filters, listings and median price per district, joins with reviews and calendar, listings without reviews, rows of vanished listings, NULL in left joins) | CC-BY-4.0 |
-| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | Practice block 2: schema-first loading of listings, calendar, monthly reviews and weather into PostgreSQL (Docker, with `COPY`) or DuckDB, documented loading decisions, constraints at work, districts ranked by price, running totals of reviews, data card | CC-BY-4.0 |
+| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | Practice block 2: schema-first loading of listings, calendar, monthly reviews and weather into PostgreSQL (Docker, with `COPY`) or DuckDB, documented loading decisions, constraints at work, districts ranked by price, running totals of reviews, limitations of the data | CC-BY-4.0 |
 | [workbooks/14-case-study-pandas-vs-polars.ipynb](workbooks/14-case-study-pandas-vs-polars.ipynb) | Practice block 3: the same district-month aggregation on the raw availability calendar (4,692,075 rows, 159 MB of CSV) in SQL, pandas and Polars (eager, lazy, streaming); code, runtime, peak memory; CSV against Parquet | CC-BY-4.0 |
 | [workbooks/sql/01-schema.sql](workbooks/sql/01-schema.sql), [02-add-constraints.sql](workbooks/sql/02-add-constraints.sql), [03-rank-districts-by-price.sql](workbooks/sql/03-rank-districts-by-price.sql), [04-reviews-running-total.sql](workbooks/sql/04-reviews-running-total.sql) | Schema with keys and constraints; constraints for tables written by `prepare_airbnb.py --postgres`; districts ranked by price; running totals of reviews | CC-BY-4.0 |
-| [workbooks/data-card-template.md](workbooks/data-card-template.md) | Data card template | CC-BY-4.0 |
 
 Author of own material: course team.
 
@@ -51,8 +50,6 @@ Data used by the own material: the Inside Airbnb Berlin snapshot of 26 June 2026
 ## Citations
 
 - Codd, E. F. (1970). A relational model of data for large shared data banks. *Communications of the ACM*, 13(6), 377–387. https://doi.org/10.1145/362384.362685
-- Gebru, T., Morgenstern, J., Vecchione, B., Wortman Vaughan, J., Wallach, H., Daumé III, H., & Crawford, K. (2021). Datasheets for datasets. *Communications of the ACM*, 64(12), 86–92. https://arxiv.org/abs/1803.09010
-- Pushkarna, M., Zaldivar, A., & Kjartansson, O. (2022). Data cards: Purposeful and transparent dataset documentation for responsible AI. *FAccT 2022*. https://arxiv.org/abs/2204.01075
 - Raasveldt, M., & Mühleisen, H. (2019). DuckDB: an embeddable analytical database. *SIGMOD 2019*, 1981–1984. https://doi.org/10.1145/3299869.3320212
 - McKinney, W. (2017). *Apache Arrow and the "10 Things I Hate About pandas"*. https://wesmckinney.com/blog/apache-arrow-pandas-internals/
 - Kakegawa, Y. (2024). *Polars Cookbook*. Packt. Code: https://github.com/PacktPublishing/Polars-Cookbook

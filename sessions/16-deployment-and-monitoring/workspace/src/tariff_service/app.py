@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from . import __version__
 from .config import Settings
 from .model import decision_text, load_model, top_k
-from .monitoring import PredictionLogger
+from .monitoring import PostgresPredictionLogger, PredictionLogger
 from .schemas import BatchIn, BatchOut, DecisionIn, HeadingScore, Health, PredictionOut
 
 
@@ -28,7 +28,12 @@ def create_app(model_dir: Path | None = None, log_path: Path | None = None) -> F
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.model, app.state.meta = load_model(model_dir)
-        app.state.logger = PredictionLogger(log_path) if log_path else None
+        if log_path:
+            app.state.logger = PredictionLogger(log_path)
+        elif settings.database_url:
+            app.state.logger = PostgresPredictionLogger(settings.database_url)
+        else:
+            app.state.logger = None
         yield
 
     app = FastAPI(title="Tariff heading API", version=__version__, lifespan=lifespan)

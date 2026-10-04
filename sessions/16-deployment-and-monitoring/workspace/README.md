@@ -2,7 +2,7 @@
 
 A complete, small service around the case-study model: training script, FastAPI prediction API with
 pydantic schemas that returns the **three highest-scoring HS headings** with their English texts, tests with
-`TestClient`, a Dockerfile, CI and CD workflows for GitHub Actions, drift statistics as tested pure functions,
+`TestClient`, a Dockerfile, a Compose file that runs dashboard, API and database together, CI and CD workflows for GitHub Actions, drift statistics as tested pure functions,
 a monitoring report and a model card template. Session 16 builds and releases version 1 and then, after the
 2024 feedback labels are released, version 2. Copy the folder into your team repository.
 
@@ -12,13 +12,14 @@ src/tariff_service/
   train.py        CLI: train a version on the case-study data (time-based validation)
   schemas.py      pydantic request/response models
   app.py          FastAPI app: /health, /metadata, /predict, /predict/batch (exercise 2)
-  monitoring.py   prediction log (JSON lines, no description text)
+  monitoring.py   prediction log (JSON lines or a PostgreSQL table, no description text)
   drift.py        KS test, PSI, category shift, unseen headings, retraining rule, OOV rate (exercise 4)
   monitor.py      CLI: drift report of new decisions against the model's reference statistics
-  config.py       settings from environment variables (MODEL_DIR, PREDICTION_LOG)
+  config.py       settings from environment variables (MODEL_DIR, PREDICTION_LOG, DATABASE_URL)
 tests/            pytest: API contract, validation, behaviour, model files, drift statistics
-dashboard/        Streamlit demo app
-Dockerfile        container image; .dockerignore keeps data and tests out of it
+dashboard/        Streamlit app (front end) and its Dockerfile
+Dockerfile        container image of the API; .dockerignore keeps data and tests out of it
+compose.yaml      front end, back end and database in three containers
 .github/workflows ci.yml (lint, tests, container smoke test), cd.yml (release image on version tags)
 MODEL_CARD.md     template after Mitchell et al. (2019)
 uv.lock           pinned versions of all dependencies
@@ -30,7 +31,7 @@ solutions/        reference solutions of the exercises, for self-checking only
 ```bash
 cd sessions/16-deployment-and-monitoring/workspace
 uv sync                                   # creates .venv with exactly the versions in uv.lock
-uv run pytest -q                          # 34 passed, 2 xfailed (open exercises); with --extra skops: 35 passed
+uv run pytest -q                          # 33 passed, 2 skipped, 2 xfailed (open exercises)
 uvx ruff check .
 
 # version 1 on the 50,000-decision sample (about 20 s; validation accuracy about 0.78, top-3 0.85)
@@ -66,8 +67,12 @@ weights remain, validation accuracy is unchanged, and the model file has about 1
    invalid decision must be rejected with 422.
 3. **Container and CI/CD (block 2).** Read the `Dockerfile` line by line and explain each layer. If Docker
    is installed: `docker build -t tariff-service:1.0.0 .` and `docker run --rm -p 8000:8000
-   tariff-service:1.0.0`. Put the workspace into a GitHub repository, push, and check that `ci.yml`
-   passes. Create the release `v1.0.0` with the model files attached and follow `cd.yml`.
+   tariff-service:1.0.0`. Then start all three parts with `docker compose up --build`: open the dashboard
+   at http://localhost:8501, send three descriptions, and find them in the database with
+   `docker compose exec db psql -U tariff -c "SELECT * FROM predictions"`. Put the workspace into a GitHub
+   repository, push, and check that `ci.yml` passes. Create the release `v1.0.0` with the model files attached
+   and follow `cd.yml`. Finally, sketch the cloud architecture of your team project on AWS (which part runs on
+   which service; see the theory page, "System design and cloud architecture").
 4. **Monitoring (block 3).** Implement `oov_rate` (TODO in `drift.py`). Run the drift report on the 2024–2026
    test decisions: `uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet`,
    then with the feedback labels (`--labels ../../../case-study/data/feedback_2024.csv`). Which input drifts?
@@ -106,8 +111,25 @@ waits for a drop can miss an opportunity to improve.
 | [Google Cloud Run](https://cloud.google.com/run/pricing) | any container listening on a port | monthly free quota | needs a billing account; scales to zero |
 | University or administration server | the container with `docker run` or Podman | n/a | often the right choice for confidential requests |
 
-The dashboard in `dashboard/streamlit_app.py` loads the model with `load_model` and shows the top-3 headings
-and the metadata: `uv sync --extra dashboard && MODEL_DIR=models uv run streamlit run dashboard/streamlit_app.py`.
+The dashboard in `dashboard/streamlit_app.py` shows the top-3 headings and the metadata. On its own it loads
+the model itself: `uv sync --extra dashboard && MODEL_DIR=models uv run streamlit run dashboard/streamlit_app.py`.
+With `API_URL` set, it is only a front end and sends each description to the API.
+
+### Three containers: front end, back end, database
+
+`compose.yaml` runs the dashboard (port 8501), the API (port 8000) and PostgreSQL (no published port) on one
+private network. The API writes every prediction to the table `predictions`, because `DATABASE_URL` is set;
+the dashboard calls `http://api:8000`, because `API_URL` is set. Train or download the model into `models/`
+first, then:
+
+```bash
+docker compose up --build
+docker compose exec db psql -U tariff -c "SELECT heading, language, model_version FROM predictions"
+docker compose down -v            # -v also deletes the database volume
+```
+
+The test of the PostgreSQL log needs a server and is skipped otherwise:
+`TEST_DATABASE_URL=postgresql://user:password@localhost:5432/db uv run --extra postgres pytest -k postgres`.
 
 ## Design notes
 

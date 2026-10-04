@@ -72,3 +72,26 @@ def test_predictions_are_logged_without_the_text(client, tmp_path):
     assert record["model_version"] == "0.0.0-test" and record["heading"] == "6403"
     assert record["text_length"] == len(BOOTS["description"]) and record["language"] == "de"
     assert "description" not in record and "text" not in record
+
+
+def test_predictions_are_logged_to_postgres_when_a_database_is_configured(model_dir, monkeypatch):
+    """Runs only with a PostgreSQL server: TEST_DATABASE_URL=postgresql://... uv run --extra postgres pytest"""
+    import os
+
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url:
+        pytest.skip("set TEST_DATABASE_URL to run this test against PostgreSQL")
+    psycopg = pytest.importorskip("psycopg")
+    from fastapi.testclient import TestClient
+
+    from tariff_service.app import create_app
+
+    monkeypatch.setenv("DATABASE_URL", url)
+    monkeypatch.delenv("PREDICTION_LOG", raising=False)
+    with psycopg.connect(url) as conn:
+        conn.execute("DROP TABLE IF EXISTS predictions")
+    with TestClient(create_app(model_dir=model_dir)) as c:
+        heading = c.post("/predict", json=BOOTS).json()["heading"]
+    with psycopg.connect(url) as conn:
+        rows = conn.execute("SELECT heading, language, model_version FROM predictions").fetchall()
+    assert rows == [(heading, "de", "0.0.0-test")]

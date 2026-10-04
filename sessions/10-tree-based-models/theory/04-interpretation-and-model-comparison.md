@@ -1,4 +1,4 @@
-# Interpreting tree ensembles and comparing a challenger with the current model
+# Interpreting tree ensembles and comparing model performance
 
 A boosted model with 300 trees cannot be read like the depth-2 tree of page 1. Yet we must know what it has learned: to check that it uses sensible information, to find leaks and bugs, and to explain it to the people who rely on it. This page covers the third block of Session 10: **feature importance** (impurity-based), **permutation importance**, **SHAP values** as a tool for checking and debugging models, and the question every model update raises: is the new **challenger** model really better than the **current** model, by enough to replace it? Sections 1–3 use the Telco churn data; Section 4 applies everything to a practical tabular question: what drives the nightly price of a Berlin Airbnb listing, and does a tree ensemble price better than the linear model of Session 6?
 
@@ -172,7 +172,7 @@ The test AUC jumps from 0.842 to 0.918, and the SHAP summary shows one feature f
 > [!WARNING]
 > The `shap` package changes its API often. Pin the version, check shapes (multi-class models return one set of values per class, an extra dimension), and note whether values are on the log-odds or probability scale.
 
-## 3. Comparing a challenger with the current model
+## 3. Comparing the performance of models
 
 ### Concept
 

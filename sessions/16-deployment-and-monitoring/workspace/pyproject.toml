@@ -21,6 +21,8 @@ dependencies = [
 skops = ["skops>=0.10"]
 # the demo dashboard in dashboard/streamlit_app.py
 dashboard = ["streamlit>=1.36"]
+# prediction log in PostgreSQL (compose.yaml)
+postgres = ["psycopg[binary]>=3.2"]
 
 [dependency-groups]
 dev = ["pytest", "ruff", "httpx2"]

@@ -1,6 +1,6 @@
-# Advanced SQL, Python access and reproducible loading
+# Advanced SQL and access from Python
 
-This page covers the second block. The housing analyst from block 1 now asks follow-up questions that plain `GROUP BY` cannot answer: which district is the most expensive *for each room type*, how did the number of reviews develop month by month, and how does a single listing compare with its district? Common table expressions and window functions answer them. Then the analysis moves into a shared team database: access from Python with SQLAlchemy and pandas, loading the data reproducibly with an ingestion script and constraints, and documenting the dataset with a data card. Together these steps turn a folder of files into a shared, documented team database, which is the team-project task for this week.
+This page covers the second block. The housing analyst from block 1 now asks follow-up questions that plain `GROUP BY` cannot answer: which district is the most expensive *for each room type*, how did the number of reviews develop month by month, and how does a single listing compare with its district? Common table expressions and window functions answer them. Then the analysis moves into a shared team database: access from Python with SQLAlchemy and pandas, and, as practical guidance for the exercise, loading the case-study data into PostgreSQL. Together these steps turn a folder of files into a shared team database, which is the team-project task for this week.
 
 ```mermaid
 flowchart LR
@@ -8,7 +8,6 @@ flowchart LR
     SCRIPT --> SCHEMA["Schema with keys<br/>and constraints"]
     SCHEMA --> DB[("PostgreSQL")]
     DB --> CHECK["Checks: row counts,<br/>rejected rows"]
-    CHECK --> CARD["Data card"]
     DB --> PY["Python: SQLAlchemy,<br/>pandas.read_sql"]
 ```
 
@@ -290,7 +289,7 @@ print(n)                                                             # 541
 > [!TIP]
 > `pd.read_sql` loads the whole result into memory. For large results, aggregate in SQL first, or read in pieces with `chunksize=` and process each piece. `SELECT * FROM calendar` sends 4.7 million rows to Python; the share of free nights per district is twelve rows.
 
-## Loading data reproducibly with an ingestion script and constraints
+## Loading the case-study data into PostgreSQL
 
 ### Concept
 
@@ -353,7 +352,7 @@ except duckdb.ConstraintException as e:
     print(str(e).splitlines()[0][:100])
 # Constraint Error: CHECK constraint failed on table listings with expression CHECK((maximum_nights <
 
-# decision 1, documented in the data card: the placeholder maximum stay becomes NULL
+# decision 1, documented with the data: the placeholder maximum stay becomes NULL
 con.execute(f"INSERT INTO listings SELECT {COLS.replace('maximum_nights', 'NULLIF(maximum_nights, 2147483647)')} "
             f"FROM '{SRC}/listings.parquet'")
 try:
@@ -378,100 +377,13 @@ print(con.sql(f"""SELECT (SELECT COUNT(*) FROM listings), (SELECT COUNT(*) FROM 
 - **Data engineering teams** use tools such as dbt, which runs SQL transformations from version-controlled files and checks `unique`, `not_null` and `relationships` rules after each run.
 
 > [!WARNING]
-> `to_sql(..., if_exists="replace")` drops the table and recreates it **without** keys, constraints or indexes. After a reload, run the constraints script again, or load with `if_exists="append"` into a table that you created with its schema. Once `02-add-constraints.sql` has added the foreign keys, `listings` cannot simply be dropped: a second run of `prepare_airbnb.py --postgres` stops with "cannot drop table listings because other objects depend on it". Drop the tables first (`DROP TABLE calendar, reviews_monthly, weather_daily, listings CASCADE;`), then reload and add the constraints again.
+> `to_sql(..., if_exists="replace")` drops the table and recreates it **without** keys, constraints or indexes. After a reload, run the constraints script again, or load with `if_exists="append"` into a table that you created with its schema. A second run of `prepare_airbnb.py --postgres` therefore drops the four tables with `CASCADE` and loads them again, which also removes the keys and constraints added by `02-add-constraints.sql`; run that file again after every reload.
 
 > [!TIP]
 > Sending 4.7 million rows with plain `to_sql` takes about a minute and a half. PostgreSQL's `COPY` command is much faster: in the course team's test, workbook 10 loaded all four tables with `COPY` in about 35 seconds, most of it spent preparing the rows in pandas. The workbook shows how to use it from pandas, following the example in the pandas documentation (`to_sql(..., method=)` with a callable).
 
-## Documenting a dataset (data card)
-
-### Concept
-
-A **data card** is a short document that travels with a dataset and answers the questions a new user would ask: what is in it, where does it come from, how was it processed, what is it for, and what are its limitations. The idea was proposed as *Datasheets for Datasets* by Gebru et al. (2021), who compared it to the datasheets that accompany electronic components. Hugging Face dataset cards and Google's *Data Cards* (Pushkarna et al., 2022) are widely used variants.
-
-The course template ([`workbooks/data-card-template.md`](../workbooks/data-card-template.md)) has these sections:
-
-```mermaid
-mindmap
-  root((Data card))
-    Summary
-      name, version, owner
-    Motivation
-      why created
-      our question
-    Source
-      origin, licence
-      time period
-      who is missing
-    Composition
-      tables, keys
-      missing values
-      personal data
-    Processing
-      script, filters
-      rejected rows
-    Uses
-      intended
-      to avoid
-    Limitations
-```
-
-Some facts can be computed (row counts, date ranges, shares of missing values); others need judgement (who is under-represented, which questions the data cannot answer). For the Berlin listings, three limitations need judgement:
-
-- **Survivorship.** `reviews_monthly` contains the reviews of listings that are still online in June 2026. Listings that were deleted earlier took their reviews with them, so the growth of reviews since 2015 overstates the growth of the market.
-- **Availability is not demand.** A night that is not available is booked *or* blocked by the host; the calendar cannot tell them apart.
-- **Asking prices.** The price is what a host asks for the next free night, not what guests paid, and Airbnb shifts each location by up to about 150 metres to protect the host.
-
-### Why it matters
-
-Without documentation, knowledge about a dataset lives in the heads of the people who prepared it. Later users repeat mistakes (such as using a column that is derived from the target, see Session 9), use data outside their licence, or draw conclusions about populations the data do not cover. A data card also forces the team to look at the data before modelling.
-
-### How it works in Python
-
-The computed part of the card comes from a few queries:
-
-```python
-import duckdb
-
-con = duckdb.connect()
-for table in ["listings", "calendar", "reviews_monthly"]:
-    con.execute(f"CREATE VIEW {table} AS SELECT * FROM 'case-study/data/airbnb/{table}.parquet'")
-facts = con.sql("""
-    SELECT COUNT(*) AS n_listings,
-           COUNT(DISTINCT host_id) AS n_hosts,
-           COUNT(DISTINCT district) AS n_districts,
-           MIN(last_scraped)::date AS scraped_from, MAX(last_scraped)::date AS scraped_to,
-           ROUND(AVG((price IS NULL)::int), 3) AS share_price_missing,
-           ROUND(AVG((minimum_nights >= 28)::int), 3) AS share_medium_term,
-           ROUND(AVG((license_status = 'registration number')::int), 3) AS share_registered,
-           (SELECT MIN(month)::date FROM reviews_monthly) AS first_review_month,
-           (SELECT MAX(date)::date FROM calendar) AS calendar_until
-    FROM listings
-""").df().T
-print(facts)
-#                                        0
-# n_listings                         12776
-# n_hosts                             8182
-# n_districts                           12
-# scraped_from         2026-06-26 00:00:00
-# scraped_to           2026-07-03 00:00:00
-# share_price_missing                0.339
-# share_medium_term                  0.351
-# share_registered                   0.351
-# first_review_month   2009-06-01 00:00:00
-# calendar_until       2027-07-02 00:00:00
-```
-
-The two equal shares are a coincidence (4,480 listings each), and a revealing one: the groups hardly overlap, since only 131 medium-term listings show a registration number. Such observations belong in the card.
-
-### In practice
-
-- **Hugging Face** shows a dataset card on the page of every dataset on its Hub; the card of a dataset is the first thing users see.
-- **Google** introduced *Data Cards* for its own datasets and published the template and the experience from using it (Pushkarna et al., 2022).
-- **Public open-data portals**, for example GovData in Germany, publish metadata following the DCAT-AP standard: source, licence, update frequency and contact for every dataset.
-
 > [!IMPORTANT]
-> Inside Airbnb publishes its data under the Creative Commons Attribution 4.0 licence (CC BY 4.0): reuse is allowed with attribution. The data are scraped from public listing pages and contain personal data, which `prepare_airbnb.py` removes (host names, review texts, names typed into the registration field). A data card records both the licence and these steps, and the course reports results in aggregate, never naming hosts; "found on the internet" is not a licence.
+> Inside Airbnb publishes its data under the Creative Commons Attribution 4.0 licence (CC BY 4.0): reuse is allowed with attribution. The data are scraped from public listing pages and contain personal data, which `prepare_airbnb.py` removes (host names, review texts, names typed into the registration field). Document both the licence and these steps with the data, and report results in aggregate, never naming hosts; "found on the internet" is not a licence.
 
 ## Check your understanding
 
@@ -479,11 +391,9 @@ The two equal shares are a coincidence (4,480 listings each), and a revealing on
 2. When do `RANK()` and `ROW_NUMBER()` give different results?
 3. Why is `text("... WHERE district = :district")` with `params={"district": d}` safer than an f-string?
 4. The script writes the tables with `to_sql(if_exists="replace")`. What is missing afterwards, and why can the foreign key from `calendar` to `listings` not simply be added as a valid constraint?
-5. Name two facts of the listings' data card that can be computed by a query and two that need human judgement.
 
 ## Further reading
 
-- Gebru, T., Morgenstern, J., Vecchione, B., Wortman Vaughan, J., Wallach, H., Daumé III, H., & Crawford, K. (2021). Datasheets for datasets. *Communications of the ACM*, 64(12), 86–92. https://arxiv.org/abs/1803.09010
 - The PostgreSQL Global Development Group. *PostgreSQL documentation: Window functions* (tutorial section 3.5). https://www.postgresql.org/docs/current/tutorial-window.html
 - SQLAlchemy. *SQLAlchemy Unified Tutorial* (version 2.0). https://docs.sqlalchemy.org/en/20/tutorial/
 - Inside Airbnb. *Data assumptions*. https://insideairbnb.com/data-assumptions/

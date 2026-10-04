@@ -157,7 +157,7 @@ A team project needs one place where the current version of the data lives, with
 
 ### How it works in Python
 
-Start a PostgreSQL server in Docker with one command (details in [block 2](02-sql-from-python-and-ingestion.md#loading-data-reproducibly-with-an-ingestion-script-and-constraints)), then connect from Python. Without a server, DuckDB answers the same SQL from the files:
+Start a PostgreSQL server in Docker with one command (details in [block 2](02-sql-from-python-and-ingestion.md#loading-the-case-study-data-into-postgresql)), then connect from Python. Without a server, DuckDB answers the same SQL from the files:
 
 ```python
 import duckdb

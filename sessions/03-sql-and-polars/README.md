@@ -20,13 +20,11 @@
 - [INNER and LEFT JOIN; NULL values in joins and aggregates](theory/01-relational-model-and-sql.md#inner-and-left-join-null-values-in-joins-and-aggregates)
 - *Practice:* answer first questions about the Berlin Airbnb listings in SQL; listings and median price per district; join the listings with their reviews and their availability; find listings without any review (LEFT JOIN) → [workbook 06](workbooks/06-case-study-sql-first-questions.ipynb)
 
-**1:00–1:45 · Advanced SQL, Python access and reproducible loading** ([theory page](theory/02-sql-from-python-and-ingestion.md))
+**1:00–1:45 · Advanced SQL and access from Python** ([theory page](theory/02-sql-from-python-and-ingestion.md))
 
 - [Common table expressions and window functions](theory/02-sql-from-python-and-ingestion.md#common-table-expressions-and-window-functions)
 - [Access from Python with SQLAlchemy and pandas](theory/02-sql-from-python-and-ingestion.md#access-from-python-with-sqlalchemy-and-pandas)
-- [Loading data reproducibly with an ingestion script and constraints](theory/02-sql-from-python-and-ingestion.md#loading-data-reproducibly-with-an-ingestion-script-and-constraints)
-- [Documenting a dataset (data card)](theory/02-sql-from-python-and-ingestion.md#documenting-a-dataset-data-card)
-- *Practice:* case study: load `listings`, `calendar` and `reviews_monthly` into PostgreSQL with the provided script or a schema-first loader; rank districts by price and compute running totals of reviews with window functions; write a short data card → [workbook 10](workbooks/10-case-study-postgres-listings.ipynb), [SQL files](workbooks/sql/), [data card template](workbooks/data-card-template.md)
+- *Practice:* case study: load `listings`, `calendar` and `reviews_monthly` into PostgreSQL with the provided script or a schema-first loader; rank districts by price and compute running totals of reviews with window functions → [workbook 10](workbooks/10-case-study-postgres-listings.ipynb), [SQL files](workbooks/sql/); how to load the data is explained in [Loading the case-study data into PostgreSQL](theory/02-sql-from-python-and-ingestion.md#loading-the-case-study-data-into-postgresql)
 
 **2:00–2:45 · Large tables in Python: Polars and choosing a tool** ([theory page](theory/03-polars-and-choosing-a-tool.md))
 
@@ -41,7 +39,7 @@
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-relational-model-and-sql.md](theory/01-relational-model-and-sql.md) | Relational model, PostgreSQL, basic queries, aggregation, joins and NULL | 1 | core |
-| [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | CTEs, window functions, SQLAlchemy, ingestion, data card | 2 | core |
+| [theory/02-sql-from-python-and-ingestion.md](theory/02-sql-from-python-and-ingestion.md) | CTEs, window functions, SQLAlchemy, loading the case-study data | 2 | core |
 | [theory/03-polars-and-choosing-a-tool.md](theory/03-polars-and-choosing-a-tool.md) | Limits of pandas, Polars, three tools side by side, choosing a tool | 3 | core |
 | [workbooks/01-sql-select-where-order.ipynb](workbooks/01-sql-select-where-order.ipynb) | Data 100: SELECT, WHERE, ORDER BY, LIMIT with jupysql and DuckDB | 1 | core |
 | [workbooks/02-sql-first-query.ipynb](workbooks/02-sql-first-query.ipynb) | Ploomber: a first query on bank marketing data | 1 | optional |
@@ -52,9 +50,8 @@
 | [workbooks/07-sql-window-functions.ipynb](workbooks/07-sql-window-functions.ipynb) | Ploomber: RANK, DENSE_RANK, moving averages, ROLLUP | 2 | optional |
 | [workbooks/08-postgres-with-python.ipynb](workbooks/08-postgres-with-python.ipynb) | Ploomber: PostgreSQL in Docker with SQLAlchemy and jupysql | 2 | optional |
 | [workbooks/09-jupysql-postgres-connect.ipynb](workbooks/09-jupysql-postgres-connect.ipynb) | JupySQL: connecting to PostgreSQL, loading and plotting | 2 | optional |
-| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | **Case study**: load listings, calendar and reviews into PostgreSQL (or DuckDB) with keys and constraints, rank districts by price, running totals of reviews, data card | 2 | core |
+| [workbooks/10-case-study-postgres-listings.ipynb](workbooks/10-case-study-postgres-listings.ipynb) | **Case study**: load listings, calendar and reviews into PostgreSQL (or DuckDB) with keys and constraints, rank districts by price, running totals of reviews | 2 | core |
 | [workbooks/sql/](workbooks/sql/) | `01-schema.sql`, `02-add-constraints.sql`, `03-rank-districts-by-price.sql`, `04-reviews-running-total.sql` | 2 | core |
-| [workbooks/data-card-template.md](workbooks/data-card-template.md) | Data card template for the case study and the team project | 2 | core |
 | [workbooks/11-polars-eda-with-sql-equivalents.ipynb](workbooks/11-polars-eda-with-sql-equivalents.ipynb) | Data 100: first steps in Polars, each with the equivalent SQL | 3 | core |
 | [workbooks/12-polars-getting-started.ipynb](workbooks/12-polars-getting-started.ipynb) | Polars Cookbook ch. 1: DataFrame, LazyFrame, query plans, expressions | 3 | core |
 | [workbooks/13-polars-transformations.ipynb](workbooks/13-polars-transformations.ipynb) | Polars Cookbook ch. 4: group_by, window functions with `over`, UDFs, SQL in Polars | 3 | optional |

@@ -1,8 +1,8 @@
 # The ML lifecycle and linear regression
 
-This page opens the machine-learning part of the course. It places every later session in the **machine-learning lifecycle**, a sequence of ten steps from problem definition to monitoring, and introduces the vocabulary of supervised learning: features, target, training and prediction. Then it covers the first model, **linear regression**: the split into training and test data, simple and multiple regression fitted by least squares, residuals, and the three standard error metrics MAE, RMSE and R². The running example is a question with a real use: **what drives the nightly price of a short-stay Airbnb listing in Berlin?** A host who wants to price a new flat, and a city analyst who wants to know what a night in each district costs, both need the answer in euros. The data are the Inside Airbnb Berlin listings (snapshot of 26 June 2026, CC BY 4.0; `uv run python case-study/prepare_airbnb.py`) restricted, as in Sessions 4 and 5, to the 6,701 listings with a price and a minimum stay below 28 nights.
+This page opens the machine-learning part of the course. It places every later session in the **machine-learning lifecycle**, a sequence of stages from problem definition to monitoring, and introduces the vocabulary of supervised learning: features, target, training and prediction. Then it covers the first model, **linear regression**: the split into training and test data, simple and multiple regression fitted by least squares, residuals, and the three standard error metrics MAE, RMSE and R². The running example is a question with a real use: **what drives the nightly price of a short-stay Airbnb listing in Berlin?** A host who wants to price a new flat, and a city analyst who wants to know what a night in each district costs, both need the answer in euros. The data are the Inside Airbnb Berlin listings (snapshot of 26 June 2026, CC BY 4.0; `uv run python case-study/prepare_airbnb.py`) restricted, as in Sessions 4 and 5, to the 6,701 listings with a price and a minimum stay below 28 nights.
 
-## The ML lifecycle in ten steps
+## The machine learning lifecycle
 
 ### Concept
 
@@ -64,7 +64,7 @@ print(baseline, round(np.mean(np.abs(test["price"] - baseline)), 1))   # 156.5 8
 - Sculley et al. (2015) at Google described the "hidden technical debt" of ML systems: the model code is a small part of a system dominated by data collection, feature extraction, serving and monitoring.
 
 > [!IMPORTANT]
-> **Practice (block 1, part 1).** What would it take to turn a Berlin price model into a pricing aid for hosts? Map it to the ten steps: for each step, write one sentence on what it means for this task and which session covers it. Example for step 02: the data are a public snapshot scraped by Inside Airbnb; `estimated_revenue_l365d` is computed by Inside Airbnb *from* the price, so it cannot be a feature (Session 9 calls this leakage); a new host's flat has no reviews yet, so review features would not be available at prediction time either.
+> **Practice (block 1, part 1).** What would it take to turn a Berlin price model into a pricing aid for hosts? Map it to the lifecycle: for each stage, write one sentence on what it means for this task and which session covers it. Example for data collection: the data are a public snapshot scraped by Inside Airbnb; `estimated_revenue_l365d` is computed by Inside Airbnb *from* the price, so it cannot be a feature (Session 9 calls this leakage); a new host's flat has no reviews yet, so review features would not be available at prediction time either.
 
 ## Supervised learning: features, target, training, prediction
 

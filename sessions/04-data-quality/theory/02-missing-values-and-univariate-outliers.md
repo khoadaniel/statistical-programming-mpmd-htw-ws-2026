@@ -172,50 +172,14 @@ On the Airbnb listings, `bedrooms` is missing for 27 % of the listings. Workbook
 > [!CAUTION]
 > Never impute the **target** variable of a model and then evaluate on it. And do not impute a value that is missing *by definition* (a review score for a listing without reviews, the price of a listing with no bookable night, a "date of death" for a living patient); use a category or an indicator instead.
 
-## Missing-value indicators
-
-### Concept
-
-Imputation hides the fact that a value was missing. A **missing-value indicator** is an extra 0/1 column that records it: 1 where the original value was missing. In scikit-learn, `MissingIndicator` creates the indicators, and `SimpleImputer(add_indicator=True)` (also `KNNImputer` and `IterativeImputer`) appends them to the imputed columns.
-
-By hand: review scores `[4.9, ?, 4.7]` with median imputation become `[4.9, 4.8, 4.7]` and the indicator `[0, 1, 0]`. A model can now learn "listings without a rating behave differently", which the imputed 4.8 alone would hide.
-
-### Why it matters
-
-When missingness is informative (not MCAR), the indicator carries signal: in the listings, a missing rating means no reviews yet, and those listings have much longer minimum stays (median 92 nights against 2) and more free nights. For tree-based models (Session 10), an indicator, or simply leaving the value missing for models that support it, is often better than any imputed value.
-
-### How it works in Python
-
-```python
-import pandas as pd
-from sklearn.impute import SimpleImputer
-
-listings = pd.read_parquet("case-study/data/airbnb/listings.parquet")
-X = listings[["bedrooms", "review_scores_rating"]]
-
-imp = SimpleImputer(strategy="median", add_indicator=True).fit(X)
-out = pd.DataFrame(imp.transform(X), columns=imp.get_feature_names_out())
-print(out.columns.tolist())
-# ['bedrooms', 'review_scores_rating', 'missingindicator_bedrooms', 'missingindicator_review_scores_rating']
-print(imp.statistics_, out.filter(like="missingindicator").mean().round(3).tolist())   # [1.   4.86] [0.268, 0.201]
-
-# do listings without a rating differ? (no rating = no reviews yet)
-no_rating = listings["review_scores_rating"].isna()
-print(listings.groupby(no_rating)[["minimum_nights", "availability_365"]].median().to_string())
-#                       minimum_nights  availability_365
-# review_scores_rating
-# False                            2.0             121.0
-# True                            92.0             184.0
-```
-
-### In practice
-
-- **Credit scoring**: "no previous loan" or a missing income field is kept as its own category or indicator, because the absence of information carries risk information.
-- **Clinical prediction models** that use routinely collected data often include indicators for tests that were not ordered; the decision not to test reflects the physician's assessment.
-- **scikit-learn's gradient boosting** (`HistGradientBoostingClassifier`) handles missing values natively by learning on which side of a split they belong, which is an internal form of the indicator idea.
-
 > [!TIP]
-> Add indicators by default when missingness is not obviously MCAR. A model can ignore a useless indicator; it cannot recover information that imputation has removed.
+> **Keep track of what was imputed.** Imputation hides the fact that a value was missing. `SimpleImputer(add_indicator=True)` (also `KNNImputer` and `IterativeImputer`) appends a 0/1 column that is 1 where the value was missing, so a model can still use that information. It helps when missingness is informative: in the listings, a missing rating means no reviews yet, and those listings have much longer minimum stays (median 92 nights against 2).
+>
+> ```python
+> imp = SimpleImputer(strategy="median", add_indicator=True).fit(listings[["bedrooms", "review_scores_rating"]])
+> print(imp.get_feature_names_out().tolist())
+> # ['bedrooms', 'review_scores_rating', 'missingindicator_bedrooms', 'missingindicator_review_scores_rating']
+> ```
 
 ## Univariate outliers (IQR rule, z-score, median absolute deviation)
 

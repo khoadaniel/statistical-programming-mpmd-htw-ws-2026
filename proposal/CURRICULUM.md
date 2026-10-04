@@ -2,9 +2,9 @@
 
 **Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
 
-The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. Every topic is introduced from its foundations; no prior knowledge of machine learning or NLP is assumed. Methods are practised on real datasets: Berlin Airbnb listings for data work, statistics and tabular machine learning, and EU customs decisions for text and language models, with a class leaderboard.
+The course prepares students for the analyst and the data science track of data work. All students first learn the shared foundations: Python, collaborative development, SQL and the preparation of data. They then learn to explore, report and test data as analysts do, and finally to build, validate and deploy machine learning models, from regression to language models. No prior knowledge of machine learning or NLP is assumed. All methods are practised on public, real-world datasets ([Section 4](#4-datasets-and-leaderboard)).
 
-The analysis behind these decisions (curriculum, labour market, comparable courses, dataset and assessment) is in Part 1, [PREMISE.md](PREMISE.md).
+The analysis behind these decisions (curriculum, labour market, comparable courses, datasets and assessment) is in Part 1, [PREMISE.md](PREMISE.md).
 
 | Item | Proposal |
 |---|---|
@@ -14,65 +14,36 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Workload | 5 ECTS = 135 h: 40.5 h contact time (54 UE) and about 94.5 h self-study and project work (about 5 h per week) |
 | Participants | 22 students in seven teams (six of three, one of four) |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
-| Datasets | Inside Airbnb Berlin (Sessions 1–12) and the Open-Meteo weather API; IBM Telco for churn; EU customs decisions (EBTI) for the text and language-model sessions 13–16, with a leaderboard on a hidden, time-based test set |
+| Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-leaderboard) |
+| Leaderboard | In the text and language-model sessions (13–16), teams submit predictions for a held-out test set whose correct answers stay hidden, so the ranking shows how well a model works on new data |
 | Assessment | Final project with an analytics or machine learning emphasis, graded in its presentation (100 %) |
 
 ## Contents
 
 - [1. Overview](#1-overview)
 - [2. Module learning outcomes](#2-module-learning-outcomes)
-- [3. Session overview](#3-session-overview)
-- [4. Sessions](#4-sessions)
-- [5. Datasets and leaderboard](#5-datasets-and-leaderboard)
-- [6. Final project](#6-final-project)
-- [7. Assessment](#7-assessment)
+- [3. Sessions](#3-sessions)
+- [4. Datasets and leaderboard](#4-datasets-and-leaderboard)
+- [5. Final project](#5-final-project)
+- [6. Assessment](#6-assessment)
 
 ## 1. Overview
 
 Data roles share a common base and then divide: analysts work mainly with SQL, Python for reporting, visualisation and statistical tests; data scientists and ML engineers build, validate and operate models ([Premise, Section 3](PREMISE.md#3-labour-market-requirements)). The course follows this structure.
 
-```mermaid
-flowchart LR
-  A["<b>Foundations</b><br/>S1–S2<br/>careers, Python,<br/>OOP, APIs, Git"]:::found --> B["<b>Working with data</b><br/>S3–S4<br/>SQL, Polars,<br/>data quality"]:::data
-  B --> C["<b>Analytics</b><br/>S5<br/>exploration, visualisation,<br/>statistics recap"]:::ana
-  C --> D["<b>Machine learning</b><br/>S6–S16<br/>linear and logistic regression → validation<br/>→ classification metrics → features<br/>→ tree-based models → unsupervised<br/>→ time series → classical NLP → LLMs and agents<br/>→ deployment"]:::ml
-  D --> E["<b>Final presentations</b><br/>S17–S18"]:::pres
-  classDef found fill:#475569,stroke:#475569,color:#ffffff
-  classDef data fill:#2d7d74,stroke:#2d7d74,color:#ffffff
-  classDef ana fill:#6a5a8c,stroke:#6a5a8c,color:#ffffff
-  classDef ml fill:#3b5b8c,stroke:#3b5b8c,color:#ffffff
-  classDef pres fill:#636b78,stroke:#636b78,color:#ffffff
-```
+**Learning through practice.** The course is oriented towards professional practice. Statistical and data concepts that students have met in earlier modules are revisited where a task requires them, but the emphasis lies on their implementation in Python and on their application to realistic problems. Each teaching block combines a short conceptual input with live coding and an exercise on real data, so that every method is learned by using it. Formal derivations are presented only as far as they are needed to apply a method correctly and to interpret its results; the theory page of each session and the further reading it lists provide the full background for students who wish to study a topic in depth.
 
 - **Shared base (Sessions 1–4).** Every role needs Python, both for analysis in notebooks and for building applications (object-oriented programming, APIs), collaborative development with Git, SQL, Polars for large tables and the preparation of data.
 - **Analytics (Session 5).** Exploration and visualisation together with the statistics recap of the module description: descriptive statistics, tests, contingency tables and correlation, applied in Python. Correlation leads directly into regression, the first model of the next part.
-- **Machine learning (Sessions 6–16).** Built up from the simplest model to the most complex: linear and logistic regression, validation and tuning, classification and its evaluation metrics, feature engineering, tree-based models, unsupervised learning, forecasting, classical NLP, two sessions on large language models (from transformer and embedding models to RAG and agents) and deployment. The ML lifecycle is introduced at the start of this part.
-- **Real datasets and one project.** Methods are practised on Berlin Airbnb listings and EU customs decisions, with a class leaderboard on the customs decisions from Session 13. Teams then apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation.
-
-## 2. Module learning outcomes
-
-After completing the module, students are able to
-
-| # | Learning outcome | Sessions | Assessed in criterion |
-|---|---|---|---|
-| LO1 | write well-structured Python code for data tasks, check it with automated tests, and develop it in a team using Git, code review and continuous integration | S1–S2, used throughout | Collaboration and presentation |
-| LO2 | load, query and prepare data from relational databases, APIs and larger files reproducibly, with SQL, pandas or Polars, and document its quality | S2–S4 | Data |
-| LO3 | describe and compare data with suitable statistical methods and charts and report results with their uncertainty | S5, S7 | Analysis or model; uncertainty and validation |
-| LO4 | build, validate and tune supervised and unsupervised models, from regression to tree-based models, without leakage | S6–S12 | Analysis or model; uncertainty and validation |
-| LO5 | represent text for machine learning, use embedding and language models, including retrieval and agents, and evaluate them against baselines | S13–S15 | Analysis or model; uncertainty and validation |
-| LO6 | deploy, monitor and document a model or a dashboard | S16 | Delivery |
-| LO7 | define a data problem with a stakeholder, and present and defend the results individually | S1, S6, S17–S18 | Problem definition; collaboration and presentation |
-
-Every learning outcome is assessed in at least one criterion of the final project ([Assessment](#7-assessment)).
-
-## 3. Session overview
+- **Machine learning (Sessions 6–16).** Built up from the simplest model to the most complex: linear and logistic regression, validation and tuning, classification and its evaluation metrics, feature engineering, tree-based models, unsupervised learning, forecasting, classical NLP, two sessions on large language models (from transformer and embedding models to RAG and agents) and deployment. The machine learning lifecycle is introduced at the start of this part.
+- **One project.** Teams apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation. The weekly exercises and the leaderboard prepare the project and are not graded.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/course-structure-timeline-dark.svg">
   <img src="assets/course-structure-timeline-light.svg" alt="Timeline of the 18 sessions coloured by course part" width="100%">
 </picture>
 
-| Week | Session | Part | Main roles |
+| Week | Session | Part | Roles that require these skills |
 |---|---|---|---|
 | 1 | **S1** Introduction: data science careers, Python for analysis and Python for software engineering | Foundations | All |
 | 2 | **S2** Software engineering for data work: object-oriented programming, APIs, testing, Git and continuous integration | Foundations | All |
@@ -93,9 +64,23 @@ Every learning outcome is assessed in at least one criterion of the final projec
 | 17 | **S17** Final project presentations I | Final presentations |  |
 | 18 | **S18** Final project presentations II and course conclusion | Final presentations |  |
 
-## 4. Sessions
+## 2. Module learning outcomes
 
-For each session: the guiding question, the learning outcomes and the session plan. Each session has three teaching blocks of 45 minutes (0:00–0:45, 1:00–1:45, 2:00–2:45) with 15-minute breaks in between; each block combines a short input with live coding and an exercise.
+After completing the module, students are able to
+
+| Sessions | Learning outcome |
+|---|---|
+| **S1–S2** Foundations: Python, software engineering, APIs and Git | write well-structured Python code for data tasks, check it with automated tests, and develop it in a team using Git, code review and continuous integration |
+| **S3–S4** Working with data: SQL, Polars and data quality | load, query and prepare data from relational databases, APIs and larger files reproducibly, with SQL, pandas or Polars, and document its quality |
+| **S5** Exploratory analysis and statistics recap | describe and compare data with suitable statistical methods and charts and report results with their uncertainty |
+| **S6–S12** Machine learning: from regression to time series forecasting | build, validate and tune supervised and unsupervised models, from regression to tree-based models, without leakage |
+| **S13–S15** Classical NLP and large language models | represent text for machine learning, use embedding and language models, including retrieval and agents, and evaluate them against baselines |
+| **S16** Deployment, monitoring and maintenance | serve a model in a container, explain how a data application is deployed in the cloud, and monitor and document the model |
+| **S17–S18** Final presentations, prepared in the team project throughout the course | define a data problem with a stakeholder, and present and defend the results individually |
+
+## 3. Sessions
+
+For each session: the guiding question, the learning outcomes and the session plan. Each session has three teaching blocks of 45 minutes (0:00–0:45, 1:00–1:45, 2:00–2:45) with 15-minute breaks in between; each block combines a short conceptual input with live coding and an exercise on real data (*Practice*).
 
 ### Foundations (Sessions 1–2)
 
@@ -115,7 +100,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 - Data roles: data analyst, data scientist, ML and AI engineer, data engineer
 - Tasks, skills and entry routes of each role
-- Course organisation, assessment, the running case study and the leaderboard
+- Course organisation, assessment, the course datasets and the leaderboard
 
 *Practice:* Compare three job advertisements (analyst, data scientist, ML engineer) and list the skills they share and those that differ
 
@@ -209,10 +194,8 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 - Common table expressions and window functions
 - Access from Python with SQLAlchemy and pandas
-- Loading data reproducibly with an ingestion script and constraints
-- Documenting a dataset (data card)
 
-*Practice:* Case study: load listings, calendar and monthly reviews into PostgreSQL with the provided script; rank districts by price and compute running totals of reviews with window functions; write a short data card
+*Practice:* Case study: load listings, calendar and monthly reviews into PostgreSQL with the provided script; rank districts by price and compute running totals of reviews with window functions
 
 **2:00–2:45**
 
@@ -239,9 +222,9 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **0:00–0:45**
 
-- Dimensions of data quality
+- Dimensions of data quality: completeness, validity, uniqueness, consistency, accuracy and timeliness
 - Checks for types, ranges, duplicates and consistency
-- Validation rules as tests
+- Validation rules written as automated tests (pytest, pandera) that stop the pipeline when new data break a rule
 
 *Practice:* Write a data quality report for the listings (prices stored as text, placeholder values, impossible minimum stays, names in the registration field, duplicates)
 
@@ -249,7 +232,6 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 - Missing data mechanisms (MCAR, MAR, MNAR)
 - Simple, KNN and iterative imputation
-- Missing-value indicators
 - Univariate outliers (IQR rule, z-score, median absolute deviation)
 
 *Practice:* A third of the Berlin Airbnb listings show no price. Is a missing price related to reviews or availability? Recover hidden bedroom counts with several imputers; find outliers in price and minimum stay
@@ -312,27 +294,27 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **Learning outcomes.** Students are able to
 
-- describe the ten steps of the ML lifecycle and relate them to the earlier sessions
+- describe the stages of the machine learning lifecycle, from problem definition to monitoring, and relate them to the earlier sessions
 - split data into training and test sets and fit, interpret and evaluate a linear regression
 - recognise underfitting and overfitting and use robust regression for data with outliers
 - fit and interpret a logistic regression for a binary outcome
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/ml-lifecycle-ten-steps-dark.svg">
-  <img src="assets/ml-lifecycle-ten-steps-light.svg" alt="The ten steps of the machine learning lifecycle arranged in a loop, from 01 problem definition to 10 model monitoring and maintenance, with the sessions that cover each step" width="100%">
+  <img src="assets/ml-lifecycle-ten-steps-light.svg" alt="The machine learning lifecycle arranged in a loop, from problem definition to model monitoring and maintenance, with the sessions that cover each stage" width="100%">
 </picture>
 
 **Session plan**
 
 **0:00–0:45**
 
-- The ML lifecycle in ten steps, from problem definition (target, metric, baseline) to maintenance, and how Sessions 3–5 already covered data collection, cleaning and exploration
+- The machine learning lifecycle, from problem definition (target, metric, baseline) to monitoring and maintenance, and how Sessions 3–5 already covered data collection, cleaning and exploration
 - Supervised learning: features, target, training, prediction
 - The data split into training and test sets
 - Simple and multiple linear regression (least squares, coefficients, residuals)
 - Regression metrics (MAE, RMSE, R²)
 
-*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the ten steps; fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros
+*Practice:* What drives nightly prices in Berlin? Map a pricing aid for hosts to the stages of the lifecycle; fit and interpret a price model (guests, room type, distance to the centre, district) and report its error in euros
 
 **1:00–1:45**
 
@@ -437,7 +419,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **Learning outcomes.** Students are able to
 
-- construct features from dates, interactions, high-cardinality categories and joined tables
+- construct features from dates, interactions, high-cardinality categories and related tables
 - implement feature construction in pipelines without leakage
 - handle class imbalance with undersampling, oversampling and class weights, applied only to the training data
 
@@ -453,8 +435,8 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **1:00–1:45**
 
-- Aggregates from joined tables, computed only from past data
-- Target leakage through aggregates
+- Aggregation features from related tables
+- Target leakage
 - Simple text statistics as features
 
 *Practice:* Case study: which listings will be busy next year? Build past-only demand features from the monthly reviews and detect the columns that leak the target, such as the revenue estimate
@@ -503,7 +485,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 **2:00–2:45**
 
 - Interpretation of tree-based models with feature importance, permutation importance and SHAP values
-- Comparing a challenger with the current model
+- Comparing the performance of models
 
 *Practice:* Case study: is a tree ensemble worth replacing the linear price model of Session 6? Compare a random forest and gradient boosting with it on host-grouped folds and interpret the winner
 
@@ -706,8 +688,8 @@ For each session: the guiding question, the learning outcomes and the session pl
 **Learning outcomes.** Students are able to
 
 - serve a model as a tested web API in a container, released with CI/CD
-- monitor a deployed model for data drift and label shift
-- decide on retraining and document a model in a model card
+- describe the architecture of a data application (front end, back end, database) and the cloud services used to deploy it
+- monitor a deployed model for data drift and label shift, decide on retraining and document the model in a model card
 
 **Session plan**
 
@@ -723,9 +705,10 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 - Containers with Docker
 - Continuous delivery with GitHub Actions
-- Publishing a dashboard
+- Introduction to system design and cloud architecture: a data application as front end (dashboard), back end (model API) and database, illustrated with examples
+- Cloud services for such an application on AWS, by example: container registry (ECR), container hosting (ECS with Fargate), managed database (RDS for PostgreSQL), file storage (S3) and monitoring (CloudWatch)
 
-*Practice:* Release the service in a container through the CI/CD workflow
+*Practice:* Run the service, a dashboard and PostgreSQL together in containers with Docker Compose and release the service through the CI/CD workflow; sketch the cloud architecture of the team project on AWS
 
 **2:00–2:45**
 
@@ -770,9 +753,9 @@ For each session: the guiding question, the learning outcomes and the session pl
 | 2:00–2:25 | Team 7: same format |
 | 2:25–2:45 | Course review; course evaluation (anonymous, in class) |
 
-## 5. Datasets and leaderboard
+## 4. Datasets and leaderboard
 
-The course works with three datasets. Each session uses the one that fits its topic best.
+The course works with the following public datasets. Each session uses the one that fits its topic best.
 
 | Dataset | What it is | Used for |
 |---|---|---|
@@ -815,7 +798,7 @@ The course works with three datasets. Each session uses the one that fits its to
 > [!NOTE]
 > **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; each student downloads them with the provided script. Because decisions can be looked up in the public database, the leaderboard is deliberately not graded.
 
-## 6. Final project
+## 5. Final project
 
 Teams of three choose a topic from the list below, or propose their own of comparable scope. In the project charter (Session 4) each team chooses an emphasis.
 
@@ -863,7 +846,7 @@ The list contains 17 topics on Berlin and German public data in four domains; mo
 
 **Own topics.** Teams may propose their own topic, including one with a company or NGO partner, if it has a named stakeholder, uses data that may legally be used and meets the requirements of the shared base and of its emphasis. Kaggle and other prepared datasets with a predefined target variable are excluded. Company data require written permission and a data-protection review; personal data may not leave the company.
 
-## 7. Assessment
+## 6. Assessment
 
 **Final project with presentation · 100 % · Sessions 17 and 18**
 

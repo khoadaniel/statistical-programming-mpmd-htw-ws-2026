@@ -11,11 +11,11 @@ WORKDIR /app
 
 # 1. dependencies first: this layer is reused until pyproject.toml or uv.lock change
 COPY pyproject.toml uv.lock README.md ./
-RUN uv sync --frozen --no-dev --no-install-project --no-cache
+RUN uv sync --frozen --no-dev --extra postgres --no-install-project --no-cache
 
 # 2. then the code (installed as a package, not editable) and the model files
 COPY src ./src
-RUN uv sync --frozen --no-dev --no-editable --no-cache
+RUN uv sync --frozen --no-dev --extra postgres --no-editable --no-cache
 COPY models ./models
 ENV MODEL_DIR=/app/models PATH="/app/.venv/bin:$PATH"
 

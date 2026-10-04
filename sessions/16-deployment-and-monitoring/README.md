@@ -6,8 +6,8 @@
 **Learning outcomes.** Students are able to
 
 - serve a model as a tested web API in a container, released with CI/CD
-- monitor a deployed model for data drift and label shift
-- decide on retraining and document a model in a model card
+- describe the architecture of a data application (front end, back end, database) and the cloud services used to deploy it
+- monitor a deployed model for data drift and label shift, decide on retraining and document the model in a model card
 
 ## Session plan
 
@@ -19,13 +19,15 @@
 
 *Practice:* Build and test version 1 of the tariff heading service (top-3 headings with scores and English texts) → [`workspace/`](workspace/README.md), exercises 1–2
 
-**1:00–1:45 · Containers and continuous delivery** ([theory](theory/02-containers-and-continuous-delivery.md))
+**1:00–1:45 · Containers, continuous delivery and cloud architecture** ([theory](theory/02-containers-and-continuous-delivery.md))
 
 - [Containers with Docker](theory/02-containers-and-continuous-delivery.md#containers-with-docker)
 - [Continuous delivery with GitHub Actions](theory/02-containers-and-continuous-delivery.md#continuous-delivery-with-github-actions)
-- [Publishing a dashboard](theory/02-containers-and-continuous-delivery.md#publishing-a-dashboard)
+- [Introduction to system design and cloud architecture](theory/02-containers-and-continuous-delivery.md#system-design-and-cloud-architecture): front end, back end and database, with examples
+- Cloud services for such an application on AWS, by example: ECR, ECS with Fargate, RDS for PostgreSQL, S3 and CloudWatch
+- Optional: [publishing a dashboard](theory/02-containers-and-continuous-delivery.md#publishing-a-dashboard-optional)
 
-*Practice:* Release the service in a container through the CI/CD workflow → [`workspace/`](workspace/README.md), exercise 3
+*Practice:* Run the service, the dashboard and PostgreSQL together with Docker Compose and release the service through the CI/CD workflow; sketch the cloud architecture of your team project on AWS → [`workspace/`](workspace/README.md), exercise 3
 
 **2:00–2:45 · Monitoring and maintenance** ([theory](theory/03-monitoring-and-maintenance.md))
 
@@ -40,9 +42,9 @@
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-from-notebook-to-service.md](theory/01-from-notebook-to-service.md) | Saving pipelines (joblib, skops), versioning, pinned dependencies, FastAPI and pydantic, tests | 1 | core |
-| [theory/02-containers-and-continuous-delivery.md](theory/02-containers-and-continuous-delivery.md) | Docker, GitHub Actions CI/CD, publishing a dashboard | 2 | core |
+| [theory/02-containers-and-continuous-delivery.md](theory/02-containers-and-continuous-delivery.md) | Docker, GitHub Actions CI/CD, system design and cloud architecture (Docker Compose, AWS), publishing a dashboard | 2 | core |
 | [theory/03-monitoring-and-maintenance.md](theory/03-monitoring-and-maintenance.md) | KS test, PSI, prediction drift, label shift, nomenclature change, retraining, model card | 3 | core |
-| [workspace/](workspace/README.md) | Complete tariff heading service (package `tariff_service`): train script, FastAPI app, tests, Dockerfile, `ci.yml`, `cd.yml`, drift module, model card template, dashboard | 1–3 | core |
+| [workspace/](workspace/README.md) | Complete tariff heading service (package `tariff_service`): train script, FastAPI app, tests, Dockerfile, `compose.yaml` (dashboard, API, PostgreSQL), `ci.yml`, `cd.yml`, drift module, model card template, dashboard | 1–3 | core |
 | [workspace/MODEL_CARD.md](workspace/MODEL_CARD.md) | Model card template (Mitchell et al. 2019) | 3 | core |
 | [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Own: input and prediction drift, label shift with the 2024 feedback, accuracy by language, retraining candidates, v2, leaderboard round L3 | 3 | core |
 | [workbooks/02-evidently-data-drift-report.ipynb](workbooks/02-evidently-data-drift-report.ipynb) | Evidently: data drift and data summary reports on a tabular dataset | 3 | optional |
@@ -52,7 +54,7 @@ Sources and licences: [source.md](source.md).
 
 ## Before and after the session
 
-**Preparation.** Re-read the FastAPI and CI parts of Session 2. Run `cd workspace && uv sync && uv run pytest -q` once, so that all packages are installed before class. Docker Desktop (or Podman) is useful but not required: the tests and the notebook do not need it.
+**Preparation.** Re-read the FastAPI and CI parts of Session 2. Run `cd workspace && uv sync && uv run pytest -q` once, so that all packages are installed before class. Docker Desktop (or Podman) is needed for the Compose part of exercise 3; the tests and the notebook do not need it.
 
 **Lecturer.** Before block 3, run `uv run python sessions/16-deployment-and-monitoring/workbooks/make_feedback_2024.py` and share `case-study/data/feedback_2024.csv` (labels of the 40,369 decisions of 2024 only, columns `id,heading`) with the students. `--out PATH` writes the file elsewhere.
 

@@ -7,7 +7,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 |---|---|---|---|---|---|
 | [workbooks/02-evidently-data-drift-report.ipynb](workbooks/02-evidently-data-drift-report.ipynb) | Data drift and data summary reports (Evidently `DataDriftPreset`, `DataSummaryPreset`) on the Adult dataset | [evidentlyai/evidently](https://raw.githubusercontent.com/evidentlyai/evidently/main/examples/classic_ml_validation.ipynb) | [Apache-2.0](https://github.com/evidentlyai/evidently/blob/main/LICENSE) | 2026-10-01 | Renamed from `examples/classic_ml_validation.ipynb`; content unchanged |
 
-FastAPI documentation (MIT), Made With ML (MIT), Streamlit documentation and the Docker documentation are referenced as links only; no files were copied.
+FastAPI documentation (MIT), Made With ML (MIT), Streamlit documentation, the Docker and Docker Compose documentation and the AWS documentation are referenced as links only; no files were copied.
 
 ## Own material
 | File | Covers | Licence |
@@ -18,7 +18,7 @@ FastAPI documentation (MIT), Made With ML (MIT), Streamlit documentation and the
 | [theory/figures/make_figures.py](theory/figures/make_figures.py), `drift-histogram.png`, `psi-explained.png` | Figures from the EBTI case-study data (issuing-country drift, chapter label shift with the released 2024 labels, PSI per country) | CC-BY-4.0, course team |
 | [workbooks/01-case-study-drift-and-retraining.ipynb](workbooks/01-case-study-drift-and-retraining.ipynb) | Practice block 3: drift, label shift, retraining candidates, final submission (L3) | Author: course team, licence CC-BY-4.0 |
 | [workbooks/make_feedback_2024.py](workbooks/make_feedback_2024.py) | Lecturer script: releases the 2024 labels (`--out` for another path) | Author: course team, licence MIT |
-| [workspace/](workspace/README.md) | Package `tariff_service`, tests, Dockerfile, workflows, model card template, dashboard | Code: MIT; text: CC-BY-4.0, course team |
+| [workspace/](workspace/README.md) | Package `tariff_service`, tests, Dockerfile, `compose.yaml`, workflows, model card template, dashboard and its Dockerfile | Code: MIT; text: CC-BY-4.0, course team |
 
 Parts of the theory pages reuse the earlier course notes (course team).
 

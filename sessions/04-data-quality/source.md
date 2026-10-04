@@ -23,7 +23,7 @@ Third-party material in this session, with its origin and licence. Keep the attr
 | File | Covers | Licence |
 |---|---|---|
 | [theory/01-data-quality-checks.md](theory/01-data-quality-checks.md) | Block 1: dimensions of data quality, checks for types/ranges/duplicates/consistency, validation rules as tests | CC-BY-4.0 |
-| [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | Block 2: MCAR/MAR/MNAR, simple/KNN/iterative imputation, missing-value indicators, IQR/z-score/MAD | CC-BY-4.0 |
+| [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | Block 2: MCAR/MAR/MNAR, simple/KNN/iterative imputation, IQR/z-score/MAD | CC-BY-4.0 |
 | [theory/03-multivariate-outliers-transformations-pipeline.md](theory/03-multivariate-outliers-transformations-pipeline.md) | Block 3: Mahalanobis distance (classical and MCD), log/Box–Cox/Yeo–Johnson/scaling, documented cleaning pipeline | CC-BY-4.0 |
 | [theory/figures/make_figures.py](theory/figures/make_figures.py) | Script for `missingness-pattern.png`, `univariate-outliers.png`, `box-cox-before-after.png` (Inside Airbnb Berlin listings) and `mahalanobis-ellipses.png` (simulated) | CC-BY-4.0 |
 | [workbooks/03-case-study-quality-report.ipynb](workbooks/03-case-study-quality-report.ipynb) | Practice block 1 (Inside Airbnb Berlin): data quality report for listings, calendar and monthly reviews (completeness and empty columns, placeholders, impossible stays, listings of the same host, foreign keys across tables, prices as text and names in the registration field of the raw file, counted without being shown); checks as code; pandera schema | CC-BY-4.0 |

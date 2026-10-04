@@ -1,6 +1,6 @@
-# Containers, continuous delivery and publishing
+# Containers, continuous delivery and cloud architecture
 
-A tested service on a laptop is still not available to its users. This page covers the three steps that get it there: packaging the service with all its dependencies in a **container**, releasing it automatically with **continuous delivery** in GitHub Actions, and **publishing** a dashboard or the API on a hosting platform. In this course we do not run servers in class for everyone; the workspace contains a Dockerfile and two workflows that you can read line by line and run in your own repository.
+A tested service on a laptop is still not available to its users. This page covers the steps that get it there: packaging the service with all its dependencies in a **container**, releasing it automatically with **continuous delivery** in GitHub Actions, and an introduction to **system design and cloud architecture**: how a front end, a back end and a database work together, and which cloud services run them. A last, optional section shows simple ways of **publishing a dashboard**. In this course we do not run servers in class for everyone; the workspace contains a Dockerfile and two workflows that you can read line by line and run in your own repository.
 
 The deployment pipeline of the tariff heading service. Every arrow is automated except the two marked as decisions.
 
@@ -224,7 +224,120 @@ print("release", tag, "matches the model metadata")
 > [!CAUTION]
 > A workflow that pushes images or deploys needs credentials. Use the built-in `GITHUB_TOKEN` with minimal `permissions`, store other keys as repository secrets, and never print them in a step.
 
-## Publishing a dashboard
+## System design and cloud architecture
+
+This section is an introduction. Its aim is that you can read and sketch the architecture of a data application and know which cloud services exist for each part, not that you operate them.
+
+### Concept
+
+**System design** is the decision about which parts an application consists of, what each part does and how the parts communicate. Most data applications follow the same three-part pattern:
+
+| Part | What it does | In the tariff example |
+|---|---|---|
+| **Front end** | What users see and click: a web page or a dashboard | the Streamlit dashboard, where an officer pastes a description |
+| **Back end** | The logic behind it, offered as an API: validation, the model, the rules | the FastAPI service that returns the top three headings |
+| **Database** | Data that must outlive a single request | PostgreSQL with the prediction log, the raw data of every drift check (block 3) |
+
+The parts talk over the network: the front end sends HTTP requests with JSON to the back end (Session 2), the back end sends SQL to the database (Session 3). Only the front end and the API are reachable from outside; the database is not.
+
+```mermaid
+flowchart LR
+    U["User<br/>(browser)"] -->|HTTPS| FE["Front end<br/>Streamlit dashboard"]
+    FE -->|"HTTP + JSON<br/>POST /predict"| BE["Back end<br/>FastAPI + model"]
+    P["Other programs"] -->|"HTTP + JSON"| BE
+    BE -->|SQL| DB[("Database<br/>PostgreSQL")]
+```
+
+Why separate the parts instead of putting everything into one script?
+
+- **One model, several clients.** The dashboard, a batch job and another team's software can all use the same API, and a new model version is deployed in one place.
+- **Independent scaling.** If many requests arrive, more copies of the back end are started; the database stays one.
+- **Security.** The database holds the data and is reachable only from the back end, never from the internet.
+- **Replaceable parts.** The Streamlit front end can later be replaced by a web page without touching the model.
+
+Not every project needs all three parts. Three common designs:
+
+| Design | Parts | Example |
+|---|---|---|
+| Interactive model service | front end → back end → database | the tariff heading service in this workspace |
+| Analytics dashboard | front end → database, refreshed by a scheduled job | a dashboard of Berlin rental prices, reloaded every night by the loading script |
+| Batch scoring | scheduled job → database → reporting tool | churn scores computed every Monday for all customers and read by the CRM team |
+
+**Locally**, each part runs in its own container, and **Docker Compose** starts them together from one file, `compose.yaml`. The containers share a private network in which they find each other by service name: the dashboard calls `http://api:8000`, the API connects to the host `db`.
+
+**In the cloud**, the same parts run on managed services. A provider such as **Amazon Web Services (AWS)** offers a service for each part:
+
+| Part | Locally (Compose) | AWS service | What the service does |
+|---|---|---|---|
+| Container images | `docker build` | **Amazon ECR** (Elastic Container Registry) | stores the images that CI builds |
+| Front end and back end | containers `dashboard`, `api` | **Amazon ECS with AWS Fargate** | runs containers without managing servers; starts more copies under load |
+| Entry point | `ports:` | **Elastic Load Balancing** (Application Load Balancer) | receives HTTPS traffic and distributes it to the containers |
+| Database | container `db` | **Amazon RDS for PostgreSQL** | managed PostgreSQL with backups and updates |
+| Files: model, raw data | `models/` folder | **Amazon S3** | object storage for files of any size |
+| Passwords and keys | `environment:` | **AWS Secrets Manager** | stores secrets and passes them to the containers |
+| Logs and metrics | `docker logs` | **Amazon CloudWatch** | collects logs, metrics and alarms |
+
+```mermaid
+flowchart LR
+    GH["GitHub Actions<br/>(cd.yml)"] -->|push image| ECR["Amazon ECR"]
+    U["Users"] -->|HTTPS| LB["Load balancer"]
+    subgraph ECS["Amazon ECS on Fargate"]
+        FE["dashboard<br/>container"]
+        BE["api<br/>containers"]
+    end
+    ECR -.->|pull| ECS
+    LB --> FE
+    LB --> BE
+    FE --> BE
+    BE --> RDS[("Amazon RDS<br/>PostgreSQL")]
+    BE -.->|model files| S3["Amazon S3"]
+    ECS -.->|logs| CW["Amazon CloudWatch"]
+```
+
+Microsoft Azure and Google Cloud offer the same building blocks under other names, for example Azure Container Apps or Google Cloud Run for the containers and Azure Database for PostgreSQL or Cloud SQL for the database. The design stays the same; only the names change.
+
+### Why it matters
+
+Data scientists rarely set up cloud infrastructure alone, but they take part in the decisions: where the model runs, where the data live, who can reach them and what it costs. A sketch of the architecture is the common language for these discussions with engineers, IT security and the budget holder. It also makes data protection visible: in the diagram you can point to the one place where confidential requests are stored.
+
+### How it works in Python
+
+The workspace contains the three-part version of the service. `compose.yaml`, shortened:
+
+```yaml
+services:
+  db:                                     # database: no "ports", so not reachable from outside
+    image: postgres:17
+    environment: {POSTGRES_USER: tariff, POSTGRES_PASSWORD: tariff, POSTGRES_DB: tariff}
+  api:                                    # back end: the image of the Dockerfile above
+    build: .
+    environment: {DATABASE_URL: "postgresql://tariff:tariff@db:5432/tariff"}
+    ports: ["8000:8000"]
+  dashboard:                              # front end: sends every description to the API
+    build: dashboard
+    environment: {API_URL: "http://api:8000"}
+    ports: ["8501:8501"]
+```
+
+```bash
+cd sessions/16-deployment-and-monitoring/workspace
+docker compose up --build        # dashboard: http://localhost:8501, API: http://localhost:8000/docs
+docker compose exec db psql -U tariff -c "SELECT heading, language, model_version FROM predictions"
+docker compose down              # add -v to delete the database volume as well
+```
+
+The service code itself hardly changes: with the environment variable `DATABASE_URL` set, the API writes its prediction log to PostgreSQL instead of a file (`monitoring.py`), and with `API_URL` set, the dashboard calls the API instead of loading the model (`dashboard/streamlit_app.py`). Settings that differ between laptop and cloud come from the environment, not from the code (*The Twelve-Factor App*).
+
+### In practice
+
+- AWS, Azure and Google Cloud each publish a "well-architected framework" with design principles for reliability, security, cost and performance; the AWS Well-Architected Framework is a common reference in job interviews and design reviews.
+- Many companies run their containers on Kubernetes (Amazon EKS, Azure AKS, Google GKE) once they have many services; for a few services, managed container platforms such as ECS on Fargate are simpler.
+- Architecture diagrams with the providers' official icons are a standard part of project documentation and of the review before a system goes live.
+
+> [!CAUTION]
+> Cloud resources cost money while they exist, whether or not anyone uses them: a load balancer and a database are billed by the hour. The free offers for new accounts are limited in time and amount, and their terms change; check them, set a budget alarm, and delete what you created after an experiment.
+
+## Publishing a dashboard (optional)
 
 ### Concept
 
@@ -301,10 +414,15 @@ To publish it on Streamlit Community Cloud: push the repository to GitHub (publi
 3. Why is the model file attached to a GitHub release instead of being committed to the repository?
 4. The CD workflow stops with "metadata version 1.1.0 != tag". What went wrong in the release, and how do you fix it?
 5. Your team's dashboard classifies pending BTI requests that customs officers paste into it. Which publishing option do you choose, and why?
+6. Sketch the architecture of your team project: which parts does it need (front end, back end, database, scheduled job), and which AWS service would run each part?
+7. Why does `compose.yaml` publish ports for the dashboard and the API but not for the database?
 
 ## Further reading
 
 - Docker Inc. *Docker: Get started*. [docs.docker.com/get-started](https://docs.docker.com/get-started/)
 - FastAPI documentation. *FastAPI in Containers – Docker*. [fastapi.tiangolo.com/deployment/docker](https://fastapi.tiangolo.com/deployment/docker/) (MIT licence)
 - GitHub. *GitHub Actions documentation: Publishing Docker images*. [docs.github.com/actions/publishing-packages/publishing-docker-images](https://docs.github.com/en/actions/publishing-packages/publishing-docker-images)
+- Docker Inc. *Docker Compose: How Compose works*. [docs.docker.com/compose/intro/compose-application-model](https://docs.docker.com/compose/intro/compose-application-model/)
+- Amazon Web Services. *AWS Well-Architected Framework*. [docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html)
+- Amazon Web Services. *What is Amazon Elastic Container Service?* [docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html)
 - Streamlit. *Deploy your app on Community Cloud*. [docs.streamlit.io/deploy/streamlit-community-cloud](https://docs.streamlit.io/deploy/streamlit-community-cloud)

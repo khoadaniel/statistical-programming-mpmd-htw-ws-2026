@@ -22,7 +22,6 @@
 
 - [Missing data mechanisms (MCAR, MAR, MNAR)](theory/02-missing-values-and-univariate-outliers.md#missing-data-mechanisms-mcar-mar-mnar)
 - [Simple, KNN and iterative imputation](theory/02-missing-values-and-univariate-outliers.md#simple-knn-and-iterative-imputation)
-- [Missing-value indicators](theory/02-missing-values-and-univariate-outliers.md#missing-value-indicators)
 - [Univariate outliers (IQR rule, z-score, median absolute deviation)](theory/02-missing-values-and-univariate-outliers.md#univariate-outliers-iqr-rule-z-score-median-absolute-deviation)
 - *Practice:* a third of the Berlin Airbnb listings show no price. Is a missing price related to the number of reviews, or to availability? Why is the review score missing by design? Recover hidden bedroom counts with three imputers; find the implausible prices and minimum stays → [workbook 08](workbooks/08-case-study-airbnb-missing-and-outliers.ipynb)
 
@@ -38,7 +37,7 @@
 | File | Content | Block | Status |
 |---|---|---|---|
 | [theory/01-data-quality-checks.md](theory/01-data-quality-checks.md) | Dimensions, checks as code, validation rules as tests | 1 | core |
-| [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | MCAR/MAR/MNAR, imputation, indicators, IQR/z-score/MAD | 2 | core |
+| [theory/02-missing-values-and-univariate-outliers.md](theory/02-missing-values-and-univariate-outliers.md) | MCAR/MAR/MNAR, imputation, IQR/z-score/MAD | 2 | core |
 | [theory/03-multivariate-outliers-transformations-pipeline.md](theory/03-multivariate-outliers-transformations-pipeline.md) | Mahalanobis distance, transformations, cleaning pipeline | 3 | core |
 | [workbooks/01-try-pandera.ipynb](workbooks/01-try-pandera.ipynb) | pandera: schemas, runtime validation, failure cases | 1 | core |
 | [workbooks/02-data-cleaning-missing-and-duplicates.ipynb](workbooks/02-data-cleaning-missing-and-duplicates.ipynb) | Microsoft Data Science for Beginners: missing values and duplicates in pandas | 1 | optional |

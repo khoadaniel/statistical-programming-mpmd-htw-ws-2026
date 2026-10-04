@@ -1,0 +1,43 @@
+# A data application in three containers: front end (dashboard), back end (prediction API) and database.
+#   docker compose up --build        then open http://localhost:8501 (dashboard) and http://localhost:8000/docs (API)
+#   docker compose down              stops everything; add -v to delete the database volume as well
+# The model files must be in models/ before the build (see README). Inside the compose network the services
+# reach each other by name: the dashboard calls http://api:8000, the API connects to the host "db".
+# The password below is for a laptop only; in the cloud it comes from a secret store (AWS Secrets Manager).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: tariff
+      POSTGRES_PASSWORD: tariff
+      POSTGRES_DB: tariff
+    volumes:
+      - db-data:/var/lib/postgresql/data      # the data survive a restart of the container
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tariff"]
+      interval: 5s
+      retries: 10
+    # no "ports": the database is reachable only from the other containers, not from outside
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://tariff:tariff@db:5432/tariff   # every prediction is logged to the database
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  dashboard:
+    build: dashboard
+    environment:
+      API_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy              # the API's Dockerfile defines a HEALTHCHECK
+    ports:
+      - "8501:8501"
+
+volumes:
+  db-data:

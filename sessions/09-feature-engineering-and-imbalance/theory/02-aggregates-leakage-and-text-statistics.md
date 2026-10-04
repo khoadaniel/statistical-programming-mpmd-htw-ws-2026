@@ -1,11 +1,11 @@
-# Aggregates from joined tables, target leakage and text statistics
+# Aggregation features, target leakage and text statistics
 
 Many useful features do not sit in the row we predict on. They come from another table, grouped by a key and summarised: how many reviews a listing received in the last twelve months, how long ago its last review was, what similar listings in the neighbourhood cost. This page covers the second block of Session 9: how to compute such **aggregates** only from data that existed at the time of each prediction, how features **leak the target** when that rule is broken, and how simple statistics of a text become numeric features. The examples use the Inside Airbnb data for Berlin: the listings table and the monthly review counts per listing, a proxy for stays (snapshot of 26 June 2026).
 
 > [!NOTE]
 > The code blocks on this page build on each other. Run them in order from the repository root. They need `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`). Review counts are a proxy for demand: not every guest writes a review, and the share who do may change over time.
 
-## 1. Aggregates computed only from past data
+## 1. Aggregation features from related tables
 
 ### Concept
 
@@ -163,7 +163,7 @@ Hosts who state the floor area or use luxury words ask for much higher prices (m
 > [!WARNING]
 > A statistic that differs between groups is not automatically useful, and it is not a cause. "Luxury" in the title does not make a flat more expensive; it marks flats that their hosts consider expensive. For a price model that is fine; for advice to hosts ("write *luxury* and earn more") it is not.
 
-## 3. Target leakage through aggregates and late information
+## 3. Target leakage
 
 ### Concept
 

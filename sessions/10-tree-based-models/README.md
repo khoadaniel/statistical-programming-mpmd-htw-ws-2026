@@ -28,7 +28,7 @@
 **2:00–2:45 · Interpretation and model comparison** ([theory page 4](theory/04-interpretation-and-model-comparison.md))
 
 - Interpretation of tree-based models with [feature importance and permutation importance](theory/04-interpretation-and-model-comparison.md#1-feature-importance-impurity-based-and-permutation-importance) and [SHAP values](theory/04-interpretation-and-model-comparison.md#2-shap-values-as-a-model-checking-tool), used to check and debug the model
-- [Comparing a challenger with the current model](theory/04-interpretation-and-model-comparison.md#3-comparing-a-challenger-with-the-current-model)
+- [Comparing the performance of models](theory/04-interpretation-and-model-comparison.md#3-comparing-the-performance-of-models)
 - [The case study: what drives Berlin Airbnb prices, and do trees price better?](theory/04-interpretation-and-model-comparison.md#4-the-case-study-what-drives-berlin-airbnb-prices-and-do-trees-price-better)
 - *Practice:* case study: what drives nightly prices in Berlin, and is a tree ensemble worth replacing the linear price model of Session 6? Compare a random forest and gradient boosting with it on host-grouped folds, decide with paired differences and a bootstrap interval, and interpret the challenger with permutation importance and SHAP → [20-case-study-airbnb-price-trees.ipynb](workbooks/20-case-study-airbnb-price-trees.ipynb)
 
