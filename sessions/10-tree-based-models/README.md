@@ -68,7 +68,7 @@ Third-party sources and licences: [source.md](source.md).
 
 **Preparation.** Re-read Session 7 on grouped cross-validation and `RandomizedSearchCV`, Session 6 on the linear price model, and Session 9 page 2 on leaking columns (the revenue leak). Make sure `case-study/data/airbnb/` exists (`uv run python case-study/prepare_airbnb.py`). Run the first cell of [15-churn-gradient-boosting.ipynb](workbooks/15-churn-gradient-boosting.ipynb) once to check that XGBoost, LightGBM and CatBoost import (see Setup).
 
-**Team project until the next session.** Interim review (10 minutes per team): model or dashboard, validation, plan to the end.
+**Team project until the next session.** Interim review (10 minutes per team): data, validation plan, baselines, plan for Sessions 13–16.
 
 **Further reading (optional).**
 

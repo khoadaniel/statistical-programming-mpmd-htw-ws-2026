@@ -58,7 +58,7 @@ Sources and licences: [source.md](source.md).
 
 **Preparation.** Skim Chapter 2 (time series graphics) of *Forecasting: Principles and Practice, the Pythonic Way* and run Part 1 of the [case-study notebook](workbooks/10-case-study-airbnb-review-forecast.ipynb). It needs the Airbnb data and the Berlin weather in `case-study/data/airbnb/` (see [case-study/README.md](../../case-study/README.md)).
 
-**Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
+**Team project until the next session.** Open points from the interim review.
 
 **Further reading (optional).**
 

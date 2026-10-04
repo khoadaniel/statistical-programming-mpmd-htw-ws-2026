@@ -79,7 +79,7 @@ The INRIA notebooks read data from `datasets/` and images from `figures/` in thi
 
 **Before.** Re-run your Session 6 notebooks (the price regression, logistic regression for Telco churn). Make sure the case-study data exist: `uv run python case-study/prepare_airbnb.py` (Inside Airbnb, Berlin). Read the first section of the theory page 01.
 
-**Team project until the next session.** Validation plan for the project model (machine learning teams): splitter, metric, uncertainty, leakage checks. Uncertainty of key results (analytics teams): bootstrap intervals for the main numbers of your analysis.
+**Team project until the next session.** Validation plan: split by time, metrics, uncertainty of the scores, inputs that may not be used.
 
 **Further reading (optional).**
 - James et al. (2023). *ISLP*, Chapters 5 and 6. https://www.statlearning.com/

@@ -58,7 +58,7 @@ Sources and licences of third-party files: [source.md](source.md).
 
 **Preparation.** Make sure `case-study/data/` exists (run `case-study/prepare_data.py`, see [case-study/README.md](../../case-study/README.md)). Revise logistic regression (Session 6), validation and leakage (Sessions 7 and 9), precision, recall, F1 and the confusion matrix (Session 8), backtesting by time (Session 12) and PCA (Session 11). Read the case-study description of the EBTI data in [case-study/README.md](../../case-study/README.md). Read the WCO page *What is the Harmonized System?* (link below) to know what a heading is.
 
-**Team project until the next session.** Text features where the project uses text; otherwise model improvement.
+**Team project until the next session.** TF-IDF classifier on the team's validation scheme, error analysis, leaderboard round L1.
 
 **Further reading (optional).**
 

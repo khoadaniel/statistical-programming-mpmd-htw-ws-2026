@@ -84,7 +84,7 @@ The script writes the tables as Parquet files to `case-study/data/` (ignored by 
 | L2 | 14 | embeddings or a language model, any method of the session |
 | L3 | 16 | final submission after retraining with the released 2024 labels, any method, with a one-page description |
 
-The leaderboard is not graded. Decisions can be looked up in the public EBTI database, so a high rank earns no marks; what counts is that methods are applied and compared correctly. In Session 16 the lecturer releases the 2024 labels as feedback data (`data/feedback_2024.csv`); the 2025–2026 decisions stay hidden.
+The leaderboard task is also the final project of all teams. Decisions can be looked up in the public EBTI database, so the score is not converted into marks: the project is graded on how a team frames, handles, solves and explains the problem, and its final submission must be reproducible from the team's repository. In Session 16 the lecturer releases the 2024 labels as feedback data (`data/feedback_2024.csv`); the 2025–2026 decisions stay hidden.
 
 ### Things to watch out for
 

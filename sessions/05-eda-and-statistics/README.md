@@ -69,7 +69,7 @@ Sources and licences of third-party notebooks: [source.md](source.md).
 
 **Preparation.** Revise mean, median, standard deviation, confidence interval and p-value from your first-semester statistics module. Prepare the Airbnb data once with `uv run python case-study/prepare_airbnb.py` (downloads about 100 MB) and run the first two cells of the [case-study notebook](workbooks/18-case-study-airbnb-exploration.ipynb) to check that the data load. Optional: read chapter 1 of Healy, *Data Visualization* (link below).
 
-**Team project until the next session.** Exploratory and statistical findings of the project, presented in a short team review.
+**Team project until the next session.** Exploratory findings: decisions per heading, language, member state and year, and the long tail of rare headings, presented in a short team review.
 
 **Further reading (free).**
 

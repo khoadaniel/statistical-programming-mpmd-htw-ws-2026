@@ -36,13 +36,13 @@ Each session folder contains a **README** (plan, materials, preparation), **theo
 ## Datasets and leaderboard
 
 - **Sessions 1–12** use the Berlin listings of **Inside Airbnb** (prices, districts, availability, reviews) together with Berlin weather from the **Open-Meteo** API, and the **IBM Telco** churn data for classification.
-- **Sessions 13–16** use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. The task is to predict the four-digit HS heading from the description of goods, written in one of 23 EU languages. In these sessions your team submits predictions to an ungraded class leaderboard, scored on decisions from 2024–2026 that you have not seen.
+- **Sessions 13–16** use decisions from the EU's **European Binding Tariff Information (EBTI)** database: customs authorities state how a described product is classified in the customs tariff. The task is to predict the four-digit HS heading from the description of goods, written in one of 23 EU languages. In these sessions your team submits predictions to the class leaderboard, scored on decisions from 2024–2026 that you have not seen; this task is also the final project.
 
 Details, downloads and scoring: [case-study/README.md](case-study/README.md).
 
 ## Final project
 
-Teams of three work on one project with an analytics or a machine learning emphasis, presented in Sessions 17–18. It is the only graded part of the module. Brief, milestones, criteria and topics: [final-project.md](sessions/17-18-final-presentations/final-project.md).
+All teams work on the same project: the EBTI leaderboard task, predicting the customs heading of a decision from its description as accurately as possible on the hidden test set. Teams present their final solution in Sessions 17–18; it is the only graded part of the module, assessed on how the problem is framed, handled, solved and explained. Brief, milestones, rules and criteria: [final-project.md](sessions/17-18-final-presentations/final-project.md).
 
 ## Setup
 

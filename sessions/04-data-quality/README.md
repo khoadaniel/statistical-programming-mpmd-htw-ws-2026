@@ -65,7 +65,7 @@ Origins and licences of third-party files: [source.md](source.md). Workbooks 04 
 - Read the [pandas user guide on missing data](https://pandas.pydata.org/docs/user_guide/missing_data.html) (about 20 minutes).
 - Look at the data quality findings you noticed in Session 3 and bring them along.
 
-**Team project until the next session.** Project charter: question, stakeholder, emphasis (analytics or machine learning), metric, baseline, data loaded.
+**Team project until the next session.** Data quality report of the decisions and project charter: use of the suggestions, metric, baseline, validation by time, inputs that may not be used.
 
 **Further reading (optional)**
 

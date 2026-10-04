@@ -165,7 +165,7 @@ timeline
 
 The Airbnb data carry the first twelve sessions: SQL across listings, calendar and reviews (S3), data quality (S4), statistics on prices by district (S5), price models (S6, S7, S9, S10), kinds of offers (S11) and monthly demand with the weather (S12). Telco is the classic churn task for classification. EBTI is a text task across many languages and more than 1,000 classes, which is what Sessions 13–16 need for text models, language models and deployment.
 
-**Leaderboard.** In Sessions 13–16, teams predict the heading of 113,188 customs decisions from 2024 to 2026 whose headings are hidden; 2024 forms the public leaderboard, 2025–2026 the private one. The score is **accuracy** (the share of correct headings), reported together with **macro-F1**, the average F1 score over all headings, in which a rare heading counts as much as a frequent one. The training data contain 1,114 different headings, so the two numbers tell different stories (Session 13). The leaderboard is not graded; it gives every method the same, comparable test.
+**Leaderboard.** In Sessions 13–16, teams predict the heading of 113,188 customs decisions from 2024 to 2026 whose headings are hidden; 2024 forms the public leaderboard, 2025–2026 the private one. The score is **accuracy** (the share of correct headings), reported together with **macro-F1**, the average F1 score over all headings, in which a rare heading counts as much as a frequent one. The training data contain 1,114 different headings, so the two numbers tell different stories (Session 13). The leaderboard gives every method the same, comparable test, and it is the task of the final project.
 
 | Round | Session | Model |
 |---|---|---|
@@ -207,7 +207,7 @@ print(listings["room_type"].value_counts().to_dict())
 > Inside Airbnb and Open-Meteo publish their data under CC BY 4.0: reuse is allowed with attribution. The listings were collected from public web pages, so the preparation script removes host names, profile texts, photos and review texts, and names that hosts typed into the registration field. Report results in aggregate and never try to identify a host. Each student downloads the data with the script, and data files never go into a Git repository.
 
 > [!CAUTION]
-> Every decision of the leaderboard's test set can be looked up in the public EBTI database. A high leaderboard rank therefore earns no marks; what counts is that methods are applied and compared correctly.
+> Every decision of the leaderboard's test set can be looked up in the public EBTI database. The leaderboard task is the final project of all teams, but a high score earns no marks by itself: the grade rests on how a team frames, handles, solves and explains the problem, and the final submission must be reproducible from the team's repository.
 
 **AI tools.** Using AI coding assistants is permitted. Students remain responsible for all code they submit, must be able to explain and test it, and declare the tools they used (HTW declaration; in team repositories a file `AI_USE.md`). [Page 2](02-python-for-analysis.md#tips-for-using-ai-coding-assistants) gives practical rules.
 
@@ -222,7 +222,7 @@ Find three current advertisements in Berlin or Germany: one for a data analyst, 
 
 ## Team project until the next session
 
-Teams of three are formed and shortlist three project topics from the [project list](../../17-18-final-presentations/final-project.md#topics) or of their own.
+Teams of three are formed and read the [project brief](../../17-18-final-presentations/final-project.md): all teams work on the leaderboard task as their final project.
 
 ## Check your understanding
 

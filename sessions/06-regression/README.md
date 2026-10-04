@@ -69,7 +69,7 @@ Sources and licences of third-party notebooks: [source.md](source.md).
 
 **Preparation.** Re-read the last section of Session 5, [From correlation to the regression line](../05-eda-and-statistics/theory/04-correlation-and-communication.md#from-correlation-to-the-regression-line). Prepare the Airbnb data once (`uv run python case-study/prepare_airbnb.py`) and run the first cell of the [case-study notebook](workbooks/17-case-study-airbnb-price-and-churn.ipynb). Optional: ISLP sections 2.1–2.2 (link below).
 
-**Team project until the next session.** Machine learning teams fit a first model; analytics teams complete their statistical analysis.
+**Team project until the next session.** Baselines on the project data: the most frequent heading and a simple rule.
 
 **Further reading (free).**
 

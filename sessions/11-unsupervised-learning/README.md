@@ -74,7 +74,7 @@ Sources and licences: [source.md](source.md). Workbooks 01, 13 and 15 have a non
 
 **Preparation.** Read the first section of [theory/01](theory/01-clustering-and-k-means.md) and run the first cells of [workbook 04](workbooks/04-case-study-telco-segments.ipynb) to check that the Telco data load. Make sure the Airbnb data exist in `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`, see [case-study/README.md](../../case-study/README.md)).
 
-**Team project until the next session.** Segmentation or anomaly detection where it supports the project.
+**Team project until the next session.** Open points from the interim review.
 
 **Further reading (optional).**
 

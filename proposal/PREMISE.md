@@ -123,14 +123,14 @@ Source: [Data Berlin skills snapshot, 1,019 live Berlin data/AI job ads, 24 Sep 
 
 ### 3.1 Entry positions
 
-The advertisements fall into three entry positions with a shared base and different emphases. The curriculum follows this structure: a shared base, an analytics part and a machine learning part, and a project with an analytics or a machine learning emphasis.
+The advertisements fall into three entry positions with a shared base and different emphases. The curriculum follows this structure: a shared base, an analytics part and a machine learning part. The final project is a machine learning project for all teams; its first steps (loading, data quality, exploration, baselines) practise the shared base.
 
-| Entry position | Typical tasks | Most relevant sessions | Project emphasis |
-|---|---|---|---|
-| Data or business analyst | SQL queries, reports and dashboards, statistical comparisons, A/B tests, segmentation | S1–S5, S11 | Analytics |
-| Data scientist | Models for prediction and their validation, experiments, communication | S1–S16 | Machine learning |
-| ML or AI engineer | Model services, deployment, monitoring, LLM applications and agents | S1–S4, S6–S16 | Machine learning |
-| Working student (Werkstudent) in these areas | The most common entry route: 9–12 % of the Berlin data and AI advertisements, compared with 1–2 % for junior positions (Data Berlin snapshot) | depends on the role | either |
+| Entry position | Typical tasks | Most relevant sessions |
+|---|---|---|
+| Data or business analyst | SQL queries, reports and dashboards, statistical comparisons, A/B tests, segmentation | S1–S5, S11 |
+| Data scientist | Models for prediction and their validation, experiments, communication | S1–S16 |
+| ML or AI engineer | Model services, deployment, monitoring, LLM applications and agents | S1–S4, S6–S16 |
+| Working student (Werkstudent) in these areas | The most common entry route: 9–12 % of the Berlin data and AI advertisements, compared with 1–2 % for junior positions (Data Berlin snapshot) | depends on the role |
 
 ## 4. Comparable university courses
 
@@ -167,17 +167,17 @@ The curriculum uses one running case study so that every method is practised on 
 - **A built-in drift example.** Scores fall by about three points from the public to the private test years; the United Kingdom stops issuing decisions after Brexit, and the HS revision of 2022 changed headings. Session 16 uses these to teach monitoring and retraining.
 - **Terms.** Reuse is permitted with acknowledgement of the source (Commission Decision 2011/833/EU); the holders of the decisions are not published. Each student downloads the data with a provided script.
 
-**Datasets per part of the course.** A pilot of all sessions on EBTI alone showed that every part outside text and language models then relies on contrived questions. Sessions 1–12 therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students, together with Berlin weather from the Open-Meteo API; EBTI is used in Sessions 13–16, where predicting the heading from a description is a natural text task. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
+**Datasets per part of the course.** A pilot of all sessions on EBTI alone showed that every part outside text and language models then relies on contrived questions. Sessions 1–12 therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students, together with Berlin weather from the Open-Meteo API; EBTI is used in Sessions 13–16, where predicting the heading from a description is a natural text task, and is the task of the final project for all teams. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
 
 ## 7. Choice of the assessment format
 
 The current module page lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The curriculum replaces these with one component: the final project, graded in its presentation with individual questions.
 
 - **Attribution of take-home code.** With AI coding assistants, a take-home assignment no longer shows reliably what a student can do. Several comparable courses have moved weight to in-person and oral components (Section 4).
-- **The leaderboard cannot be graded.** Decisions can be looked up in the public EBTI database, so a high rank could be obtained without the methods of the course.
+- **One project, assessed on its method, not its score.** All teams work on the leaderboard task, which makes the projects comparable and lets students discuss their solutions with each other. Decisions can be looked up in the public EBTI database, so a high score could be obtained without the methods of the course; the score is therefore not converted into marks, the submission must be reproducible from the team's repository, and the grade rests on how the team frames, handles, solves and explains the problem.
 - **What the market values.** Project experience, judgement about results and communication are the skills employers name most often (Section 3); a presented project with individual questions assesses all three.
 - **Individual attribution.** Group work must be attributable to each member. Each member presents a part, answers individual questions and is visible in the Git history; one criterion (20 %) is assessed per member.
-- **Risk of a single component.** A single component concentrates the risk. It is mitigated by five ungraded project milestones with feedback, including an interim review in Session 10.
+- **Risk of a single component.** A single component concentrates the risk. It is mitigated by ungraded project milestones with feedback (charter, interim review in Session 10, three leaderboard rounds).
 
 The change requires approval and must be announced at the start of the semester (RStPO §§ 9–14).
 
@@ -194,7 +194,7 @@ The findings of Sections 2–7 lead to the following design decisions, which the
 | Evaluation and judgement gain importance as AI tools automate coding | The statistics recap (S5) leads into regression (S6); validation (S7) is taught before the more complex models; RAG and agents are evaluated with test sets |
 | Teamwork and communication are frequently named gaps; data roles increasingly require software engineering skills | Object-oriented programming, APIs and Git in Session 2; reviewed pull requests; presentation with individual questions |
 | Participants have different programming backgrounds | Python for analysis and for applications in Session 1, with self-study notebooks; every topic starts from its central concept and a small example |
-| Take-home work can no longer be attributed reliably; the leaderboard can be gamed | One graded component: the final project, presented with individual questions; checkpoints and leaderboard ungraded (Section 7) |
+| Take-home work can no longer be attributed reliably; the leaderboard can be gamed | One graded component: one final project for all teams on the leaderboard task, presented with individual questions; the score is evidence, not a grade (Section 7) |
 | The plan has to fit a semester of 18 sessions on any weekday | Time series forecasting is kept short, so that it can become self-study if a weekday has only 17 teaching weeks |
 
 ## 9. Sources

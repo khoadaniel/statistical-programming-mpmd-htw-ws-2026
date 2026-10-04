@@ -64,7 +64,7 @@ Sources and licences of third-party files: [source.md](source.md).
 - Read Alammar's *The Illustrated Transformer* (link below), sections on self-attention.
 - Revise TF-IDF, the metrics for many classes and the error analysis of Session 13 (bring your validation and leaderboard scores of round L1), k-means and UMAP of Session 11, the bootstrap of Session 7 and the decision threshold of Session 8.
 
-**Team project until the next session.** Decide with evidence whether a language-model component improves the project.
+**Team project until the next session.** Decide with evidence whether embeddings or a language model improve the model; leaderboard round L2.
 
 **Further reading (optional).**
 

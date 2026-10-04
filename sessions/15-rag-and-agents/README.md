@@ -60,7 +60,7 @@ Sources and licences: [source.md](source.md).
 `docker run --name pgvector -e POSTGRES_PASSWORD=course -p 5432:5432 -d pgvector/pgvector:pg17`.
 Download the multilingual embedding model once (run the first cells of workbook 01; `intfloat/multilingual-e5-small`, about 470 MB). Optionally install [Ollama](https://ollama.com/) and run `ollama pull llama3.2` (about 2 GB) for a local LLM; without it, the notebooks skip the LLM cells or use a scripted stand-in.
 
-**Team project until the next session.** Language-model component of the project, where chosen, with its evaluation.
+**Team project until the next session.** Optional language-model component (for example a classification assistant with retrieval), with its evaluation.
 
 **Further reading (optional, free)**
 

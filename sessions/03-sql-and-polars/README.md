@@ -67,7 +67,7 @@ Origins and licences of third-party files: [source.md](source.md).
 - Install [Docker Desktop](https://docs.docker.com/get-docker/) if you can, and check that `docker run hello-world` works. Without Docker, the case-study notebooks fall back to DuckDB.
 - Work through the first half of [SQLBolt](https://sqlbolt.com/) (lessons 1–6), about 45 minutes.
 
-**Team project until the next session.** Identify the project's data sources and load a first extract into the team database.
+**Team project until the next session.** Download the customs decisions with the provided script, load them into the team database and count them per year, language and member state in SQL.
 
 **Further reading (optional)**
 

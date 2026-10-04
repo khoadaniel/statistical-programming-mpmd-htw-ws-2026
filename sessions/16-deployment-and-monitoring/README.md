@@ -58,7 +58,7 @@ Sources and licences: [source.md](source.md).
 
 **Lecturer.** Before block 3, run `uv run python sessions/16-deployment-and-monitoring/workbooks/make_feedback_2024.py` and share `case-study/data/feedback_2024.csv` (labels of the 40,369 decisions of 2024 only, columns `id,heading`) with the students. `--out PATH` writes the file elsewhere.
 
-**Team project until the next session.** Release: dashboard or deployed model, repository and documentation complete.
+**Team project until the next session.** Release: tested service, monitoring plan and model card; retraining with the 2024 labels and final leaderboard round L3; repository tagged.
 
 **Further reading (optional, free)**
 

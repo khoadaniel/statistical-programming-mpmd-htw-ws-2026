@@ -68,7 +68,7 @@ The INRIA notebooks read data from `datasets/` and images from `figures/` in thi
 
 **Before.** Re-run your Session 6 logistic regression for Telco churn. Think about one decision in your own work that is taken from a score (a credit limit, a reminder, an inspection): what does each kind of error cost?
 
-**Team project until the next session.** Baseline and first validated model: a majority or rule baseline, one model in a pipeline, and cross-validated scores with the metric that fits the project question.
+**Team project until the next session.** A first classifier on simple features (language, member state, description length) in a pipeline, evaluated with accuracy and macro-F1 against the baselines.
 
 **Further reading (optional).**
 - Google Machine Learning Crash Course: Classification. https://developers.google.com/machine-learning/crash-course/classification

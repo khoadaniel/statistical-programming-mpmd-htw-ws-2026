@@ -13,9 +13,8 @@
 
 **0:00–0:45 · Data careers and the course** ([theory](theory/01-data-careers.md))
 
-- [Data roles: data analyst, data scientist, ML and AI engineer, data engineer](theory/01-data-careers.md#data-roles)
-- [Tasks, skills and entry routes of each role](theory/01-data-careers.md#tasks-skills-and-entry-routes)
-- [Course organisation, assessment, the running case study and the leaderboard](theory/01-data-careers.md#course-organisation-assessment-case-study-and-leaderboard)
+- [Data roles](theory/01-data-careers.md#data-roles) (data analyst, data scientist, ML and AI engineer, data engineer): [tasks, skills and entry routes](theory/01-data-careers.md#tasks-skills-and-entry-routes)
+- [Course organisation, assessment and the final project: the EBTI challenge and its leaderboard](theory/01-data-careers.md#course-organisation-assessment-case-study-and-leaderboard) (15 minutes for the challenge)
 - *Practice:* [compare three job advertisements](theory/01-data-careers.md#practice-compare-three-job-advertisements) (analyst, data scientist, ML engineer) and list the skills they share and those that differ
 
 **1:00–1:45 · Python for analysis** ([theory](theory/02-python-for-analysis.md))
@@ -73,7 +72,7 @@ The EBTI customs data of Sessions 13–16 are prepared later with `case-study/pr
 
 If Python is new to you after the summer, work through workbooks 02–06.
 
-**Team project until the next session.** Teams of three are formed and shortlist three project topics.
+**Team project until the next session.** Teams of three are formed and read the project brief and the leaderboard rules.
 
 **After.** Repeat questions 4 and 5 for the district you live in or know best and compare it with the city as a whole, and finish the workspace exercises.
 

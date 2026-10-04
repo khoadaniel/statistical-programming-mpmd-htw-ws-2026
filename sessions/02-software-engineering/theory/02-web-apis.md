@@ -66,7 +66,7 @@ An API gives access to data that are current and too large or too changing to do
 
 - The **Python Package Index** (PyPI) offers a JSON API (`https://pypi.org/pypi/<name>/json`) that tools such as uv use to find package versions.
 - Nearly every SaaS product used in companies (CRM, ticketing, payment) exposes a REST API, which analysts use to pull data into reports.
-- Open-data portals such as **GovData** and the Berlin open-data portal run the catalogue software CKAN, whose API lists the datasets of the portal; the project topics of this course often start there.
+- Open-data portals such as **GovData** and the Berlin open-data portal run the catalogue software CKAN, whose API lists the datasets of the portal; data projects often start there.
 
 > [!NOTE]
 > Not every website is an API. Pages written for people return HTML and may block scripts; a documented API returns structured data and states its terms of use. Collecting data from pages written for people (*scraping*) is how Inside Airbnb builds its files; it needs care with terms of use and personal data, which is why the course uses its published, cleaned files instead.

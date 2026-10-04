@@ -15,8 +15,8 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Participants | 22 students in seven teams (six of three, one of four) |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
 | Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-leaderboard) |
-| Leaderboard | In the text and language-model sessions (13–16), teams submit predictions for a held-out test set whose correct answers stay hidden, so the ranking shows how well a model works on new data |
-| Assessment | Final project with an analytics or machine learning emphasis, graded in its presentation (100 %) |
+| Leaderboard | In Sessions 13–16, teams submit predictions for a held-out test set whose correct answers stay hidden, so the ranking shows how well a model works on new data; the leaderboard task is also the final project |
+| Assessment | One final project for all teams on the leaderboard task, graded in its presentation (100 %) |
 
 ## Contents
 
@@ -36,7 +36,7 @@ Data roles share a common base and then divide: analysts work mainly with SQL, P
 - **Shared base (Sessions 1–4).** Every role needs Python, both for analysis in notebooks and for building applications (object-oriented programming, APIs), collaborative development with Git, SQL, Polars for large tables and the preparation of data.
 - **Analytics (Session 5).** Exploration and visualisation together with the statistics recap of the module description: descriptive statistics, tests, contingency tables and correlation, applied in Python. Correlation leads directly into regression, the first model of the next part.
 - **Machine learning (Sessions 6–16).** Built up from the simplest model to the most complex: linear and logistic regression, validation and tuning, classification and its evaluation metrics, feature engineering, tree-based models, unsupervised learning, forecasting, classical NLP, two sessions on large language models (from transformer and embedding models to RAG and agents) and deployment. The machine learning lifecycle is introduced at the start of this part.
-- **One project.** Teams apply the methods in a project with an analytics or a machine learning emphasis, graded in its presentation. The weekly exercises and the leaderboard prepare the project and are not graded.
+- **One project.** All teams work on the same project, the leaderboard task, so that they can follow, compare and discuss each other's solutions. Teams apply the general steps of each session to the project data from Session 3 onwards and build the text models from Session 13. The project is graded in its presentation ([Section 5](#5-final-project)); the weekly exercises are not graded.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/course-structure-timeline-dark.svg">
@@ -98,9 +98,9 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 **0:00–0:45**
 
-- Data roles: data analyst, data scientist, ML and AI engineer, data engineer
-- Tasks, skills and entry routes of each role
-- Course organisation, assessment, the course datasets and the leaderboard
+- Data roles (data analyst, data scientist, ML and AI engineer, data engineer): tasks, skills and entry routes
+- Course organisation and assessment
+- The final project: the EBTI challenge and its leaderboard (15 minutes)
 
 *Practice:* Compare three job advertisements (analyst, data scientist, ML engineer) and list the skills they share and those that differ
 
@@ -123,7 +123,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Turn the notebook analysis into a module with a small class that loads and summarises the listings
 
-**Team project until the next session.** Teams of three are formed and shortlist three project topics.
+**Team project until the next session.** Teams of three are formed and read the project brief and the leaderboard rules.
 
 #### 📍 Session 2 · Software engineering for data work: object-oriented programming, APIs, testing, Git and continuous integration
 
@@ -206,7 +206,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: run the same aggregation on the availability calendar (4.7 million rows) in SQL, pandas and Polars and compare code, runtime and memory use
 
-**Team project until the next session.** Identify the project's data sources and load a first extract into the team database.
+**Team project until the next session.** Download the customs decisions with the provided script, load them into the team database and count them per year, language and member state in SQL.
 
 #### 📍 Session 4 · Data quality and preparation: validation, missing values, outliers and transformations
 
@@ -244,7 +244,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: produce the cleaned table of Berlin listings with a log of every cleaning decision
 
-**Team project until the next session.** Project charter: question, stakeholder, emphasis (analytics or machine learning), metric, baseline, data loaded.
+**Team project until the next session.** Data quality report of the decisions and project charter: use of the suggestions, metric, baseline, validation by time, inputs that may not be used.
 
 ### Analytics (Session 5)
 
@@ -284,7 +284,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: how strongly does the price rise with the number of guests? Do district price differences survive once room type and size are held fixed? A one-page report or a dashboard of prices by district
 
-**Team project until the next session.** Exploratory and statistical findings of the project, presented in a short team review.
+**Team project until the next session.** Exploratory findings: decisions per heading, language, member state and year, and the long tail of rare headings, presented in a short team review.
 
 ### Machine learning (Sessions 6–16)
 
@@ -331,7 +331,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: predict churn probability for the IBM Telco customers with logistic regression and interpret the coefficients
 
-**Team project until the next session.** Machine learning teams fit a first model; analytics teams complete their statistical analysis.
+**Team project until the next session.** Baselines on the project data: the most frequent heading and a simple rule.
 
 #### 📍 Session 7 · Validation and hyperparameter tuning: data splits, cross-validation, bootstrap and leakage
 
@@ -373,7 +373,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Demonstrate two leaking workflows on the price model (preprocessing fitted outside the cross-validation; the same host in training and test), then fix them with a Pipeline and grouped folds and compare the scores
 
-**Team project until the next session.** Validation plan for the project model (machine learning teams); uncertainty of key results (analytics teams).
+**Team project until the next session.** Validation plan: split by time, metrics, uncertainty of the scores, inputs that may not be used.
 
 #### 📍 Session 8 · Classification and evaluation metrics: preprocessing pipelines, k-nearest neighbours, confusion matrix, ROC curves and decision thresholds
 
@@ -411,7 +411,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: choose the churn threshold from the cost of a retention offer against the value of a lost customer, and check whether the predicted probabilities can be trusted
 
-**Team project until the next session.** Baseline and first validated model.
+**Team project until the next session.** A first classifier on simple features (language, member state, description length) in a pipeline, evaluated with accuracy and macro-F1 against the baselines.
 
 #### 📍 Session 9 · Advanced feature engineering and imbalanced data
 
@@ -452,7 +452,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: compare undersampling, oversampling, SMOTE, class weights and a tuned threshold for catching Telco churners
 
-**Team project until the next session.** Feature set for the project model, documented in the repository.
+**Team project until the next session.** How the team will deal with rare headings; inputs documented with the moment at which each is known.
 
 #### 📍 Session 10 · Tree-based models: decision trees, random forests and gradient boosting
 
@@ -489,7 +489,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: is a tree ensemble worth replacing the linear price model of Session 6? Compare a random forest and gradient boosting with it on host-grouped folds and interpret the winner
 
-**Team project until the next session.** Interim review (10 minutes per team): model or dashboard, validation, plan to the end.
+**Team project until the next session.** Interim review (10 minutes per team): data, validation plan, baselines, plan for Sessions 13–16.
 
 #### 📍 Session 11 · Unsupervised learning: clustering, dimensionality reduction and anomaly detection
 
@@ -529,7 +529,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: summarise the listings' amenities with PCA and rank implausible listings (Isolation Forest, local outlier factor, price far from what size and location suggest)
 
-**Team project until the next session.** Segmentation or anomaly detection where it supports the project.
+**Team project until the next session.** Open points from the interim review.
 
 #### 📍 Session 12 · Time series forecasting
 
@@ -566,7 +566,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models, test whether the Berlin weather from Session 2 adds anything, and recommend one with its 12-month forecast and prediction interval
 
-**Team project until the next session.** Forecasting component where the project needs one; otherwise model improvement.
+**Team project until the next session.** Open points from the interim review.
 
 #### 📍 Session 13 · Classical NLP: bag-of-words, TF-IDF and text classification
 
@@ -607,7 +607,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Analyse 20 misclassified decisions with their English keywords and heading texts, and improve the classifier
 
-**Team project until the next session.** Text features where the project uses text; otherwise model improvement.
+**Team project until the next session.** TF-IDF classifier on the team's validation scheme, error analysis, leaderboard round L1.
 
 #### 📍 Session 14 · Large language models I: transformer models, embeddings and their applications
 
@@ -644,7 +644,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: compare an LLM, choosing among ten candidate headings, with the trained classifier on 200 decisions; second leaderboard submission (L2)
 
-**Team project until the next session.** Decide with evidence whether a language-model component improves the project.
+**Team project until the next session.** Decide with evidence whether embeddings or a language model improve the model; leaderboard round L2.
 
 #### 📍 Session 15 · Large language models II: retrieval-augmented generation and agents
 
@@ -679,7 +679,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Build a small agent with three tools (an SQL query, the similar-decision search, a nomenclature look-up) and evaluate it on ten tasks
 
-**Team project until the next session.** Language-model component of the project, where chosen, with its evaluation.
+**Team project until the next session.** Optional language-model component (for example a classification assistant with retrieval), with its evaluation.
 
 #### 📍 Session 16 · Deployment, monitoring and maintenance
 
@@ -718,7 +718,7 @@ For each session: the guiding question, the learning outcomes and the session pl
 
 *Practice:* Case study: the 2024 labels are released as feedback data; detect the shifts (no decisions from the United Kingdom after Brexit, a lower share of chapter 85, a few unseen headings), retrain and make the final leaderboard submission (L3), ranked on the 2025–2026 decisions
 
-**Team project until the next session.** Release: dashboard or deployed model, repository and documentation complete.
+**Team project until the next session.** Release: tested service, monitoring plan and model card; retraining with the 2024 labels and final leaderboard round L3; repository tagged.
 
 ### Final presentations (Sessions 17–18)
 
@@ -762,7 +762,7 @@ The course works with the following public datasets. Each session uses the one t
 | **Inside Airbnb, Berlin** | About 12,800 Berlin listings with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL and Polars, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
 | **Open-Meteo** (weather API) | Daily Berlin weather since 2016, fetched through a web API | Session 2 (working with APIs) and Session 12 (weather as a factor in demand) |
 | **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification metrics and thresholds, imbalance, trees, segments |
-| **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in 23 languages | Sessions 13–16: text classification, language models, retrieval, deployment, and the leaderboard |
+| **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in 23 languages | Sessions 13–16: text classification, language models, retrieval, deployment; the leaderboard and the final project |
 
 **Datasets by session**
 
@@ -792,26 +792,27 @@ The course works with the following public datasets. Each session uses the one t
 - **Task:** predict the heading of each test decision from its description, issuing country, language and date.
 - **Split:** decisions of 2024 form the public leaderboard, decisions of 2025–2026 the private leaderboard. Test decisions whose description repeats a training description are removed.
 - **Metric:** accuracy, with macro-F1 reported alongside. Reference values on the public leaderboard: always the most frequent heading 4 %; logistic regression on simple features 8 %; word TF-IDF with a linear model 81 % (50,000-decision sample) and 87 % (full training set); character TF-IDF 88 %. On the private years the same models score about three points lower, an effect of drift that Session 16 takes up.
-- **Rounds:** L1 TF-IDF models (Session 13), L2 embeddings or language models (14), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18.
+- **Rounds:** L1 TF-IDF models (Session 13), L2 embeddings or language models (14), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18; the L3 submission is the team's final project solution.
 - **Platform:** Codabench (free, open source, operated by Université Paris-Saclay; submission of a CSV file; hidden solution; public and private leaderboard). Students register with a pseudonym; alternatively the lecturer submits on behalf of a team.
 
 > [!NOTE]
-> **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; each student downloads them with the provided script. Because decisions can be looked up in the public database, the leaderboard is deliberately not graded.
+> **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; each student downloads them with the provided script. Because decisions can be looked up in the public database, the leaderboard score is not converted into marks; the final project is graded on the criteria of Section 6, and its submission must be reproducible from the team's repository.
 
 ## 5. Final project
 
-Teams of three choose a topic from the list below, or propose their own of comparable scope. In the project charter (Session 4) each team chooses an emphasis.
+All teams work on the same project: the leaderboard task of [Section 4](#4-datasets-and-leaderboard), predicting the four-digit customs heading of a binding tariff decision from its description of goods, as accurately as possible on the hidden test set. A single project lets teams follow and discuss each other's solutions, gives all of them the same workload, and makes the results comparable. Teams present their final solution in Sessions 17 and 18.
 
-- **Analytics emphasis** (typical roles: data or business analyst): the project answers a decision question with exploratory findings, statistical tests or an A/B-test design, and delivers a dashboard or automated report for the stakeholder.
-- **Machine learning emphasis** (typical roles: data scientist, ML engineer): the project predicts an outcome with a validated model compared with a baseline, and delivers a deployed model service with a monitoring plan and a model card.
+- **Task:** a model that suggests the heading of a new request to a customs officer, using only what exists when the request arrives (description, member state, language, date).
+- **Deliverables:** a repository that reruns from the official export to the submission; a validated model compared with baselines; error analysis; a tested service that returns the top-3 headings, with a monitoring plan and a model card; the presentation.
+- **Accuracy and grade:** teams aim for the highest accuracy they can reach, but the score is not converted into marks. The grade rewards how a team frames the problem, handles the data, builds and validates the model and explains the results ([Section 6](#6-assessment)).
 
-Every project shares the same base: a problem defined with a stakeholder, public data loaded and cleaned by a reproducible script, documented data quality, a Git repository with reviewed pull requests and CI, and a presentation.
+**Timeline.** The challenge is introduced in Session 1. Teams first load, check and explore the data and set up baselines and a validation plan (Sessions 3–9), then build the text models in Sessions 13–16.
 
 ```mermaid
 flowchart LR
-  P1["<b>S2</b><br/>Teams and repository"]:::found --> P2["<b>S4</b><br/>Project charter<br/>and emphasis"]:::data
-  P2 --> P3["<b>S5</b><br/>Exploratory and<br/>statistical findings"]:::ana --> P4["<b>S10</b><br/>Interim review"]:::ml
-  P4 --> P5["<b>S16</b><br/>Release"]:::ml --> P6["<b>S17–18</b><br/>Final presentation (graded)"]:::pres
+  P1["<b>S1–S2</b><br/>Teams and repository"]:::found --> P2["<b>S3–S4</b><br/>Data loaded, quality report,<br/>project charter"]:::data
+  P2 --> P3["<b>S5–S9</b><br/>Exploration, validation plan,<br/>baselines"]:::ana --> P4["<b>S10</b><br/>Interim review"]:::ml
+  P4 --> P5["<b>S13–S14</b><br/>Text models,<br/>rounds L1 and L2"]:::ml --> P6["<b>S16</b><br/>Release, round L3"]:::ml --> P7["<b>S17–18</b><br/>Final presentation (graded)"]:::pres
   classDef found fill:#475569,stroke:#475569,color:#ffffff
   classDef data fill:#2d7d74,stroke:#2d7d74,color:#ffffff
   classDef ana fill:#6a5a8c,stroke:#6a5a8c,color:#ffffff
@@ -819,49 +820,24 @@ flowchart LR
   classDef pres fill:#636b78,stroke:#636b78,color:#ffffff
 ```
 
-### Project topics
-
-The list contains 17 topics on Berlin and German public data in four domains; most can be worked on with either emphasis. Each topic names a stakeholder, the data sources and their quality issues, and the expected statistics, models and delivery.
-
-| Topic | Domain | Methods | Level |
-|---|---|---|---|
-| Short-term rentals in Berlin under EU Regulation 2024/1028 | Housing | NLP, Time series, Spatial | Standard |
-| A rent checker based on the Berlin Mietspiegel 2026 | Housing | Spatial | Standard |
-| Screening for displacement pressure in Berlin planning areas | Housing | Spatial | Advanced |
-| Residential construction in Berlin: from building permits to completions | Housing | Time series | Standard |
-| A searchable database of answers to written questions in the Berlin parliament | Housing | NLP | Advanced |
-| Language requirements in Berlin job advertisements | Migration | NLP, Time series | Standard |
-| Availability of Berlin's public-service information in English | Migration | NLP | Standard |
-| A validated database of BAMF asylum statistics | Migration | Time series | Standard |
-| Integration courses in Berlin after the 2026 budget cuts | Migration | Time series, Spatial | Advanced |
-| Heat and health in Berlin: effects and short-term forecasts | Health | Time series | Standard |
-| Ambulance response times and social disadvantage in Berlin | Health | Time series, Spatial | Standard |
-| Wastewater surveillance as an early indicator of respiratory infection waves | Health | Time series | Standard |
-| Reconstructing the history of drug shortages in Germany | Health | NLP, Time series | Advanced |
-| Heat vulnerability and access to cool rooms in Berlin | Environment | Spatial | Standard |
-| Volunteer watering and street-tree survival in Berlin | Environment | Spatial, Time series | Standard |
-| Air quality after the partial withdrawal of Tempo 30 zones in Berlin | Environment | Time series | Advanced |
-| Progress towards Berlin's heat-planning and solar targets by district | Environment | Time series, Spatial | Standard |
-| Student-proposed topic (including company or NGO partners) | Open | NLP, Time series, Spatial | Standard |
-
-**Own topics.** Teams may propose their own topic, including one with a company or NGO partner, if it has a named stakeholder, uses data that may legally be used and meets the requirements of the shared base and of its emphasis. Kaggle and other prepared datasets with a predefined target variable are excluded. Company data require written permission and a data-protection review; personal data may not leave the company.
+**Rules.** The final submission must be reproducible from the tagged repository; a submission that the repository cannot reproduce is not assessed. Looking up test decisions in the public EBTI database is not allowed. Columns that customs write with or after the decision (justification, keywords, CN code, chapter, status, end date, invalidation reason) must not be model inputs.
 
 ## 6. Assessment
 
 **Final project with presentation · 100 % · Sessions 17 and 18**
 
 > [!NOTE]
-> The module is assessed by one examination component: the final project, graded in its presentation. Weekly exercises and the leaderboard are not graded; they prepare the project. The module page currently lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The change to a single graded project presentation must be approved and announced at the start of the semester (RStPO §§ 9–14); the reasons are set out in [Premise, Section 7](PREMISE.md#7-choice-of-the-assessment-format).
+> The module is assessed by one examination component: the final project, graded in its presentation. Weekly exercises are not graded, and the leaderboard score is not converted into marks. The module page currently lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The change to a single graded project presentation must be approved and announced at the start of the semester (RStPO §§ 9–14); the reasons are set out in [Premise, Section 7](PREMISE.md#7-choice-of-the-assessment-format).
 
 **What is assessed**
 
-- **Repository**, frozen with a release tag the day before Session 17: code, a README that lets a reader rerun the work from raw data to result, documentation of data and decisions, and the history of reviewed pull requests.
+- **Repository**, frozen with a release tag the day before Session 17: code, a README that lets a reader rerun the work from the official export to the submitted file, documentation of data and decisions, and the history of reviewed pull requests.
 - **Presentation**: 15 minutes per team with a live demonstration, followed by 10 minutes of questions. Every member presents a part and answers individual questions.
 
 **How the grade is formed**
 
 - The first five criteria (80 %) are assessed per team. *Collaboration and presentation* (20 %) is assessed per member, from the member's presented part, the answers to individual questions and the member's pull requests.
-- The criteria are the same for both emphases; three of them are read according to the emphasis.
+- Leaderboard accuracy is evidence for the criteria *Model* and *Reliability of the results*, not a grade in itself: a lower score that is well validated and well explained can earn a better grade than a higher score that the team cannot explain.
 - The individual questions are recorded in a short protocol, so that individual grades can be justified.
 - Use of AI tools is permitted and documented with the HTW declaration; members must be able to explain any part of the code they submitted.
 
@@ -869,11 +845,11 @@ The list contains 17 topics on Berlin and German public data in four domains; mo
 
 | Criterion | Weight | Evidence | Expected for a very good grade |
 |---|---|---|---|
-| Problem definition | 10 % | Charter, presentation | A clear question and stakeholder; the metric and the baseline are justified by the decision the result supports |
-| Data | 20 % | Repository | Sources documented with origin and licence; loading and cleaning reproducible by a script that anyone can rerun from the raw data; quality checked, with every cleaning decision recorded |
-| Analysis or model | 25 % | Repository, presentation | Analytics: sound exploration and correct, well-chosen statistical methods. Machine learning: suitable models compared fairly with the baseline |
-| Reliability of the results | 15 % | Repository, questions | Analytics: confidence intervals, effect sizes and stated limitations. Machine learning: validation without leakage, error analysis and a held-out test |
-| Delivery | 10 % | Live demonstration | Analytics: a dashboard or automated report the stakeholder can use. Machine learning: a deployed service with a monitoring plan and a model card |
+| Problem definition | 10 % | Charter, presentation | The use of the suggestions is clear; metric, baseline and, if used, abstention are justified by that use |
+| Data | 20 % | Repository | A pipeline that reruns from the official export to the submission; quality checked, with every cleaning decision recorded; inputs limited to what exists when a request arrives |
+| Model | 25 % | Repository, presentation | Several approaches compared fairly with the baseline and with each other on the same validation scheme; the final choice justified |
+| Reliability of the results | 15 % | Repository, questions | Validation by time without leakage; uncertainty of the differences between models; error analysis by language, heading frequency and chapter; validation and leaderboard scores compared and differences explained |
+| Delivery | 10 % | Live demonstration | A tested service that returns the top-3 headings, with a monitoring plan and a model card |
 | Collaboration and presentation (per member) | 20 % | Pull requests, presentation, questions | Own reviewed pull requests with passing CI; a clear presented part; correct and confident answers to individual questions |
 
 ```mermaid
@@ -898,7 +874,7 @@ pie showData
   title Weight of the assessment criteria (%)
   "Problem definition" : 10
   "Data" : 20
-  "Analysis or model" : 25
+  "Model" : 25
   "Reliability of the results" : 15
   "Delivery" : 10
   "Collaboration and presentation" : 20

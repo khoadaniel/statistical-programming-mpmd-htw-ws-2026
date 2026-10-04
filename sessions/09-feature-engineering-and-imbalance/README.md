@@ -61,7 +61,7 @@ Third-party sources and licences: [source.md](source.md).
 
 **Preparation.** Re-read the Session 7 pages on grouped cross-validation and leakage, and the Session 8 pages on `Pipeline`, `ColumnTransformer`, thresholds and macro-F1. Make sure the case-study data exist: `uv run python case-study/prepare_airbnb.py` (Inside Airbnb, Berlin).
 
-**Team project until the next session.** Feature set for the project model, documented in the repository: for every feature, its source, the moment at which it is known, and how it is computed inside the pipeline.
+**Team project until the next session.** How the team will deal with rare headings; inputs documented with the moment at which each is known.
 
 **Further reading (optional).**
 
