@@ -26,6 +26,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 - [4. Datasets and leaderboard](#4-datasets-and-leaderboard)
 - [5. Final project](#5-final-project)
 - [6. Assessment](#6-assessment)
+- [Appendix. The final project at a glance](#appendix-the-final-project-at-a-glance)
 
 ## 1. Overview
 
@@ -879,3 +880,117 @@ pie showData
   "Delivery" : 10
   "Collaboration and presentation" : 20
 ```
+
+## Appendix. The final project at a glance
+
+This appendix gives a short overview of the final project: the task, the data, how hard it is, and why it is a suitable way to close the module.
+
+### The task
+
+<img src="assets/final-project/container-terminal-hamburg.jpg" alt="Container ship and cranes at Container Terminal Tollerort in the port of Hamburg" width="100%">
+
+<sub>Container Terminal Tollerort, Hamburg. Photo: Matti Blume, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Container_Terminal_Tollerort,_Vorhafen,_Hamburg_(P1080405).jpg).</sub>
+
+Every product that enters or leaves the EU needs a tariff code. The code determines the customs duty, import restrictions and trade statistics. When a trader is unsure about the code, they can ask the customs authority of a member state for a **Binding Tariff Information (BTI)** decision. The authority describes the goods, states the code and explains why. The decision binds all EU customs authorities for three years. The European Commission publishes all decisions in the **EBTI database**: about 40,000 to 50,000 per year.
+
+The project asks: **given the description of goods, which four-digit heading will customs assign?** A model that answers this well can suggest headings to customs officers and help traders prepare their requests.
+
+```mermaid
+flowchart LR
+  T["Trader<br/>describes the goods"] --> C["Customs authority<br/>of a member state"]
+  C --> D["Binding decision<br/>description + code + justification"]
+  D --> E[("EBTI database<br/>European Commission")]
+  E --> M["Course project:<br/>model learns from past decisions"]
+  M -.->|"suggests the heading<br/>of a new request"| C
+```
+
+### What a heading is
+
+The code follows the **Harmonized System (HS)** of the World Customs Organization, used by more than 200 countries. Each level refines the one above it. The project predicts the four-digit heading.
+
+```mermaid
+flowchart LR
+  S["<b>Section XII</b><br/>footwear, headgear,<br/>umbrellas"] --> CH["<b>Chapter 64</b><br/>footwear, gaiters"]
+  CH --> H["<b>Heading 6403</b><br/>footwear with<br/>uppers of leather"]:::target
+  H --> SH["<b>Subheading 6403.91</b><br/>covering the ankle"]
+  SH --> CN["<b>EU CN code</b><br/>8 digits, then TARIC<br/>10 digits"]
+  classDef target fill:#3b5b8c,stroke:#3b5b8c,color:#ffffff
+```
+
+Small differences in the goods lead to a different heading: the same boot with **textile** uppers belongs to heading **6404**, not 6403. The model must learn such distinctions from the text.
+
+### One decision
+
+| Field | Example | Role in the project |
+|---|---|---|
+| Description of goods | *Botte de sécurité couvrant la cheville jusqu'à mi-mollet, comportant un dessus en cuir, une semelle extérieure en matière plastique (polyuréthane) …* | **Input** |
+| Issuing country, language, date | France, French, January 2017 | **Input** |
+| Heading | **6403**: footwear with outer soles of rubber, plastics or leather and uppers of leather | **Target** |
+| Keywords, justification, CN code | *half boots, of leather, outer soles, protective toe caps …* | Written with the decision: **not allowed as input** |
+
+The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about 70 % of cases. A model that uses it scores 0.96 in a careless validation but only 0.71 on new requests, which have a description only.
+
+### The data in four charts
+
+**Size and split.** 309,529 decisions from 2017–2023 are used for training. The 113,188 decisions of 2024–2026 form the hidden test set: 2024 for the public leaderboard, 2025–2026 for the private one. Training on the past and testing on the future is how the model would be used.
+
+![Bar chart of binding tariff decisions per year from 2004 to 2025, between about 38,000 and 52,000 per year; 2017–2023 marked as training, 2024 as public test and 2025 as private test](assets/final-project/decisions-per-year.png)
+
+**Many languages.** Each authority writes in its own language. German and French dominate, and many languages have only a few thousand decisions.
+
+![Horizontal bar chart of the share of training decisions by language: German 57 %, French 16 %, English 5 %, Dutch 5 %, Polish 4 %, Czech 3 %, Spanish 3 %, Swedish 2 %, 15 other languages 6 %](assets/final-project/languages.png)
+
+**Many classes and a long tail.** 1,114 headings occur in the training data. The most frequent one covers only 4 % of the decisions, while a quarter of the headings have fewer than ten examples. This is why the leaderboard reports macro-F1 next to accuracy.
+
+![Bar chart of training decisions per heading on a log scale, sorted from the most to the least frequent; the most frequent heading 3926 has about 12,900 decisions, and 273 headings have fewer than 10](assets/final-project/long-tail.png)
+
+**The data change over time.** After Brexit the United Kingdom issues no more decisions, and the share of electrical machinery (chapter 85) varies from year to year. Session 16 uses these shifts to teach monitoring and retraining.
+
+![Two line charts from 2012 to 2025: left, the UK share of decisions falls from about 14 % to zero in 2021; right, the share of chapter 85 varies between 12 % and 17 % and drops to 11.7 % in 2024](assets/final-project/drift.png)
+
+### How hard it is
+
+The reference results leave room for every method of the course. A trivial model is almost always wrong. Simple text models already reach about 80 %, and better features and more data push this towards 90 %. The last points are hard to gain, and each team must show with validation that a gain is real.
+
+TF-IDF is only the starting point. Teams are free to try other approaches, for example a fine-tuned multilingual encoder model (BERT type), nearest past decisions in an embedding space, a two-step model that predicts the chapter first, a language model that chooses among candidate headings, retrieval of similar decisions, an ensemble, or other designs. How well these work on this task is open; finding out is part of the project.
+
+![Horizontal bar chart of public-leaderboard accuracy. Measured: most frequent heading 4 %, simple features 8 %, word TF-IDF on a sample of 50,000 decisions 81 %, character TF-IDF on the sample 82 %, TF-IDF plus embeddings on the sample 82 %, word TF-IDF on all 309,529 decisions 87 %, character TF-IDF on all decisions 88 %. Below, marked with a question mark as open for the teams: fine-tuned multilingual encoder, embeddings with nearest past decisions, chapter first then heading, language model choosing among candidates, retrieval of similar decisions, ensemble, and other designs](assets/final-project/reference-accuracy.png)
+
+### A project in one picture
+
+```mermaid
+flowchart LR
+  A["Official export<br/>(23 yearly files)"] --> B["Load and query<br/>SQL, Polars"]
+  B --> C["Quality checks<br/>placeholders, duplicates,<br/>forbidden columns"]
+  C --> D["Exploration<br/>languages, long tail,<br/>change over time"]
+  D --> E["Baselines and<br/>validation by time"]
+  E --> F["Text models<br/>TF-IDF, embeddings,<br/>language models"]
+  F --> G["Error analysis<br/>and leaderboard"]
+  G --> H["Service, monitoring,<br/>retraining"]
+  H --> I["Presentation"]
+```
+
+### Why this project closes the module
+
+The project uses almost every part of the course on one realistic problem:
+
+| Course part | Used in the project for |
+|---|---|
+| Python, testing, Git and CI (S1–S2) | A team repository with reviewed pull requests and a pipeline that anyone can rerun |
+| SQL, Polars and data quality (S3–S4) | Loading about 420,000 decisions; placeholder dates, duplicates, columns that exist only after the decision |
+| Exploration and statistics (S5) | Distributions over languages, member states and headings; uncertainty of the scores |
+| Validation and metrics (S7–S8) | Validation by time; accuracy and macro-F1 for more than 1,000 classes; bootstrap intervals of the differences between models |
+| Feature engineering and imbalance (S9) | Rare headings and target leakage |
+| Classical NLP (S13) | TF-IDF models, error analysis, the first leaderboard round |
+| Language models (S14–S15) | Multilingual embeddings, a language model that chooses among candidate headings, retrieval of similar past decisions |
+| Deployment and monitoring (S16) | A service that suggests the top three headings; drift, retraining with new labels, a model card |
+
+Further reasons for the choice:
+
+- **A real task.** Customs authorities classify goods every day, and errors have legal and financial consequences.
+- **Public and reusable.** The decisions are published by the European Commission and may be reused with acknowledgement of the source (Commission Decision 2011/833/EU). Each student downloads them with a script.
+- **A fair, honest test.** The hidden test years show how well a model works on new data. Because the score is not converted into marks, teams gain nothing by gaming it.
+- **Leakage and drift are built in.** Both are real features of the data, not constructed exercises.
+- **One task for all teams.** Students can compare and discuss approaches, and the final ranking in Session 18 shows which ideas worked.
+
+<sub>Figures: course team, computed from the EBTI data (European Commission) with [`assets/final-project/make_figures.py`](assets/final-project/make_figures.py).</sub>
