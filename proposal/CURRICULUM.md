@@ -930,7 +930,7 @@ Small differences in the goods lead to a different heading: the same boot with *
 
 The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about 70 % of cases. A model that uses it scores 0.96 in a careless validation but only 0.71 on new requests, which have a description only.
 
-### The data in four charts
+### The data in three charts
 
 **Size and split.** 309,529 decisions from 2017–2023 are used for training. The 113,188 decisions of 2024–2026 form the hidden test set: 2024 for the public leaderboard, 2025–2026 for the private one. Training on the past and testing on the future is how the model would be used.
 
@@ -944,9 +944,27 @@ The last row is the course's main leakage example (Session 13). Customs writes t
 
 ![Bar chart of training decisions per heading on a log scale, sorted from the most to the least frequent; the most frequent heading 3926 has about 12,900 decisions, and 273 headings have fewer than 10](assets/final-project/long-tail.png)
 
-**The data change over time.** After Brexit the United Kingdom issues no more decisions, and the share of electrical machinery (chapter 85) varies from year to year. Session 16 uses these shifts to teach monitoring and retraining.
+### Testing for drift in the inputs
 
-![Two line charts from 2012 to 2025: left, the UK share of decisions falls from about 14 % to zero in 2021; right, the share of chapter 85 varies between 12 % and 17 % and drops to 11.7 % in 2024](assets/final-project/drift.png)
+**Why drift matters in practice.** A model learns the patterns of the period it was trained on, but it is used later, on new data. When the new data differ, the model can become wrong without any error message: the service keeps answering, and the answers look as confident as before. In a customs office this means more wrong suggestions that officers must catch, slower work, and in the worst case wrong duties. What students need to know:
+
+- **Accuracy is measured late.** The correct headings of new requests are known only weeks or months after the decision. Drift in the inputs is the earliest warning available.
+- **Drift is not always harmful.** A change in the inputs is a reason to look, not proof that the model got worse. The real check is accuracy on new labelled data once it arrives.
+- **Drift leads to a decision.** Monitoring exists to answer practical questions: keep the model, retrain it on newer data, route uncertain requests to a person, or add headings that the model cannot know yet.
+- **Thresholds and checks are agreed in advance.** Which signals are watched, how often, and at which value someone acts are written down before the model goes live, for example in the model card.
+
+A model trained on 2017–2023 is used on requests from 2024 onwards. Before the correct headings arrive, a team can only watch the inputs: do new requests still look like the training data? For a text classifier, practical angles are:
+
+| Question | Signal to compare (training years against new requests) | Possible test |
+|---|---|---|
+| Do the requests come from the same places? | Shares of issuing member states and languages | Population stability index (PSI), chi-square test |
+| Are the descriptions written in the same way? | Length of the description in characters and words | Kolmogorov–Smirnov (KS) test, PSI on deciles |
+| Does the vocabulary change? | Share of words in a new description that the model has never seen (out-of-vocabulary rate); new frequent words | Trend over months; list of the most frequent unseen words |
+| Is the model less certain? | Distribution of the top score; share of requests below the abstention threshold | KS test, share over time |
+| Does the model predict differently? | Shares of predicted chapters and headings | PSI on chapters |
+| Are there goods the model cannot know? | Headings created or changed in a revision of the nomenclature (HS 2022, next revision 2027) | List of headings with no training decisions |
+
+Two of these shifts are already visible in the data: the United Kingdom issues no decisions after Brexit, so the mix of member states and languages changes; and the share of some chapters moves from year to year. Session 16 measures such signals, then uses the released 2024 headings to check whether accuracy has actually changed and whether retraining helps.
 
 ### How hard it is
 

@@ -115,23 +115,4 @@ ax.set_xlabel("accuracy on the public leaderboard (2024)")
 ax.set_title("Reference results, and approaches the teams may try")
 save(fig, "reference-accuracy.png")
 
-# 5. drift over time: the United Kingdom and chapter 85
-m = monthly.assign(year=monthly["month"].dt.year).query("2012 <= year <= 2025")
-total = m.groupby("year")["n_decisions"].sum()
-gb = m[m["issuing_country"] == "GB"].groupby("year")["n_decisions"].sum().reindex(total.index, fill_value=0) / total
-ch85 = m[m["chapter"] == "85"].groupby("year")["n_decisions"].sum() / total
-fig, axes = plt.subplots(1, 2, figsize=(9, 3.2), sharex=True)
-axes[0].plot(total.index, gb * 100, color=RED, marker="o", ms=3)
-axes[0].set_title("Share of decisions issued by the UK")
-axes[0].axvspan(2020.9, 2025.5, color=GREY, alpha=0.2)
-axes[0].text(2021.2, max(gb * 100) * 0.85, "after Brexit", fontsize=10)
-axes[1].plot(total.index, ch85 * 100, color=BLUE, marker="o", ms=3)
-axes[1].set_title("Share of chapter 85 (electrical machinery)")
-for ax in axes:
-    ax.set_ylabel("%")
-    ax.axvline(2023.5, color="black", lw=0.8, ls=":")
-axes[1].text(2023.6, ch85.max() * 100 * 0.98, "test →", fontsize=9)
-for ax in axes:
-    ax.set_xticks(range(2012, 2026, 3))
-save(fig, "drift.png")
 print("figures written to", OUT)
