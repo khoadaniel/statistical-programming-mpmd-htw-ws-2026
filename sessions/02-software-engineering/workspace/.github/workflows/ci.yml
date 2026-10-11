@@ -12,8 +12,8 @@ jobs:
   test:                                   # job name = the required status check in branch protection
     runs-on: ubuntu-latest                # a fresh virtual machine for every run
     steps:
-      - uses: actions/checkout@v7         # copy the repository onto the machine
-      - uses: astral-sh/setup-uv@v10.2.0  # install uv; Python comes from .python-version
+      - uses: actions/checkout@v7.0.1         # copy the repository onto the machine
+      - uses: astral-sh/setup-uv@v10.3.0  # install uv; Python comes from .python-version
         with:
           enable-cache: true
       - name: Install the locked environment

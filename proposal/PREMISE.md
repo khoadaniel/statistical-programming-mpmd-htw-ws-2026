@@ -81,43 +81,44 @@ The market analysis asks which skills employers in Berlin and Europe expect from
 
 | Indicator | Value | Source |
 |---|---|---|
-| Entry-level job postings in Germany vs 2019 | **−46 %** | [Indeed Hiring Lab DE, Sep 2026](https://hiringlab.indeed.com/de/blog/2026/09/23/berufseinstieg-stellenangebot-sinkt-ausbildungssystem-bietet-einen-anker/) |
+| Entry-level job postings in Germany, July 2026 vs 2019 | **−46 %** | [Indeed Hiring Lab DE, Sep 2026](https://hiringlab.indeed.com/de/blog/2026/09/23/berufseinstieg-stellenangebot-sinkt-ausbildungssystem-bietet-einen-anker/) |
 | Net entry-level tech hiring in Europe (rest of world +14 %) | **−3 %** | [Linux Foundation, Tech Talent Europe 2026](https://www.linuxfoundation.org/hubfs/Research%20Reports/State-of-Tech-Talent-Europe-2026-REV-1.pdf) |
-| German firms recruiting ICT specialists that find it hard (EU 57 %) | **72 %** | [Eurostat](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=ICT_specialists_-_statistics_on_hard-to-fill_vacancies_in_enterprises) |
-| Berlin data & analytics postings, Sep 2025 → Mar 2026 | **+17.6 %** | [Indeed Hiring Lab DE, Apr 2026](https://hiringlab.indeed.com/de/blog/2026/04/02/tech-aufschwung-in-berlin/) |
-| Data analysis among skills recruiters value in graduates (was 10th) | **4th** | [GMAC Corporate Recruiters Survey 2026](https://blog.efmdglobal.org/2026/06/30/corporate-recruiters-survey-ai/) |
-| Data teams prioritising AI testing, vs 72 % prioritising AI coding | **24 %** | [dbt State of Analytics Engineering 2026](https://www.getdbt.com/blog/new-dbt-labs-report-finds-ai-driven-acceleration-is-outpacing-trust-and-governance) |
+| German firms recruiting ICT specialists that found it hard, 2023 (EU 57.5 %) | **72 %** | [Eurostat](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=ICT_specialists_-_statistics_on_hard-to-fill_vacancies_in_enterprises) |
+| Berlin postings in IT applications, data & analytics, 27 Sep 2025 → 6 Mar 2026 | **+17.6 %** | [Indeed Hiring Lab DE, Apr 2026](https://hiringlab.indeed.com/de/blog/2026/04/02/tech-aufschwung-in-berlin/) |
+| Skills with the largest increase in importance to recruiters since 2025 | **technology, AI, data analysis** | [GMAC Corporate Recruiters Survey 2026](https://blog.efmdglobal.org/2026/06/30/corporate-recruiters-survey-ai/) |
+| Data teams prioritising AI-assisted pipeline management incl. testing and observability, vs 72 % prioritising AI-assisted coding | **24 %** | [dbt State of Analytics Engineering 2026](https://www.getdbt.com/blog/new-dbt-labs-report-finds-ai-driven-acceleration-is-outpacing-trust-and-governance) |
 
 - **Entry-level hiring has decreased.** Employers still report difficulty in filling experienced positions, but entry-level postings have fallen in Germany and other European countries. Graduates therefore need demonstrable project experience in addition to their degree.
-- **Evaluation and judgement gain importance.** Where AI tools automate programming tasks, the ability to judge whether a result is correct becomes more important. Employment of 22–25-year-olds in AI-exposed occupations has fallen mainly where AI automates tasks, not where it supports judgement ([Brynjolfsson, Chandar & Chen, Stanford Digital Economy Lab, update Aug 2026](https://digitaleconomy.stanford.edu/news/canariesaug26/)).
-- **Communication is a frequently named gap.** In the Bitkom IT skills study 2025 (n = 855), missing soft skills (38 %) are the most frequent reason why IT positions in Germany remain unfilled, ahead of missing German (35 %) ([Bitkom 2026](https://www.bitkom.org/sites/main/files/2026-01/bitkom-studienbericht-it-fachkraefte-2025.pdf)).
+- **Evaluation and judgement gain importance.** Where AI tools automate programming tasks, the ability to judge whether a result is correct becomes more important. Employment of 22–25-year-olds in AI-exposed occupations has fallen mainly in occupations where AI tends to automate tasks, not where it mainly supports workers (a descriptive pattern, not proof of cause) ([Brynjolfsson, Chandar & Chen, Stanford Digital Economy Lab, update Aug 2026](https://digitaleconomy.stanford.edu/news/canariesaug26/)).
+- **Communication is a frequently named gap.** In the Bitkom IT skills study 2025 (n = 855 companies, several answers possible), missing soft skills (38 %) are the most frequent qualification-related difficulty in filling IT positions in Germany, ahead of insufficient German (35 %) and insufficient technical qualification (34 %); salary expectations are named more often overall (63 %) ([Bitkom 2026, p. 14](https://www.bitkom.org/sites/main/files/2026-01/bitkom-studienbericht-it-fachkraefte-2025.pdf)).
 - **Foundational skills are more durable than tools.** The skill content of technical jobs changes fastest ([Deming & Noray, QJE 2020](https://academic.oup.com/qje/article-abstract/135/4/1965/5858010)). Statistics, SQL, evaluation and communication remain relevant longer than individual frameworks, which the course treats as examples of general methods.
 
 <details open>
-<summary>Skills named in 1,019 Berlin data and AI job advertisements, and the sessions of the curriculum that teach them</summary>
+<summary>Skills named in 1,047 Berlin data and AI job advertisements, and the sessions of the curriculum that teach them</summary>
 
-| Skill | Share of advertisements | Sessions |
+| Skill (as named by the source) | Share of advertisements | Sessions |
 |---|---|---|
-| LLM APIs (structured output, tool calling, cost) | 52 % | S14–S15 |
-| Python for data (packaging, tests) | 48 % | S1–S2 |
-| Analytical SQL | 34 % | S3 |
-| Communication | 32 % | S5, S17–S18 |
-| Stakeholder management | 31 % | S5, project charter |
-| Agentic AI / tool use | 29 % | S15 |
-| Machine learning (scikit-learn) | 27 % | S6–S11 |
-| Cloud (AWS / GCP / Azure) | 22 % | S16 |
-| APIs and deployment | 19 % | S2, S16 |
+| LLM | 52 % | S14–S15 |
+| Python | 48 % | S1–S2 |
+| SQL | 33 % | S3 |
+| Communication | 30 % | S5, S17–S18 |
+| Stakeholder management | 30 % | S5, project charter |
+| Agentic AI | 28 % | S15 |
+| Machine learning | 28 % | S6–S11 |
+| AWS / Google Cloud / Azure | 20 % / 14 % / 11 % | S16 |
+| APIs | 19 % | S2, S16 |
 | CI/CD | 16 % | S2, S16 |
-| Observability | 14 % | S16 |
+| Observability | 12 % | S16 |
 | Data quality | 11 % | S4 |
-| A/B testing | 10 % | S5 |
-| Product analytics | 10 % | S5, S11 |
-| dbt | 9 % | optional |
+| Product analytics | 11 % | S5, S11 |
+| A/B testing | 8 % | S5 |
+| dbt | 8 % | optional |
 | MLOps | 8 % | S16 |
 | Data modelling | 8 % | S3 |
-| Evaluation and error analysis | n/a | S7–S8, S13–S15 |
+| Statistics | 6 % | S5 |
+| Evaluation and error analysis | not tracked by the source | S7–S8, S13–S15 |
 
-Source: [Data Berlin skills snapshot, 1,019 live Berlin data/AI job ads, 24 Sep 2026](https://databerlin.net/skills); one aggregator on one day, indicative only.
+Source: [Data Berlin, Skills Dictionary](https://databerlin.net/skills), retrieved 11 October 2026. The page is a live view: it shows, for each skill, how many of the advertisements currently on the board (1,047 that day) match the skill's keyword pattern; the shares above are these counts divided by 1,047. Skills are matched by keyword, so "LLM" or "Machine learning" says that the term appears in an advertisement, not which technique is required (scikit-learn by name appears in 2 %). One aggregator on one day, indicative only; a saved copy of the page is kept in `internal/`.
 
 </details>
 
@@ -130,7 +131,7 @@ The advertisements fall into three entry positions with a shared base and differ
 | Data or business analyst | SQL queries, reports and dashboards, statistical comparisons, A/B tests, segmentation | S1–S5, S11 |
 | Data scientist | Models for prediction and their validation, experiments, communication | S1–S16 |
 | ML or AI engineer | Model services, deployment, monitoring, LLM applications and agents | S1–S4, S6–S16 |
-| Working student (Werkstudent) in these areas | The most common entry route: 9–12 % of the Berlin data and AI advertisements, compared with 1–2 % for junior positions (Data Berlin snapshot) | depends on the role |
+| Working student (Werkstudent) or intern in these areas | The most common entry route: 7 % of the Berlin data and AI advertisements (76 of 1,047) are for interns or students, compared with 1 % (12) for junior positions ([Data Berlin, seniority insights](https://databerlin.net/insights/seniority/intern-student), retrieved 11 October 2026) | depends on the role |
 
 ## 4. Comparable university courses
 
@@ -201,7 +202,7 @@ The findings of Sections 2–7 lead to the following design decisions, which the
 
 - MPMD website: curriculum from intake 2026 and module pages, retrieved 30 September 2026
 - Study and examination regulations of the MPMD, AMBl. 15/2025, in force since 1 April 2026
-- Labour market: Indeed Hiring Lab, Linux Foundation, Eurostat, GMAC, dbt Labs, Bitkom, Stanford Digital Economy Lab, Deming & Noray (2020), Data Berlin skills snapshot (links in Section 3)
+- Labour market: Indeed Hiring Lab, Linux Foundation, Eurostat, GMAC, dbt Labs, Bitkom, Stanford Digital Economy Lab, Deming & Noray (2020), Data Berlin skills dictionary and seniority insights (links in Section 3)
 - Comparable courses: course websites, retrieved September 2026
 - Order of topics: Diez, Çetinkaya-Rundel & Barr, [OpenIntro Statistics](https://www.openintro.org/book/os/), 4th ed.; Çetinkaya-Rundel & Hardin, [Introduction to Modern Statistics](https://openintro-ims.netlify.app/), 2nd ed.; James et al., [An Introduction to Statistical Learning with Applications in Python](https://www.statlearning.com/); UC Berkeley, [Data 100 course notes](https://ds100.org/course-notes/), Fall 2025
 - Course dataset: European Commission, [European Binding Tariff Information (EBTI) database](https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en); HS nomenclature from [datasets/harmonized-system](https://github.com/datasets/harmonized-system) (ODC-PDDL)

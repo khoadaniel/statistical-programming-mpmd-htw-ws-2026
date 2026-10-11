@@ -3,26 +3,24 @@ name = "tariff-service"
 version = "1.0.0"
 description = "HS heading suggestions for customs decisions, served as a tested web API, with drift monitoring (Session 16)"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = [
-    "fastapi>=0.115",
-    "pydantic>=2.7",
-    "uvicorn>=0.30",
-    "scikit-learn>=1.5",
-    "joblib>=1.4",
-    "numpy>=1.26",
-    "scipy>=1.13",
-    "pandas>=2.2",
-    "pyarrow>=16",
+    "fastapi>=0.143",
+    "pydantic>=2.14",
+    "uvicorn>=0.54",
+    "scikit-learn>=1.9",
+    "joblib>=1.6",
+    "numpy>=2.5",
+    "scipy>=1.18",
+    "pandas>=3.0",
+    "pyarrow>=25.0",
 ]
 
 [project.optional-dependencies]
 # safer model files than pickle/joblib (https://skops.readthedocs.io)
-skops = ["skops>=0.10"]
+skops = ["skops>=0.16"]
 # the demo dashboard in dashboard/streamlit_app.py
-dashboard = ["streamlit>=1.36"]
-# prediction log in PostgreSQL (compose.yaml)
-postgres = ["psycopg[binary]>=3.2"]
+dashboard = ["streamlit>=1.65"]
 
 [dependency-groups]
 dev = ["pytest", "ruff", "httpx2"]

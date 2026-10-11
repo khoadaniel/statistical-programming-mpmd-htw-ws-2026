@@ -74,24 +74,20 @@ def test_predictions_are_logged_without_the_text(client, tmp_path):
     assert "description" not in record and "text" not in record
 
 
-def test_predictions_are_logged_to_postgres_when_a_database_is_configured(model_dir, monkeypatch):
-    """Runs only with a PostgreSQL server: TEST_DATABASE_URL=postgresql://... uv run --extra postgres pytest"""
-    import os
+def test_predictions_are_logged_to_sqlite_when_a_database_is_configured(model_dir, tmp_path, monkeypatch):
+    import sqlite3
 
-    url = os.environ.get("TEST_DATABASE_URL")
-    if not url:
-        pytest.skip("set TEST_DATABASE_URL to run this test against PostgreSQL")
-    psycopg = pytest.importorskip("psycopg")
     from fastapi.testclient import TestClient
 
     from tariff_service.app import create_app
 
-    monkeypatch.setenv("DATABASE_URL", url)
+    db = tmp_path / "data" / "predictions.sqlite"
+    monkeypatch.setenv("PREDICTION_DB", str(db))
     monkeypatch.delenv("PREDICTION_LOG", raising=False)
-    with psycopg.connect(url) as conn:
-        conn.execute("DROP TABLE IF EXISTS predictions")
     with TestClient(create_app(model_dir=model_dir)) as c:
         heading = c.post("/predict", json=BOOTS).json()["heading"]
-    with psycopg.connect(url) as conn:
-        rows = conn.execute("SELECT heading, language, model_version FROM predictions").fetchall()
-    assert rows == [(heading, "de", "0.0.0-test")]
+    with sqlite3.connect(db) as conn:
+        rows = conn.execute("SELECT heading, language, model_version, text_length FROM predictions").fetchall()
+    assert rows == [(heading, "de", "0.0.0-test", len(BOOTS["description"]))]
+    columns = [r[1] for r in sqlite3.connect(db).execute("PRAGMA table_info(predictions)")]
+    assert "description" not in columns                       # the confidential text is never stored

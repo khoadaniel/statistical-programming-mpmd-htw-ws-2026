@@ -4,7 +4,7 @@ Modules
 -------
 chunking    split long descriptions into overlapping word windows
 embeddings  turn text into vectors (offline hashing embedder or a multilingual sentence-transformers model)
-store       vector stores: in-memory numpy, DuckDB, PostgreSQL with pgvector
+store       vector stores: in-memory NumPy, SQLite (embeddings as BLOBs, ranking in NumPy)
 keyword     BM25 keyword search
 hybrid      reciprocal rank fusion of several rankings
 metrics     heading hit@k, recall@k, reciprocal rank, citation checks (pure functions)

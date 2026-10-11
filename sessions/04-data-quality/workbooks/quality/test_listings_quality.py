@@ -6,7 +6,7 @@ Run from the repository root:
 Tests on the prepared tables encode hard rules (keys, domains, ranges, consistency within and across tables,
 and the privacy rule for the registration field). Known problems of the snapshot are marked `xfail` with the
 reason: they are documented, and pytest reports them as "expected failures". Tests on the cleaned table run
-after workbook 15 has written `listings_clean.parquet`; otherwise they are skipped.
+after workbook 07 has written `listings_clean.parquet`; otherwise they are skipped.
 Author: course team, licence CC-BY-4.0.
 """
 import os
@@ -46,7 +46,7 @@ def calendar_ids():
 @pytest.fixture(scope="module")
 def clean():
     if not CLEAN.exists():
-        pytest.skip("cleaned table not found: run workbook 15 first")
+        pytest.skip("cleaned table not found: run workbook 07 first")
     return pd.read_parquet(CLEAN)
 
 
@@ -145,7 +145,7 @@ def test_raw_reviews_listing_exists(listings, reviews_monthly):
     assert reviews_monthly["listing_id"].isin(listings["id"]).all()
 
 
-# ---------- cleaned table (after workbook 15) ----------
+# ---------- cleaned table (after workbook 07) ----------
 
 def test_clean_id_unique(clean):
     assert clean["id"].is_unique

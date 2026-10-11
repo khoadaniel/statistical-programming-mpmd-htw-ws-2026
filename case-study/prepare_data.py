@@ -9,7 +9,6 @@ The script downloads the official full export (about 400 MB, once), builds the c
 the leaderboard split, and writes them to case-study/data/.
 
     uv run python case-study/prepare_data.py
-    uv run python case-study/prepare_data.py --postgres postgresql+psycopg://postgres:course@localhost/postgres
 
 Split (by start date of validity):
     train          decisions 2017-2023, with CN code, heading and the customs' justification
@@ -23,7 +22,6 @@ HS nomenclature from https://github.com/datasets/harmonized-system (ODC-PDDL-1.0
 
 from __future__ import annotations
 
-import argparse
 import re
 import urllib.request
 import zipfile
@@ -130,9 +128,6 @@ def build(path: Path) -> dict[str, pd.DataFrame]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--postgres", help="SQLAlchemy URL; also load the tables into PostgreSQL")
-    args = parser.parse_args()
     tables = build(download())
     for name, df in tables.items():
         if name == "solution":
@@ -141,13 +136,6 @@ def main() -> None:
         else:
             df.to_parquet(OUT / f"{name}.parquet", index=False)
         print(f"{name:15s} {len(df):>9,} rows")
-    if args.postgres:
-        from sqlalchemy import create_engine
-        engine = create_engine(args.postgres)
-        for table, name in (("train", "decisions"), ("test", "decisions_test"), ("nomenclature", "nomenclature")):
-            tables[table].to_sql(name, engine, if_exists="replace", index=False, chunksize=10_000)
-        print("loaded decisions, decisions_test and nomenclature into PostgreSQL")
-
 
 if __name__ == "__main__":
     main()

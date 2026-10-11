@@ -1,0 +1,56 @@
+role,n_ads,skill,share,retrieved
+Data analyst,41,SQL,0.902,2026-10-11
+Data analyst,41,"Statistics, experiments",0.512,2026-10-11
+Data analyst,41,"Dashboards, BI",0.78,2026-10-11
+Data analyst,41,Python,0.585,2026-10-11
+Data analyst,41,Machine learning,0.195,2026-10-11
+Data analyst,41,Data pipelines,0.537,2026-10-11
+Data analyst,41,Cloud,0.098,2026-10-11
+Data analyst,41,"Containers, CI/CD",0.0,2026-10-11
+Data analyst,41,"LLMs, agents",0.146,2026-10-11
+Data analyst,41,"Communication, stakeholders",0.732,2026-10-11
+Data analyst,41,German,0.439,2026-10-11
+Data scientist,49,SQL,0.735,2026-10-11
+Data scientist,49,"Statistics, experiments",0.816,2026-10-11
+Data scientist,49,"Dashboards, BI",0.204,2026-10-11
+Data scientist,49,Python,0.837,2026-10-11
+Data scientist,49,Machine learning,0.898,2026-10-11
+Data scientist,49,Data pipelines,0.469,2026-10-11
+Data scientist,49,Cloud,0.327,2026-10-11
+Data scientist,49,"Containers, CI/CD",0.306,2026-10-11
+Data scientist,49,"LLMs, agents",0.449,2026-10-11
+Data scientist,49,"Communication, stakeholders",0.735,2026-10-11
+Data scientist,49,German,0.204,2026-10-11
+Data engineer,62,SQL,0.839,2026-10-11
+Data engineer,62,"Statistics, experiments",0.065,2026-10-11
+Data engineer,62,"Dashboards, BI",0.258,2026-10-11
+Data engineer,62,Python,0.839,2026-10-11
+Data engineer,62,Machine learning,0.242,2026-10-11
+Data engineer,62,Data pipelines,0.968,2026-10-11
+Data engineer,62,Cloud,0.516,2026-10-11
+Data engineer,62,"Containers, CI/CD",0.516,2026-10-11
+Data engineer,62,"LLMs, agents",0.21,2026-10-11
+Data engineer,62,"Communication, stakeholders",0.581,2026-10-11
+Data engineer,62,German,0.468,2026-10-11
+ML engineer,46,SQL,0.196,2026-10-11
+ML engineer,46,"Statistics, experiments",0.565,2026-10-11
+ML engineer,46,"Dashboards, BI",0.022,2026-10-11
+ML engineer,46,Python,0.848,2026-10-11
+ML engineer,46,Machine learning,1.0,2026-10-11
+ML engineer,46,Data pipelines,0.37,2026-10-11
+ML engineer,46,Cloud,0.5,2026-10-11
+ML engineer,46,"Containers, CI/CD",0.543,2026-10-11
+ML engineer,46,"LLMs, agents",0.543,2026-10-11
+ML engineer,46,"Communication, stakeholders",0.587,2026-10-11
+ML engineer,46,German,0.196,2026-10-11
+AI engineer,40,SQL,0.15,2026-10-11
+AI engineer,40,"Statistics, experiments",0.4,2026-10-11
+AI engineer,40,"Dashboards, BI",0.075,2026-10-11
+AI engineer,40,Python,0.675,2026-10-11
+AI engineer,40,Machine learning,0.475,2026-10-11
+AI engineer,40,Data pipelines,0.2,2026-10-11
+AI engineer,40,Cloud,0.475,2026-10-11
+AI engineer,40,"Containers, CI/CD",0.35,2026-10-11
+AI engineer,40,"LLMs, agents",0.975,2026-10-11
+AI engineer,40,"Communication, stakeholders",0.625,2026-10-11
+AI engineer,40,German,0.375,2026-10-11

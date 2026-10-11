@@ -1,15 +1,21 @@
 """Vector stores with one interface: `add(chunks, vectors, headings)` and `search(vector, k, chapter)`.
 
 - `NumpyVectorStore`: everything in memory; exact search with one matrix product.
-- `DuckDBVectorStore`: an in-process SQL database; cosine similarity in SQL, no server needed.
-- `PgVectorStore`: PostgreSQL with the pgvector extension, the course path (see README).
+- `SQLiteVectorStore`: chunks and metadata in an SQLite table (`sqlite3`, part of Python), embeddings as
+  float32 BLOBs in the same table; SQL selects the rows (the chapter filter: exercise 1), NumPy ranks them.
+  With a file path the index survives a restart.
 Every chunk carries the heading of its decision as metadata; `chapter="64"` restricts a search to the
 decisions of one HS chapter (the first two digits of the heading).
 All vectors must have length 1 (use `embeddings.normalise`), so that cosine similarity is a dot product.
+
+Exact (brute-force) search compares the query with every stored vector. For collections of 10^4 to 10^5
+chunks that is one matrix product of a few milliseconds; for millions of vectors, an approximate index in a
+vector database or a database extension is the usual next step.
 """
 
 from __future__ import annotations
 
+import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -65,93 +71,48 @@ class NumpyVectorStore:
         ]
 
 
-class DuckDBVectorStore:
-    """Chunks and embeddings in a DuckDB table; `array_cosine_similarity` ranks them."""
+class SQLiteVectorStore:
+    """Chunks, headings and embeddings in one SQLite table; cosine similarity computed in NumPy.
+
+    `path=":memory:"` keeps the table in memory; a file path (in an ignored folder, never in the repository)
+    keeps it on disk, so that the collection is embedded only once.
+    """
 
     def __init__(self, dim: int, path: str = ":memory:") -> None:
-        import duckdb
-
         self.dim = dim
-        self.con = duckdb.connect(path)
+        self.con = sqlite3.connect(path)
         self.con.execute(
-            f"""CREATE TABLE IF NOT EXISTS chunks (chunk_id VARCHAR PRIMARY KEY, doc_id VARCHAR,
-                heading VARCHAR, text VARCHAR, embedding FLOAT[{dim}])"""
+            """CREATE TABLE IF NOT EXISTS chunks (chunk_id TEXT PRIMARY KEY, doc_id TEXT,
+               heading TEXT, text TEXT, embedding BLOB)"""
         )
 
     def add(self, chunks: Sequence[Chunk], vectors: np.ndarray, headings=None) -> None:
         heads = _check(chunks, vectors, headings)
         rows = [
-            (c.chunk_id, c.doc_id, h, c.text, [float(x) for x in v])
+            (c.chunk_id, c.doc_id, h, c.text, np.asarray(v, dtype=np.float32).tobytes())
             for c, h, v in zip(chunks, heads, vectors, strict=True)
         ]
-        self.con.executemany("INSERT INTO chunks VALUES (?, ?, ?, ?, ?)", rows)
+        with self.con:  # one transaction
+            self.con.executemany("INSERT OR IGNORE INTO chunks VALUES (?, ?, ?, ?, ?)", rows)
 
     def __len__(self) -> int:
         return self.con.execute("SELECT count(*) FROM chunks").fetchone()[0]
 
     def search(self, vector: np.ndarray, k: int = 5, chapter: str | None = None) -> list[Hit]:
-        sql = f"""
-            SELECT chunk_id, doc_id, text, array_cosine_similarity(embedding, ?::FLOAT[{self.dim}]) AS score,
-                   heading
-            FROM chunks
-            WHERE ?::VARCHAR IS NULL OR left(heading, 2) = ?
-            ORDER BY score DESC
-            LIMIT ?"""
-        q = [float(x) for x in vector]
-        rows = self.con.execute(sql, [q, chapter, chapter, k]).fetchall()
-        return [Hit(r[0], r[1], r[2], float(r[3]), r[4]) for r in rows]
-
-
-class PgVectorStore:
-    """PostgreSQL with pgvector. Start the database with Docker (see README):
-
-        docker run --name pgvector -e POSTGRES_PASSWORD=course -p 5432:5432 -d pgvector/pgvector:pg17
-
-    and connect with DATABASE_URL=postgresql://postgres:course@localhost:5432/postgres.
-    Requires the optional dependencies: uv sync --extra postgres
-    """
-
-    def __init__(self, dim: int, url: str, table: str = "decision_chunks") -> None:
-        import psycopg
-        from pgvector.psycopg import register_vector
-
-        self.dim, self.table = dim, table
-        self.con = psycopg.connect(url, autocommit=True)
-        self.con.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        register_vector(self.con)  # numpy arrays <-> the vector type
-        self.con.execute(
-            f"""CREATE TABLE IF NOT EXISTS {table} (chunk_id text PRIMARY KEY, doc_id text,
-                heading text, text text, embedding vector({dim}))"""
-        )
-
-    def add(self, chunks: Sequence[Chunk], vectors: np.ndarray, headings=None) -> None:
-        heads = _check(chunks, vectors, headings)
-        with self.con.cursor() as cur:
-            cur.executemany(
-                f"INSERT INTO {self.table} VALUES (%s, %s, %s, %s, %s) ON CONFLICT (chunk_id) DO NOTHING",
-                [(c.chunk_id, c.doc_id, h, c.text, np.asarray(v, dtype=np.float32))
-                 for c, h, v in zip(chunks, heads, vectors, strict=True)],
-            )
-
-    def create_index(self) -> None:
-        """Approximate nearest-neighbour index (HNSW) for cosine distance, the operator <=>."""
-        self.con.execute(
-            f"CREATE INDEX IF NOT EXISTS {self.table}_hnsw ON {self.table} "
-            "USING hnsw (embedding vector_cosine_ops)"
-        )
-
-    def search(self, vector: np.ndarray, k: int = 5, chapter: str | None = None) -> list[Hit]:
         if chapter is not None:
-            # TODO (exercise 1): add the metadata filter. Extend the SQL below with
-            #   WHERE left(heading, 2) = %s
-            # before ORDER BY, and pass chapter as an extra parameter in the right position.
+            # TODO (exercise 1): add the metadata filter in SQL. Extend the query below with
+            #   WHERE substr(heading, 1, 2) = ?
+            # and pass chapter as a parameter, so that only the rows of that chapter are loaded and ranked.
             raise NotImplementedError("exercise 1: filter by chapter in SQL")
-        q = np.asarray(vector, dtype=np.float32)
-        rows = self.con.execute(
-            f"""SELECT chunk_id, doc_id, text, 1 - (embedding <=> %s) AS score, heading
-                FROM {self.table}
-                ORDER BY embedding <=> %s   -- <=> is the cosine distance, 1 - cosine similarity
-                LIMIT %s""",
-            (q, q, k),
-        ).fetchall()
-        return [Hit(r[0], r[1], r[2], float(r[3]), r[4]) for r in rows]
+        rows = self.con.execute("SELECT chunk_id, doc_id, text, heading, embedding FROM chunks").fetchall()
+        return _rank(rows, vector, k, self.dim)
+
+
+def _rank(rows: list[tuple], vector: np.ndarray, k: int, dim: int) -> list[Hit]:
+    """Rank rows (chunk_id, doc_id, text, heading, embedding BLOB) by cosine similarity to the query."""
+    if not rows:
+        return []
+    matrix = np.frombuffer(b"".join(r[4] for r in rows), dtype=np.float32).reshape(len(rows), dim)
+    scores = matrix @ np.asarray(vector, dtype=np.float32)  # cosine similarity: all vectors have length 1
+    order = np.argsort(-scores, kind="stable")[:k]
+    return [Hit(rows[i][0], rows[i][1], rows[i][2], float(scores[i]), rows[i][3]) for i in order]

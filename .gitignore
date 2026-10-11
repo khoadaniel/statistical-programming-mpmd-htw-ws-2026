@@ -13,3 +13,15 @@ submission*.csv
 
 # internal notes, never published
 internal/
+
+# Local website prototype (not published or committed yet)
+/website/
+
+# lecturer teaching notes, never published
+teaching-notes/
+
+
+.claude/
+
+# final-project prototype (local only, never committed)
+/prototype/

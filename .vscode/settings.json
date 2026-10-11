@@ -1,0 +1,28 @@
+{
+  // Course environment: VS Code finds the project's .venv (created by `uv sync`) and uses it
+  // for terminals, scripts and as the kernel of every notebook.
+  "python.terminal.activateEnvironment": true,
+
+  // Notebooks: start each notebook in its own folder, so relative paths such as data/ work.
+  "jupyter.notebookFileRoot": "${fileDirname}",
+  "notebook.output.textLineLimit": 60,
+  "notebook.formatOnSave.enabled": false,
+
+  // Python files: format and check with Ruff, as in the course's CI.
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": false
+  },
+
+  // Keep generated folders out of the file explorer and search.
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.ipynb_checkpoints": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "case-study/data": true
+  }
+}

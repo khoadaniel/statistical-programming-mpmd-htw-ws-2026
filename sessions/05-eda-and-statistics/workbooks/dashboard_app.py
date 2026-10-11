@@ -1,4 +1,4 @@
-"""One-page dashboard of short-stay Airbnb prices in Berlin (Session 5, block 3).
+"""One-page dashboard of short-stay Airbnb prices in Berlin (Session 5, block 2).
 
 Start from the repository root:
     uv run streamlit run sessions/05-eda-and-statistics/workbooks/dashboard_app.py

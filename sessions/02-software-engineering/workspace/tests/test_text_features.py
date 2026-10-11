@@ -51,7 +51,7 @@ def test_features_reject_missing_text(function):
         function(None)
 
 
-@pytest.mark.skip(reason="exercise 6: delete this line in your pull request")
+@pytest.mark.skip(reason="exercise 7: delete this line in your pull request")
 @pytest.mark.parametrize(
     ("text", "expected"),
     [("Loft 110 qm", 3), ("Fläche 45 m²", 2), ("Cosy flat", 0), ("", 0)],
@@ -60,7 +60,7 @@ def test_n_digits(text, expected):
     assert n_digits(text) == expected
 
 
-@pytest.mark.skip(reason="exercise 6: delete this line in your pull request")
+@pytest.mark.skip(reason="exercise 7: delete this line in your pull request")
 @pytest.mark.parametrize(
     ("text", "expected"),
     [("ABC", 1.0), ("abc", 0.0), ("Ab", 0.5), ("ÄÖ äö", 0.5), ("WG 30 m²", 2 / 3), ("123", 0.0)],

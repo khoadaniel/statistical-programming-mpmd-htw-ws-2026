@@ -1,18 +1,16 @@
-"""Listing tools: validated Airbnb listings, a weather API client and a small web API."""
+"""Listing tools: validated Airbnb listings, a table of listings with summaries, title features."""
 
-from listingtools.errors import APIError, ListingToolsError, RateLimitError, ValidationError
+from listingtools.errors import ListingToolsError, ValidationError
+from listingtools.listings import REQUIRED_COLUMNS, SHORT_STAY_MAX_NIGHTS, ListingTable
 from listingtools.records import ROOM_TYPES, ListingRecord, parse_price
-from listingtools.weather import DailySeries, DailyWeather, WeatherClient
 
 __all__ = [
+    "REQUIRED_COLUMNS",
     "ROOM_TYPES",
-    "APIError",
-    "DailySeries",
-    "DailyWeather",
+    "SHORT_STAY_MAX_NIGHTS",
     "ListingRecord",
+    "ListingTable",
     "ListingToolsError",
-    "RateLimitError",
     "ValidationError",
-    "WeatherClient",
     "parse_price",
 ]

@@ -6,6 +6,6 @@ then report `XPASS`.
 
 | Exercise | File | Replaces |
 |---|---|---|
-| 1 | [pgvector_filter.py](pgvector_filter.py) | `PgVectorStore.search` in `src/bti_assistant/store.py` |
+| 1 | [sqlite_chapter_filter.py](sqlite_chapter_filter.py) | `SQLiteVectorStore.search` in `src/bti_assistant/store.py` |
 | 2 | [chunk_sentences.py](chunk_sentences.py) | `chunk_sentences` in `src/bti_assistant/chunking.py` |
 | 3 | [agent_budget.py](agent_budget.py) | `run_agent` in `src/bti_assistant/agent.py` |

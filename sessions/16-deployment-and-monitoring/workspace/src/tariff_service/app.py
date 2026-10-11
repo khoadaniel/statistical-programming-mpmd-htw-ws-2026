@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from . import __version__
 from .config import Settings
 from .model import decision_text, load_model, top_k
-from .monitoring import PostgresPredictionLogger, PredictionLogger
+from .monitoring import PredictionLogger, SQLitePredictionLogger
 from .schemas import BatchIn, BatchOut, DecisionIn, HeadingScore, Health, PredictionOut
 
 
@@ -30,8 +30,8 @@ def create_app(model_dir: Path | None = None, log_path: Path | None = None) -> F
         app.state.model, app.state.meta = load_model(model_dir)
         if log_path:
             app.state.logger = PredictionLogger(log_path)
-        elif settings.database_url:
-            app.state.logger = PostgresPredictionLogger(settings.database_url)
+        elif settings.database_path:
+            app.state.logger = SQLitePredictionLogger(settings.database_path)
         else:
             app.state.logger = None
         yield

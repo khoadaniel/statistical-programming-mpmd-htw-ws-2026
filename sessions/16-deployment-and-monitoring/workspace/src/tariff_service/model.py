@@ -95,7 +95,7 @@ def shares(values: list[str], top: int | None = None) -> dict[str, float]:
 
 def reference_stats(texts: list[str], labels: list[str], languages: list[str] | None = None,
                     countries: list[str] | None = None) -> dict[str, Any]:
-    """What monitoring compares new data with (Session 16, block 3)."""
+    """What monitoring compares new data with (Session 16, Block 2)."""
     lengths = np.log1p([len(t) for t in texts])
     ref = {"chapter_shares": shares([y[:2] for y in labels]),
            "log_length_quantiles": np.quantile(lengths, np.linspace(0, 1, 11)).round(4).tolist(),

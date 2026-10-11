@@ -6,8 +6,8 @@ you have tried the exercise. Copy it over src/listingtools/records.py to check i
 ``ListingRecord`` is a dataclass: Python writes ``__init__``, ``__repr__`` and ``__eq__`` from
 the annotated fields. ``__post_init__`` runs after ``__init__`` and is where the record checks
 and cleans its own values, so that every ``ListingRecord`` that exists is valid. ``from_dict``
-builds a record from raw input: a row of the raw Inside Airbnb file ``listings.csv.gz``, in
-which the price is text such as ``"$1,083.00"``, or a JSON object sent to the web API.
+builds a record from raw input, such as a row of the raw Inside Airbnb file ``listings.csv.gz``
+(in which the price is text such as ``"$1,083.00"``) or a JSON object read from a file.
 """
 
 from __future__ import annotations

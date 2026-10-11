@@ -87,7 +87,8 @@ def check_read_only_sql(sql: str) -> str:
     """Guardrail: allow exactly one SELECT (or WITH ... SELECT) statement, nothing that writes.
 
     This is a coarse first line of defence. The second, stronger one is a database user that has
-    only read permissions (PostgreSQL: GRANT SELECT), or a read-only connection.
+    only read permissions. In SQLite: open the file read-only (`sqlite3.connect("file:x.sqlite?mode=ro", uri=True)`)
+    or switch the connection to read-only with `PRAGMA query_only = ON`.
     """
     statement = sql.strip().rstrip(";").strip()
     if not statement:
@@ -110,7 +111,7 @@ def format_table(columns: list[str], rows: list[tuple], truncated: bool) -> str:
 
 
 def make_sql_tool(con, schema_hint: str, max_rows: int = 30) -> Tool:
-    """A read-only SQL tool over a DB-API connection (DuckDB, sqlite3, psycopg)."""
+    """A read-only SQL tool over a DB-API connection (in the course: sqlite3)."""
 
     def sql_query(query: str) -> str:
         statement = check_read_only_sql(query)

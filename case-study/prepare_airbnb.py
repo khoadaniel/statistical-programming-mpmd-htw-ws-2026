@@ -5,7 +5,6 @@ the Berlin snapshot for the numeric topics: prices, statistics, regression, tree
 clustering, anomalies and demand over time.
 
     uv run python case-study/prepare_airbnb.py
-    uv run python case-study/prepare_airbnb.py --postgres postgresql+psycopg://postgres:course@localhost/postgres
 
 The script downloads the latest Berlin snapshot (about 100 MB, once), keeps the columns needed in
 the course, removes personal data (host names, profile texts, photos, review texts, reviewer
@@ -22,7 +21,6 @@ Source: Inside Airbnb, https://insideairbnb.com/get-the-data/ (CC BY 4.0).
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
 import urllib.request
@@ -125,7 +123,7 @@ WEATHER_URL = ("https://archive-api.open-meteo.com/v1/archive?latitude=52.52&lon
 
 
 def weather(end: str) -> pd.DataFrame:
-    """Daily Berlin weather from the Open-Meteo archive (CC BY 4.0), the data Session 2 fetches by hand."""
+    """Daily Berlin weather from the Open-Meteo archive (CC BY 4.0), used for the demand forecast of Session 12."""
     with urllib.request.urlopen(WEATHER_URL.format(end=end)) as response:
         daily = json.load(response)["daily"]
     out = pd.DataFrame(daily).rename(columns={"time": "date"})
@@ -135,9 +133,6 @@ def weather(end: str) -> pd.DataFrame:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--postgres", help="SQLAlchemy URL; also load listings, calendar and reviews_monthly into PostgreSQL")
-    args = parser.parse_args()
     date = download()
     OUT.mkdir(parents=True, exist_ok=True)
     tables = build()
@@ -148,17 +143,7 @@ def main() -> None:
     (OUT / "neighbourhoods.geojson").write_bytes((RAW / "neighbourhoods.geojson").read_bytes())
     (OUT / "snapshot.txt").write_text(date)
     print(f"Inside Airbnb Berlin, snapshot {date}")
-    if args.postgres:
-        from sqlalchemy import create_engine, text
-        engine = create_engine(args.postgres)
-        names = ("listings", "calendar", "reviews_monthly", "weather_daily")
-        with engine.begin() as conn:  # CASCADE: constraints added in Session 3 must not block a reload
-            for name in names:
-                conn.execute(text(f"DROP TABLE IF EXISTS {name} CASCADE"))
-        for name in names:
-            tables[name].to_sql(name, engine, if_exists="append", index=False, chunksize=50_000)
-        print("loaded listings, calendar, reviews_monthly and weather_daily into PostgreSQL")
-
+    print("SQLite database for Session 3: uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py")
 
 if __name__ == "__main__":
     main()

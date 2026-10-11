@@ -1,31 +1,11 @@
-"""Shared test data and helpers."""
+"""Shared test data: one messy raw listing, and eight listings small enough to check by hand."""
 
 from __future__ import annotations
 
 from typing import Any
 
+import pandas as pd
 import pytest
-
-
-def open_meteo(days: list[str], **columns: list[Any]) -> dict[str, Any]:
-    """A minimal Open-Meteo response with a ``daily`` block for ``days``.
-
-    Missing columns are filled with plausible values: 20 °C, no rain, 8 hours of sunshine.
-    """
-    n = len(days)
-    daily = {
-        "time": days,
-        "temperature_2m_mean": columns.get("temperature", [20.0] * n),
-        "precipitation_sum": columns.get("precipitation", [0.0] * n),
-        "sunshine_duration": columns.get("sunshine_seconds", [8 * 3600.0] * n),
-    }
-    return {
-        "latitude": 52.52,
-        "longitude": 13.42,
-        "timezone": "Europe/Berlin",
-        "daily_units": {"time": "iso8601", "temperature_2m_mean": "°C"},
-        "daily": daily,
-    }
 
 
 @pytest.fixture
@@ -44,3 +24,38 @@ def raw_listing() -> dict[str, Any]:
         "maximum_nights": 730,
         "host_name": "ignored: not part of the record",
     }
+
+
+@pytest.fixture
+def tiny_listings() -> pd.DataFrame:
+    """Eight listings in the shape of the prepared ``listings.parquet``."""
+    return pd.DataFrame(
+        {
+            "id": [1, 2, 3, 4, 5, 6, 7, 8],
+            "host_id": [10, 10, 11, 12, 13, 13, 13, 14],
+            "district": [
+                "Mitte",
+                "Mitte",
+                "Pankow",
+                "Neukölln",
+                "Mitte",
+                "Pankow",
+                "Neukölln",
+                "Mitte",
+            ],
+            "room_type": [
+                "Entire home/apt",
+                "Private room",
+                "Entire home/apt",
+                "Private room",
+                "Entire home/apt",
+                "Entire home/apt",
+                "Shared room",
+                "Entire home/apt",
+            ],
+            # listing 4 has no price; listings 5 and 8 are rented by the month (28+ nights)
+            "price": [120.0, 60.0, 90.0, None, 200.0, 150.0, 30.0, 80.0],
+            "minimum_nights": [2, 1, 3, 2, 30, 2, 1, 90],
+            "number_of_reviews": [150, 0, 12, 3, 0, 40, 1, 0],
+        }
+    )

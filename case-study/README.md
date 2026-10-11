@@ -8,12 +8,12 @@
 
 ## Inside Airbnb, Berlin (Sessions 1–12)
 
-Sessions 1–12 (Python, classes, SQL and Polars, data quality, statistics, regression, validation, features, tree-based models, clustering, demand over time) use the Berlin listings of [Inside Airbnb](https://insideairbnb.com/get-the-data/): about 12,800 listings with price, district, room type, size, ratings, availability and registration number, plus the number of reviews per listing and month since 2009 as a proxy for demand.
+Sessions 1–12 (Python, classes, SQL, data quality, statistics, regression, validation, features, tree-based models, clustering, demand over time) use the Berlin listings of [Inside Airbnb](https://insideairbnb.com/get-the-data/): about 12,800 listings with price, district, room type, size, ratings, availability and registration number, plus the number of reviews per listing and month since 2009 as a proxy for demand.
 
 ```bash
 uv run python case-study/prepare_airbnb.py   # downloads the latest Berlin snapshot (about 100 MB, once) and the weather
-# also load the tables into PostgreSQL (Session 3):
-uv run python case-study/prepare_airbnb.py --postgres postgresql+psycopg://postgres:course@localhost/postgres
+# the SQLite database of Session 3 (case-study/data/airbnb.sqlite), built from the Parquet files:
+uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py
 ```
 
 | Table | Rows | Content |
@@ -21,7 +21,7 @@ uv run python case-study/prepare_airbnb.py --postgres postgresql+psycopg://postg
 | `airbnb/listings.parquet` | ~12,800 | location (district, neighbourhood, coordinates), property, price per night, minimum nights, availability, reviews and ratings, host, registration number |
 | `airbnb/calendar.parquet` | ~4.7 M | availability of each listing for the next 365 days |
 | `airbnb/reviews_monthly.parquet` | ~227,000 | reviews per listing and month since 2009 |
-| `airbnb/weather_daily.parquet` | ~3,800 days | daily Berlin weather since 2016 from the Open-Meteo archive (temperature, rain, sunshine); Session 2 shows how to fetch it from the API yourself |
+| `airbnb/weather_daily.parquet` | ~3,800 days | daily Berlin weather since 2016 from the Open-Meteo archive (temperature, rain, sunshine); Session 16 shows how to fetch such data from a web API yourself |
 | `airbnb/neighbourhoods.geojson` | | district boundaries |
 
 The script removes personal data: host names, profile texts, photos, review texts, reviewer names, and names that hosts entered in the registration field (`license` keeps only registration numbers; `license_status` gives the type of entry). Inside Airbnb publishes a new snapshot every quarter, so numbers in the materials (based on the snapshot of 26 June 2026) can differ slightly from yours.
@@ -50,8 +50,6 @@ The data are downloaded from the official source by each student (about 400 MB, 
 
 ```bash
 uv run python case-study/prepare_data.py
-# also load the tables into PostgreSQL (Session 15):
-uv run python case-study/prepare_data.py --postgres postgresql+psycopg://postgres:course@localhost/postgres
 ```
 
 The script writes the tables as Parquet files to `case-study/data/` (ignored by Git).

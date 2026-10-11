@@ -8,7 +8,7 @@ Two ways to run it:
     # 2. as the front end of the API: the dashboard sends each description to the back end
     API_URL=http://localhost:8000 uv run streamlit run dashboard/streamlit_app.py
 
-compose.yaml uses the second way: front end, back end and database each run in their own container.
+compose.yaml uses the second way: front end and back end run in their own containers, and the API logs to SQLite.
 On Streamlit Community Cloud, point the app to this file; in the first way the model files must then be in the
 repository or be downloaded at start-up (see README, "Publishing a dashboard").
 """

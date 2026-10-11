@@ -1,6 +1,6 @@
 # Workspace: a classification assistant for customs decisions (RAG and a small agent)
 
-A small Python package that does what the three notebooks of Session 15 do, as tested software:
+A small Python package that does what the case-study notebooks of Session 15 do, as tested software:
 semantic search over past Binding Tariff Information (BTI) decisions in any language, a heading suggestion
 that cites the decisions it is based on, retrieval metrics, and an agent with three tools.
 Copy the folder into your team repository and extend it.
@@ -9,7 +9,7 @@ Copy the folder into your team repository and extend it.
 src/bti_assistant/
   chunking.py    word windows with overlap; sentence chunks (exercise 2)
   embeddings.py  HashingEmbedder (offline, for tests) and SentenceTransformerEmbedder (multilingual-e5-small)
-  store.py       NumpyVectorStore, DuckDBVectorStore, PgVectorStore (the course path; exercise 1)
+  store.py       NumpyVectorStore; SQLiteVectorStore (embeddings as BLOBs in SQLite, ranking in NumPy; exercise 1)
   keyword.py     BM25
   hybrid.py      reciprocal rank fusion
   retrieval.py   VectorRetriever, HybridRetriever (filter by HS chapter)
@@ -20,7 +20,7 @@ src/bti_assistant/
   tools.py       function schemas; sql_query, search_decisions, lookup_heading; guardrails
   agent.py       the plan-act-observe loop (token budget: exercise 3), task scoring
   demo.py        command-line demo on the case-study data
-tests/           pytest; offline, with a fake LLM, numpy/DuckDB stores and an sqlite database
+tests/           pytest; offline, with a fake LLM, the NumPy and SQLite stores and an SQLite database
 solutions/       reference solutions of the exercises, for self-checking only
 ```
 
@@ -28,8 +28,8 @@ solutions/       reference solutions of the exercises, for self-checking only
 
 ```bash
 cd sessions/15-rag-and-agents/workspace
-uv sync                                    # core: numpy, openai, duckdb
-uv run pytest -q                           # 48 passed, 2 xfailed (the open exercises)
+uv sync                                    # core: numpy, openai (sqlite3 is part of Python)
+uv run pytest -q                           # 50 passed, 3 xfailed (the open exercises)
 uvx ruff check .
 uv sync --extra data --extra embeddings    # pandas and sentence-transformers for the demo (model: about 470 MB)
 uv run python -m bti_assistant.demo "Damenstiefel mit Oberteil aus Rindleder und Laufsohle aus Gummi"
@@ -57,39 +57,38 @@ Never write an API key into code, notebooks or a commit. Keep it in the environm
 is listed in `.gitignore`. New BTI requests contain confidential business information: before you send real
 requests to a hosted provider, clarify the legal basis.
 
-### PostgreSQL with pgvector (the course path)
+### SQLite as the vector store
 
 ```bash
-docker run --name pgvector -e POSTGRES_PASSWORD=course -p 5432:5432 -d pgvector/pgvector:pg17
-export DATABASE_URL=postgresql://postgres:course@localhost:5432/postgres
-uv sync --extra data --extra embeddings --extra postgres
-uv run python -m bti_assistant.demo "plastic toy car" --store pgvector
-docker stop pgvector                                      # docker start pgvector to continue later
+uv run python -m bti_assistant.demo "plastic toy car" --store sqlite                    # in memory
+uv run python -m bti_assistant.demo "plastic toy car" --store sqlite --db index.sqlite  # kept in a file
 ```
 
-The image `pgvector/pgvector:pg17` is PostgreSQL 17 with the extension installed; `PgVectorStore` runs
-`CREATE EXTENSION IF NOT EXISTS vector` itself. The tests do not need the database: they use the numpy and
-DuckDB stores, which return the same ranking.
+`SQLiteVectorStore` keeps the chunks, their headings and their embeddings (as float32 BLOBs) in one SQLite
+table. SQL selects the rows, NumPy ranks them by cosine similarity: exact search, which is fast enough for the
+10,000 decisions of the course (one matrix product). Nothing has to be installed or started. `*.sqlite` files are
+listed in `.gitignore`; never commit them. The tests use the same store in memory.
 
 ## Exercises
 
-The exercises follow the practice tasks of the session. Tests for exercises 2 and 3 are in
-`tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` when your solution works.
+Exercises 1 and 2 belong to block 1 of the session, exercises 3 to 5 to block 2. Tests for exercises 1, 2 and 3
+are in `tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` when your solution works.
 
-1. **Semantic search in PostgreSQL (block 1).** Start the pgvector container and run the demo with
-   `--store pgvector`. Then implement the chapter filter in `PgVectorStore.search` (TODO in `store.py`):
-   `WHERE left(heading, 2) = %s`. Check that `--store pgvector` and `--store numpy` return the same decisions.
-   Add `store.create_index()` and compare the query plan with `EXPLAIN`.
-2. **Chunk size (block 2).** Implement `chunk_sentences` (TODO in `chunking.py`). Write a small script that
+1. **Chapter filter in SQLite (block 1).** Run the demo with `--store sqlite`. Then implement the chapter filter
+   in `SQLiteVectorStore.search` (TODO in `store.py`): select only the rows of one chapter with
+   `WHERE substr(heading, 1, 2) = ?` and rank them in NumPy. Check that `--store sqlite` and `--store numpy`
+   return the same decisions, with and without a chapter.
+2. **Chunk size (block 1).** Implement `chunk_sentences` (TODO in `chunking.py`). Write a small script that
    evaluates heading hit@5 (`metrics.evaluate_heading_retrieval`) on 500 decisions of 2023 used as queries,
    for word windows of 40, 120 and 250 words and for sentence chunks.
-3. **Cost guardrail (block 3).** Implement the token budget in `run_agent` (TODO in `agent.py`): stop with
+3. **Cost guardrail (block 2).** Implement the token budget in `run_agent` (TODO in `agent.py`): stop with
    `stop_reason="budget"` once the total tokens exceed `max_total_tokens`.
-4. **A fourth tool (block 3).** Add a tool `heading_history(heading)` that returns the number of decisions
+4. **A fourth tool (block 2).** Add a tool `heading_history(heading)` that returns the number of decisions
    per year and issuing country for one heading (hint: a fixed, parameterised SQL query, not free SQL).
    Write its schema, add it to the `ToolBox`, and write tests with `FakeChatClient` for a correct call and
    for a heading that is not four digits.
-5. **Evaluate the agent (block 3).** Write ten `AgentTask`s (as in notebook `10-case-study-agent.ipynb`), run
+5. **Evaluate the agent (block 2).** Write ten `AgentTask`s (as in the notebook
+   [05-case-study-agent.ipynb](../workbooks/05-case-study-agent.ipynb)), run
    them with a real model and `score_task`, and report the share of correct answers, tool errors and tokens
    per task. Add one task whose data contain a prompt injection.
 
@@ -102,7 +101,9 @@ The exercises follow the practice tasks of the session. Tests for exercises 2 an
   `ToolBox.call` validates arguments against the schema, runs only allow-listed tools and returns errors as
   observations instead of raising them.
 - **Read-only SQL is checked twice in practice.** `check_read_only_sql` is a coarse first line of defence. In
-  a real deployment, the agent's database user must only have `SELECT` rights.
+  a real deployment, the agent's connection must not be able to write at all: in SQLite, open the file with
+  `sqlite3.connect("file:decisions.sqlite?mode=ro", uri=True)` or set `PRAGMA query_only = ON`; in a
+  database server, a user with read rights only.
 - **Any OpenAI-compatible endpoint.** The code uses only `client.chat.completions.create` with `messages`,
   `tools`, `temperature` and `response_format={"type": "json_object"}`, which Ollama, vLLM, LM Studio,
   OpenAI and many other providers support.

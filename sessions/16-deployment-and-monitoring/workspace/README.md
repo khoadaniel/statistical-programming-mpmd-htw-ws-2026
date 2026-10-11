@@ -2,9 +2,11 @@
 
 A complete, small service around the case-study model: training script, FastAPI prediction API with
 pydantic schemas that returns the **three highest-scoring HS headings** with their English texts, tests with
-`TestClient`, a Dockerfile, a Compose file that runs dashboard, API and database together, CI and CD workflows for GitHub Actions, drift statistics as tested pure functions,
-a monitoring report and a model card template. Session 16 builds and releases version 1 and then, after the
-2024 feedback labels are released, version 2. Copy the folder into your team repository.
+`TestClient`, a Dockerfile, a Compose file that runs dashboard and API together (with the prediction log in a
+SQLite file), CI and CD workflows for GitHub Actions, drift statistics as tested pure functions, a monitoring
+report and a model card template. Session 16 builds version 1 and then, after the 2024 feedback labels are
+released, version 2. Copy the folder into your team repository: running service and dashboard with Docker Compose
+and releasing through CI/CD is part of the team project.
 
 ```
 src/tariff_service/
@@ -12,14 +14,14 @@ src/tariff_service/
   train.py        CLI: train a version on the case-study data (time-based validation)
   schemas.py      pydantic request/response models
   app.py          FastAPI app: /health, /metadata, /predict, /predict/batch (exercise 2)
-  monitoring.py   prediction log (JSON lines or a PostgreSQL table, no description text)
+  monitoring.py   prediction log (JSON lines or a SQLite table, no description text)
   drift.py        KS test, PSI, category shift, unseen headings, retraining rule, OOV rate (exercise 4)
   monitor.py      CLI: drift report of new decisions against the model's reference statistics
-  config.py       settings from environment variables (MODEL_DIR, PREDICTION_LOG, DATABASE_URL)
+  config.py       settings from environment variables (MODEL_DIR, PREDICTION_LOG, PREDICTION_DB)
 tests/            pytest: API contract, validation, behaviour, model files, drift statistics
 dashboard/        Streamlit app (front end) and its Dockerfile
 Dockerfile        container image of the API; .dockerignore keeps data and tests out of it
-compose.yaml      front end, back end and database in three containers
+compose.yaml      front end and back end in two containers; the prediction log in SQLite on a volume
 .github/workflows ci.yml (lint, tests, container smoke test), cd.yml (release image on version tags)
 MODEL_CARD.md     template after Mitchell et al. (2019)
 uv.lock           pinned versions of all dependencies
@@ -31,7 +33,7 @@ solutions/        reference solutions of the exercises, for self-checking only
 ```bash
 cd sessions/16-deployment-and-monitoring/workspace
 uv sync                                   # creates .venv with exactly the versions in uv.lock
-uv run pytest -q                          # 33 passed, 2 skipped, 2 xfailed (open exercises)
+uv run pytest -q                          # 34 passed, 1 skipped (skops not installed), 2 xfailed (open exercises)
 uvx ruff check .
 
 # version 1 on the 50,000-decision sample (about 20 s; validation accuracy about 0.78, top-3 0.85)
@@ -56,30 +58,34 @@ route them to an officer (Session 14, abstention).
 `train.py` sets coefficients with |w| < 0.05 to zero and stores them sparsely (`--prune`): about 1 % of the
 weights remain, validation accuracy is unchanged, and the model file has about 12 MB.
 
-## Exercises
+## Workspace exercises
 
-1. **Version 1 of the service (block 1).** Train v1, start the API and send five descriptions through `/docs`,
+The 30-minute exercises in class are in the exercise notebook
+([session-16-exercises.ipynb](../workbooks/session-16-exercises.ipynb)). The workspace exercises below are longer:
+1, 2, 4 and 5 are self-study after Blocks 1 and 2, and 3 is part of the team project until the final presentations.
+
+1. **Version 1 of the service (after Block 1).** Train v1, start the API and send five descriptions through `/docs`,
    at least one long description copied from `test.parquet`. Then save the model with skops instead of joblib
    (`uv sync --extra skops`, `--format skops`) and explain in two sentences why a skops file is safer to load than
    a pickle from an unknown source.
-2. **Batch endpoint (block 1).** Implement `/predict/batch` (TODO in `app.py`). The tests in
+2. **Batch endpoint (after Block 1).** Implement `/predict/batch` (TODO in `app.py`). The tests in
    `tests/test_exercises.py` turn from `xfail` into `XPASS`. Add one test of your own: a batch with one
    invalid decision must be rejected with 422.
-3. **Container and CI/CD (block 2).** Read the `Dockerfile` line by line and explain each layer. If Docker
+3. **Container, Compose and CI/CD (team project).** Read the `Dockerfile` line by line and explain each layer. If Docker
    is installed: `docker build -t tariff-service:1.0.0 .` and `docker run --rm -p 8000:8000
-   tariff-service:1.0.0`. Then start all three parts with `docker compose up --build`: open the dashboard
-   at http://localhost:8501, send three descriptions, and find them in the database with
-   `docker compose exec db psql -U tariff -c "SELECT * FROM predictions"`. Put the workspace into a GitHub
+   tariff-service:1.0.0`. Then start dashboard and API with `docker compose up --build`: open the dashboard
+   at http://localhost:8501, send three descriptions, and find them in the SQLite log (command in
+   "Two containers and a SQLite file" below). Put the workspace into a GitHub
    repository, push, and check that `ci.yml` passes. Create the release `v1.0.0` with the model files attached
    and follow `cd.yml`. Finally, sketch the cloud architecture of your team project on AWS (which part runs on
-   which service; see the theory page, "System design and cloud architecture").
-4. **Monitoring (block 3).** Implement `oov_rate` (TODO in `drift.py`). Run the drift report on the 2024–2026
+   which service; see the lecture notebook [04-lecture-architecture-in-the-cloud.ipynb](../workbooks/04-lecture-architecture-in-the-cloud.ipynb)).
+4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Run the drift report on the 2024–2026
    test decisions: `uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet`,
    then with the feedback labels (`--labels ../../../case-study/data/feedback_2024.csv`). Which input drifts?
    Does the retraining rule fire?
-5. **Version 2 and the model card (block 3).** Retrain with the feedback
+5. **Version 2 and the model card (after Block 2).** Retrain with the feedback
    (`--feedback ../../../case-study/data/feedback_2024.csv --version 2.0.0`), compare v1 and v2 as in
-   the workbook `01-case-study-drift-and-retraining.ipynb`, and fill in `MODEL_CARD.md` for v2.
+   the worked example [06-case-study-drift-and-retraining.ipynb](../workbooks/06-case-study-drift-and-retraining.ipynb), and fill in `MODEL_CARD.md` for v2.
 
 With the course data, the report for v1 on the 2024 decisions shows: country PSI 0.24 (GB issued about 4 % of
 the training decisions and none since 2021), language PSI 0.09, description-length PSI 0.04, predicted-chapter
@@ -115,21 +121,23 @@ The dashboard in `dashboard/streamlit_app.py` shows the top-3 headings and the m
 the model itself: `uv sync --extra dashboard && MODEL_DIR=models uv run streamlit run dashboard/streamlit_app.py`.
 With `API_URL` set, it is only a front end and sends each description to the API.
 
-### Three containers: front end, back end, database
+### Two containers and a SQLite file: front end, back end, database
 
-`compose.yaml` runs the dashboard (port 8501), the API (port 8000) and PostgreSQL (no published port) on one
-private network. The API writes every prediction to the table `predictions`, because `DATABASE_URL` is set;
-the dashboard calls `http://api:8000`, because `API_URL` is set. Train or download the model into `models/`
-first, then:
+`compose.yaml` runs the dashboard (port 8501) and the API (port 8000) on one private network. The database is a
+SQLite file, `/app/data/predictions.sqlite`, on the volume `prediction-data` that only the API container mounts:
+the API writes every prediction to its table `predictions`, because `PREDICTION_DB` is set, and the file is not
+reachable from outside. The dashboard calls `http://api:8000`, because `API_URL` is set. Train or download the
+model into `models/` first, then:
 
 ```bash
 docker compose up --build
-docker compose exec db psql -U tariff -c "SELECT heading, language, model_version FROM predictions"
-docker compose down -v            # -v also deletes the database volume
+docker compose exec api python -c "import sqlite3; print(sqlite3.connect('/app/data/predictions.sqlite').execute('SELECT heading, language, model_version FROM predictions').fetchall())"
+docker compose down -v            # -v also deletes the volume with the log
 ```
 
-The test of the PostgreSQL log needs a server and is skipped otherwise:
-`TEST_DATABASE_URL=postgresql://user:password@localhost:5432/db uv run --extra postgres pytest -k postgres`.
+The test `test_predictions_are_logged_to_sqlite_when_a_database_is_configured` checks the SQLite log without
+Docker. One SQLite file serves one API container well; when several copies of the API on different machines must
+write to one database, a database server is the better choice ([SQLite: Appropriate uses](https://www.sqlite.org/whentouse.html)).
 
 ## Design notes
 
@@ -142,7 +150,7 @@ The test of the PostgreSQL log needs a server and is skipped otherwise:
   refuses a model file whose checksum does not match.
 - **The log stores no description**, only its length, language, the top heading and its score: a pending BTI
   request is confidential business information.
-- **Configuration by environment variables** (`MODEL_DIR`, `PREDICTION_LOG`), as in the Twelve-Factor App.
+- **Configuration by environment variables** (`MODEL_DIR`, `PREDICTION_LOG`, `PREDICTION_DB`), as in the Twelve-Factor App.
 
 ## Further reading
 

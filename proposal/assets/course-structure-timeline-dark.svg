@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 210" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
-<title id="t">Course structure</title><desc id="d">18 weekly sessions in 5 parts.</desc>
+<title id="t">Course structure</title><desc id="d">18 sessions in 5 parts.</desc>
 <g transform="translate(0,22)">
 <rect x="67.0" y="113" width="88.6" height="10" rx="5" fill="#9aa8bb"/>
 <text x="111.3" y="36" text-anchor="middle" font-size="12.5" font-weight="600" fill="#9aa8bb"><tspan x="111.3" dy="0">Foundations</tspan></text>
@@ -42,7 +42,7 @@
 <text x="505.4" y="156" text-anchor="middle" font-size="11.5" fill="#c3c8d0">Classification</text>
 <circle cx="568.5" cy="118" r="13" fill="#262c36" stroke="#7f9fcf" stroke-width="3"/>
 <text x="568.5" y="122.5" text-anchor="middle" font-size="12" font-weight="700" fill="#e5e7eb">9</text>
-<text x="568.5" y="88" text-anchor="middle" font-size="11.5" fill="#c3c8d0">Features and sampling</text>
+<text x="568.5" y="88" text-anchor="middle" font-size="11.5" fill="#c3c8d0">Features and leakage</text>
 <circle cx="631.5" cy="118" r="13" fill="#262c36" stroke="#7f9fcf" stroke-width="3"/>
 <text x="631.5" y="122.5" text-anchor="middle" font-size="12" font-weight="700" fill="#e5e7eb">10</text>
 <text x="631.5" y="156" text-anchor="middle" font-size="11.5" fill="#c3c8d0">Tree-based models</text>

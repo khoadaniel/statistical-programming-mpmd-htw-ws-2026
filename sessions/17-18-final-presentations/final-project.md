@@ -45,7 +45,7 @@ flowchart LR
 | S13 | TF-IDF classifier on the team's validation scheme, error analysis, round **L1** | Leaderboard |
 | S14 | Evidence whether embeddings or a language model improve the model, round **L2** | Leaderboard |
 | S15 | Optional: a language-model component (for example a classification assistant with retrieval), with its evaluation | On request |
-| S16 | **Release**: tested service with the top-3 headings, monitoring plan and model card; retraining with the 2024 labels, round **L3** | Leaderboard |
+| S16 | **Release**: tested service with the top-3 headings and dashboard, run together with Docker Compose and released through the CI/CD workflow; monitoring plan and model card; retraining with the 2024 labels, round **L3** | Leaderboard |
 | S17–S18 | **Final presentation** (graded) | Grade and written feedback |
 
 ## Project charter (Session 4)

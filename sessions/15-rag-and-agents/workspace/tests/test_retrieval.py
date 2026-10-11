@@ -4,7 +4,7 @@ import pytest
 from bti_assistant.embeddings import HashingEmbedder, normalise
 from bti_assistant.keyword import BM25
 from bti_assistant.retrieval import HybridRetriever, VectorRetriever
-from bti_assistant.store import DuckDBVectorStore, NumpyVectorStore
+from bti_assistant.store import NumpyVectorStore, SQLiteVectorStore
 
 
 def test_embeddings_have_unit_length_and_are_deterministic():
@@ -45,7 +45,7 @@ def test_chapter_filter(retriever):
     assert hits and all(h.heading.startswith("64") for h in hits)
 
 
-@pytest.mark.parametrize("store_cls", [NumpyVectorStore, DuckDBVectorStore])
+@pytest.mark.parametrize("store_cls", [NumpyVectorStore, SQLiteVectorStore])
 def test_stores_return_the_same_ranking(store_cls, chunks, headings):
     emb = HashingEmbedder(dim=128)
     store = store_cls(emb.dim)
@@ -56,8 +56,25 @@ def test_stores_return_the_same_ranking(store_cls, chunks, headings):
     got, want = store.search(q, k=3), reference.search(q, k=3)
     assert [h.chunk_id for h in got] == [h.chunk_id for h in want]
     assert np.allclose([h.score for h in got], [h.score for h in want], atol=1e-5)
-    assert all(h.heading.startswith("95") for h in store.search(q, k=3, chapter="95"))
     assert len(store) == len(chunks)
+
+
+def test_numpy_store_chapter_filter(chunks, headings):
+    emb = HashingEmbedder(dim=128)
+    store = NumpyVectorStore(emb.dim)
+    store.add(chunks, emb.encode([c.text for c in chunks]), headings)
+    q = emb.encode(["Spielzeug Kunststoff kinderen"])[0]
+    assert all(h.heading.startswith("95") for h in store.search(q, k=3, chapter="95"))
+
+
+def test_sqlite_store_keeps_the_index_on_disk(tmp_path, chunks, headings):
+    emb = HashingEmbedder(dim=64)
+    path = str(tmp_path / "chunks.sqlite")
+    SQLiteVectorStore(emb.dim, path).add(chunks, emb.encode([c.text for c in chunks]), headings)
+    reopened = SQLiteVectorStore(emb.dim, path)  # a new connection to the same file
+    assert len(reopened) == len(chunks)
+    q = emb.encode(["Laufsohle"])[0]
+    assert reopened.search(q, k=1)[0].heading in {"6403", "6404"}
 
 
 def test_store_rejects_mismatched_input(chunks):

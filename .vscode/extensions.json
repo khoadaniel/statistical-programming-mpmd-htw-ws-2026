@@ -1,0 +1,10 @@
+{
+  // VS Code offers to install these when the repository is opened for the first time.
+  "recommendations": [
+    "ms-python.python",
+    "ms-toolsai.jupyter",
+    "charliermarsh.ruff",
+    // renders ```mermaid diagrams in notebook Markdown cells and in Markdown previews
+    "bierner.markdown-mermaid"
+  ]
+}

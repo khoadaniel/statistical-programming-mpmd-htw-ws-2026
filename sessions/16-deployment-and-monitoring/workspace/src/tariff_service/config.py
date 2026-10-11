@@ -11,10 +11,11 @@ from pathlib import Path
 class Settings:
     model_dir: Path
     log_path: Path | None
-    database_url: str | None = None  # set in compose.yaml: predictions are then logged to PostgreSQL
+    database_path: Path | None = None  # set in compose.yaml: predictions are then logged to SQLite
 
     @classmethod
     def from_env(cls) -> Settings:
         log = os.environ.get("PREDICTION_LOG")
+        db = os.environ.get("PREDICTION_DB")
         return cls(model_dir=Path(os.environ.get("MODEL_DIR", "models")), log_path=Path(log) if log else None,
-                   database_url=os.environ.get("DATABASE_URL") or None)
+                   database_path=Path(db) if db else None)

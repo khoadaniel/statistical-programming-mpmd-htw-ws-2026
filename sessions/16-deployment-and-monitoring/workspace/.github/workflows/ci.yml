@@ -16,10 +16,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - run: uv sync --frozen                 # exactly the versions in uv.lock
       - run: uv run ruff check .
       - run: uv run pytest -q                 # a failing test stops the workflow here
@@ -28,8 +28,8 @@ jobs:
     needs: test                               # only if the tests passed
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.0
       - name: Tiny model for the smoke test (the real model is never built from data in CI)
         run: uv run python -m tariff_service.train --fixture --out models
       - run: docker build -t tariff-service:${{ github.sha }} .

@@ -14,10 +14,10 @@ jobs:
       run:
         working-directory: .
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - run: uv sync
       - run: uvx ruff check .
       - run: uv run pytest -q

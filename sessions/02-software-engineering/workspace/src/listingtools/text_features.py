@@ -1,4 +1,4 @@
-"""Simple features of a listing title (the pull-request exercise of Session 2).
+"""Simple features of a listing title (the pull-request exercise of Session 2, block 2).
 
 Each function takes one title and returns one number. The features describe the *form* of a
 title (how long, how loud, whether it states the size of the flat), not the flat itself.
@@ -70,12 +70,12 @@ def mentions_size(text: str) -> int:
 def n_digits(text: str) -> int:
     """Number of digit characters (0-9) in the title.
 
-    TODO (exercise 6, pull request): implement with a generator expression that counts
+    TODO (exercise 7, pull request): implement with a generator expression that counts
     the characters in ``DIGITS`` (``str.isdigit`` would also count the ² in "m²");
     raise ``TypeError`` for non-text input like the other functions (use ``_check``).
     Remove the skip marker of the tests.
     """
-    raise NotImplementedError("exercise 6: n_digits")
+    raise NotImplementedError("exercise 7: n_digits")
 
 
 def upper_share(text: str) -> float:
@@ -85,6 +85,6 @@ def upper_share(text: str) -> float:
     punctuation do not change the share. Letters such as Ä and É count as well. Titles in
     capitals ("WOHNUNG IN BERLIN MITTE") get a share close to 1.
 
-    TODO (exercise 6, pull request).
+    TODO (exercise 7, pull request).
     """
-    raise NotImplementedError("exercise 6: upper_share")
+    raise NotImplementedError("exercise 7: upper_share")
