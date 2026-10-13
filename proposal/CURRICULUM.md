@@ -59,7 +59,7 @@ Data roles share a common base and then divide: analysts work mainly with SQL, P
 </tr>
 </thead>
 <tbody>
-<tr><td valign="top"><b>Thu 22 Oct 2026</b></td><td valign="top">09:45–15:15</td><td valign="top"><b>S1</b> Introduction: data science careers, the final project challenge and Python for analysis</td><td align="center" valign="top">3</td><td valign="top"><b>1. Data careers, the course and the challenge</b><br>• Data roles: data analyst, data scientist, ML and AI engineer, data engineer<br>• What Berlin job advertisements ask for, by role<br>• Course organisation and assessment<br>• The final project challenge: predicting the customs heading of a product from its description (EBTI dataset)<br><br><b>2. Notebooks and Python's data types</b><br>• The working environment: uv, VS Code and the course environment<br>• Jupyter notebooks: cells, kernel, Markdown, order of execution<br>• Variables, expressions and operators<br>• Numbers, strings, booleans and None<br>• Lists, tuples, dictionaries and sets<br>• Getting help: <code>help()</code>, <code>dir()</code> and the documentation<br><br><b>3. Control flow, functions and first steps with pandas</b><br>• Conditions: <code>if</code>, <code>elif</code>, <code>else</code><br>• Loops: <code>for</code>, <code>while</code>, comprehensions<br>• Functions: parameters, return values, docstrings<br>• Importing modules and packages<br>• pandas: Series and DataFrame; reading, selecting, filtering, sorting and grouping a table<br>• Tips for using AI coding assistants</td><td valign="top">All</td></tr>
+<tr><td valign="top"><b>Thu 22 Oct 2026</b></td><td valign="top">09:45–15:15</td><td valign="top"><b>S1</b> Introduction: data science careers, the final project challenge, NumPy and pandas</td><td align="center" valign="top">3</td><td valign="top"><b>1. Data careers, the course and the challenge</b><br>• Data roles: data analyst, data scientist, ML and AI engineer, data engineer<br>• What Berlin job advertisements ask for, by role<br>• Agentic engineering: how AI coding agents change data work and learning<br>• Course organisation and assessment<br>• The final project challenge: predicting the customs heading of a product from its description (EBTI dataset)<br><br><b>2. Notebooks, a Python recap and NumPy</b><br>• The working environment: uv, VS Code and the course environment<br>• Jupyter notebooks: cells, kernel, Markdown, order of execution<br>• A short recap of Python: types, collections, conditions, loops and functions<br>• NumPy arrays: creation, <code>dtype</code> and <code>shape</code>, indexing, slicing and Boolean masks<br>• Vectorised operations, broadcasting and aggregation along an axis<br>• Random numbers and simulation with NumPy<br><br><b>3. pandas: Series and DataFrames, from basic to advanced</b><br>• Series and DataFrame: index, columns and <code>dtype</code>; reading a file<br>• Selecting rows and columns with <code>loc</code>, <code>iloc</code> and Boolean masks; missing values<br>• Creating and transforming columns: vectorised arithmetic, <code>.str</code> and <code>.dt</code>, <code>map</code> and <code>apply</code><br>• Sorting, <code>value_counts</code>, <code>groupby</code> with <code>agg</code>, and pivot tables<br>• Combining tables with <code>merge</code> and <code>concat</code><br>• Method chaining, and tips for using AI coding assistants</td><td valign="top">All</td></tr>
 <tr><td rowspan="2" valign="top"><b>Fri 30 Oct 2026</b></td><td valign="top">09:45–13:00</td><td valign="top"><b>S2</b> Software engineering for data work: object-oriented programming, testing, from notebook to application, Git and continuous integration</td><td align="center" valign="top">2</td><td valign="top"><b>1. Classes, errors and tests</b><br>• Classes and objects: attributes and methods<br>• Composition, inheritance and dataclasses<br>• Type hints and docstrings<br>• Exceptions and error handling<br>• Automated tests with pytest<br><br><b>2. From notebook to application, Git and continuous integration</b><br>• From notebook to application: when to use which<br>• Scripts, modules, packages and project structure<br>• Git: commits, branches, merging and merge conflicts<br>• GitHub: pull requests and code review<br>• Continuous integration with GitHub Actions</td><td valign="top">All</td></tr>
 <tr><td valign="top">13:45–17:00</td><td valign="top"><b>S3</b> Relational databases and SQL with SQLite</td><td align="center" valign="top">2</td><td valign="top"><b>1. Relational databases and first queries</b><br>• What a relational database is: tables, rows, columns and data types<br>• Primary keys, foreign keys and relationships<br>• SQLite: a database in one file; opening it from Python with <code>sqlite3</code> and in a database browser<br>• Creating tables and loading data: <code>CREATE TABLE</code>, <code>INSERT</code>, <code>COPY</code><br>• Queries: <code>SELECT</code>, <code>WHERE</code>, <code>ORDER BY</code>, <code>LIMIT</code><br>• NULL values<br><br><b>2. Aggregation, joins and SQL from Python</b><br>• Aggregation with <code>GROUP BY</code> and <code>HAVING</code><br>• Joins: <code>INNER JOIN</code> and <code>LEFT JOIN</code><br>• Subqueries and common table expressions<br>• Window functions: ranking, running totals, comparison with the previous row<br>• Running SQL from Python: <code>sqlite3</code> connections, cursors and parameters; query results as pandas DataFrames; a script that loads data and answers a question</td><td valign="top">All</td></tr>
 <tr><td valign="top"><b>Fri 6 Nov 2026</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S4</b> Data quality and preparation: validation, missing values, outliers and transformations</td><td align="center" valign="top">2</td><td valign="top"><b>1. Data quality checks and missing values</b><br>• Dimensions of data quality: completeness, validity, uniqueness, consistency, accuracy and timeliness<br>• Checks for types, ranges, duplicates and consistency<br>• Validation rules written as automated tests (pytest, pandera) that stop the pipeline when new data break a rule<br>• Missing data mechanisms (MCAR, MAR, MNAR)<br>• Simple, KNN and iterative imputation<br><br><b>2. Outliers, transformations and a cleaning pipeline</b><br>• Univariate outliers (IQR rule, z-score, median absolute deviation)<br>• Multivariate outliers with the Mahalanobis distance (model-based detection follows in Session 11)<br>• Transformations (logarithm, Box–Cox, Yeo–Johnson, scaling)<br>• A documented cleaning pipeline</td><td valign="top">All</td></tr>
@@ -123,16 +123,18 @@ Sessions 1 and 2 follow the start of the module: careers and the challenge, Pyth
 
 ### Foundations (Sessions 1–2)
 
-#### 📍 Session 1 · Introduction: data science careers, the final project challenge and Python for analysis
+#### 📍 Session 1 · Introduction: data science careers, the final project challenge, NumPy and pandas
 
-**Guiding question.** What do data professionals do, what will we build in this course, and how do we start working with Python?
+**Guiding question.** What do data professionals do, what will we build in this course, and how do we work with data in Python?
 
 **Learning outcomes.** Students are able to
 
-- describe the main data roles, their tasks and the skills they require
+- describe the main data roles, their tasks and the skills they require, and how AI coding agents change them
 - explain the task of the final project challenge
-- work in Jupyter notebooks and use Python's data types and data structures
-- write small programs with conditions, loops and functions, and load and summarise a table with pandas
+- work in Jupyter notebooks and compute with NumPy arrays instead of Python loops
+- load, select, transform, combine and summarise tables with pandas Series and DataFrames
+
+Students know the basics of Python from the first semester (module 1.2); Block 2 recaps them briefly.
 
 **Session plan**
 
@@ -142,34 +144,35 @@ Sessions 1 and 2 follow the start of the module: careers and the challenge, Pyth
 
 - Data roles: data analyst, data scientist, ML and AI engineer, data engineer
 - What Berlin job advertisements ask for, by role
+- Agentic engineering: how AI coding agents change data work and learning
 - Course organisation and assessment
 - The final project challenge: predicting the customs heading of a product from its description (EBTI dataset)
 
 *Exercises (30 min) and debrief (15 min)*
 
-**Block 2 (90 min) · Notebooks and Python's data types**
+**Block 2 (90 min) · Notebooks, a Python recap and NumPy**
 
 *Theory (45 min)*
 
 - The working environment: uv, VS Code and the course environment
 - Jupyter notebooks: cells, kernel, Markdown, order of execution
-- Variables, expressions and operators
-- Numbers, strings, booleans and None
-- Lists, tuples, dictionaries and sets
-- Getting help: `help()`, `dir()` and the documentation
+- A short recap of Python: types, collections, conditions, loops and functions
+- NumPy arrays: creation, `dtype` and `shape`, indexing, slicing and Boolean masks
+- Vectorised operations, broadcasting and aggregation along an axis
+- Random numbers and simulation with NumPy
 
 *Exercises (30 min) and debrief (15 min)*
 
-**Block 3 (90 min) · Control flow, functions and first steps with pandas**
+**Block 3 (90 min) · pandas: Series and DataFrames, from basic to advanced**
 
 *Theory (45 min)*
 
-- Conditions: `if`, `elif`, `else`
-- Loops: `for`, `while`, comprehensions
-- Functions: parameters, return values, docstrings
-- Importing modules and packages
-- pandas: Series and DataFrame; reading, selecting, filtering, sorting and grouping a table
-- Tips for using AI coding assistants
+- Series and DataFrame: index, columns and `dtype`; reading a file
+- Selecting rows and columns with `loc`, `iloc` and Boolean masks; missing values
+- Creating and transforming columns: vectorised arithmetic, `.str` and `.dt`, `map` and `apply`
+- Sorting, `value_counts`, `groupby` with `agg`, and pivot tables
+- Combining tables with `merge` and `concat`
+- Method chaining, and tips for using AI coding assistants
 
 *Exercises (30 min) and debrief (15 min)*
 

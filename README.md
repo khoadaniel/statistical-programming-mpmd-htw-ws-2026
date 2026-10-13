@@ -24,7 +24,7 @@ flowchart LR
 
 | | Session |
 |---|---|
-| 1 | [Data careers, the final project challenge and Python for analysis](sessions/01-careers-and-python/) |
+| 1 | [Data careers, the final project challenge, NumPy and pandas](sessions/01-careers-and-python/) |
 | 2 | [Software engineering for data work](sessions/02-software-engineering/) |
 | 3 | [Relational databases and SQL with SQLite](sessions/03-sql/) |
 | 4 | [Data quality and preparation](sessions/04-data-quality/) |
