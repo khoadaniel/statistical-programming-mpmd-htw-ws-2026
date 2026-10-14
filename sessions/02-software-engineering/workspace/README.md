@@ -22,7 +22,7 @@ workspace/
 └── solutions/                 reference solutions, for self-checking only
 ```
 
-Theory: [01 classes, errors and tests](../workbooks/01-lecture-oop-errors-and-tests.ipynb) · [02 from notebook to application](../workbooks/02-lecture-notebook-to-application.ipynb) · [03 Git, GitHub and CI](../workbooks/03-lecture-git-github-and-ci.ipynb). The exercises below are also listed, with their hand-outs, in the session's [exercise notebook](../workbooks/session-02-exercises.ipynb).
+Teaching notebooks: [block 1, classes, errors and tests](../workbooks/01-lecture-classes-errors-and-tests.ipynb) (exercise 1.6 = workspace exercises 1–2) · [block 2, from notebook to application, Git and CI](../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb) (exercises 2.2–2.6 = workspace exercises 3–9). The exercises below are also listed there, with their hand-outs.
 
 ## Run it
 

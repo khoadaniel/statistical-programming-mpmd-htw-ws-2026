@@ -1,12 +1,13 @@
 """Validation rules for the Berlin Airbnb listings of the case study, written as pytest tests.
 
 Run from the repository root:
-    uv run --with pytest pytest sessions/04-data-quality/workbooks/quality -v
+    uv run pytest sessions/04-data-quality/workbooks/quality -v
 
 Tests on the prepared tables encode hard rules (keys, domains, ranges, consistency within and across tables,
 and the privacy rule for the registration field). Known problems of the snapshot are marked `xfail` with the
 reason: they are documented, and pytest reports them as "expected failures". Tests on the cleaned table run
-after workbook 07 has written `listings_clean.parquet`; otherwise they are skipped.
+when the environment variable AIRBNB_CLEAN_OUT points to the cleaned table written by the block 2 notebook
+(02-lecture-outliers-transformations-and-cleaning-pipeline.ipynb); otherwise they are skipped.
 Author: course team, licence CC-BY-4.0.
 """
 import os
@@ -17,7 +18,7 @@ import pytest
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "case-study").is_dir())
 DATA = ROOT / "case-study" / "data" / "airbnb"
-CLEAN = Path(os.environ.get("AIRBNB_CLEAN_OUT", DATA / "listings_clean.parquet"))
+CLEAN = Path(os.environ["AIRBNB_CLEAN_OUT"]) if os.environ.get("AIRBNB_CLEAN_OUT") else None
 
 ROOM_TYPES = {"Entire home/apt", "Private room", "Hotel room", "Shared room"}
 LICENSE_STATUS = {"registration number", "missing", "legal entity name", "private host name", "other"}
@@ -45,8 +46,8 @@ def calendar_ids():
 
 @pytest.fixture(scope="module")
 def clean():
-    if not CLEAN.exists():
-        pytest.skip("cleaned table not found: run workbook 07 first")
+    if CLEAN is None or not CLEAN.exists():
+        pytest.skip("cleaned table not found: set AIRBNB_CLEAN_OUT (see the block 2 notebook)")
     return pd.read_parquet(CLEAN)
 
 
@@ -145,7 +146,7 @@ def test_raw_reviews_listing_exists(listings, reviews_monthly):
     assert reviews_monthly["listing_id"].isin(listings["id"]).all()
 
 
-# ---------- cleaned table (after workbook 07) ----------
+# ---------- cleaned table (block 2 notebook) ----------
 
 def test_clean_id_unique(clean):
     assert clean["id"].is_unique

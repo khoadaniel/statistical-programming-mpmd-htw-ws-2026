@@ -88,7 +88,7 @@ are in `tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` 
    Write its schema, add it to the `ToolBox`, and write tests with `FakeChatClient` for a correct call and
    for a heading that is not four digits.
 5. **Evaluate the agent (block 2).** Write ten `AgentTask`s (as in the notebook
-   [05-case-study-agent.ipynb](../workbooks/05-case-study-agent.ipynb)), run
+   [02-lecture-agents-and-guardrails.ipynb](../workbooks/02-lecture-agents-and-guardrails.ipynb), worked example), run
    them with a real model and `score_task`, and report the share of correct answers, tool errors and tokens
    per task. Add one task whose data contain a prompt injection.
 

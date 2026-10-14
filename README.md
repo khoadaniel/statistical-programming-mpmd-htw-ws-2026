@@ -155,7 +155,7 @@ uv run python case-study/prepare_data.py     # EBTI customs decisions, about 400
 
 1. Start VS Code, choose **File → Open Folder…** and select the folder `statistical-programming-mpmd-htw-ws-2026`. If VS Code asks whether you trust the authors, choose **Yes, I trust the authors**.
 2. VS Code offers to install the **recommended extensions** (Python, Jupyter, Ruff, Markdown Mermaid for the diagrams) in a pop-up at the bottom right; choose **Install**. If you missed it: open the Extensions view (the four squares on the left), type `@recommended` and install the four listed under *Workspace Recommendations*.
-3. Open `sessions/01-careers-and-python/workbooks/02-jupyter-introduction.ipynb` and run the first cell (▶ to its left, or Shift+Enter).
+3. Open `sessions/01-careers-and-python/workbooks/02-lecture-notebooks-python-and-numpy.ipynb` and run the first **code** cell (▶ to its left, or Shift+Enter).
 4. Look at the top right of the notebook: the kernel must read **.venv (Python 3.14…)**. VS Code picks the repository's `.venv` automatically. If it shows something else or asks you to choose, click it → **Python Environments…** → **.venv** (marked *Recommended*). You do this once; VS Code remembers it for the workspace.
 
 The repository contains the VS Code settings for this ([`.vscode/settings.json`](.vscode/settings.json), [`.vscode/extensions.json`](.vscode/extensions.json)). Terminals opened inside VS Code use the `.venv` automatically, so `python` and `pytest` there are the course versions.

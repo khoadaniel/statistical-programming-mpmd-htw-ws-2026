@@ -1,7 +1,7 @@
 """Daily Berlin weather from the Open-Meteo API, parsed into validated records.
 
-Helper module of Session 16, used by the lecture notebook 01-lecture-web-apis.ipynb and the
-worked example 03-case-study-weather-api.ipynb (both import it from this folder).
+Helper module of Session 16, used by the block notebook 01-lecture-web-apis-and-a-released-service.ipynb
+and its exercise 1.7 (imported from this folder).
 
 Weather changes every day and is not shipped as a file; Open-Meteo offers it through a web API.
 The archive endpoint returns past days, the forecast endpoint the next days, both as JSON:

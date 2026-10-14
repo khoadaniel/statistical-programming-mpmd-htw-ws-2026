@@ -60,8 +60,8 @@ weights remain, validation accuracy is unchanged, and the model file has about 1
 
 ## Workspace exercises
 
-The 30-minute exercises in class are in the exercise notebook
-([session-16-exercises.ipynb](../workbooks/session-16-exercises.ipynb)). The workspace exercises below are longer:
+The 30-minute exercises in class are at the end of the two block notebooks
+([Block 1](../workbooks/01-lecture-web-apis-and-a-released-service.ipynb), [Block 2](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)). The workspace exercises below are longer:
 1, 2, 4 and 5 are self-study after Blocks 1 and 2, and 3 is part of the team project until the final presentations.
 
 1. **Version 1 of the service (after Block 1).** Train v1, start the API and send five descriptions through `/docs`,
@@ -78,14 +78,14 @@ The 30-minute exercises in class are in the exercise notebook
    "Two containers and a SQLite file" below). Put the workspace into a GitHub
    repository, push, and check that `ci.yml` passes. Create the release `v1.0.0` with the model files attached
    and follow `cd.yml`. Finally, sketch the cloud architecture of your team project on AWS (which part runs on
-   which service; see the lecture notebook [04-lecture-architecture-in-the-cloud.ipynb](../workbooks/04-lecture-architecture-in-the-cloud.ipynb)).
+   which service; see the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)).
 4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Run the drift report on the 2024–2026
    test decisions: `uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet`,
    then with the feedback labels (`--labels ../../../case-study/data/feedback_2024.csv`). Which input drifts?
    Does the retraining rule fire?
 5. **Version 2 and the model card (after Block 2).** Retrain with the feedback
    (`--feedback ../../../case-study/data/feedback_2024.csv --version 2.0.0`), compare v1 and v2 as in
-   the worked example [06-case-study-drift-and-retraining.ipynb](../workbooks/06-case-study-drift-and-retraining.ipynb), and fill in `MODEL_CARD.md` for v2.
+   the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), and fill in `MODEL_CARD.md` for v2.
 
 With the course data, the report for v1 on the 2024 decisions shows: country PSI 0.24 (GB issued about 4 % of
 the training decisions and none since 2021), language PSI 0.09, description-length PSI 0.04, predicted-chapter

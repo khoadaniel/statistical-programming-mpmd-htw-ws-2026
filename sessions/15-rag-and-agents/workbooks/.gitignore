@@ -1,2 +1,0 @@
-# caches written by the notebooks (embeddings, SQLite indexes); never commit them
-embeddings_cache/
