@@ -12,10 +12,9 @@ catboost_info/
 case-study/data/*
 !case-study/data/README.md
 !case-study/data/.gitkeep
-# lecturer only: preparation scripts, downloaded source files, hidden test sets and labels
-case-study/prepare/
-case-study/raw/
-case-study/private/
+# lecturer only: preparation scripts, downloaded source files, processed data for the course drive,
+# held-out test sets and labels (see case-study/README.md)
+case-study/lecturer/
 submission*.csv
 
 # internal notes, never published

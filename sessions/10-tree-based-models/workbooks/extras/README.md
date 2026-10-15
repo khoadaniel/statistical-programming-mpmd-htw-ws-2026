@@ -48,7 +48,7 @@ Copied unchanged from the [INRIA/scikit-learn-mooc datasets](https://github.com/
 | [penguins_classification.csv](../../datasets/penguins_classification.csv), [penguins_regression.csv](../../datasets/penguins_regression.csv) | extras 01, 02; block 1, sections "Decision trees: splits and Gini impurity" and "Tree depth, overfitting and pruning" | palmerpenguins (Horst, Hill & Gorman, 2020) | [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | [adult-census.csv](../../datasets/adult-census.csv) (5.4 MB) | extra 06 | UCI Adult dataset (Becker & Kohavi, 1996), https://doi.org/10.24432/C5XW20 | [CC BY 4.0](https://archive.ics.uci.edu/dataset/2/adult) |
 
-**Case-study data.** IBM Telco customer churn sample data, https://github.com/IBM/telco-customer-churn-on-icp4d (Apache-2.0 repository), read from GitHub at run time. Inside Airbnb (2026), *Berlin, Germany*, snapshot of 26 June 2026, CC BY 4.0, prepared with `case-study/prepare_airbnb.py` (host names and other personal data removed), https://insideairbnb.com/get-the-data/.
+**Case-study data.** IBM Telco customer churn sample data, https://github.com/IBM/telco-customer-churn-on-icp4d (Apache-2.0 repository), read from GitHub at run time. Inside Airbnb (2026), *Berlin, Germany*, snapshot of 26 June 2026, CC BY 4.0, prepared by the lecturer and downloaded from the course drive (host names and other personal data removed; see `case-study/airbnb/README.md`), https://insideairbnb.com/get-the-data/.
 
 ## Removed course files
 

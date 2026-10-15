@@ -33,9 +33,8 @@ Extras 02–05 download the 20 Newsgroups dataset (about 14 MB) on first use; ex
 | File | Content | Licence |
 |---|---|---|
 | [../../figures/dtm_sketch.png](../../figures/dtm_sketch.png) | multilingual document-term matrix sketch, used in the Block 1 notebook, section "Bag-of-words computed by hand" | CC BY 4.0, course team |
-| [../../figures/top_ngrams.png](../../figures/top_ngrams.png), [../../figures/confusion_matrix.png](../../figures/confusion_matrix.png) | top words per heading (6403, 6404, 9503) and footwear confusion matrix; no longer used by the notebooks, which now compute both inline | CC BY 4.0, course team |
 
-All three are generated from EBTI case-study data by [../../figures/make_figures.py](../../figures/make_figures.py) (`uv run python sessions/13-classical-nlp/figures/make_figures.py`).
+It is generated (from fixed toy documents) by [../../figures/make_figures.py](../../figures/make_figures.py) (`uv run python sessions/13-classical-nlp/figures/make_figures.py`).
 
 ## Archived course notebooks
 

@@ -38,7 +38,7 @@ Extras 01, 04, 05, 06, 08 and 09 run in the course environment. Extras 03, 07 an
 
 ## Data
 
-- **Inside Airbnb (2026).** *Berlin, snapshot of 26 June 2026* (listings, calendar, reviews), aggregated to `case-study/data/airbnb/reviews_monthly.parquet` by `case-study/prepare_airbnb.py` (personal data removed). CC BY 4.0. https://insideairbnb.com/get-the-data/
+- **Inside Airbnb (2026).** *Berlin, snapshot of 26 June 2026* (listings, calendar, reviews), aggregated to `case-study/data/airbnb/reviews_monthly.parquet` by the lecturer's preparation (personal data removed; see `case-study/airbnb/README.md`). CC BY 4.0. https://insideairbnb.com/get-the-data/
 - **Open-Meteo (2026).** *Historical weather API*, daily temperature, precipitation and sunshine for Berlin (52.52° N, 13.41° E) since 2016, stored as `case-study/data/airbnb/weather_daily.parquet` by the same script. CC BY 4.0. https://open-meteo.com/en/docs/historical-weather-api
 - **Bike Sharing Demand** (Capital Bikeshare, Washington D.C., 2011–2012; Fanaee-T and Gama, 2014), used in block 2, section *Machine learning with lag features*, and in extras 08 and 09. Downloaded at run time from OpenML (dataset 44063) into the scikit-learn data cache in the user's home directory; not stored in the repository. The UCI Machine Learning Repository distributes it under CC BY 4.0. https://www.openml.org/d/44063
 

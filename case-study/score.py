@@ -3,7 +3,7 @@
     uv run python case-study/score.py submission.csv
 
 The test labels are not part of the student data: only the lecturer has them, in
-case-study/private/ebti/test_labels.csv, and scores the submissions for the leaderboard. Students
+case-study/lecturer/held_out/ebti/test_labels.csv, and scores the submissions for the leaderboard. Students
 check their models on the validation set (case-study/data/ebti/val.parquet), which has labels.
 
 score() also works for any table of true labels with the columns id and heading, and reports the
@@ -16,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 
-TEST_LABELS = Path(__file__).resolve().parent / "private" / "ebti" / "test_labels.csv"
+TEST_LABELS = Path(__file__).resolve().parent / "lecturer" / "held_out" / "ebti" / "test_labels.csv"
 
 
 def score(submission: pd.DataFrame, labels: pd.DataFrame) -> dict[str, float]:

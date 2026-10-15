@@ -52,7 +52,7 @@ Keep the original attribution and licence notices when reusing these sources. Th
 
 **Figures.** [../../figures/make_figures.py](../../figures/make_figures.py) and its PNGs (`kmeans_iterations.png`, `elbow_silhouette.png`, `dendrogram.png`, `pca_scree_biplot.png`, `amenities_pca.png`) were written by the course team (CC BY 4.0); the first four use toy data or scikit-learn's built-in wine data, the last one the Inside Airbnb listings.
 
-**Case-study data.** IBM (2019), *Telco customer churn sample data*, read from GitHub at run time. Inside Airbnb (2026), *Berlin, snapshot of 26 June 2026* (listings), CC BY 4.0, prepared by `case-study/prepare_airbnb.py` (personal data removed). Built-in scikit-learn data sets (wine, digits, iris, the `china.jpg` sample image) ship with scikit-learn.
+**Case-study data.** IBM (2019), *Telco customer churn sample data*, read from GitHub at run time. Inside Airbnb (2026), *Berlin, snapshot of 26 June 2026* (listings), CC BY 4.0, prepared by the lecturer and downloaded from the course drive (personal data removed; see `case-study/airbnb/README.md`). Built-in scikit-learn data sets (wine, digits, iris, the `china.jpg` sample image) ship with scikit-learn.
 
 ## Former course notebooks
 

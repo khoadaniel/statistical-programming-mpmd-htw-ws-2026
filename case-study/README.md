@@ -8,9 +8,33 @@
 
 Start with the two introductions: where the data come from, why the course uses them, and a first look with charts. This page covers the download, the split and the leaderboard.
 
+## The folder at a glance
+
+```
+case-study/
+  README.md                 this page: download, split, leaderboard
+  airbnb/README.md          introduction to the Airbnb data, with charts
+  ebti/README.md            introduction to the EBTI data, with charts
+  score.py                  leaderboard scorer (works only with the lecturer's test labels)
+  make_dataset_figures.py   draws the charts of the two introductions
+
+  data/                     YOUR DATA: unzip the course-drive files here (empty in the repository)
+    airbnb/                   from airbnb.zip
+    ebti/                     from ebti.zip
+
+  lecturer/                 only on the lecturer's computer, never in the repository
+    prepare_airbnb.py         download and process Inside Airbnb
+    prepare_ebti.py           download and process EBTI
+    raw/                      the files downloaded from the original sources
+    processed/                airbnb/, ebti/ and their zips: exactly what is on the course drive
+    held_out/                 the test sets and their labels, never shared
+```
+
+You only ever touch `data/`. The `lecturer/` folder is listed so that you know where your files come from: the lecturer downloads the public sources into `raw/`, cleans and splits them, puts the part you may train on into `processed/` and keeps the test part in `held_out/`.
+
 ## Getting the data
 
-The lecturer prepares both datasets and puts two zip files on the **course drive**. Download them and unzip them **inside `case-study/data/`**, so that you get:
+Download `airbnb.zip` and `ebti.zip` from the **course drive** and unzip them **inside `case-study/data/`**, so that you get:
 
 ```
 case-study/data/

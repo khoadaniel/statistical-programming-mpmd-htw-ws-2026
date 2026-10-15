@@ -3,9 +3,8 @@
 Run from the repository root:
     uv run python sessions/13-classical-nlp/figures/make_figures.py
 
-Writes dtm_sketch.png, top_ngrams.png and confusion_matrix.png next to this script.
-Deterministic: fixed toy documents; the model is trained on the 50,000-decision sample and evaluated on the
-validation set (case-study/data/ebti/val.parquet); random_state=0.
+Writes dtm_sketch.png next to this script (deterministic: fixed toy documents). The other figures of
+the session (most informative words, the footwear confusion matrix) are drawn inside the notebooks.
 """
 
 from pathlib import Path
@@ -14,16 +13,9 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import confusion_matrix
-from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import CountVectorizer
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti"
-COLORS = ["#2471a3", "#c0392b", "#1e8449"]
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 
 
@@ -57,65 +49,6 @@ def dtm_sketch() -> None:
     plt.close(fig)
 
 
-def fit_model():
-    train = pd.read_parquet(DATA / "train_sample.parquet")
-    valid = pd.read_parquet(DATA / "val.parquet")
-    model = make_pipeline(
-        TfidfVectorizer(min_df=2, sublinear_tf=True),
-        SGDClassifier(loss="hinge", alpha=1e-5, max_iter=20, tol=None, random_state=0, n_jobs=-1),
-    )
-    model.fit(train["description"], train["heading"])
-    return model, valid
-
-
-def top_ngrams(model, k: int = 12) -> None:
-    vec, clf = model.named_steps.values()
-    names = vec.get_feature_names_out()
-    fig, axes = plt.subplots(1, 3, figsize=(11, 4.6), dpi=120)
-    for ax, heading, color in zip(axes, ["6403", "6404", "9503"], COLORS):
-        coef = clf.coef_[list(clf.classes_).index(heading)]
-        top = np.argsort(coef)[::-1][:k][::-1]
-        ax.barh(range(k), coef[top], color=color)
-        ax.set_yticks(range(k), names[top])
-        short = {"6403": "footwear, uppers of leather", "6404": "footwear, uppers of textile",
-                 "9503": "toys"}[heading]
-        ax.set_title(f"{heading}: {short}", fontsize=10)
-        ax.set_xlabel("coefficient")
-    fig.suptitle("Most informative words per heading (word TF-IDF + linear SVM, 50,000-decision sample)")
-    fig.tight_layout()
-    fig.savefig(OUT / "top_ngrams.png")
-    plt.close(fig)
-
-
-def confusion(model, valid) -> None:
-    shoes = ["6401", "6402", "6403", "6404", "6405", "6406"]
-    keep = valid["heading"].isin(shoes).to_numpy()
-    pred = model.predict(valid["description"])[keep]
-    labels = shoes + ["other"]
-    pred = np.where(np.isin(pred, shoes), pred, "other")
-    cm = confusion_matrix(valid["heading"][keep], pred, labels=labels)[: len(shoes)]
-    share = cm / np.maximum(cm.sum(axis=1, keepdims=True), 1)
-    fig, ax = plt.subplots(figsize=(7.2, 5.0), dpi=120)
-    ax.imshow(share, cmap="Blues", vmin=0, vmax=1)
-    for i in range(share.shape[0]):
-        for j in range(share.shape[1]):
-            if cm[i, j]:
-                ax.text(j, i, f"{share[i, j]:.2f}\n({cm[i, j]})", ha="center", va="center", fontsize=9,
-                        color="white" if share[i, j] > 0.6 else "black")
-    ax.set_xticks(range(len(labels)), labels)
-    ax.set_yticks(range(len(shoes)), shoes)
-    ax.set_xlabel("predicted heading")
-    ax.set_ylabel("true heading")
-    ax.set_title("Footwear (chapter 64), validation set\n(row shares = recall; counts in brackets)")
-    ax.spines[:].set_visible(False)
-    fig.tight_layout()
-    fig.savefig(OUT / "confusion_matrix.png")
-    plt.close(fig)
-
-
 if __name__ == "__main__":
     dtm_sketch()
-    model, valid = fit_model()
-    top_ngrams(model)
-    confusion(model, valid)
     print("figures written to", OUT)
