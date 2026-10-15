@@ -34,7 +34,7 @@ class ListingTable:
     Example:
         >>> table = ListingTable.from_parquet("case-study/data/airbnb/listings.parquet")
         >>> len(table)
-        12776
+        10221
     """
 
     def __init__(self, data: pd.DataFrame) -> None:

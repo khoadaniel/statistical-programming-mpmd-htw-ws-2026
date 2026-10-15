@@ -1,6 +1,6 @@
 -- Reviews per month in Berlin (a proxy for demand): running total within each year and the
 -- change against the previous month (window functions). Runs on the course database
--- case-study/data/airbnb.sqlite. Months are text 'YYYY-MM-01'; substr(month, 1, 4) is the year.
+-- case-study/data/airbnb/airbnb.sqlite. Months are text 'YYYY-MM-01'; substr(month, 1, 4) is the year.
 -- June and July 2026 are incomplete (the listings were scraped between 26 June and 3 July 2026,
 -- and reviews appear with a delay) and are excluded.
 -- Author: course team, licence CC BY 4.0

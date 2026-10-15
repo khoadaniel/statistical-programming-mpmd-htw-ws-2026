@@ -6,19 +6,19 @@
 
 [Open notebook](workbooks/01-lecture-from-one-tree-to-an-ensemble.ipynb)
 
-- Decision trees: splits and Gini impurity computed by hand, reading a tree, decision boundaries.
-- Tree depth as a hyperparameter, overfitting of deep trees, pre-pruning and cost-complexity pruning.
+- Decision trees: splits and Gini impurity computed by hand, decision boundaries, reading a tree, the arrays inside a fitted tree.
+- Tree depth, overfitting and pruning: regression trees, depth as a hyperparameter, pre-pruning, cost-complexity pruning, the instability of single trees.
 - Bagging and random forests: bootstrap samples, averaging, `max_features`, the out-of-bag score.
-- Gradient boosting as fitting the remaining errors step by step; histogram boosting.
+- Gradient boosting as fitting the remaining errors step by step; boosting versus bagging; histogram boosting.
 - Worked example: tree, random forest and gradient boosting on the same churn folds.
 
 ## 2 · Gradient boosting in practice and interpretation
 
 [Open notebook](workbooks/02-lecture-gradient-boosting-and-interpretation.ipynb)
 
-- XGBoost, LightGBM and CatBoost: shared ideas, differences, native interfaces.
+- XGBoost, LightGBM and CatBoost: shared ideas, differences, one fit of each, native interfaces.
 - Categorical features, class weights, early stopping and tuning.
-- Interpretation: built-in importance, permutation importance and SHAP values; why SHAP is not causal.
+- Interpretation: built-in importance and its bias, permutation importance, coefficients versus importances, SHAP values; why SHAP is not causal.
 - Comparing models: paired folds, corrected t-test and Bayesian comparison.
 - Worked example: is a tree ensemble worth replacing the linear price model of Session 6?
 
@@ -29,7 +29,7 @@ Interim review (10 minutes per team): data, validation plan, baselines, plan for
 ## Setup
 
 - On macOS, XGBoost and LightGBM need the OpenMP runtime: `brew install libomp` once.
-- The notebooks read the Telco data from GitHub (internet needed) and the Airbnb data from `case-study/data/airbnb/` (`uv run python case-study/prepare_airbnb.py`).
+- The notebooks read the Telco data from GitHub (internet needed) and the Airbnb data from `case-study/data/airbnb/`: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - Some extras need more packages: extra 11 `hyperopt`, extra 09 `ISLP`, extra 18 `econml` and `graphviz` (see the extras README).
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

@@ -13,7 +13,7 @@ These are the downloaded source notebooks behind the two [block notebooks](../..
 
 - **skops developers (Hugging Face and contributors):** extra 01, MIT. Code adapted in Block 2 with an attribution line.
 - **Evidently AI:** extra 02, Apache-2.0.
-- **Course team:** the block notebooks, `weather.py`, `make_feedback_2024.py`, the figures and the workspace. Notebooks and text CC BY 4.0; code MIT.
+- **Course team:** the block notebooks, `weather.py`, the figures and the workspace. Notebooks and text CC BY 4.0; code MIT.
 
 FastAPI documentation (MIT), HTTPX documentation, MDN Web Docs, Made With ML (MIT), the Evidently, Streamlit, Docker, GitHub Actions, SQLite and AWS documentation are referenced as links only; no files were copied.
 
@@ -24,8 +24,7 @@ FastAPI documentation (MIT), HTTPX documentation, MDN Web Docs, Made With ML (MI
 | [../01-lecture-web-apis-and-a-released-service.ipynb](../01-lecture-web-apis-and-a-released-service.ipynb) | Block 1. Folds in the former `01-lecture-web-apis.ipynb`, `02-lecture-from-notebook-to-service.ipynb`, `03-case-study-weather-api.ipynb` and part 1 of `session-16-exercises.ipynb` (2026-10-14; earlier versions in Git history). The web-API material moved here from Session 2 earlier | CC BY 4.0 |
 | [../02-lecture-architecture-monitoring-and-maintenance.ipynb](../02-lecture-architecture-monitoring-and-maintenance.ipynb) | Block 2. Folds in the former `04-lecture-architecture-in-the-cloud.ipynb`, `05-lecture-monitoring-and-maintenance.ipynb`, `06-case-study-drift-and-retraining.ipynb` and part 2 of `session-16-exercises.ipynb` | CC BY 4.0 |
 | [../weather.py](../weather.py) | Open-Meteo client (`WeatherClient`, `DailyWeather`, `parse_daily`, `yearly_chunks`) imported by Block 1 and exercise 1.7. From the Session 2 workspace (`listingtools.weather`), made self-contained | MIT |
-| [../make_feedback_2024.py](../make_feedback_2024.py) | Lecturer script: releases the 2024 labels as `case-study/data/feedback_2024.csv` (`--out` for another path) | MIT |
-| [../../figures/make_figures.py](../../figures/make_figures.py) with `drift-histogram.png` and `psi-explained.png` | Figures from the EBTI case-study data (issuing-country drift, chapter label shift with the released 2024 labels, PSI per country), shown in Block 2. Regenerate with `uv run python sessions/16-deployment-and-monitoring/figures/make_figures.py` (needs the feedback file) | CC BY 4.0 |
+| [../../figures/make_figures.py](../../figures/make_figures.py) with `drift-histogram.png` and `psi-explained.png` | Figures from the EBTI case-study data (issuing-country drift between the training decisions of 2023–2025 and the requests of 2026, chapter label shift from 2025 to 2026 with the released Public-half labels, PSI per country), shown in Block 2. Regenerate with `uv run python sessions/16-deployment-and-monitoring/figures/make_figures.py` (uses `case-study/data/ebti/public_labels.csv`, or the 2026 decisions of `val.parquet` without it) | CC BY 4.0 |
 | [../../workspace/](../../workspace/README.md) | Package `tariff_service`, tests, Dockerfile, `compose.yaml`, workflows, model card template, dashboard and its Dockerfile | Code: MIT; text: CC BY 4.0 |
 
 ## Data
@@ -33,10 +32,10 @@ FastAPI documentation (MIT), HTTPX documentation, MDN Web Docs, Made With ML (MI
 | Data | Used in | Source | Licence |
 |---|---|---|---|
 | Daily Berlin weather (temperature, precipitation, sunshine), requested live | `weather.py`, Block 1, exercises 1.1 and 1.7 (printed and mocked responses) | [Open-Meteo](https://open-meteo.com/) archive and forecast APIs | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); free API for non-commercial use (fewer than 10,000 calls per day) |
-| Stored daily weather (`case-study/data/airbnb/weather_daily.parquet`) | Block 1 (comparison with the live download, offline fallback) | Open-Meteo, fetched by `case-study/prepare_airbnb.py` | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
-| Live departures at S+U Alexanderplatz (optional depth cell) | Block 1 | [v6.vbb.transport.rest](https://v6.vbb.transport.rest/), community-run, data of VBB | Not stored; requested live only |
+| Stored daily weather (`case-study/data/airbnb/weather_daily.parquet`) | Block 1 (comparison with the live download, offline fallback) | Open-Meteo, fetched by the lecturer's preparation script; part of `airbnb.zip` on the course drive | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Live departures at S+U Alexanderplatz | Block 1, section "Requesting data with httpx" (nested JSON) | [v6.vbb.transport.rest](https://v6.vbb.transport.rest/), community-run, data of VBB | Not stored; requested live only |
 | Customs decisions and nomenclature texts | Blocks 1 and 2, exercises, workspace | European Commission, *European Binding Tariff Information (EBTI)* database, full export; reuse with acknowledgement under Commission Decision 2011/833/EU. Nomenclature texts: datasets/harmonized-system, *Harmonized System nomenclature (HS 2022)* | EBTI: Decision 2011/833/EU; HS texts: ODC-PDDL |
-| 2024 labels (`feedback_2024.csv`) | Block 2 | Derived from the hidden leaderboard solution by `make_feedback_2024.py`; shared by the lecturer in class | as EBTI |
+| Labels of the Public half of the test set (`public_labels.csv`, columns `id,heading`) | Block 2, figures, workspace | Written by the lecturer's preparation script from the held-back test labels; released on the course drive in Session 16 | as EBTI |
 
 ## References cited in the block notebooks
 

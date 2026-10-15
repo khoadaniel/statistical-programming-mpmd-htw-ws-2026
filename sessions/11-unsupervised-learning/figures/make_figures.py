@@ -5,8 +5,8 @@ Run from the repository root:
         python sessions/11-unsupervised-learning/figures/make_figures.py
 
 The first four figures use toy data or built-in scikit-learn data; amenities_pca uses the
-Inside Airbnb Berlin listings (case-study/data/airbnb/listings.parquet, made by
-`uv run python case-study/prepare_airbnb.py`; needs pandas and pyarrow).
+Inside Airbnb Berlin listings (case-study/data/airbnb/listings.parquet: download
+airbnb.zip from the course drive and unzip it into case-study/data/; needs pandas and pyarrow).
 All use a fixed random seed.
 """
 

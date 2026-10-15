@@ -7,8 +7,15 @@ __pycache__/
 catboost_info/
 *.duckdb
 *.egg-info/
-# case-study data are downloaded by each student and never committed
-case-study/data/
+# case-study data: students download the prepared files from the course drive into case-study/data/;
+# only the README and .gitkeep of that folder are committed
+case-study/data/*
+!case-study/data/README.md
+!case-study/data/.gitkeep
+# lecturer only: preparation scripts, downloaded source files, hidden test sets and labels
+case-study/prepare/
+case-study/raw/
+case-study/private/
 submission*.csv
 
 # internal notes, never published

@@ -1,6 +1,6 @@
 -- Rank Berlin districts by the average price of a short stay, separately for entire homes and
 -- private rooms (common table expressions and a window function). Runs on the course database
--- case-study/data/airbnb.sqlite (SQLite 3.25 or newer) and unchanged on PostgreSQL.
+-- case-study/data/airbnb/airbnb.sqlite (SQLite 3.25 or newer) and unchanged on PostgreSQL.
 -- Short stays: minimum stay below 28 nights and a price shown (the course convention).
 -- Author: course team, licence CC BY 4.0
 

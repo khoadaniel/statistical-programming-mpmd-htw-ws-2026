@@ -6,24 +6,25 @@
 
 [Open notebook](workbooks/01-lecture-splits-cross-validation-and-leakage.ipynb)
 
-- Training, validation and test data; training error versus test error.
+- Training, validation and test data and their roles; training error versus test error.
 - Why a single split is unreliable; repeated shuffle-splits.
-- k-fold and stratified cross-validation.
-- Grouped splits by host and time-series splits.
-- Bootstrap confidence interval of the error in euros, by listing and by host.
-- Data leakage: preprocessing outside the cross-validation, target leakage.
-- Preprocessing inside a Pipeline; checking the promises on new hosts.
+- k-fold and stratified cross-validation; how many folds; sorted data.
+- Grouped splits by host, hidden groups and time-series splits; all splitters side by side.
+- Bootstrap confidence interval of the error in euros, by listing and by host (cluster bootstrap).
+- Data leakage: preprocessing outside the cross-validation.
+- Data leakage: target leakage.
+- Preprocessing inside a Pipeline; worked example: which validation promise comes true for new hosts.
 
 ## 2 · Choosing settings: regularisation and tuning
 
 [Open notebook](workbooks/02-lecture-regularisation-and-tuning.ipynb)
 
-- Parameters and hyperparameters.
-- Ridge and lasso regularisation; coefficient paths and scaling.
-- Validation curves and learning curves.
-- Grid search and randomised search, tuning ridge and lasso together.
-- Nested cross-validation.
-- The final test on held-out hosts, with a cluster-bootstrap interval.
+- Parameters and hyperparameters; locking the test hosts away first.
+- Ridge and lasso regularisation: coefficient paths, why scaling matters, `RidgeCV`.
+- Validation curves and learning curves; what noise is.
+- Grid search and randomised search, tuning ridge and lasso together, the one-standard-error rule.
+- Nested cross-validation and how large the optimism is.
+- The final test on held-out hosts; worked example with a cluster-bootstrap interval.
 
 ## Team project until the next session
 

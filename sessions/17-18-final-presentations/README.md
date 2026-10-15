@@ -43,6 +43,6 @@ The last two sessions are reserved for the presentations of the seven teams: fou
 | 1:05–1:30 | Team 7: same format |
 | 1:30–1:45 | Break |
 | 1:45–1:55 | Written peer feedback on Team 7 |
-| 1:55–2:25 | Leaderboard results on the 2025–2026 decisions: the leading teams explain features, model and validation |
+| 1:55–2:25 | Leaderboard results on the Private half of the test set: the leading teams explain features, model and validation |
 | 2:25–2:55 | Course review |
 | 2:55–3:15 | Course evaluation (anonymous, in class) |

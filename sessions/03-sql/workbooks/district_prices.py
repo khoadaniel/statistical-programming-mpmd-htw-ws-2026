@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pandas as pd
 
-DB = Path(__file__).resolve().parents[3] / "case-study" / "data" / "airbnb.sqlite"
+DB = Path(__file__).resolve().parents[3] / "case-study" / "data" / "airbnb" / "airbnb.sqlite"
 
 QUERY = """
 SELECT room_type, COUNT(*) AS n_listings, ROUND(AVG(price), 1) AS avg_price

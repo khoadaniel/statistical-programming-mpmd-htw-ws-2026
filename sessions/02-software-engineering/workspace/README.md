@@ -26,14 +26,14 @@ Teaching notebooks: [block 1, classes, errors and tests](../workbooks/01-lecture
 
 ## Run it
 
-The summary of the real listings needs the case-study data (`uv run python case-study/prepare_airbnb.py`, run once from the repository root); the tests do not.
+The summary of the real listings needs the case-study data (download `airbnb.zip` from the course drive and unzip it into `case-study/data/` of the repository, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
 
 ```bash
 cd sessions/02-software-engineering/workspace
 uv run pytest -q                      # 70 passed, 22 skipped (the skipped ones are your exercises)
 uv run ruff check . && uv run ruff format --check .
 
-# from the repository root: print the summary of the 12,776 Berlin listings
+# from the repository root: print the summary of the 10,221 Berlin listings
 uv run --project sessions/02-software-engineering/workspace listing-summary
 ```
 

@@ -1,12 +1,15 @@
 """Drift report: compare a batch of new decisions with the reference stored in the model metadata.
 
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet \\
-        --labels ../../../case-study/data/feedback_2024.csv
+    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet --since 2026-01-01
+    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet --since 2026-01-01 \\
+        --labels ../../../case-study/data/ebti/public_labels.csv
+    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/val.parquet --since 2026-01-01
 
 Input drift (description length, language and country shares) and prediction drift (predicted chapter
 shares) need no labels; label shift, unseen headings and the accuracy check need the labels of the new
-period, which arrive later (here: the 2024 feedback released in Session 16).
+period, which arrive later (here: the labels of the Public half of the test set, released in Session 16).
+A file with a `heading` column, such as val.parquet, brings its own labels. `--since DATE` keeps only
+decisions that started on or after DATE.
 """
 
 from __future__ import annotations
@@ -57,13 +60,18 @@ def main() -> None:
     parser.add_argument("--model-dir", type=Path, default=Path("models"))
     parser.add_argument("--current", type=Path, required=True, help="parquet with id, description, language, ...")
     parser.add_argument("--labels", type=Path, help="CSV id,heading for (part of) the current decisions")
+    parser.add_argument("--since", help="keep only decisions that started on or after this date (YYYY-MM-DD)")
     parser.add_argument("--tolerance", type=float, default=0.03)
     args = parser.parse_args()
     pipe, meta = load_model(args.model_dir)
-    df = pd.read_parquet(args.current, columns=["id", "description", "language", "issuing_country"])
+    df = pd.read_parquet(args.current)
+    if args.since is not None:
+        df = df[df["start_date"] >= pd.Timestamp(args.since)]
     labels = None
     if args.labels:
-        df = df.merge(pd.read_csv(args.labels, dtype=str), on="id")
+        df = df.drop(columns="heading", errors="ignore").merge(pd.read_csv(args.labels, dtype=str), on="id")
+        labels = df["heading"].tolist()
+    elif "heading" in df.columns:  # e.g. val.parquet: labelled decisions
         labels = df["heading"].tolist()
     texts = [decision_text(t) for t in df["description"]]
     report = drift_report(pipe, meta, texts, labels, df["language"].tolist(), df["issuing_country"].tolist(),

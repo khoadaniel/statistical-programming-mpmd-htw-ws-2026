@@ -36,15 +36,17 @@ The course does not need another major topic such as deep learning from scratch,
 
 ### P0 — Correct the hidden-test workflow before releasing student data
 
-**Observed:** [prepare_data.py](../case-study/prepare_data.py) writes `data/instructor/solution.csv` when students run the documented preparation command. [score.py](../case-study/score.py) reads that file and prints both public and private scores. Several student notebooks conditionally score against it, including the L1, L2 and retraining notebooks. The word `instructor` in a directory name does not make its contents private.
+**Observed:** `prepare_data.py` (since removed) wrote `data/instructor/solution.csv` when students ran the documented preparation command. [score.py](../case-study/score.py) reads that file and prints both public and private scores. Several student notebooks conditionally score against it, including the L1, L2 and retraining notebooks. The word `instructor` in a directory name does not make its contents private.
 
 **Impact:** A student following the instructions receives hidden labels without deliberately breaking a rule. Repeated private scoring also undermines the lesson about preserving a final test set. The project already acknowledges that source decisions are public; this is a separate, avoidable disclosure through the normal course workflow.
 
 **Recommendation:** Separate instructor preparation from student preparation. Distribute a frozen student bundle containing training labels and unlabelled test rows, and keep the scoring solution outside the student bundle. Student-side checks should validate submission format and score a labelled development split only. Remove private scoring cells from the student route. Audit cached notebook outputs as well as code.
 
-After releasing 2024 labels, explicitly retire that year's public score as an evaluation measure. The S16 notebook already explains why its near-perfect retraining score is uninformative; apply the same rule to the leaderboard interface and project instructions. Preserve the rule against looking up public-source test answers, while describing the exercise honestly as an educational holdout rather than a secure competition.
+After releasing the labels of the public half, explicitly retire its public score as an evaluation measure. The S16 notebook already explains why its near-perfect retraining score is uninformative; apply the same rule to the leaderboard interface and project instructions. Preserve the rule against looking up public-source test answers, while describing the exercise honestly as an educational holdout rather than a secure competition.
 
 **Acceptance check:** A fresh student setup neither creates a solution file nor reports private-period scores; final private scoring is performed after the submission freeze.
+
+**Status (15 October 2026):** Addressed. Students no longer run a preparation script: they download prepared data (training, validation and unlabelled test sets, split at random and stratified by heading) from the course drive, and the test labels stay with the lecturer. The time split described above no longer exists.
 
 ### P0 — Publish one consistent assessment contract
 
@@ -206,11 +208,11 @@ Retain the early data milestones, but give teams a **small, working TF-IDF start
 
 Provide a one-page domain glossary and a few illustrated goods examples. Include examples in different languages with reading support. Translated explanations and post-decision keywords can help interpret training errors, but must stay visibly separate from permitted model inputs.
 
-Offer three dataset scales: a tiny fixture for debugging, a fixed small development sample for class, and the larger training set for optional experiments. Preserve chronological development splits and document the class coverage of each sample. Do not silently remove rare classes to make the task easier while continuing to claim full-task performance.
+Offer three dataset scales: a tiny fixture for debugging, a fixed small development sample for class, and the larger training set for optional experiments. Preserve the fixed, heading-stratified development splits and document the class coverage of each sample. Do not silently remove rare classes to make the task easier while continuing to claim full-task performance.
 
 ### Define a sufficient final project
 
-The minimum complete route should be explicit: a documented data pipeline, majority baseline and TF-IDF model, a defensible time split, a controlled comparison, error analysis, a tested supplied service adapted to the team's model, and an honest model card. Set the number and scope of required comparisons; “several approaches” is open-ended.
+The minimum complete route should be explicit: a documented data pipeline, majority baseline and TF-IDF model, a defensible validation scheme, a controlled comparison, error analysis, a tested supplied service adapted to the team's model, and an honest model card. Set the number and scope of required comparisons; “several approaches” is open-ended.
 
 Make one extension optional: character features, multilingual embeddings, abstention, retrieval/reranking, calibration, or a robustness investigation. Fine-tuning or an agent should not be an implicit route to a high grade. The current S15 project component is already optional; make that optionality equally clear across the rubric and student-facing hub.
 

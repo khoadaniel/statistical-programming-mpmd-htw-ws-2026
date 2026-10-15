@@ -18,7 +18,7 @@
 
 - The working environment: uv, VS Code and the course environment
 - Jupyter notebooks: cells, kernel, Markdown, order of execution
-- A short recap of Python: types, collections, conditions, loops, functions, errors
+- Python fundamentals: variables, simple types, collections, conditions and loops, functions, errors, modules
 - NumPy arrays: creation, `dtype`, `shape`, indexing, slicing and Boolean masks
 - Vectorised operations, broadcasting and aggregation along an axis
 - Random numbers and simulation; worked example: the Berlin booking calendar
@@ -41,6 +41,7 @@ Teams of three are formed and read the project brief and the leaderboard rules.
 
 ## Setup
 
+- The case-study data: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)); `ebti.zip` is needed from Session 3 on.
 - The job advertisements of exercise 1.1 are handed out by the lecturer; they are not in the repository.
 - To regenerate the figures: `uv run python sessions/01-careers-and-python/figures/make_figures.py`. To refresh the skills heat map with today's job ads, first run `uv run --with trafilatura python sessions/01-careers-and-python/figures/job_ad_skills.py` (about 250 page requests to the Data Berlin board).
 

@@ -144,12 +144,21 @@ uv sync
 uv run python -c "import sys, sklearn, pandas; print(sys.version.split()[0], 'OK')"
 ```
 
-It prints `3.14.x OK`. Then download the case-study data (once; Sessions 13–16 data can wait until Session 13):
+It prints `3.14.x OK`. Then get the course data from the **course drive**: download `airbnb.zip` (about 3 MB, Sessions 1–12) and `ebti.zip` (about 80 MB, Sessions 13–16; it can wait until Session 13) and unzip both **into the folder `case-study/data/`** of the repository:
 
 ```bash
-uv run python case-study/prepare_airbnb.py   # Inside Airbnb Berlin and Berlin weather, about 100 MB (Sessions 1–12)
-uv run python case-study/prepare_data.py     # EBTI customs decisions, about 400 MB (Sessions 13–16)
+unzip ~/Downloads/airbnb.zip -d case-study/data/
+unzip ~/Downloads/ebti.zip -d case-study/data/
 ```
+
+You then have `case-study/data/airbnb/` and `case-study/data/ebti/`. The notebooks read the data from exactly these two folders, so do not rename or move them. Git ignores their contents: the data stay on your computer and are never uploaded to GitHub.
+
+| Folder | Files | What they hold |
+|---|---|---|
+| `case-study/data/airbnb/` | `listings.parquet` (10,221 rows), `calendar.parquet`, `reviews_monthly.parquet`, `weather_daily.parquet`, `neighbourhoods.geojson` | Berlin Airbnb listings from [Inside Airbnb](https://insideairbnb.com/get-the-data/) (snapshot of 26 June 2026) with price, district, room type, ratings and availability; reviews per month as a proxy for demand; daily Berlin weather from [Open-Meteo](https://open-meteo.com) |
+| `case-study/data/ebti/` | `train.parquet` (83,659 rows), `val.parquet` (17,927), `test.parquet` (17,928), `train_sample.parquet`, `nomenclature.parquet` | EU customs decisions from the European Commission's [EBTI database](https://ec.europa.eu/taxation_customs/dds2/ebti/ebti_consultation.jsp?Lang=en): a product description and its four-digit heading; `test` has no heading, it is the leaderboard set |
+
+The lecturer prepared both datasets from these public sources and **held back a test set** of each, which you never receive: it measures how well a model works on cases it has never seen. How the data were cleaned and split, and what every column means: [case-study/README.md](case-study/README.md). Session 3 builds a SQLite database from the Airbnb files with one command given in its notebook.
 
 ### Step 5 · Open the repository in VS Code and run a notebook
 

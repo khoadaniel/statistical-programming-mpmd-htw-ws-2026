@@ -23,10 +23,11 @@ CLEAN = Path(os.environ["AIRBNB_CLEAN_OUT"]) if os.environ.get("AIRBNB_CLEAN_OUT
 ROOM_TYPES = {"Entire home/apt", "Private room", "Hotel room", "Shared room"}
 LICENSE_STATUS = {"registration number", "missing", "legal entity name", "private host name", "other"}
 LAT, LON = (52.33, 52.68), (13.08, 13.77)            # bounding box of neighbourhoods.geojson
-REGISTRATION = r"\d{2}/[Z3]/[A-Z]{2}/?\d+"           # the pattern prepare_airbnb.py keeps (any case)
+REGISTRATION = r"\d{2}/[Z3]/[A-Z]{2}/?\d+"           # the pattern the preparation script keeps (any case)
 
 if not (DATA / "listings.parquet").exists():
-    pytest.skip("Airbnb data missing: run case-study/prepare_airbnb.py", allow_module_level=True)
+    pytest.skip("Airbnb data missing: download airbnb.zip from the course drive into case-study/data/ "
+                "(see case-study/README.md)", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")
@@ -126,12 +127,12 @@ def test_raw_no_sentinel_maximum_nights(listings):
     assert not listings["maximum_nights"].eq(2**31 - 1).any()
 
 
-@pytest.mark.xfail(strict=True, reason="known: 10 listings require a minimum stay above 365 nights (up to 1,125)")
+@pytest.mark.xfail(strict=True, reason="known: 8 listings require a minimum stay above 365 nights (up to 1,125)")
 def test_raw_minimum_stay_at_most_one_year(listings):
     assert listings["minimum_nights"].dropna().le(365).all()
 
 
-@pytest.mark.xfail(strict=True, reason="known: 47 listings have more bedrooms than guests")
+@pytest.mark.xfail(strict=True, reason="known: 31 listings have more bedrooms than guests")
 def test_raw_bedrooms_not_above_guests(listings):
     assert not listings["bedrooms"].gt(listings["accommodates"]).any()
 

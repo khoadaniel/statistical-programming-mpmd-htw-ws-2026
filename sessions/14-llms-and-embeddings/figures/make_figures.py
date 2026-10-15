@@ -21,7 +21,8 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "train_sample.parquet"
+DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti" / "train_sample.parquet"
+VAL = DATA.with_name("val.parquet")
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 PALETTE = ["#2471a3", "#c0392b", "#27ae60", "#8e44ad", "#d68910", "#17a589"]
 
@@ -144,13 +145,12 @@ def coverage_accuracy() -> None:
     from sklearn.linear_model import SGDClassifier
     from sklearn.pipeline import make_pipeline
 
-    d = pd.read_parquet(DATA)
-    past = d["start_date"].dt.year <= 2021
+    d, v = pd.read_parquet(DATA), pd.read_parquet(VAL)
     clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
                         SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
-    clf.fit(d.loc[past, "description"], d.loc[past, "heading"])
-    proba = clf.predict_proba(d.loc[~past, "description"])
-    correct = clf.classes_[proba.argmax(axis=1)] == d.loc[~past, "heading"].to_numpy()
+    clf.fit(d["description"], d["heading"])
+    proba = clf.predict_proba(v["description"])
+    correct = clf.classes_[proba.argmax(axis=1)] == v["heading"].to_numpy()
     conf = proba.max(axis=1)
     ts = np.linspace(0, 0.95, 96)              # above 0.95 almost no case is left
     cov = np.array([(conf >= t).mean() for t in ts])
@@ -164,8 +164,8 @@ def coverage_accuracy() -> None:
                     fontsize=9)
     ax.set(xlabel="coverage: share of decisions the model decides itself",
            ylabel="accuracy on the decided cases", xlim=(0, 1.02), ylim=(0.7, 1.01))
-    ax.set_title("Abstention: TF-IDF heading classifier, EBTI 2022–2023\n"
-                 "(trained on 2017–2021 of the 50,000-decision sample)", loc="left", fontsize=10)
+    ax.set_title("Abstention: TF-IDF heading classifier, EBTI validation set\n"
+                 "(trained on the 50,000-decision sample)", loc="left", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "coverage_accuracy.png")
     plt.close(fig)

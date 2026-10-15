@@ -1,7 +1,8 @@
 """Figures for the Session 1 lecture notebooks.
 
-Run from the repository root (the listing figures need the case-study data, `uv run python case-study/prepare_airbnb.py`;
-the skills figure reads job_ad_skills.csv, written by job_ad_skills.py):
+Run from the repository root. The listing and language figures need the case-study data: download `airbnb.zip` and
+`ebti.zip` from the course drive and unzip them into `case-study/data/` (see case-study/README.md). The skills figure
+reads job_ad_skills.csv, written by job_ad_skills.py:
 
     uv run python sessions/01-careers-and-python/figures/make_figures.py
 """
@@ -16,6 +17,7 @@ plt.switch_backend("Agg")  # write files only, no window
 
 OUT = Path(__file__).resolve().parent
 DATA = Path("case-study/data/airbnb")
+EBTI = Path("case-study/data/ebti")
 ROOM_TYPES = ["Entire home/apt", "Private room"]  # the two room types with enough listings
 COLOUR = "#2d7d74"
 
@@ -56,7 +58,7 @@ def listings_by_district() -> None:
 
     fig, (left, right) = plt.subplots(1, 2, figsize=(9, 4.5), sharey=True, dpi=130)
     left.barh(counts.index, counts.to_numpy(), color=COLOUR, height=0.7)
-    left.set_xlabel("Listings (all 12,776)")
+    left.set_xlabel(f"Listings (all {len(listings):,})")
     right.barh(median.index, median.to_numpy(), color=COLOUR, height=0.7)
     right.set_xlabel("Median price per night of short stays (EUR)")
     for ax in (left, right):
@@ -161,9 +163,39 @@ def skills_by_role() -> None:
     plt.close(fig)
 
 
+LANGUAGE_NAMES = {"de": "German", "fr": "French", "nl": "Dutch", "cs": "Czech", "es": "Spanish", "pl": "Polish",
+                  "it": "Italian", "sv": "Swedish", "en": "English"}
+
+
+def ebti_languages() -> None:
+    """Share of training decisions per language of the description (EBTI, final project)."""
+    language = pd.read_parquet(EBTI / "train.parquet", columns=["language"])["language"]
+    shares = language.value_counts(normalize=True) * 100
+    top = shares.iloc[:8]
+    others = shares.iloc[8:]
+    labels = [LANGUAGE_NAMES.get(code, code) for code in top.index] + [f"{len(others)} others"]
+    values = [*top.to_numpy(), others.sum()]
+
+    fig, ax = plt.subplots(figsize=(8, 3.8), dpi=130)
+    y = np.arange(len(values))[::-1]
+    ax.barh(y, values, color=[BLUE[5]] * len(top) + [MUTED], height=0.75)
+    for yi, value in zip(y, values, strict=True):
+        ax.text(value + 0.8, yi, f"{value:.0f} %" if value >= 1 else f"{value:.1f} %", va="center", fontsize=9,
+                color=INK)
+    ax.set_yticks(y, labels, fontsize=10, color=INK)
+    ax.set_xlabel(f"share of the {len(language):,} training decisions (%)", color=INK_2)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.set_title(f"Descriptions are written in {language.nunique()} languages", fontsize=12, color=INK)
+    fig.tight_layout()
+    fig.savefig(OUT / "ebti_languages.png")
+    plt.close(fig)
+
+
 if __name__ == "__main__":
     role_map()
     skills_by_role()
     if DATA.exists():
         price_by_room_type()
         listings_by_district()
+    if EBTI.exists():
+        ebti_languages()

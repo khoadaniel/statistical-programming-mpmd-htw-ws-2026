@@ -4,8 +4,8 @@ A complete, small service around the case-study model: training script, FastAPI 
 pydantic schemas that returns the **three highest-scoring HS headings** with their English texts, tests with
 `TestClient`, a Dockerfile, a Compose file that runs dashboard and API together (with the prediction log in a
 SQLite file), CI and CD workflows for GitHub Actions, drift statistics as tested pure functions, a monitoring
-report and a model card template. Session 16 builds version 1 and then, after the 2024 feedback labels are
-released, version 2. Copy the folder into your team repository: running service and dashboard with Docker Compose
+report and a model card template. Session 16 builds version 1 and then, after the labels of the Public half of the
+test set are released as feedback, version 2. Copy the folder into your team repository: running service and dashboard with Docker Compose
 and releasing through CI/CD is part of the team project.
 
 ```
@@ -36,8 +36,8 @@ uv sync                                   # creates .venv with exactly the versi
 uv run pytest -q                          # 34 passed, 1 skipped (skops not installed), 2 xfailed (open exercises)
 uvx ruff check .
 
-# version 1 on the 50,000-decision sample (about 20 s; validation accuracy about 0.78, top-3 0.85)
-uv run python -m tariff_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
+# version 1 on the 50,000-decision sample (about 20 s; validation accuracy about 0.76, top-3 0.83)
+uv run python -m tariff_service.train --data ../../../case-study/data/ebti/train_sample.parquet --version 1.0.0
 
 # start the API (Ctrl+C stops it) and open http://localhost:8000/docs
 uv run uvicorn tariff_service.app:app --reload
@@ -49,14 +49,14 @@ The tests never need the case-study data: `tests/conftest.py` trains a model on 
 
 **What the scores mean.** The model is a linear support vector machine on word TF-IDF features (Session 13).
 A score is its margin: above 0 the model votes for the heading, below 0 it is not convinced of any heading.
-Scores are not probabilities. For the boot request above, version 1 answers 6404 with score −0.28 and has
-the correct heading 6403 only in third place (−0.68): short descriptions, unlike the long descriptions of real
+Scores are not probabilities. For the boot request above, version 1 answers 6404 with score 0.24 and has
+the correct heading 6403 only in third place (−0.72): short descriptions, unlike the long descriptions of real
 decisions, give the model little to go on. A service would show such low-score answers as suggestions only and
 route them to an officer (Session 14, abstention).
 
-**Model size.** With about 900 headings and 80,000 words, the dense coefficient matrix takes about 600 MB.
+**Model size.** With about 940 headings and 100,000 words, the dense coefficient matrix takes about 770 MB.
 `train.py` sets coefficients with |w| < 0.05 to zero and stores them sparsely (`--prune`): about 1 % of the
-weights remain, validation accuracy is unchanged, and the model file has about 12 MB.
+weights remain, validation accuracy is unchanged, and the model file has about 11 MB.
 
 ## Workspace exercises
 
@@ -79,20 +79,26 @@ The 30-minute exercises in class are at the end of the two block notebooks
    repository, push, and check that `ci.yml` passes. Create the release `v1.0.0` with the model files attached
    and follow `cd.yml`. Finally, sketch the cloud architecture of your team project on AWS (which part runs on
    which service; see the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)).
-4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Run the drift report on the 2024–2026
-   test decisions: `uv run python -m tariff_service.monitor --current ../../../case-study/data/test.parquet`,
-   then with the feedback labels (`--labels ../../../case-study/data/feedback_2024.csv`). Which input drifts?
-   Does the retraining rule fire?
-5. **Version 2 and the model card (after Block 2).** Retrain with the feedback
-   (`--feedback ../../../case-study/data/feedback_2024.csv --version 2.0.0`), compare v1 and v2 as in
+4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Simulate a model released at the start
+   of 2026, as in the block notebook: `uv run python -m tariff_service.train --data
+   ../../../case-study/data/ebti/train_sample.parquet --before 2026-01-01 --version 1.0.0`. Run the drift report on
+   the requests of 2026: `uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet
+   --since 2026-01-01`, then with the released labels of the Public half (`--labels
+   ../../../case-study/data/ebti/public_labels.csv`; before the release, `--current
+   ../../../case-study/data/ebti/val.parquet --since 2026-01-01` uses the labels of the validation set). Which input
+   drifts? Does the retraining rule fire?
+5. **Version 2 and the model card (after Block 2).** Retrain on the whole training sample with the feedback
+   (`--data ../../../case-study/data/ebti/train_sample.parquet --feedback ../../../case-study/data/ebti/public_labels.csv
+   --version 2.0.0`), compare v1 and v2 on `val.parquet` as in
    the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), and fill in `MODEL_CARD.md` for v2.
 
-With the course data, the report for v1 on the 2024 decisions shows: country PSI 0.24 (GB issued about 4 % of
-the training decisions and none since 2021), language PSI 0.09, description-length PSI 0.04, predicted-chapter
-PSI 0.06, chapter label shift PSI 0.06 (chapter 85 falls from 14.7 % to 11.7 %), 0.4 % of the 2024 headings
-never seen in training, and accuracy 0.80 on 2024 against 0.78 in validation. The written rule does **not**
-fire, yet retraining with the 2024 labels still raises accuracy on 2025–2026 (see the workbook): a rule that
-waits for a drop can miss an opportunity to improve.
+With the course data, v1 trained on the decisions before 2026 has a time-based validation accuracy of 0.768, and
+the report on the 2,473 decisions of 2026 in the Public half shows: description-length PSI 0.004, language PSI
+0.035 and country PSI 0.036 (France's share rises), predicted-chapter PSI 0.085, chapter label shift PSI 0.086,
+0.4 % of the 2026 headings never seen in training, and accuracy 0.745 against 0.768 in validation. The written
+rule (accuracy more than 0.03 below validation, or an input PSI above 0.25) does **not** fire, yet retraining with
+the released labels raises accuracy on 2026 by about 3 points (see the block notebook): a rule that waits for a
+drop can miss an opportunity to improve.
 
 ## Containers, CI/CD and hosting
 

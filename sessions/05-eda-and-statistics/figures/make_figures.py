@@ -155,7 +155,8 @@ def fig_simpsons_paradox() -> None:
     right.set_xticks(np.arange(3), groups)
     right.set_xlim(-0.6, 2.6)
     right.set(ylabel="mean price per night (log scale)",
-              title="Case study: a €10 gap between two districts vanishes\nwithin each type of stay")
+              title=f"Case study: a €{pooled[pair[0]] - pooled[pair[1]]:.0f} gap between two districts\n"
+                    "shrinks to a few euros within each type of stay")
     right.legend(frameon=False, loc="center", fontsize=8.5)
     fig.savefig(OUT / "simpsons-paradox.png")
     plt.close(fig)

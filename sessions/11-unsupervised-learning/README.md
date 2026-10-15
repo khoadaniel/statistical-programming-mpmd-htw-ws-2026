@@ -7,24 +7,24 @@
 [Open notebook](workbooks/01-lecture-clustering.ipynb)
 
 - Supervised and unsupervised learning: no target, three kinds of evidence instead of a test score.
-- Distance, similarity and scaling: Euclidean, Manhattan and cosine; why units decide the result.
-- k-means computed by hand, k-means as expectation–maximisation, where it fails, digits and colour compression.
+- Distance, similarity and scaling: Euclidean, Manhattan and cosine side by side; why units decide the result.
+- k-means: computed by hand, as expectation–maximisation, where it fails, digits and colour compression.
 - Choosing the number of clusters: elbow, silhouette and silhouette plots on the Telco customers.
-- Hierarchical clustering and dendrograms: linkages, cutting the tree, Ward on the Berlin listings.
-- Density-based clustering: DBSCAN hot spots on the map, HDBSCAN, all methods on toy data.
-- Evaluating and interpreting clusters: silhouette, bootstrap stability, adjusted Rand index, profiles.
+- From customers to listings: the Berlin listings as six standardised features.
+- Hierarchical clustering and dendrograms: linkages compared, cutting the tree, Ward on the Berlin listings.
+- Density-based clustering: core, border and noise points, DBSCAN hot spots on the map, HDBSCAN, all methods on toy data.
+- Evaluating and interpreting clusters: separation, bootstrap stability, the adjusted Rand index.
 - Worked example: what kinds of Airbnb offers exist in Berlin?
 
 ## 2 · Dimensionality reduction and anomaly detection
 
 [Open notebook](workbooks/02-lecture-dimensionality-reduction-and-anomaly-detection.ipynb)
 
-- Principal component analysis: explained variance, loadings, geometry, scaling and the number of components.
-- t-SNE and UMAP for visualisation: perplexity, manifold methods, UMAP parameters, what maps cannot show.
+- Principal component analysis: geometry on two columns, explained variance and loadings, scaling, the number of components, noise filtering.
+- t-SNE and UMAP for visualisation: perplexity, UMAP parameters, trustworthiness, manifold methods, what maps cannot show.
 - Worked example: PCA of the amenities of the Berlin listings.
-- Model-based anomaly detection with Isolation Forest and local outlier factor, continuing Session 4.
-- Implausible listings: detectors compared with a price ratio from a cross-validated model.
-- Clusters and components as features inside a pipeline; location clusters in the price model.
+- Model-based anomaly detection with Isolation Forest and local outlier factor, continuing Session 4: detectors on toy data, evaluation with known labels, and implausible Berlin listings compared with a price ratio from a cross-validated model.
+- Clusters and components as features inside a pipeline: Telco churn, scaling before PCA in a classifier, location clusters in the price model.
 
 ## Team project until the next session
 
@@ -32,7 +32,7 @@ Open points from the interim review.
 
 ## Setup
 
-- Prepare the Airbnb data once: `uv run python case-study/prepare_airbnb.py`. The Telco data are read from GitHub.
+- The Airbnb data: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). The Telco data are read from GitHub.
 - The ISLP lab among the extras needs `uv run --with ISLP jupyter lab`; some other extras download data sets on first run.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

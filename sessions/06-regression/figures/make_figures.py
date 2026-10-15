@@ -63,7 +63,8 @@ def fig_residuals() -> None:
     right.scatter(f2, res2, s=5, alpha=0.25, color=GREY)
     right.axhline(0, color="black", lw=1)
     top = res2.idxmax()
-    right.annotate("€10,025 for a loft for seven guests:\nresidual +3.7, 42 times the fitted price",
+    right.annotate(f"€{short.loc[top, 'price']:,.0f} for a flat for {short.loc[top, 'accommodates']} guests:\n"
+                   f"residual {res2[top]:+.1f}, {np.exp(res2[top]):.0f} times the fitted price",
                    xy=(f2[short.index.get_loc(top)], res2[top]), xytext=(3.4, 3.2),
                    arrowprops={"arrowstyle": "->"}, fontsize=9)
     right.set(xlabel="fitted log(price)", ylabel="residual (log scale)", ylim=(-3, 4.5),

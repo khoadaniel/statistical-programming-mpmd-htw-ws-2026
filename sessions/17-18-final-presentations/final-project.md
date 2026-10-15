@@ -9,10 +9,10 @@ All teams work on the same project: **predict the four-digit customs heading of 
 
 A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority answers with a binding decision that states the code, and the European Commission publishes all decisions (EBTI). Your model suggests the heading of a new request, so that a customs officer can check it faster.
 
-- **Data:** 309,529 decisions from 2017–2023 for training; 113,188 decisions from 2024–2026 without headings as the test set. Descriptions are written in 23 languages. Prepare them with `uv run python case-study/prepare_data.py` ([case-study/README.md](../../case-study/README.md)).
-- **Inputs:** only what exists when a request arrives: the description, the issuing country, the language and the date. The customs' justification, the keywords, the CN code, the chapter, the status, the end date and the invalidation reason are written with or after the decision and must not be model inputs (Session 13).
-- **Leaderboard:** the decisions of 2024 form the public leaderboard (you see your score after each submission), those of 2025–2026 the private leaderboard (shown in Session 18). Accuracy is the main metric, with macro-F1 alongside.
-- **Rounds:** L1 with TF-IDF models (Session 13), L2 with embeddings or language models (Session 14), L3 the final model after retraining with the released 2024 labels (Session 16).
+- **Data:** 119,514 decisions that were valid on 15 October 2026 (started between late 2023 and 2026), split at random and stratified by heading: 83,659 for training (`train.parquet`, with a 50,000-decision sample), 17,927 with headings for validation (`val.parquet`), and 17,928 without headings as the test set (`test.parquet`). Descriptions are written in 23 languages (German 61 %, French 16 %). Download `ebti.zip` from the course drive and unzip it into `case-study/data/` ([case-study/README.md](../../case-study/README.md)).
+- **Inputs:** only what exists when a request arrives: the description, the issuing country, the language and the date. The customs' justification, the keywords, the CN code, the chapter and the end date are written with or after the decision and must not be model inputs (Session 13); the test set contains none of them.
+- **Leaderboard:** the test set is split into two halves, again stratified by heading. The Public half gives your score after each submission; the Private half decides the final ranking and stays hidden until Session 18. Accuracy is the main metric, with macro-F1 alongside. The test labels are only on the lecturer's computer: to check a model yourself, score it on `val.parquet`. A submission is a CSV file with the columns `id,heading` and one row per test decision.
+- **Rounds:** L1 with TF-IDF models (Session 13), L2 with embeddings or language models (Session 14), L3 the final model after retraining with the released labels of the Public half (Session 16).
 
 > [!NOTE]
 > Aim for the highest accuracy you can reach, but the score is not converted into marks. The grade rewards how you frame the problem, handle the data, build and validate the model and explain your results (see the criteria below). A team with a lower score that is well validated and well explained can receive a better grade than a team with a higher score that it cannot explain.
@@ -35,17 +35,17 @@ flowchart LR
 |---|---|---|
 | S1 | Challenge introduced in class; teams formed | Lecturer, in class |
 | S2 | Team repository from the template, with branch protection and CI | Lecturer, in the repository |
-| S3 | Customs decisions downloaded with the provided script and loaded into the team database; first counts per year, language and member state in SQL | — |
+| S3 | Customs decisions downloaded from the course drive (`ebti.zip`) and loaded into the team database; first counts per year, language and member state in SQL | — |
 | S4 | Data quality report of the decisions and **project charter** | Written feedback within one week |
 | S5 | Exploratory findings: decisions per heading, language, member state and year; the long tail of rare headings | In class |
-| S6–S7 | Baselines (most frequent heading; a simple rule) and the **validation plan**: split by time, metrics, uncertainty, forbidden inputs | On request |
+| S6–S7 | Baselines (most frequent heading; a simple rule) and the **validation plan**: how the validation set is used, a time-based check (train on older, validate on newer decisions), metrics, uncertainty, forbidden inputs | On request |
 | S8–S9 | A first classifier on simple features (language, member state, description length) in a pipeline, evaluated with accuracy and macro-F1; how the team will deal with rare headings | On request |
 | S10 | **Interim review** (10 minutes per team): data, validation plan, baselines, plan for Sessions 13–16 | In class, not graded |
 | S11–S12 | Open points from the interim review | — |
 | S13 | TF-IDF classifier on the team's validation scheme, error analysis, round **L1** | Leaderboard |
 | S14 | Evidence whether embeddings or a language model improve the model, round **L2** | Leaderboard |
 | S15 | Optional: a language-model component (for example a classification assistant with retrieval), with its evaluation | On request |
-| S16 | **Release**: tested service with the top-3 headings and dashboard, run together with Docker Compose and released through the CI/CD workflow; monitoring plan and model card; retraining with the 2024 labels, round **L3** | Leaderboard |
+| S16 | **Release**: tested service with the top-3 headings and dashboard, run together with Docker Compose and released through the CI/CD workflow; monitoring plan and model card; retraining with the released labels, round **L3** | Leaderboard |
 | S17–S18 | **Final presentation** (graded) | Grade and written feedback |
 
 ## Project charter (Session 4)
@@ -54,14 +54,14 @@ One page in the team repository (`docs/charter.md`):
 
 1. **Use**: who would use the suggestions, for which decision, and what a wrong suggestion costs.
 2. **Metric and baseline**: accuracy and macro-F1, and whether the model may abstain on uncertain cases (then also coverage); the simplest result you must beat.
-3. **Validation**: how you split the training years by time, and why.
+3. **Validation**: how you use the validation set, whether you also hold out the newest decisions by start date (the course split is random, deployment is not), and why.
 4. **Data**: evidence that the decisions are loaded (a script that prints row counts per year), the main quality problems found, and the list of columns you will not use as inputs.
 5. **Plan and roles**: who works on what until the interim review.
 6. **Risks**: rare headings, languages with few decisions, changes of the nomenclature, and what you will do about them.
 
 ## Rules
 
-- The final submission must be reproducible: the lecturer must be able to rerun the tagged repository from the official export to the submitted file. A submission that the repository cannot reproduce is not assessed.
+- The final submission must be reproducible: the lecturer must be able to rerun the tagged repository from the course data (`ebti.zip`) to the submitted file. A submission that the repository cannot reproduce is not assessed.
 - Do not look up test decisions in the public EBTI database or use their headings in any form. Every test decision can be found there; that is why the score itself earns no marks.
 - Never commit data or submission files to the repository.
 

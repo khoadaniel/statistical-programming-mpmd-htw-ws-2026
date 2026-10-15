@@ -1,7 +1,8 @@
 """Build the course's SQLite database of the Berlin Airbnb case study.
 
-Session 3 queries the Inside Airbnb Berlin snapshot with SQL. This script reads the Parquet files that
-case-study/prepare_airbnb.py writes to case-study/data/airbnb/ and stores three tables in one SQLite file:
+Session 3 queries the Inside Airbnb Berlin snapshot with SQL. This script reads the Parquet files in
+case-study/data/airbnb/ (downloaded as airbnb.zip from the course drive, see case-study/README.md) and
+stores three tables in one SQLite file:
 
     listings   one row per listing (id is the primary key)
     calendar   one row per listing and night of the coming year (listing_id, date, available 0/1)
@@ -10,10 +11,9 @@ case-study/prepare_airbnb.py writes to case-study/data/airbnb/ and stores three 
 Dates are stored as text 'YYYY-MM-DD', because SQLite has no date type; text in this format sorts in date
 order and works with SQLite's date functions (date(), strftime(), julianday()).
 
-Run from the repository root (a few seconds; the file has about 130 MB):
+Run from the repository root (a few seconds; the file has about 100 MB):
 
-    uv run python case-study/prepare_airbnb.py                      # once, if the Parquet files are missing
-    uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py   # writes case-study/data/airbnb.sqlite
+    uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py   # writes case-study/data/airbnb/airbnb.sqlite
     uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py --force   # rebuild an existing file
 
 The output lies in case-study/data/, which is not committed to Git.
@@ -31,7 +31,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[3]
 PARQUET = ROOT / "case-study" / "data" / "airbnb"
-DB = ROOT / "case-study" / "data" / "airbnb.sqlite"
+DB = PARQUET / "airbnb.sqlite"
 
 # The listings table is created with its schema first, so that id is a real primary key.
 LISTINGS_SCHEMA = """
@@ -70,7 +70,8 @@ def as_text_date(column: pd.Series) -> pd.Series:
 def build(db: Path = DB, parquet: Path = PARQUET) -> None:
     """Write listings, calendar and reviews from the Parquet files into a new SQLite file."""
     if not (parquet / "listings.parquet").exists():
-        raise SystemExit(f"{parquet / 'listings.parquet'} not found: run case-study/prepare_airbnb.py first")
+        raise SystemExit(f"{parquet / 'listings.parquet'} not found: download airbnb.zip from the course drive "
+                         "and unzip it into case-study/data/ (see case-study/README.md)")
     db.parent.mkdir(parents=True, exist_ok=True)
     tmp = db.with_suffix(".sqlite.tmp")          # build next to the target, then rename: no half-built file
     tmp.unlink(missing_ok=True)

@@ -7,9 +7,9 @@ The app opens at http://localhost:8501. Every widget change reruns this script f
 bottom; the data are read once thanks to @st.cache_data.
 
 Data: case-study/data/airbnb/listings.parquet (Inside Airbnb, Berlin snapshot of 26 June 2026,
-CC BY 4.0; prepare with `uv run python case-study/prepare_airbnb.py`). Only listings with a price
-and a minimum stay below 28 nights are shown: the price field of medium-term listings is not
-comparable (Session 4). The data come from public listing pages; the app shows aggregates only.
+CC BY 4.0; download airbnb.zip from the course drive and unzip it into case-study/data/, see
+case-study/README.md). Only listings with a price and a minimum stay below 28 nights are shown:
+the price field of medium-term listings is not comparable (Session 4). The data come from public listing pages; the app shows aggregates only.
 
 Exercises
 1. Add a selectbox for the district and show the median price per neighbourhood of that district,
@@ -76,7 +76,7 @@ right.plotly_chart(fig, width="stretch")
 # ---- written finding ---------------------------------------------------------------------
 st.subheader("Finding for a city housing analyst")
 st.text_area("Finding, number, meaning, limitation",
-             "A night in Mitte costs about a fifth more than a comparable night in Neukölln: median "
-             "short-stay price 187 against 130 EUR, about 20 % at equal room type and number of guests. "
+             "A night in Mitte costs more than a fifth more than a comparable night in Neukölln: median "
+             "short-stay price 192 against 133 EUR, about 23 % at equal room type and number of guests. "
              "The raw gap overstates the location premium because Neukölln offers more private rooms. "
              "Limitation: listed prices from one snapshot; medium-term listings excluded.")

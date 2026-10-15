@@ -89,7 +89,7 @@ def univariate_outliers():
     for name, (lo, hi) in fences(price).items():
         share = np.mean((price < lo) | (price > hi))
         ax.axvline(hi, color=styles[name][0], ls=styles[name][1], lw=1.8, label=f"{name}: {share:.1%} flagged")
-    ax.set(title="Price per night, raw scale (cut at €1,000; max €10,025)", xlabel="EUR per night", ylabel="listings")
+    ax.set(title=f"Price per night, raw scale (cut at €1,000; max €{price.max():,.0f})", xlabel="EUR per night", ylabel="listings")
     ax.legend(fontsize=8.5)
     ax = axes[1]
     logp = np.log10(price)

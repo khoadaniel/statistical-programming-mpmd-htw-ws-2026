@@ -79,7 +79,7 @@ are in `tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` 
    `WHERE substr(heading, 1, 2) = ?` and rank them in NumPy. Check that `--store sqlite` and `--store numpy`
    return the same decisions, with and without a chapter.
 2. **Chunk size (block 1).** Implement `chunk_sentences` (TODO in `chunking.py`). Write a small script that
-   evaluates heading hit@5 (`metrics.evaluate_heading_retrieval`) on 500 decisions of 2023 used as queries,
+   evaluates heading hit@5 (`metrics.evaluate_heading_retrieval`) on 500 decisions of `val.parquet` used as queries,
    for word windows of 40, 120 and 250 words and for sentence chunks.
 3. **Cost guardrail (block 2).** Implement the token budget in `run_agent` (TODO in `agent.py`): stop with
    `stop_reason="budget"` once the total tokens exceed `max_total_tokens`.

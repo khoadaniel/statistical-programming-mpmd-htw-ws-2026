@@ -58,8 +58,8 @@ def test_psi_is_small_for_noise_and_large_for_a_shift():
     assert psi(ref, ref * 1) == pytest.approx(0.0, abs=1e-9)
 
 
-def test_country_shift_after_brexit():
-    # training years: GB issued about 4 % of the decisions; test years: none
+def test_country_shift_when_a_country_vanishes():
+    # a member state that stops issuing decisions (as GB after Brexit): 4 % in the reference, none now
     reference = {"DE": 0.56, "FR": 0.16, "GB": 0.04, "other": 0.24}
     current = ["DE"] * 59 + ["FR"] * 16 + ["other"] * 25
     value = psi_categories(reference, current)

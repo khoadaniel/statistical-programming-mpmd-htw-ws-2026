@@ -10,7 +10,7 @@
 - Aggregating to regular time intervals with pandas: partial and empty periods, survivorship, the date and time toolkit.
 - Baselines: naive, seasonal naive, moving average, seasonal naive × growth, drift and equivalent dates.
 - Exponential smoothing: SES, Holt, Holt–Winters and ETS with prediction intervals and coverage.
-- ARIMA as an outlook: the airline model with the pandemic months marked as missing.
+- ARIMA as an outlook: stationarity, ACF and PACF, the airline model with the pandemic months marked as missing, `STLForecast` and the long data format.
 - Worked example: how to treat the pandemic months.
 
 ## 2 · Machine learning forecasts and backtesting
@@ -29,7 +29,7 @@ Open points from the interim review.
 
 ## Setup
 
-- The block notebooks need the Airbnb data and the Berlin weather: `uv run python case-study/prepare_airbnb.py` (see [case-study/README.md](../../case-study/README.md)). Block 2 also downloads the Bike Sharing Demand data from OpenML on first run.
+- The block notebooks need the Airbnb data and the Berlin weather: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Block 2 also downloads the Bike Sharing Demand data from OpenML on first run.
 - Extras 03, 07 and 10–13 use StatsForecast, MLForecast or skforecast, which do not support pandas 3 yet. Open them in a temporary environment, from the repository root:
 
   ```bash

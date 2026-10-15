@@ -71,7 +71,7 @@ Data roles share a common base and then divide: analysts work mainly with SQL, P
 <tr><td rowspan="2" valign="top"><b>Tue 22 Dec 2026</b></td><td valign="top">09:45–13:00</td><td valign="top"><b>S10</b> Tree-based models: decision trees, random forests and gradient boosting</td><td align="center" valign="top">2</td><td valign="top"><b>1. From one tree to an ensemble</b><br>• Decision trees: splits, Gini impurity computed by hand<br>• Tree depth as a hyperparameter, overfitting of deep trees and pruning<br>• Bagging and random forests<br>• Gradient boosting as fitting the remaining errors step by step<br><br><b>2. Gradient boosting in practice and interpretation</b><br>• XGBoost, LightGBM and CatBoost<br>• Categorical features, class weights, early stopping and tuning<br>• Interpretation of tree-based models with feature importance, permutation importance and SHAP values<br>• Comparing the performance of models</td><td valign="top">Data scientists</td></tr>
 <tr><td valign="top">13:45–17:00</td><td valign="top"><b>S11</b> Unsupervised learning: clustering, dimensionality reduction and anomaly detection</td><td align="center" valign="top">2</td><td valign="top"><b>1. Clustering</b><br>• Supervised and unsupervised learning<br>• Distance, similarity and scaling<br>• k-means computed by hand on a small example; choosing the number of clusters (elbow method, silhouette)<br>• Hierarchical clustering and dendrograms<br>• Density-based clustering (DBSCAN)<br>• Evaluating and interpreting clusters (silhouette, stability, cluster profiles)<br><br><b>2. Dimensionality reduction and anomaly detection</b><br>• Principal component analysis (explained variance, loadings)<br>• t-SNE and UMAP for visualisation<br>• Model-based anomaly detection with Isolation Forest and local outlier factor, continuing the outliers of Session 4<br>• Clusters and components as features</td><td valign="top">Data scientists; analysts for segmentation</td></tr>
 <tr><td valign="top"><b>Wed 6 Jan 2027</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S12</b> Time series forecasting</td><td align="center" valign="top">2</td><td valign="top"><b>1. Time series, baselines and exponential smoothing</b><br>• Time series: trend, seasonality, autocorrelation<br>• Aggregating to regular time intervals with pandas<br>• Baselines (naive, seasonal naive, moving average)<br>• Exponential smoothing with prediction intervals<br>• ARIMA as an outlook<br><br><b>2. Machine learning forecasts and backtesting</b><br>• Machine learning with lag features (using the tree-based models of Session 10)<br>• Rolling-origin backtesting<br>• Forecast metrics: MAE and MASE</td><td valign="top">Data scientists</td></tr>
-<tr><td valign="top"><b>Wed 13 Jan 2027</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S13</b> Classical NLP: bag-of-words, TF-IDF and text classification</td><td align="center" valign="top">2</td><td valign="top"><b>1. Text as data</b><br>• Documents, tokens and vocabulary<br>• Preprocessing (lower-casing, stop words, stemming and lemmatisation)<br>• Bag-of-words computed by hand; TF-IDF and n-grams<br>• Sparse, high-dimensional matrices<br>• Simple text statistics as features (length, digits, upper-case share)<br><br><b>2. Text classification and error analysis</b><br>• The EBTI task: predict the customs heading of a product from its description, in 23 languages<br>• Linear models for text classification<br>• Metrics for more than 1,000 classes: accuracy and macro-F1, rare headings, validation by time<br>• Error analysis of text models; the most informative n-grams per class<br>• Leakage through the customs' justification, a text that exists only after the decision<br>• Dimensionality reduction with truncated SVD<br>• Limits of word counts (word order, synonyms) as the motivation for language models</td><td valign="top">Data scientists</td></tr>
+<tr><td valign="top"><b>Wed 13 Jan 2027</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S13</b> Classical NLP: bag-of-words, TF-IDF and text classification</td><td align="center" valign="top">2</td><td valign="top"><b>1. Text as data</b><br>• Documents, tokens and vocabulary<br>• Preprocessing (lower-casing, stop words, stemming and lemmatisation)<br>• Bag-of-words computed by hand; TF-IDF and n-grams<br>• Sparse, high-dimensional matrices<br>• Simple text statistics as features (length, digits, upper-case share)<br><br><b>2. Text classification and error analysis</b><br>• The EBTI task: predict the customs heading of a product from its description, in 23 languages<br>• Linear models for text classification<br>• Metrics for almost 1,000 classes: accuracy and macro-F1, rare headings, a time-ordered validation within the data as a comparison<br>• Error analysis of text models; the most informative n-grams per class<br>• Leakage through the customs' justification, a text that exists only after the decision<br>• Dimensionality reduction with truncated SVD<br>• Limits of word counts (word order, synonyms) as the motivation for language models</td><td valign="top">Data scientists</td></tr>
 <tr><td valign="top"><b>Wed 20 Jan 2027</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S14</b> Large language models I: transformer models, embeddings and their applications</td><td align="center" valign="top">2</td><td valign="top"><b>1. Embeddings: from words to vectors, and what they are good for</b><br>• From words to vectors: tokens, embeddings, attention and pre-training at a conceptual level<br>• Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models<br>• The Hugging Face pattern: models from the Hub, tokenizer → model → outputs, <code>pipeline</code><br>• Embedding models (sentence-transformers)<br>• Applications of embedding models: semantic search, clustering (with the methods of Session 11) and classification features compared with TF-IDF<br><br><b>2. Generative models through an API</b><br>• Applications of generative models: prompts, temperature, context window and costs<br>• Zero-shot and few-shot classification with structured output<br>• Comparison with a trained model on quality, cost, latency and data protection<br>• Abstention: route unsure cases to a customs officer</td><td valign="top">Data scientists, AI engineers</td></tr>
 <tr><td valign="top"><b>Thu 28 Jan 2027</b></td><td valign="top">11:30–15:15</td><td valign="top"><b>S15</b> Large language models II: retrieval-augmented generation and agents</td><td align="center" valign="top">2</td><td valign="top"><b>1. Retrieval-augmented generation and its evaluation</b><br>• Why retrieval: knowledge cut-off, hallucination, sources<br>• The components of RAG: chunking, embedding, vector search over stored embeddings (NumPy, with the decisions in SQLite), prompt assembly, answers with citations<br>• Evaluating RAG: a test set of questions, recall@k, groundedness and human ratings<br>• Improving retrieval (chunk size, hybrid search, re-ranking)<br><br><b>2. Agents and guardrails</b><br>• Agents: tool calling, the loop of planning, acting and observing, function schemas<br>• Risks (error propagation, costs, prompt injection) and guardrails</td><td valign="top">Data scientists, AI engineers</td></tr>
 <tr><td valign="top"><b>Wed 3 Feb 2027</b></td><td valign="top">15:30–18:45</td><td valign="top"><b>S16</b> Web APIs, deployment, monitoring and maintenance</td><td align="center" valign="top">2</td><td valign="top"><b>1. Web APIs and a released service</b><br>• How web APIs work: HTTP requests and responses, JSON, authentication, pagination and rate limits<br>• Requesting data from a web API with httpx<br>• From notebook to service: saving pipelines, versioning, pinned dependencies<br>• A prediction API with FastAPI and pydantic, and its tests<br>• Containers with Docker<br>• Continuous delivery with GitHub Actions<br><br><b>2. Architecture in the cloud, monitoring and maintenance</b><br>• System design: a data application as front end (dashboard), back end (model API) and database<br>• Cloud services for such an application on AWS: container registry, container hosting, managed database, file storage, monitoring<br>• Monitoring: data drift (KS test, population stability index) and label shift<br>• Retraining triggers and versioning<br>• Documenting a model in a model card</td><td valign="top">ML engineers, data scientists; analysts for dashboards</td></tr>
@@ -257,7 +257,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Exercises (30 min) and debrief (15 min)*
 
-**Team project until the next teaching day.** Download the customs decisions with the provided script, load them into the team's SQLite database and count them per year, language and member state in SQL.
+**Team project until the next teaching day.** Download the prepared customs decisions from the course drive, load them into the team's SQLite database and count them per year, language and member state in SQL.
 
 #### 📍 Session 4 · Data quality and preparation: validation, missing values, outliers and transformations
 
@@ -290,7 +290,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Practice:* Find outliers in price and minimum stay. Case study: produce the cleaned table of Berlin listings with a log of every cleaning decision
 
-**Team project until the next teaching day.** Data quality report of the decisions and project charter: use of the suggestions, metric, baseline, validation by time, inputs that may not be used.
+**Team project until the next teaching day.** Data quality report of the decisions and project charter: use of the suggestions, metric, baseline, validation on the provided validation set, inputs that may not be used.
 
 ### Analytics (Session 5)
 
@@ -405,7 +405,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Practice:* Tune the ridge and lasso penalties of the price model, read its validation and learning curves, and estimate the tuned model's error with nested cross-validation before the final test on held-out hosts
 
-**Team project until the next teaching day.** Validation plan: split by time, metrics, uncertainty of the scores, inputs that may not be used.
+**Team project until the next teaching day.** Validation plan: use of the provided validation set, a time-ordered validation as a comparison, metrics, uncertainty of the scores, inputs that may not be used.
 
 #### 📍 Session 8 · Classification and evaluation metrics: preprocessing pipelines, k-nearest neighbours, confusion matrix, ROC curves, decision thresholds and imbalanced classes
 
@@ -559,7 +559,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 - Rolling-origin backtesting
 - Forecast metrics: MAE and MASE
 
-*Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models, test whether the Berlin weather (fetched from the Open-Meteo API with the provided script) adds anything, and recommend one with its 12-month forecast and prediction interval
+*Practice:* Case study: how many Airbnb stays should Berlin expect next year? Backtest the models, test whether the Berlin weather (daily data from the Open-Meteo archive, included with the Airbnb data) adds anything, and recommend one with its 12-month forecast and prediction interval
 
 **Team project until the next teaching day.** Open points from the interim review.
 
@@ -589,7 +589,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 - The EBTI task: predict the customs heading of a product from its description, in 23 languages
 - Linear models for text classification
-- Metrics for more than 1,000 classes: accuracy and macro-F1, rare headings, validation by time
+- Metrics for almost 1,000 classes: accuracy and macro-F1, rare headings, a time-ordered validation within the data as a comparison
 - Error analysis of text models; the most informative n-grams per class
 - Leakage through the customs' justification, a text that exists only after the decision
 - Dimensionality reduction with truncated SVD
@@ -699,7 +699,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Exercises (30 min) and debrief (15 min)*
 
-**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: tested service, monitoring plan and model card; retraining with the 2024 labels and final leaderboard round L3; repository tagged.
+**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: tested service, monitoring plan and model card; retraining with the released labels of the Public half and final leaderboard round L3; repository tagged.
 
 ### Final presentations (Sessions 17–18)
 
@@ -733,7 +733,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 | 1:05–1:30 | Team 7: same format |
 | 1:30–1:45 | Break |
 | 1:45–1:55 | Written peer feedback on Team 7 |
-| 1:55–2:25 | Leaderboard results on the 2025–2026 decisions: the leading teams explain features, model and validation |
+| 1:55–2:25 | Leaderboard results on the Private half of the test set: the leading teams explain features, model and validation |
 | 2:25–2:55 | Course review |
 | 2:55–3:15 | Course evaluation (anonymous, in class) |
 
@@ -743,7 +743,7 @@ The course works with the following public datasets. Each session uses the one t
 
 | Dataset | What it is | Used for |
 |---|---|---|
-| **Inside Airbnb, Berlin** | About 12,800 Berlin listings with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
+| **Inside Airbnb, Berlin** | About 10,200 Berlin listings (a further 20 % are held back as a test set) with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
 | **Open-Meteo** (weather API) | Daily Berlin weather since 2016, fetched through a web API | Session 12 (weather as a factor in demand) and Session 16 (working with web APIs) |
 | **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification metrics and thresholds, imbalance, trees, segments |
 | **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in 23 languages | Sessions 13–16: text classification, language models, retrieval, deployment; the leaderboard and the final project |
@@ -769,25 +769,25 @@ The course works with the following public datasets. Each session uses the one t
 | 15 | EBTI | A classification assistant that cites similar past decisions; an agent with tools |
 | 16 | EBTI, Open-Meteo | Calling a web API; a service that suggests headings, drift and retraining, final leaderboard round |
 
-**EBTI.** A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The prepared data contain 309,529 training decisions (2017–2023) and 113,188 test decisions (2024–2026), with 1,114 headings in the training data. Descriptions are written in the language of the issuing country: 57 % German, 16 % French and the rest in more than 20 other EU languages; each training decision also carries English keywords. Further tables hold the HS nomenclature in English and the monthly number of decisions since 2004. Why these datasets were chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
+**EBTI.** A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The prepared data contain the decisions valid on 15 October 2026, which started between late 2023 and 2026: 122,003 decisions, or 119,514 once renewals that repeat another decision word for word are kept once, with 988 headings in the training data. Descriptions are written in the language of the issuing country: 61 % German, 16 % French and the rest in more than 20 other EU languages; each training decision also carries English keywords. A further table holds the HS nomenclature in English. The lecturer prepares the data once, and students download them from the course drive. Why these datasets were chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
 
 ### Leaderboard
 
 - **Task:** predict the heading of each test decision from its description, issuing country, language and date.
-- **Split:** decisions of 2024 form the public leaderboard, decisions of 2025–2026 the private leaderboard. Test decisions whose description repeats a training description are removed.
-- **Metric:** accuracy, with macro-F1 reported alongside. Reference values on the public leaderboard: always the most frequent heading 4 %; logistic regression on simple features 8 %; word TF-IDF with a linear model 81 % (50,000-decision sample) and 87 % (full training set); character TF-IDF 88 %. On the private years the same models score about three points lower, an effect of drift that Session 16 takes up.
-- **Rounds:** L1 TF-IDF models (Session 13), L2 embeddings or language models (14), L3 final model after retraining with the released 2024 labels (16). The final ranking is presented in Session 18; the L3 submission is the team's final project solution.
+- **Split:** the decisions are split at random into training (83,659), validation (17,927) and test (17,928) sets, 70 / 15 / 15 and stratified by heading, so all years are mixed. The test set, without headings, is divided into a public and a private half, again stratified by heading.
+- **Metric:** accuracy, with macro-F1 reported alongside. Reference values on the validation set: always the most frequent heading 4.2 %; word TF-IDF with a linear model 85.1 % (50,000-decision sample) and 87.2 % (full training set); character TF-IDF 88.0 % (full training set). The macro-F1 of the same models is 0.000, 0.622, 0.675 and 0.682.
+- **Rounds:** L1 TF-IDF models (Session 13), L2 embeddings or language models (14), L3 final model after retraining with the released labels of the public half (16). The final ranking is presented in Session 18; the L3 submission is the team's final project solution.
 - **Platform:** Codabench (free, open source, operated by Université Paris-Saclay; submission of a CSV file; hidden solution; public and private leaderboard). Students register with a pseudonym; alternatively the lecturer submits on behalf of a team.
 
 > [!NOTE]
-> **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; each student downloads them with the provided script. Because decisions can be looked up in the public database, the leaderboard score is not converted into marks; the final project is graded on the criteria of Section 6, and its submission must be reproducible from the team's repository.
+> **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source; the lecturer prepares them once and students download them from the course drive. Because decisions can be looked up in the public database, the leaderboard score is not converted into marks; the final project is graded on the criteria of Section 6, and its submission must be reproducible from the team's repository.
 
 ## 5. Final project
 
 All teams work on the same project: the leaderboard task of [Section 4](#4-datasets-and-leaderboard), predicting the four-digit customs heading of a binding tariff decision from its description of goods, as accurately as possible on the hidden test set. A single project lets teams follow and discuss each other's solutions, gives all of them the same workload, and makes the results comparable. Teams present their final solution in Sessions 17 and 18.
 
 - **Task:** a model that suggests the heading of a new request to a customs officer, using only what exists when the request arrives (description, member state, language, date).
-- **Deliverables:** a repository that reruns from the official export to the submission; a validated model compared with baselines; error analysis; a tested service that returns the top-3 headings, with a monitoring plan and a model card; the presentation.
+- **Deliverables:** a repository that reruns from the downloaded data to the submission; a validated model compared with baselines; error analysis; a tested service that returns the top-3 headings, with a monitoring plan and a model card; the presentation.
 - **Accuracy and grade:** teams aim for the highest accuracy they can reach, but the score is not converted into marks. The grade rewards how a team frames the problem, handles the data, builds and validates the model and explains the results ([Section 6](#6-assessment)).
 
 **Timeline.** The challenge is introduced in Session 1. Teams first load, check and explore the data and set up baselines and a validation plan (Sessions 3–9), then build the text models in Sessions 13–16.
@@ -804,7 +804,7 @@ flowchart LR
   classDef pres fill:#636b78,stroke:#636b78,color:#ffffff
 ```
 
-**Rules.** The final submission must be reproducible from the tagged repository; a submission that the repository cannot reproduce is not assessed. Looking up test decisions in the public EBTI database is not allowed. Columns that customs write with or after the decision (justification, keywords, CN code, chapter, status, end date, invalidation reason) must not be model inputs.
+**Rules.** The final submission must be reproducible from the tagged repository; a submission that the repository cannot reproduce is not assessed. Looking up test decisions in the public EBTI database is not allowed. Columns that customs write with or after the decision (justification, keywords, CN code, chapter, end date) must not be model inputs.
 
 ## 6. Assessment
 
@@ -830,9 +830,9 @@ flowchart LR
 | Criterion | Weight | Evidence | Expected for a very good grade |
 |---|---|---|---|
 | Problem definition | 10 % | Charter, presentation | The use of the suggestions is clear; metric, baseline and, if used, abstention are justified by that use |
-| Data | 20 % | Repository | A pipeline that reruns from the official export to the submission; quality checked, with every cleaning decision recorded; inputs limited to what exists when a request arrives |
+| Data | 20 % | Repository | A pipeline that reruns from the downloaded data to the submission; quality checked, with every cleaning decision recorded; inputs limited to what exists when a request arrives |
 | Model | 25 % | Repository, presentation | Several approaches compared fairly with the baseline and with each other on the same validation scheme; the final choice justified |
-| Reliability of the results | 15 % | Repository, questions | Validation by time without leakage; uncertainty of the differences between models; error analysis by language, heading frequency and chapter; validation and leaderboard scores compared and differences explained |
+| Reliability of the results | 15 % | Repository, questions | Validation on the provided validation set without leakage; uncertainty of the differences between models; error analysis by language, heading frequency and chapter; validation and leaderboard scores compared and differences explained |
 | Delivery | 10 % | Live demonstration | A tested service that returns the top-3 headings, with a monitoring plan and a model card |
 | Collaboration and presentation (per member) | 20 % | Pull requests, presentation, questions | Own reviewed pull requests with passing CI; a clear presented part; correct and confident answers to individual questions |
 
@@ -906,26 +906,26 @@ Small differences in the goods lead to a different heading: the same boot with *
 
 | Field | Example | Role in the project |
 |---|---|---|
-| Description of goods | *Botte de sécurité couvrant la cheville jusqu'à mi-mollet, comportant un dessus en cuir, une semelle extérieure en matière plastique (polyuréthane) …* | **Input** |
-| Issuing country, language, date | France, French, January 2017 | **Input** |
+| Description of goods | *Chaussures de protection, dites de sécurité, non reconnaissables comme étant pour homme ou femme, couvrant la cheville mais pas le mollet, dont le dessus est majoritairement en cuir naturel et dont la semelle extérieure est en matière plastique …* | **Input** |
+| Issuing country, language, date | France, French, October 2023 | **Input** |
 | Heading | **6403**: footwear with outer soles of rubber, plastics or leather and uppers of leather | **Target** |
-| Keywords, justification, CN code | *half boots, of leather, outer soles, protective toe caps …* | Written with the decision: **not allowed as input** |
+| Keywords, justification, CN code | *covering the ankle, leather, outer soles, protective footwear, protective toe caps …* | Written with the decision: **not allowed as input** |
 
-The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about 70 % of cases. A model that uses it scores 0.96 in a careless validation but only 0.71 on new requests, which have a description only.
+The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about 70 % of cases. A model that uses it scores 0.98 in a careless validation but only 0.79 on new requests, which have a description only.
 
 ### The data in three charts
 
-**Size and split.** 309,529 decisions from 2017–2023 are used for training. The 113,188 decisions of 2024–2026 form the hidden test set: 2024 for the public leaderboard, 2025–2026 for the private one. Training on the past and testing on the future is how the model would be used.
+**Size and split.** The course uses the 119,514 decisions that were valid on 15 October 2026, after renewals are kept once. They are split at random 70 / 15 / 15, stratified by heading: 83,659 for training, 17,927 for validation and 17,928 for the hidden test set, which is divided into a public and a private half. Every start year appears in all three parts. A deployed model would be trained on the past and used on the future; the course split does not do this, so Session 13 adds a time-ordered validation within the data as a comparison.
 
-![Bar chart of binding tariff decisions per year from 2004 to 2025, between about 38,000 and 52,000 per year; 2017–2023 marked as training, 2024 as public test and 2025 as private test](assets/final-project/decisions-per-year.png)
+![Stacked bar chart of the 119,514 decisions valid on 15 October 2026 by start year: 7,700 in 2023 (from October), 38,754 in 2024, 40,635 in 2025 and 32,425 in 2026 (to October); each bar is split into training (70 %), validation (15 %) and hidden test (15 %), because the split is random and stratified by heading, with all years mixed](assets/final-project/decisions-per-year.png)
 
 **Many languages.** Each authority writes in its own language. German and French dominate, and many languages have only a few thousand decisions.
 
-![Horizontal bar chart of the share of training decisions by language: German 57 %, French 16 %, English 5 %, Dutch 5 %, Polish 4 %, Czech 3 %, Spanish 3 %, Swedish 2 %, 15 other languages 6 %](assets/final-project/languages.png)
+![Horizontal bar chart of the share of training decisions by language: German 61 %, French 16 %, Dutch 4 %, Spanish 4 %, Czech 4 %, Polish 3 %, Italian 2 %, Swedish 1 %, 15 other languages 6 %](assets/final-project/languages.png)
 
-**Many classes and a long tail.** 1,114 headings occur in the training data. The most frequent one covers only 4 % of the decisions, while a quarter of the headings have fewer than ten examples. This is why the leaderboard reports macro-F1 next to accuracy.
+**Many classes and a long tail.** 988 headings occur in the training data. The most frequent one covers only 4 % of the decisions, while 396 headings, two in five, have fewer than ten examples. This is why the leaderboard reports macro-F1 next to accuracy.
 
-![Bar chart of training decisions per heading on a log scale, sorted from the most to the least frequent; the most frequent heading 3926 has about 12,900 decisions, and 273 headings have fewer than 10](assets/final-project/long-tail.png)
+![Bar chart of training decisions per heading on a log scale, sorted from the most to the least frequent; the most frequent heading 3926 has about 3,500 decisions, and 396 headings have fewer than 10](assets/final-project/long-tail.png)
 
 ### Testing for drift in the inputs
 
@@ -936,9 +936,9 @@ The last row is the course's main leakage example (Session 13). Customs writes t
 - **Drift leads to a decision.** Monitoring exists to answer practical questions: keep the model, retrain it on newer data, route uncertain requests to a person, or add headings that the model cannot know yet.
 - **Thresholds and checks are agreed in advance.** Which signals are watched, how often, and at which value someone acts are written down before the model goes live, for example in the model card.
 
-A model trained on 2017–2023 is used on requests from 2024 onwards. Before the correct headings arrive, a team can only watch the inputs: do new requests still look like the training data? For a text classifier, practical angles are:
+A deployed model is used on requests that arrive after its training data. Before the correct headings arrive, a team can only watch the inputs: do new requests still look like the training data? For a text classifier, practical angles are:
 
-| Question | Signal to compare (training years against new requests) | Possible test |
+| Question | Signal to compare (training data against new requests) | Possible test |
 |---|---|---|
 | Do the requests come from the same places? | Shares of issuing member states and languages | Population stability index (PSI), chi-square test |
 | Are the descriptions written in the same way? | Length of the description in characters and words | Kolmogorov–Smirnov (KS) test, PSI on deciles |
@@ -947,24 +947,24 @@ A model trained on 2017–2023 is used on requests from 2024 onwards. Before the
 | Does the model predict differently? | Shares of predicted chapters and headings | PSI on chapters |
 | Are there goods the model cannot know? | Headings created or changed in a revision of the nomenclature (HS 2022, next revision 2027) | List of headings with no training decisions |
 
-Two of these shifts are already visible in the data: the United Kingdom issues no decisions after Brexit, so the mix of member states and languages changes; and the share of some chapters moves from year to year. Session 16 measures such signals, then uses the released 2024 headings to check whether accuracy has actually changed and whether retraining helps.
+Because the course split mixes all years, the leaderboard does not measure drift. Shifts between start years are still visible in the data: German descriptions make up 64 % of the decisions that started in 2024 but 57 % of those that started in 2026, while French rises from 15 % to 19 %. The share of any chapter moves by at most one and a half points between these two years. Session 16 measures such signals between older and newer decisions, then retrains with the released labels of the public half.
 
 ### How hard it is
 
-The reference results leave room for every method of the course. A trivial model is almost always wrong. Simple text models already reach about 80 %, and better features and more data push this towards 90 %. The last points are hard to gain, and each team must show with validation that a gain is real.
+The reference results leave room for every method of the course. A trivial model is almost always wrong. Simple text models already reach about 85 %, and better features and more data push this towards 90 %. The last points are hard to gain, and each team must show with validation that a gain is real.
 
 TF-IDF is only the starting point. Teams are free to try other approaches, for example a fine-tuned multilingual encoder model (BERT type), nearest past decisions in an embedding space, a two-step model that predicts the chapter first, a language model that chooses among candidate headings, retrieval of similar decisions, an ensemble, or other designs. How well these work on this task is open; finding out is part of the project.
 
-![Horizontal bar chart of public-leaderboard accuracy. Measured: most frequent heading 4 %, simple features 8 %, word TF-IDF on a sample of 50,000 decisions 81 %, character TF-IDF on the sample 82 %, TF-IDF plus embeddings on the sample 82 %, word TF-IDF on all 309,529 decisions 87 %, character TF-IDF on all decisions 88 %. Below, marked with a question mark as open for the teams: fine-tuned multilingual encoder, embeddings with nearest past decisions, chapter first then heading, language model choosing among candidates, retrieval of similar decisions, ensemble, and other designs](assets/final-project/reference-accuracy.png)
+![Horizontal bar chart of accuracy on the validation set. Measured: most frequent heading 4.2 %, word TF-IDF on a sample of 50,000 decisions 85.1 %, word TF-IDF on all 83,659 training decisions 87.2 %, character TF-IDF on all training decisions 88.0 %. Below, marked with a question mark as open for the teams: fine-tuned multilingual encoder, TF-IDF combined with embeddings, embeddings with nearest past decisions, chapter first then heading, language model choosing among candidates, retrieval of similar decisions, ensemble, and other designs](assets/final-project/reference-accuracy.png)
 
 ### A project in one picture
 
 ```mermaid
 flowchart LR
-  A["Official export<br/>(23 yearly files)"] --> B["Load and query<br/>SQL"]
+  A["Prepared data<br/>(train, validation, test)"] --> B["Load and query<br/>SQL"]
   B --> C["Quality checks<br/>placeholders, duplicates,<br/>forbidden columns"]
   C --> D["Exploration<br/>languages, long tail,<br/>change over time"]
-  D --> E["Baselines and<br/>validation by time"]
+  D --> E["Baselines and<br/>validation set"]
   E --> F["Text models<br/>TF-IDF, embeddings,<br/>language models"]
   F --> G["Error analysis<br/>and leaderboard"]
   G --> H["Service, monitoring,<br/>retraining"]
@@ -978,9 +978,9 @@ The project uses almost every part of the course on one realistic problem:
 | Course part | Used in the project for |
 |---|---|
 | Python, testing, Git and CI (S1–S2) | A team repository with reviewed pull requests and a pipeline that anyone can rerun |
-| SQL and data quality (S3–S4) | Loading about 420,000 decisions; placeholder dates, duplicates, columns that exist only after the decision |
+| SQL and data quality (S3–S4) | Loading about 120,000 decisions; placeholder dates, duplicates, columns that exist only after the decision |
 | Exploration and statistics (S5) | Distributions over languages, member states and headings; uncertainty of the scores |
-| Validation, metrics and imbalance (S7–S8) | Validation by time; accuracy and macro-F1 for more than 1,000 classes; rare headings; bootstrap intervals of the differences between models |
+| Validation, metrics and imbalance (S7–S8) | A fixed validation set and a time-ordered comparison; accuracy and macro-F1 for almost 1,000 classes; rare headings; bootstrap intervals of the differences between models |
 | Feature engineering and leakage (S9) | Grouping rare headings; target leakage |
 | Classical NLP (S13) | TF-IDF models, error analysis, the first leaderboard round |
 | Language models (S14–S15) | Multilingual embeddings, a language model that chooses among candidate headings, retrieval of similar past decisions |
@@ -989,8 +989,8 @@ The project uses almost every part of the course on one realistic problem:
 Further reasons for the choice:
 
 - **A real task.** Customs authorities classify goods every day, and errors have legal and financial consequences.
-- **Public and reusable.** The decisions are published by the European Commission and may be reused with acknowledgement of the source (Commission Decision 2011/833/EU). Each student downloads them with a script.
-- **A fair, honest test.** The hidden test years show how well a model works on new data. Because the score is not converted into marks, teams gain nothing by gaming it.
+- **Public and reusable.** The decisions are published by the European Commission and may be reused with acknowledgement of the source (Commission Decision 2011/833/EU). Students download a prepared copy from the course drive.
+- **A fair, honest test.** The hidden test set shows how well a model works on new data. Because the score is not converted into marks, teams gain nothing by gaming it.
 - **Leakage and drift are built in.** Both are real features of the data, not constructed exercises.
 - **One task for all teams.** Students can compare and discuss approaches, and the final ranking in Session 18 shows which ideas worked.
 

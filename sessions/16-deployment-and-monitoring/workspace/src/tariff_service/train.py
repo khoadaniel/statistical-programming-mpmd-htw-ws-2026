@@ -1,11 +1,15 @@
 """Train version N of the heading model and write it to models/ with its metadata.
 
-    uv run python -m tariff_service.train --data ../../../case-study/data/train_sample.parquet --version 1.0.0
-    uv run python -m tariff_service.train --data ... --feedback ../../../case-study/data/feedback_2024.csv \\
-        --version 2.0.0                                            # retraining with the released 2024 labels
+    uv run python -m tariff_service.train --data ../../../case-study/data/ebti/train_sample.parquet --version 1.0.0
+    uv run python -m tariff_service.train --data ../../../case-study/data/ebti/train_sample.parquet \\
+        --before 2026-01-01 --version 1.0.0               # simulate a model released at the start of 2026
+    uv run python -m tariff_service.train --data ... --feedback ../../../case-study/data/ebti/public_labels.csv \\
+        --version 2.0.0                                            # retraining with the released Public-half labels
     uv run python -m tariff_service.train --fixture                # tiny model for tests and CI smoke tests
 
-Validation is time-based: the most recent 20 % of the decisions are held out, as in Session 7.
+Validation is time-based: the most recent 20 % of the decisions are held out, as in Session 7. The course
+data are split at random, so this hold-out simulates deployment, where a model meets newer requests.
+`--before DATE` keeps only decisions that started before DATE, to simulate an older model (Session 16).
 Inputs are the description only: justification, keywords and CN code are decided with the heading.
 """
 
@@ -31,9 +35,15 @@ from .model import (
 COLUMNS = ["description", "language", "issuing_country", "start_date", "heading"]
 
 
-def load_training_data(data: Path, feedback: Path | None = None, test: Path | None = None) -> pd.DataFrame:
-    """Training decisions; optionally plus feedback labels (id,heading) joined to the test decisions."""
+def load_training_data(data: Path, feedback: Path | None = None, test: Path | None = None,
+                       before: str | None = None) -> pd.DataFrame:
+    """Training decisions; optionally plus feedback labels (id,heading) joined to the test decisions.
+
+    With `before` (YYYY-MM-DD), only training decisions that started before that date are kept.
+    """
     df = pd.read_parquet(data, columns=COLUMNS)
+    if before is not None:
+        df = df[df["start_date"] < pd.Timestamp(before)]
     if feedback is not None:
         test = test or data.with_name("test.parquet")
         new = pd.read_parquet(test, columns=["id", *COLUMNS[:-1]]).merge(
@@ -54,6 +64,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--data", type=Path, help="parquet file with description, language, ..., heading")
     parser.add_argument("--feedback", type=Path, help="CSV id,heading of newly labelled test decisions")
+    parser.add_argument("--before", help="keep only training decisions that started before this date (YYYY-MM-DD)")
     parser.add_argument("--out", type=Path, default=Path("models"))
     parser.add_argument("--version", default="1.0.0", help="semantic version of the model")
     parser.add_argument("--format", choices=["joblib", "skops"], default="joblib")
@@ -67,7 +78,7 @@ def main() -> None:
     if args.data is None:
         parser.error("--data is required unless --fixture is given")
 
-    df = load_training_data(args.data, args.feedback)
+    df = load_training_data(args.data, args.feedback, before=args.before)
     texts = [decision_text(t) for t in df["description"]]
     labels = df["heading"].tolist()
     cut = int(len(df) * 0.8)  # time-based hold-out: the newest 20 %
@@ -80,7 +91,7 @@ def main() -> None:
     heading_texts = load_heading_texts(args.data)
     meta = {"model_version": args.version,
             "training_data": {"file": args.data.name, "sha256": file_sha256(args.data), "n": len(df),
-                              "feedback": args.feedback.name if args.feedback else None,
+                              "feedback": args.feedback.name if args.feedback else None, "before": args.before,
                               "date_min": str(df["start_date"].min()), "date_max": str(df["start_date"].max())},
             "validation": {"scheme": "time-based, newest 20 % held out", **scores},
             "pruning": {"threshold": args.prune, "weights_kept": round(kept, 4)},

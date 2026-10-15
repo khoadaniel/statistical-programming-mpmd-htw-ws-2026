@@ -7,11 +7,11 @@
 [Open notebook](workbooks/01-lecture-classifiers-pipelines-and-confusion-matrix.ipynb)
 
 - Classification tasks and baselines: the majority class and a hand-made churn rule.
-- Preparing inputs: one-hot and ordinal encoding, scaling, rare and unseen categories.
+- Preparing inputs: choosing columns by type, one-hot and ordinal encoding, rare and unseen categories, scaling.
 - `Pipeline` and `ColumnTransformer`: preparation fitted on the training data only.
-- k-nearest neighbours, decision boundaries, and choosing *k* by cross-validation.
+- k-nearest neighbours: decision boundaries, choosing *k* by cross-validation, distance weights.
 - Confusion matrix, accuracy, precision, recall, F1, balanced accuracy.
-- Macro-F1 for several classes.
+- Macro-F1 for several classes: macro, weighted and micro averages, a three-class contract task.
 - Worked example: rule, k-NN and logistic regression compared for the retention team.
 
 ## 2 · Scores, thresholds and rare classes
@@ -19,11 +19,11 @@
 [Open notebook](workbooks/02-lecture-scores-thresholds-and-rare-classes.ipynb)
 
 - The ROC curve and AUC, also for several classes.
-- The precision–recall curve and average precision.
+- The precision–recall curve, average precision, and ROC against PR when positives are rare.
 - Decision thresholds from the costs of errors, `TunedThresholdClassifierCV`, customer-specific costs.
-- Calibration of predicted probabilities and recalibration.
-- Class imbalance, why accuracy misleads, class weights.
-- Undersampling, oversampling and SMOTE inside the cross-validation with imbalanced-learn pipelines.
+- Calibration of predicted probabilities, recalibration, sigmoid against isotonic.
+- Class imbalance, why accuracy misleads, balanced and cost-based class weights.
+- Resampling inside the cross-validation with imbalanced-learn: undersampling, oversampling, SMOTE and its variants.
 - Worked example: which strategy is cheapest for the retention team.
 
 ## Team project until the next session

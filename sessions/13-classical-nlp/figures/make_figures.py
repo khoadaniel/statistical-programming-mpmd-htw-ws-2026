@@ -4,7 +4,8 @@ Run from the repository root:
     uv run python sessions/13-classical-nlp/figures/make_figures.py
 
 Writes dtm_sketch.png, top_ngrams.png and confusion_matrix.png next to this script.
-Deterministic: fixed toy documents, time-based split (train 2017-2021, validate 2022-2023), random_state=0.
+Deterministic: fixed toy documents; the model is trained on the 50,000-decision sample and evaluated on the
+validation set (case-study/data/ebti/val.parquet); random_state=0.
 """
 
 from pathlib import Path
@@ -21,7 +22,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.pipeline import make_pipeline
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[3] / "case-study" / "data"
+DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti"
 COLORS = ["#2471a3", "#c0392b", "#1e8449"]
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 
@@ -57,9 +58,8 @@ def dtm_sketch() -> None:
 
 
 def fit_model():
-    d = pd.read_parquet(DATA / "train_sample.parquet")
-    year = d["start_date"].dt.year
-    train, valid = d[year <= 2021], d[year >= 2022]
+    train = pd.read_parquet(DATA / "train_sample.parquet")
+    valid = pd.read_parquet(DATA / "val.parquet")
     model = make_pipeline(
         TfidfVectorizer(min_df=2, sublinear_tf=True),
         SGDClassifier(loss="hinge", alpha=1e-5, max_iter=20, tol=None, random_state=0, n_jobs=-1),
@@ -81,7 +81,7 @@ def top_ngrams(model, k: int = 12) -> None:
                  "9503": "toys"}[heading]
         ax.set_title(f"{heading}: {short}", fontsize=10)
         ax.set_xlabel("coefficient")
-    fig.suptitle("Most informative words per heading (word TF-IDF + linear SVM, 2017-2021 sample)")
+    fig.suptitle("Most informative words per heading (word TF-IDF + linear SVM, 50,000-decision sample)")
     fig.tight_layout()
     fig.savefig(OUT / "top_ngrams.png")
     plt.close(fig)
@@ -106,7 +106,7 @@ def confusion(model, valid) -> None:
     ax.set_yticks(range(len(shoes)), shoes)
     ax.set_xlabel("predicted heading")
     ax.set_ylabel("true heading")
-    ax.set_title("Footwear (chapter 64), validation years 2022-2023\n(row shares = recall; counts in brackets)")
+    ax.set_title("Footwear (chapter 64), validation set\n(row shares = recall; counts in brackets)")
     ax.spines[:].set_visible(False)
     fig.tight_layout()
     fig.savefig(OUT / "confusion_matrix.png")

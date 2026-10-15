@@ -6,13 +6,13 @@
 
 [Open notebook](workbooks/01-lecture-feature-construction-without-leakage.ipynb)
 
-- Features from dates and times: date parts, elapsed time, cyclical and periodic spline encodings.
-- Interactions between features: product columns, all pairwise products, splines and kernels.
-- High-cardinality categories: grouping rare levels, unseen levels, count encoding, skrub's `TableVectorizer`.
-- Target encoding: smoothing, the naive leak, cross-fitting with `TargetEncoder`, comparison of encoders.
-- Aggregation features from related tables: point-in-time aggregates, lags, as-of joins, `AggJoiner`.
-- Target leakage: derived and snapshot columns, leakage through preprocessing and groups, detection.
-- Custom transformers in pipelines: `FunctionTransformer`, a transformer class, tuning preprocessing.
+- Features from dates and times: date parts, elapsed time, seasonality, cyclical and periodic spline encodings, dates known at prediction time.
+- Interactions between features: product columns, room type × guests, all pairwise products, splines and kernels.
+- High-cardinality categories: grouping rare levels and choosing the threshold, unseen levels, count encoding, skrub's `TableVectorizer`.
+- Target encoding and its leakage risk: smoothing, the naive leak, cross-fitting with `TargetEncoder`, its parameters, binary and multiclass targets, comparison of encoders.
+- Aggregation features from related tables: point-in-time aggregates, an out-of-time check, lags and rolling windows, as-of joins, `AggJoiner`.
+- Target leakage: derived and snapshot columns, detection, leakage through preprocessing and groups, a checklist.
+- Custom transformers in pipelines: `FunctionTransformer`, a transformer class and its contract, tuning preprocessing.
 - Worked example: which feature groups help the Berlin price model.
 
 ## Team project until the next teaching day
