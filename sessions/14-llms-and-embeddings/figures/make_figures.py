@@ -141,8 +141,8 @@ def embedding_space() -> None:
 def coverage_accuracy() -> None:
     """Abstention: accept the predicted heading only if the model's confidence reaches a threshold.
 
-    Uses the split of Session 13, Block 2 and of the Block 2 notebook: one fold of a stratified 7-fold
-    split by heading and language as validation decisions, trained on a sample of 50,000 training decisions.
+    Uses the split of Session 13, Block 2 and of the Block 2 notebook (validation decisions stratified by
+    heading and language), trained on a sample of 50,000 training decisions.
     """
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import SGDClassifier
