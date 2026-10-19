@@ -7,7 +7,7 @@ The app opens at http://localhost:8501. Every widget change reruns this script f
 bottom; the data are read once thanks to @st.cache_data.
 
 Data: case-study/data/airbnb/listings.parquet (Inside Airbnb, Berlin snapshot of 26 June 2026,
-CC BY 4.0; download airbnb.zip from the course drive and unzip it into case-study/data/, see
+CC BY 4.0; download airbnb-v1.zip from the course drive and unzip it into case-study/data/, see
 case-study/README.md). Only listings with a price and a minimum stay below 28 nights are shown:
 the price field of medium-term listings is not comparable (Session 4). The data come from public listing pages; the app shows aggregates only.
 

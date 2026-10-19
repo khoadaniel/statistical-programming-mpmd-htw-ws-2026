@@ -26,15 +26,15 @@
 - Choosing a test from a decision table; ANOVA and many tests.
 - From correlation to the regression line; regression plots in seaborn.
 - Communicating findings in a short report or a Streamlit dashboard.
-- Do district price differences survive once room type and size are held fixed?
+- Do district price differences remain once room type and size are held fixed?
 
 ## Team project until the next session
 
-Exploratory findings: decisions per heading, language, member state and year, and the long tail of rare headings, presented in a short team review.
+Exploratory findings: decisions per heading, language, member state and year, and the long tail of rare headings (the many headings with only a few decisions each), presented in a short team review.
 
 ## Setup
 
-- Airbnb data, once: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
+- Airbnb data, once: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - Dashboard (block 2), in a terminal from the repository root: `uv run streamlit run sessions/05-eda-and-statistics/workbooks/dashboard_app.py`.
 - Some extras need packages outside the course environment; see the extras page.
 

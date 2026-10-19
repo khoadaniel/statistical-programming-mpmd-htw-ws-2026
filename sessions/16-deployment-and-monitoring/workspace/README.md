@@ -4,9 +4,12 @@ A complete, small service around the case-study model: training script, FastAPI 
 pydantic schemas that returns the **three highest-scoring HS headings** with their English texts, tests with
 `TestClient`, a Dockerfile, a Compose file that runs dashboard and API together (with the prediction log in a
 SQLite file), CI and CD workflows for GitHub Actions, drift statistics as tested pure functions, a monitoring
-report and a model card template. Session 16 builds version 1 and then, after the labels of the Public half of the
-test set are released as feedback, version 2. Copy the folder into your team repository: running service and dashboard with Docker Compose
-and releasing through CI/CD is part of the team project.
+report and a model card template. The API answers the interface of the
+[final project](../../17-18-final-presentations/final-project.md): `POST /predict` with `description` and an optional
+`language` returns `heading` and `top`, `GET /health` answers `{"status": "ok", ...}`, port 8000, started with
+`docker compose up`. Session 16 builds version 1, trained on the decisions before 2026, and then version 2, trained on all decisions. Copy the
+folder into your team repository: running service and dashboard with Docker Compose and releasing through CI/CD is
+part of the team project.
 
 ```
 src/tariff_service/
@@ -33,39 +36,43 @@ solutions/        reference solutions of the exercises, for self-checking only
 ```bash
 cd sessions/16-deployment-and-monitoring/workspace
 uv sync                                   # creates .venv with exactly the versions in uv.lock
-uv run pytest -q                          # 34 passed, 1 skipped (skops not installed), 2 xfailed (open exercises)
+uv run pytest -q                          # 35 passed, 1 skipped (skops not installed), 2 xfailed (open exercises)
 uvx ruff check .
 
-# version 1 on the 50,000-decision sample (about 20 s; validation accuracy about 0.76, top-3 0.83)
-uv run python -m tariff_service.train --data ../../../case-study/data/ebti/train_sample.parquet --version 1.0.0
+# version 1 on all 102,440 decisions (a few minutes; accuracy 0.786, top-3 0.859 on the newest 20 %)
+uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet --version 1.0.0
 
 # start the API (Ctrl+C stops it) and open http://localhost:8000/docs
 uv run uvicorn tariff_service.app:app --reload
 curl -X POST localhost:8000/predict -H "Content-Type: application/json" \
      -d '{"description": "Stiefel, mit Laufsohlen aus Kautschuk, mit Oberteil aus Leder (Rindleder)", "language": "de"}'
+
+# in a second terminal, from the repository root: the check the lecturer runs after the code freeze,
+# here on your own validation decisions (a Parquet file with description, language and heading)
+uv run python case-study/evaluate_api.py --url http://localhost:8000 --data my_validation.parquet
 ```
 
 The tests never need the case-study data: `tests/conftest.py` trains a model on 16 built-in descriptions.
 
 **What the scores mean.** The model is a linear support vector machine on word TF-IDF features (Session 13).
 A score is its margin: above 0 the model votes for the heading, below 0 it is not convinced of any heading.
-Scores are not probabilities. For the boot request above, version 1 answers 6404 with score 0.24 and has
-the correct heading 6403 only in third place (−0.72): short descriptions, unlike the long descriptions of real
-decisions, give the model little to go on. A service would show such low-score answers as suggestions only and
+Scores are not probabilities. For the boot request above, version 1 answers 6404 with score 0.30, and the correct
+heading 6403 is not among the three suggestions. Short descriptions, unlike the long descriptions of real
+decisions, give the model little information. A service would show such low-score answers as suggestions only and
 route them to an officer (Session 14, abstention).
 
-**Model size.** With about 940 headings and 100,000 words, the dense coefficient matrix takes about 770 MB.
+**Model size.** With about 1,000 headings and 157,000 words, the dense coefficient matrix takes about 1.3 GB.
 `train.py` sets coefficients with |w| < 0.05 to zero and stores them sparsely (`--prune`): about 1 % of the
-weights remain, validation accuracy is unchanged, and the model file has about 11 MB.
+weights remain, validation accuracy is unchanged, and the model file has about 15 MB.
 
 ## Workspace exercises
 
-The 30-minute exercises in class are at the end of the two block notebooks
+The exercises in class are at the end of the two block notebooks
 ([Block 1](../workbooks/01-lecture-web-apis-and-a-released-service.ipynb), [Block 2](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)). The workspace exercises below are longer:
 1, 2, 4 and 5 are self-study after Blocks 1 and 2, and 3 is part of the team project until the final presentations.
 
 1. **Version 1 of the service (after Block 1).** Train v1, start the API and send five descriptions through `/docs`,
-   at least one long description copied from `test.parquet`. Then save the model with skops instead of joblib
+   at least one long description copied from `decisions.parquet`. Then save the model with skops instead of joblib
    (`uv sync --extra skops`, `--format skops`) and explain in two sentences why a skops file is safer to load than
    a pickle from an unknown source.
 2. **Batch endpoint (after Block 1).** Implement `/predict/batch` (TODO in `app.py`). The tests in
@@ -81,24 +88,23 @@ The 30-minute exercises in class are at the end of the two block notebooks
    which service; see the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)).
 4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Simulate a model released at the start
    of 2026, as in the block notebook: `uv run python -m tariff_service.train --data
-   ../../../case-study/data/ebti/train_sample.parquet --before 2026-01-01 --version 1.0.0`. Run the drift report on
-   the requests of 2026: `uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet
-   --since 2026-01-01`, then with the released labels of the Public half (`--labels
-   ../../../case-study/data/ebti/public_labels.csv`; before the release, `--current
-   ../../../case-study/data/ebti/val.parquet --since 2026-01-01` uses the labels of the validation set). Which input
-   drifts? Does the retraining rule fire?
-5. **Version 2 and the model card (after Block 2).** Retrain on the whole training sample with the feedback
-   (`--data ../../../case-study/data/ebti/train_sample.parquet --feedback ../../../case-study/data/ebti/public_labels.csv
-   --version 2.0.0`), compare v1 and v2 on `val.parquet` as in
-   the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), and fill in `MODEL_CARD.md` for v2.
+   ../../../case-study/data/ebti/decisions.parquet --before 2026-01-01 --version 1.0.0`. Run the drift report on
+   the decisions of 2026, which v1 never saw, first on their inputs only, as before the labels arrive:
+   `uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet --since 2026-01-01
+   --hide-labels`, then without `--hide-labels`, so that their headings are used. Which input drifts? Is the condition of the
+   retraining rule met?
+5. **Version 2 and the model card (after Block 2).** Retrain on all decisions, 2026 included
+   (`--data ../../../case-study/data/ebti/decisions.parquet --version 2.0.0`), compare v1 and v2 on validation decisions that neither of them saw in training, as in
+   the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), check the API with
+   `case-study/evaluate_api.py`, update the reported score in your README, and fill in `MODEL_CARD.md` for v2.
 
-With the course data, v1 trained on the decisions before 2026 has a time-based validation accuracy of 0.768, and
-the report on the 2,473 decisions of 2026 in the Public half shows: description-length PSI 0.004, language PSI
-0.035 and country PSI 0.036 (France's share rises), predicted-chapter PSI 0.085, chapter label shift PSI 0.086,
-0.4 % of the 2026 headings never seen in training, and accuracy 0.745 against 0.768 in validation. The written
-rule (accuracy more than 0.03 below validation, or an input PSI above 0.25) does **not** fire, yet retraining with
-the released labels raises accuracy on 2026 by about 3 points (see the block notebook): a rule that waits for a
-drop can miss an opportunity to improve.
+With the course data, v1 trained on all decisions before 2026 has a time-based validation accuracy of 0.803, and
+the report on the 27,701 decisions of 2026 shows: description-length PSI 0.002, language PSI 0.035 and country PSI
+0.036 (France's share rises), predicted-chapter PSI 0.051, chapter label shift PSI 0.045, 0.2 % of the 2026
+headings never seen in training, and accuracy 0.775 against 0.803 in validation. The written rule (accuracy more
+than 0.03 below validation, or an input PSI above 0.25) is not met, but the margin is small: the drop is 0.027. No input
+PSI comes near 0.25, so the clearest warning sign comes from the labels, not from the input statistics. The block
+notebook shows that retraining with the labels of 2026 raises accuracy on newer decisions.
 
 ## Containers, CI/CD and hosting
 
@@ -106,7 +112,8 @@ drop can miss an opportunity to improve.
   then the model. It runs as a non-root user and has a health check. Docker Desktop is free for education
   and small companies; [Podman](https://podman.io/) is an open-source alternative with the same commands.
 - **CI** (`ci.yml`): on every push and pull request, ruff and pytest run on a clean machine; then the image
-  is built with the fixture model and smoke-tested with `curl`.
+  is built with the fixture model and smoke-tested with `curl` (a smoke test is a quick check that the service
+  starts and answers one request).
 - **CD** (`cd.yml`): pushing a tag such as `v1.0.0` downloads the model files attached to the GitHub
   release of that tag, checks that the version in `metadata.json` matches the tag, and pushes the image to
   the GitHub container registry (`ghcr.io`). A hosting platform then runs that image.
@@ -148,7 +155,8 @@ write to one database, a database server is the better choice ([SQLite: Appropri
 ## Design notes
 
 - **One preprocessing function** (`decision_text`) is used by training, the API, the dashboard and the
-  monitor, so that serving cannot drift from training (training–serving skew).
+  monitor. Serving therefore prepares the text in the same way as training; a difference between the two is
+  called training–serving skew.
 - **Only the description is an input.** The justification, keywords and CN code are decided together with
   the heading and are not available for a new request; the schema forbids extra fields such as `heading`.
 - **Metadata travel with the model**: version, library versions, training data checksum, validation

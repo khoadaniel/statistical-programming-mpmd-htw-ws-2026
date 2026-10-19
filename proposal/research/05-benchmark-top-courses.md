@@ -1,4 +1,4 @@
-# Research notes — Benchmark against top MIT / Stanford / Harvard courses (2024–26)
+# Research notes: Benchmark against top MIT / Stanford / Harvard courses (2024–26)
 
 URLs checked 2026-09-24 (HTTP 200 unless noted). Detailed syllabi of CS229, 6.390 and 6.5940 require a login.
 
@@ -51,4 +51,4 @@ Also: CMU 11-711 ANLP F25 (https://phontron.com/class/anlp-fall2025/), MLSysBook
 
 **Gaps in elite CS courses, where our course stands out:** SQL/DuckDB · robust statistics · missing data · conformal prediction · time-series forecasting · visual communication · accessible MLOps · professional engineering practice · PM framing (requirements, risk, cost, stakeholders) · LLM cost/latency trade-offs.
 
-**Recommendations taken into the redesign:** keep the arc. Add agents + MCP + evals as first-class topics. Make the final project **one evolving system graded at milestones** with a deployed MVP early. Add individual oral checks and a per-submission AI-use statement. Add PM framing (risk register, cost budget) in each block. Drop from-scratch deep learning, GPU work and Kubernetes.
+**Recommendations taken into the redesign:** keep the order of topics. Add agents + MCP + evals as first-class topics. Make the final project **one evolving system graded at milestones** with a deployed MVP early. Add individual oral checks and a per-submission AI-use statement. Add PM framing (risk register, cost budget) in each block. Drop from-scratch deep learning, GPU work and Kubernetes.

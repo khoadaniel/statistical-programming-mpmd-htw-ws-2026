@@ -19,7 +19,7 @@
 [Open notebook](workbooks/02-lecture-aggregation-joins-and-sql-from-python.ipynb)
 
 - `GROUP BY` and `HAVING`; shares as averages of 0/1 values.
-- Inner, left, right, full and cross joins; anti-joins and one-to-many traps.
+- Inner, left, right, full and cross joins; anti-joins, and the duplicated rows that one-to-many joins can produce.
 - Subqueries and common table expressions, including recursive ones.
 - Window functions: rankings, running totals, `LAG`, `LEAD` and moving averages.
 - Python's `sqlite3`: connections, cursors, parameters, transactions, pandas, scripts, and SQL written by a language model.
@@ -27,11 +27,11 @@
 
 ## Team project until the next session
 
-Download `ebti.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Write a loading script that stores the training decisions `case-study/data/ebti/train.parquet` in the team's SQLite database, then count them in SQL per start year (`start_date`), language and member state (`issuing_country`).
+Download `ebti-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Write a loading script that stores the decisions from `case-study/data/ebti/decisions.parquet` in the team's SQLite database, then count them in SQL per start year (`start_date`), language and member state (`issuing_country`).
 
 ## Setup
 
-- Download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
+- Download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - Build the course database once (it is written to `case-study/data/airbnb/airbnb.sqlite`, which is not committed): `uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py`. The notebooks run this step themselves if the file is missing; `--force` rebuilds it, for example after exercise 2.9.
 - Optional: [DB Browser for SQLite](https://sqlitebrowser.org/) to look at the file.
 

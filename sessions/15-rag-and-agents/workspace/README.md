@@ -35,10 +35,10 @@ uv sync --extra data --extra embeddings    # pandas and sentence-transformers fo
 uv run python -m bti_assistant.demo "Damenstiefel mit Oberteil aus Rindleder und Laufsohle aus Gummi"
 ```
 
-The demo indexes 5,000 decisions of the training sample and prints the most similar ones with their
-headings and a similarity-weighted vote. For the query above, four of the five neighbours are boots
-(headings 6403, 6401, 6404) and the vote puts 6403 first; an English query such as "plastic toy car for
-children" finds French and English toy decisions (9503).
+The demo indexes a random sample of 5,000 decisions of `decisions.parquet` and prints the most similar ones with their
+headings and a similarity-weighted vote. For the query above, all five neighbours are German decisions on boots
+(headings 6403 and 6404) and the vote puts 6403 first. An English query such as "plastic toy car for
+children" finds mostly French and German toy decisions (9503), and the vote puts 9503 first.
 
 ### LLM access
 
@@ -66,7 +66,7 @@ uv run python -m bti_assistant.demo "plastic toy car" --store sqlite --db index.
 
 `SQLiteVectorStore` keeps the chunks, their headings and their embeddings (as float32 BLOBs) in one SQLite
 table. SQL selects the rows, NumPy ranks them by cosine similarity: exact search, which is fast enough for the
-10,000 decisions of the course (one matrix product). Nothing has to be installed or started. `*.sqlite` files are
+5,000 decisions of the demo index (one matrix product). Nothing has to be installed or started. `*.sqlite` files are
 listed in `.gitignore`; never commit them. The tests use the same store in memory.
 
 ## Exercises
@@ -79,8 +79,9 @@ are in `tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` 
    `WHERE substr(heading, 1, 2) = ?` and rank them in NumPy. Check that `--store sqlite` and `--store numpy`
    return the same decisions, with and without a chapter.
 2. **Chunk size (block 1).** Implement `chunk_sentences` (TODO in `chunking.py`). Write a small script that
-   evaluates heading hit@5 (`metrics.evaluate_heading_retrieval`) on 500 decisions of `val.parquet` used as queries,
-   for word windows of 40, 120 and 250 words and for sentence chunks.
+   evaluates heading hit@5 (`metrics.evaluate_heading_retrieval`) on 500 decisions of `decisions.parquet` used as
+   queries, held out from the collection (not among the indexed decisions), for word windows of 40, 120 and 250
+   words and for sentence chunks.
 3. **Cost guardrail (block 2).** Implement the token budget in `run_agent` (TODO in `agent.py`): stop with
    `stop_reason="budget"` once the total tokens exceed `max_total_tokens`.
 4. **A fourth tool (block 2).** Add a tool `heading_history(heading)` that returns the number of decisions
@@ -100,7 +101,7 @@ are in `tests/test_exercises.py`; they are marked `xfail` and turn into `XPASS` 
   retrieved decisions carries and reports invented references through `citation_precision`;
   `ToolBox.call` validates arguments against the schema, runs only allow-listed tools and returns errors as
   observations instead of raising them.
-- **Read-only SQL is checked twice in practice.** `check_read_only_sql` is a coarse first line of defence. In
+- **Read-only SQL is checked twice in practice.** `check_read_only_sql` is a first, rough check. In
   a real deployment, the agent's connection must not be able to write at all: in SQLite, open the file with
   `sqlite3.connect("file:decisions.sqlite?mode=ro", uri=True)` or set `PRAGMA query_only = ON`; in a
   database server, a user with read rights only.

@@ -1,6 +1,6 @@
 # Workspace · Session 2: software engineering for data work
 
-One small project that grows through the two blocks of Session 2: a validated record of one Berlin Airbnb listing (block 1), then the listing analysis of the Session 1 case study turned from notebook cells into a package with a class, `ListingTable`, and a module of simple features of listing titles that you contribute through a reviewed pull request with continuous integration (block 2). The data are the Berlin listings of Inside Airbnb, the course dataset of Sessions 1–12.
+One small project that grows through the two blocks of Session 2. In block 1 you build a validated record of one Berlin Airbnb listing. In block 2 the listing analysis of the Session 1 case study moves from notebook cells into a package with a class, `ListingTable`. You also add a module of simple features of listing titles, through a reviewed pull request with continuous integration. The data are the Berlin listings of Inside Airbnb, the course dataset of Sessions 1–12.
 
 ```
 workspace/
@@ -26,7 +26,7 @@ Teaching notebooks: [block 1, classes, errors and tests](../workbooks/01-lecture
 
 ## Run it
 
-The summary of the real listings needs the case-study data (download `airbnb.zip` from the course drive and unzip it into `case-study/data/` of the repository, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
+The summary of the real listings needs the case-study data (download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` of the repository, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
 
 ```bash
 cd sessions/02-software-engineering/workspace

@@ -2,11 +2,11 @@
 
     uv run python sessions/16-deployment-and-monitoring/figures/make_figures.py
 
-Uses the EBTI case-study data (case-study/data/ebti/), with the same simulated release date as block
-notebook 02: the training decisions that started before 2026 are the reference, the requests of 2026 in
-test.parquet the current data. The chapter shares of 2026 come from the labels of the Public half that are
-released in Session 16 (case-study/data/ebti/public_labels.csv); without that file, from the 2026
-decisions of val.parquet. Deterministic.
+Uses the EBTI case-study data (case-study/data/ebti/), with the validation design and the simulated release
+date of block notebook 02: the training decisions (decisions.parquet without the validation fold)
+that started before 2026 are the reference, the training decisions of 2026 the current data (the requests
+after a simulated release at the start of 2026) and their labels.
+Deterministic.
 """
 
 from pathlib import Path
@@ -17,6 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import StratifiedKFold
 
 OUT = Path(__file__).resolve().parent
 DATA = Path("case-study/data/ebti")
@@ -27,15 +28,13 @@ plt.rcParams.update({"figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "ax
                      "axes.labelcolor": INK, "xtick.color": INK2, "ytick.color": INK2, "text.color": INK,
                      "font.size": 11, "axes.spines.top": False, "axes.spines.right": False, "axes.axisbelow": True})
 
-train = pd.read_parquet(DATA / "train_sample.parquet", columns=["issuing_country", "start_date", "chapter"])
-test = pd.read_parquet(DATA / "test.parquet", columns=["id", "issuing_country", "start_date"])
+decisions = pd.read_parquet(DATA / "decisions.parquet", columns=["issuing_country", "language", "start_date", "heading", "chapter"])
+key = decisions["heading"] + "|" + decisions["language"]
+train_rows, valid_rows = next(StratifiedKFold(n_splits=7, shuffle=True, random_state=0).split(decisions, key))
+train, val = decisions.iloc[train_rows], decisions.iloc[valid_rows]
 old = train[train["start_date"] < RELEASE]
-new = test[test["start_date"] >= RELEASE]
-if (DATA / "public_labels.csv").exists():
-    labels_2026 = new.merge(pd.read_csv(DATA / "public_labels.csv", dtype=str), on="id")["heading"]
-else:
-    val = pd.read_parquet(DATA / "val.parquet", columns=["start_date", "heading"])
-    labels_2026 = val.loc[val["start_date"] >= RELEASE, "heading"]
+new = train[train["start_date"] >= RELEASE]
+labels_2026 = new["heading"]
 
 # ------------------------------------------------------------ figure 1: country drift + chapter label shift
 countries = ["DE", "FR", "NL", "CZ", "ES", "PL", "IT"]

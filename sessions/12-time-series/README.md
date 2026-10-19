@@ -29,7 +29,8 @@ Open points from the interim review.
 
 ## Setup
 
-- The block notebooks need the Airbnb data and the Berlin weather: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Block 2 also downloads the Bike Sharing Demand data from OpenML on first run.
+- The block notebooks need the Airbnb data and the Berlin weather: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Block 2 also downloads the Bike Sharing Demand data from OpenML on first run.
+- Extras 10–13 use LightGBM, which needs the OpenMP runtime installed in [Session 10](../10-tree-based-models/README.md#setup).
 - Extras 03, 07 and 10–13 use StatsForecast, MLForecast or skforecast, which do not support pandas 3 yet. Open them in a temporary environment, from the repository root:
 
   ```bash

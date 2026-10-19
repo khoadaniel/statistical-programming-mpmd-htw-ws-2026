@@ -25,6 +25,17 @@ def test_predict_contract(client):
     assert body["top"][0]["heading_description"].startswith(("Footwear", "Textiles", "Tricycles"))
 
 
+def test_final_project_interface(client):
+    """The interface of the final project (final-project.md), as case-study/evaluate_api.py calls it."""
+    assert client.get("/health").json()["status"] == "ok"
+    for body in [BOOTS, {"description": BOOTS["description"]}]:          # language is optional
+        r = client.post("/predict", json=body)
+        assert r.status_code == 200
+        answer = r.json()
+        assert len(answer["heading"]) == 4 and answer["heading"].isdigit()
+        assert len(answer["top"]) == 3 and all({"heading", "score"} <= set(t) for t in answer["top"])
+
+
 @pytest.mark.parametrize("text, heading", [
     ("Damenstiefel mit Oberteil aus Rindleder und Laufsohle aus Gummi", "6403"),
     ("Voiture jouet en matière plastique pour enfants", "9503"),

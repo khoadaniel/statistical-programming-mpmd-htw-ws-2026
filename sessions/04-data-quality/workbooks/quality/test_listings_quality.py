@@ -26,7 +26,7 @@ LAT, LON = (52.33, 52.68), (13.08, 13.77)            # bounding box of neighbour
 REGISTRATION = r"\d{2}/[Z3]/[A-Z]{2}/?\d+"           # the pattern the preparation script keeps (any case)
 
 if not (DATA / "listings.parquet").exists():
-    pytest.skip("Airbnb data missing: download airbnb.zip from the course drive into case-study/data/ "
+    pytest.skip("Airbnb data missing: download airbnb-v1.zip from the course drive into case-study/data/ "
                 "(see case-study/README.md)", allow_module_level=True)
 
 

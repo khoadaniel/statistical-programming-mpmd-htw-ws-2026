@@ -21,8 +21,7 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti" / "train_sample.parquet"
-VAL = DATA.with_name("val.parquet")
+DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti" / "decisions.parquet"
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 PALETTE = ["#2471a3", "#c0392b", "#27ae60", "#8e44ad", "#d68910", "#17a589"]
 
@@ -140,12 +139,21 @@ def embedding_space() -> None:
 
 
 def coverage_accuracy() -> None:
-    """Abstention: accept the predicted heading only if the model's confidence reaches a threshold."""
+    """Abstention: accept the predicted heading only if the model's confidence reaches a threshold.
+
+    Uses the split of Session 13, Block 2 and of the Block 2 notebook: one fold of a stratified 7-fold
+    split by heading and language as validation decisions, trained on a sample of 50,000 training decisions.
+    """
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import SGDClassifier
+    from sklearn.model_selection import StratifiedKFold
     from sklearn.pipeline import make_pipeline
 
-    d, v = pd.read_parquet(DATA), pd.read_parquet(VAL)
+    decisions = pd.read_parquet(DATA)
+    key = decisions["heading"] + "|" + decisions["language"]
+    train_rows, valid_rows = next(StratifiedKFold(n_splits=7, shuffle=True, random_state=0).split(decisions, key))
+    train_all, v = decisions.iloc[train_rows], decisions.iloc[valid_rows]
+    d = train_all.sample(50_000, random_state=0)
     clf = make_pipeline(TfidfVectorizer(min_df=2, sublinear_tf=True),
                         SGDClassifier(loss="log_loss", alpha=1e-6, random_state=0, n_jobs=-1))
     clf.fit(d["description"], d["heading"])
@@ -165,7 +173,7 @@ def coverage_accuracy() -> None:
     ax.set(xlabel="coverage: share of decisions the model decides itself",
            ylabel="accuracy on the decided cases", xlim=(0, 1.02), ylim=(0.7, 1.01))
     ax.set_title("Abstention: TF-IDF heading classifier, EBTI validation set\n"
-                 "(trained on the 50,000-decision sample)", loc="left", fontsize=10)
+                 "(trained on a sample of 50,000 training decisions)", loc="left", fontsize=10)
     fig.tight_layout()
     fig.savefig(OUT / "coverage_accuracy.png")
     plt.close(fig)

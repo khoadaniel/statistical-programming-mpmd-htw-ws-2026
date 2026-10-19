@@ -32,7 +32,11 @@ Open points from the interim review.
 
 ## Setup
 
-- The Airbnb data: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). The Telco data are read from GitHub.
-- The ISLP lab among the extras needs `uv run --with ISLP jupyter lab`; some other extras download data sets on first run.
+- The Airbnb data: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). The Telco data are read from GitHub.
+- The ISLP lab among the extras needs the `ISLP` package. Open the extras with it from the repository root; some other extras download data sets on first run.
+
+  ```bash
+  uv run --with ISLP jupyter lab sessions/11-unsupervised-learning/workbooks/extras
+  ```
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

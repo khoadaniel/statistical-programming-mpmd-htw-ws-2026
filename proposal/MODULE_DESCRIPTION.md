@@ -22,7 +22,7 @@ By the end of the module, students will be able to:
 - Write well-structured, documented and tested Python code, and collaborate using Git, code review and continuous integration.
 - Load, query and prepare data reproducibly from relational databases, APIs and large files, and assess and document data quality.
 - Apply suitable statistical methods and visualisations to explore data, compare groups and communicate findings with their uncertainty and limitations.
-- Build, validate and tune supervised and unsupervised machine learning models, using appropriate metrics and preventing data leakage.
+- Build, validate and tune supervised and unsupervised machine learning models, using appropriate metrics and preventing data leakage (information reaching a model during training that it would not have at prediction time).
 - Develop time series forecasts and assess their performance through backtesting and prediction intervals.
 - Build text classifiers, use embeddings and language models, and evaluate retrieval-augmented generation and simple agents against baselines.
 - Serve a tested model through an API in a container, explain basic cloud deployment architecture, and plan model monitoring and maintenance.
@@ -87,4 +87,4 @@ By the end of the module, students will be able to:
 
 - **Final project: 100 points**, assessed through a final presentation and written report.
 
-Students work on the project in teams but are graded individually on the basis of their final presentation and written report. Assessment considers problem definition, data preparation, methodological choices, validation, implementation and communication of results. Weekly exercises are not graded, and leaderboard scores are not directly converted into marks.
+Students work on the project in teams but are graded individually on the basis of their final presentation and written report. Assessment considers problem definition, data preparation, methodological choices, validation, implementation and communication of results. Weekly exercises are not graded, and the model's evaluation score is not directly converted into marks.

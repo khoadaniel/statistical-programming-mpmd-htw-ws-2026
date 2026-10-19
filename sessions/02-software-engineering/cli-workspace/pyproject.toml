@@ -1,0 +1,21 @@
+[project]
+name = "staycost"
+version = "0.1.0"
+description = "The smallest complete command-line program: the cost of a stay in a Berlin listing (Session 2)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+# A terminal command: `staycost` calls the function `main` in the module `staycost.cli`.
+[project.scripts]
+staycost = "staycost.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9,<0.12"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["pytest>=9.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

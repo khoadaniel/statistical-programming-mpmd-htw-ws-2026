@@ -1,4 +1,4 @@
-# Research notes — MLOps & deployment, LLMOps, pedagogy, project datasets
+# Research notes: MLOps & deployment, LLMOps, pedagogy, project datasets
 
 Links checked on 2026-09-24 (HTTP 200 unless noted; "403 to bots" = publisher blocks automated checks, likely fine in a browser).
 
@@ -35,7 +35,7 @@ Links checked on 2026-09-24 (HTTP 200 unless noted; "403 to bots" = publisher bl
 | Gradio quickstart / sharing | https://www.gradio.app/guides/quickstart | |
 | Streamlit chat & LLM apps | https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps | |
 | Langfuse (OSS, self-hostable) | https://langfuse.com/docs | Tracing, cost, evals; EU-friendly |
-| Hamel Husain — evals | https://hamel.dev/blog/posts/evals/ | |
+| Hamel Husain: evals | https://hamel.dev/blog/posts/evals/ | |
 | applied-llms.org / Eugene Yan patterns | https://applied-llms.org/ · https://eugeneyan.com/writing/llm-patterns/ | |
 | Evidently LLM courses | https://www.evidentlyai.com/courses | |
 | promptfoo / DeepEval | https://www.promptfoo.dev/docs/intro/ · https://github.com/confident-ai/deepeval | Prompt regression tests in CI |

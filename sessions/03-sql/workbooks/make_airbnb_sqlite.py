@@ -1,7 +1,7 @@
 """Build the course's SQLite database of the Berlin Airbnb case study.
 
 Session 3 queries the Inside Airbnb Berlin snapshot with SQL. This script reads the Parquet files in
-case-study/data/airbnb/ (downloaded as airbnb.zip from the course drive, see case-study/README.md) and
+case-study/data/airbnb/ (downloaded as airbnb-v1.zip from the course drive, see case-study/README.md) and
 stores three tables in one SQLite file:
 
     listings   one row per listing (id is the primary key)
@@ -70,7 +70,7 @@ def as_text_date(column: pd.Series) -> pd.Series:
 def build(db: Path = DB, parquet: Path = PARQUET) -> None:
     """Write listings, calendar and reviews from the Parquet files into a new SQLite file."""
     if not (parquet / "listings.parquet").exists():
-        raise SystemExit(f"{parquet / 'listings.parquet'} not found: download airbnb.zip from the course drive "
+        raise SystemExit(f"{parquet / 'listings.parquet'} not found: download airbnb-v1.zip from the course drive "
                          "and unzip it into case-study/data/ (see case-study/README.md)")
     db.parent.mkdir(parents=True, exist_ok=True)
     tmp = db.with_suffix(".sqlite.tmp")          # build next to the target, then rename: no half-built file

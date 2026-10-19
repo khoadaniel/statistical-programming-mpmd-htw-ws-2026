@@ -26,7 +26,7 @@
 - Resampling inside the cross-validation with imbalanced-learn: undersampling, oversampling, SMOTE and its variants.
 - Worked example: which strategy is cheapest for the retention team.
 
-## Team project until the next session
+## Team project until the next teaching day
 
 Together with the task of Session 9, which follows on the same day: a first classifier on simple features (language, member state, description length) in a pipeline, evaluated with accuracy and macro-F1 against the baselines.
 

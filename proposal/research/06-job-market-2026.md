@@ -1,4 +1,4 @@
-# Research notes — What gets graduates hired into data/ML/AI jobs (Germany/Berlin, 2026)
+# Research notes: What gets graduates hired into data/ML/AI jobs (Germany/Berlin, 2026)
 
 Research date: 2026-09-24.
 
@@ -13,7 +13,7 @@ PwC primary pages returned 403, so their numbers come from snippets and secondar
 **Specialist shortage persists:**
 - **Bitkom (3 Sep 2026):** 79k IT vacancies, down from 109k in 2025 and 149k in 2023. 78 % of firms still report a shortage. Missing German is the #1 hiring barrier (47 %). [S]
 
-**Entry-level collapse:**
+**Sharp fall in entry-level hiring:**
 - **Indeed Hiring Lab DE (23 Sep 2026):** entry-level postings down **46 % vs 2019**. [S]
   - Software development down ~70 %.
   - IT applications down 77 %.
@@ -36,7 +36,7 @@ PwC primary pages returned 403, so their numbers come from snippets and secondar
 | Forward-deployed engineer | very fast from a small base | +350 % to +1,165 % depending on source; needs customer communication [M/W] |
 | ML Engineer | growing, senior-heavy | only 2.5 % of AI-engineer ads are 0–2-year roles (US) [W–M] |
 | Data Engineer | stable/strong | 131 of 1,019 Berlin roles [M] |
-| Data Scientist | stable, shifting to ML/LLM, squeezed at entry level | NLP in 19 % of ads (5 % in 2024) [W–M] |
+| Data Scientist | stable, shifting to ML/LLM, fewer entry-level positions | NLP in 19 % of ads (5 % in 2024) [W–M] |
 | Data Analyst | most exposed at junior level | Indeed AI-exposure finding [M] |
 | Analytics Engineer | small, steady niche | dbt in 87 of 1,019 Berlin ads [M] |
 | MLOps | absorbed into other titles; a skill more than a title | [M] |
@@ -56,7 +56,7 @@ LLM 52 % · Python 48 % · English 45 % · **German 36 %** · SQL 34 % · Commun
 - **Karat 2026:** 71 % of engineering leaders say AI makes technical skills harder to assess, so take-homes are losing credibility. [M]
 - **In-person rounds are returning** (Google, McKinsey). [M]
 - **Data-scientist interview loops:** SQL screen → statistics/ML → case or take-home. **A/B testing, statistics, ML and product sense make up more than 55 % of questions.** [W–M]
-- **ML/AI-engineer loops:** coding (often AI-enabled) + ML/LLM system design + project deep dive + **eval design**. [M]
+- **ML/AI-engineer loops:** coding (often AI-enabled) + ML/LLM system design + detailed discussion of a past project + **eval design**. [M]
 - **What makes juniors stand out:** proof of work (shipped apps, open source, agentic workflows), a deployed demo instead of a notebook, and a **live, explainable walkthrough of their own repo**. [M]
 
 ## 5. Germany specifics
@@ -98,9 +98,9 @@ LLM 52 % · Python 48 % · English 45 % · **German 36 %** · SQL 34 % · Commun
 2. End to end: SQL/dbt modelling → model or LLM → public URL.
 3. An **explicit eval section**: baseline, held-out set, error analysis; for LLM features, judge-vs-human agreement and cost per request.
 4. **A statistical decision**: an experiment or quasi-experiment, with uncertainty.
-5. Engineering hygiene, and the ability to do a live walkthrough **without AI**.
+5. Good engineering practice (tests, version control, documentation), and the ability to do a live walkthrough **without AI**.
 6. A one-page stakeholder memo, a 5-minute demo video, and a responsible-AI note.
-7. One strong project beats five Kaggle notebooks.
+7. One strong project is worth more than five Kaggle notebooks.
 
 ## 8. Assessment that mirrors real hiring
 - Portfolio project, hiring-style rubric: 40 %

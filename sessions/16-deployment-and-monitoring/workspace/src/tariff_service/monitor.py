@@ -1,15 +1,15 @@
 """Drift report: compare a batch of new decisions with the reference stored in the model metadata.
 
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet --since 2026-01-01
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/test.parquet --since 2026-01-01 \\
-        --labels ../../../case-study/data/ebti/public_labels.csv
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/val.parquet --since 2026-01-01
+    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet \\
+        --since 2026-01-01 --hide-labels                  # inputs only, as before the labels arrive
+    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet \\
+        --since 2026-01-01                                # with the labels of 2026
 
 Input drift (description length, language and country shares) and prediction drift (predicted chapter
 shares) need no labels; label shift, unseen headings and the accuracy check need the labels of the new
-period, which arrive later (here: the labels of the Public half of the test set, released in Session 16).
-A file with a `heading` column, such as val.parquet, brings its own labels. `--since DATE` keeps only
-decisions that started on or after DATE.
+period, which arrive later (here: the headings of the decisions of 2026, for a model trained with
+`--before 2026-01-01`). A file with a `heading` column brings its own labels; `--hide-labels` ignores them.
+`--since DATE` keeps only decisions that started on or after DATE.
 """
 
 from __future__ import annotations
@@ -58,8 +58,8 @@ def drift_report(pipe, meta: dict, texts: list[str], labels: list[str] | None = 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model-dir", type=Path, default=Path("models"))
-    parser.add_argument("--current", type=Path, required=True, help="parquet with id, description, language, ...")
-    parser.add_argument("--labels", type=Path, help="CSV id,heading for (part of) the current decisions")
+    parser.add_argument("--current", type=Path, required=True, help="parquet with description, language, ...")
+    parser.add_argument("--hide-labels", action="store_true", help="ignore the heading column: inputs only")
     parser.add_argument("--since", help="keep only decisions that started on or after this date (YYYY-MM-DD)")
     parser.add_argument("--tolerance", type=float, default=0.03)
     args = parser.parse_args()
@@ -68,10 +68,7 @@ def main() -> None:
     if args.since is not None:
         df = df[df["start_date"] >= pd.Timestamp(args.since)]
     labels = None
-    if args.labels:
-        df = df.drop(columns="heading", errors="ignore").merge(pd.read_csv(args.labels, dtype=str), on="id")
-        labels = df["heading"].tolist()
-    elif "heading" in df.columns:  # e.g. val.parquet: labelled decisions
+    if "heading" in df.columns and not args.hide_labels:  # e.g. decisions.parquet: labelled decisions
         labels = df["heading"].tolist()
     texts = [decision_text(t) for t in df["description"]]
     report = drift_report(pipe, meta, texts, labels, df["language"].tolist(), df["issuing_country"].tolist(),

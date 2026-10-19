@@ -59,7 +59,15 @@ dependencies = [
     "ISLP>=0.4",
     "l0bnb>=1.0",
     "rank-bm25>=0.2",
+    "openpyxl>=3.1.5",
 ]
+
+[project.scripts]
+check_setup = "course_tools.check_setup:main"  # uv run check_setup: is this laptop ready? (GETTING_STARTED.md)
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
 
 [dependency-groups]
 dev = ["pytest>=9.1", "ruff>=0.17", "nbformat>=5.11", "nbclient>=0.11", "httpx2>=2.13"]
@@ -68,7 +76,11 @@ dev = ["pytest>=9.1", "ruff>=0.17", "nbformat>=5.11", "nbclient>=0.11", "httpx2>
 #   MLForecast need pandas < 3); the session READMEs give the `uv run --no-project --with ... jupyter lab` command.
 
 [tool.uv]
-package = false
+package = true  # installs the small course_tools package, so that `uv run check_setup` works
+
+[tool.uv.build-backend]
+module-name = "course_tools"
+module-root = ""
 
 # PyTorch from PyPI includes NVIDIA GPU libraries on Linux (about 3 GB). Laptops do not need them, so Linux uses the
 # CPU-only build from the PyTorch index; macOS and Windows get CPU builds from PyPI anyway.

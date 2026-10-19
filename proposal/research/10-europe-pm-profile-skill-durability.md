@@ -1,4 +1,4 @@
-# Research notes — Europe, the PM+Data profile, graduate gaps, language, skill durability
+# Research notes: Europe, the PM+Data profile, graduate gaps, language, skill durability
 
 Research date 2026-09-26.
 
@@ -31,12 +31,12 @@ Research date 2026-09-26.
 - [M] **Indeed DE (Apr 2026): Berlin "IT applications, data & analytics" postings +17.6 %, while the rest of Germany is falling.** https://hiringlab.indeed.com/de/blog/2026/04/02/tech-aufschwung-in-berlin/
 - [M] LinkedIn Jobs on the Rise 2026: AI Engineer is #1 in FR/NL/ES/IT/UK, but it typically needs 2–3 years' experience.
 
-**Verdict:** the shortage is senior and specialist; the junior squeeze is Europe-wide; Berlin data and analytics is a bright spot.
+**Conclusion:** the shortage is in senior and specialist roles. Fewer junior positions are a Europe-wide trend. Berlin data and analytics is an exception, with growing demand.
 
 ## 2. The PM+Data profile
 **Demand:**
 - [M] Axipro 2026 (3,519 EU AI ads): 7 builder roles per governance role; **fewer than 30 % of governance ads mention the AI Act**. https://axipro.co/eu-ai-act-hiring-gap-study/
-- [S] AI Omnibus (Reg. 2026/1744): high-risk obligations moved to 2 Dec 2027, so governance demand ramps up in 2027.
+- [S] AI Omnibus (Reg. 2026/1744): high-risk obligations moved to 2 Dec 2027, so governance demand grows in 2027.
 - [M] IAPP 2025: governance teams are built by re-tasking existing staff, not by hiring juniors.
 - [M] AI Product Manager (US, 12.4k ads): **2 % junior**; the top skill is use-case selection. https://axialsearch.com/insights/ai-product-jobs
 - [M/W] Forward-deployed engineers: growing fast, mostly US.
@@ -55,7 +55,7 @@ Research date 2026-09-26.
 - [M] dbt 2026: 72 % prioritise AI coding but only 24 % prioritise AI testing and observability. **This quality gap is where graduates can fill a need.**
 - [M] Anaconda 2025: 43 % feel unprepared for AI tools and regulation.
 - [M] CoderPad 2026: 46 % allow AI in technical assessments and judge candidates on catching AI errors.
-- Prompt engineering: **the title is dead, the skill is table stakes.**
+- Prompt engineering: **the job title is disappearing, but the skill is now expected of everyone.**
 
 ## 4. Language, first jobs, Werkstudent
 - [M, indicative, own sample of 1,492 Arbeitnow ads, skewed towards English-friendly employers]: an ad counted as German if written in German or asking for German.

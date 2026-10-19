@@ -1,33 +1,48 @@
-.DS_Store
+# Python
 __pycache__/
-.ipynb_checkpoints/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments and secrets
 .venv/
+venv/
+.env
+.env.*
+
+# Tool caches
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model and library outputs
 catboost_info/
+mlruns/
 *.duckdb
-*.egg-info/
-# case-study data: students download the prepared files from the course drive into case-study/data/;
-# only the README and .gitkeep of that folder are committed
+*.duckdb.wal
+
+# Operating system and editors
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Course data: download it into case-study/data/
 case-study/data/*
 !case-study/data/README.md
 !case-study/data/.gitkeep
-# lecturer only: preparation scripts, downloaded source files, processed data for the course drive,
-# held-out test sets and labels (see case-study/README.md)
-case-study/lecturer/
 submission*.csv
 
-# internal notes, never published
-internal/
-
-# Local website prototype (not published or committed yet)
-/website/
-
-# lecturer teaching notes, never published
-teaching-notes/
-
-
+# Local folders
 .claude/
-
-# final-project prototype (local only, never committed)
+case-study/lecturer/
+internal/
+teaching-notes/
 /prototype/

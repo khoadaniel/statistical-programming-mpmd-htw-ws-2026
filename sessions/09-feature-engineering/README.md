@@ -11,9 +11,9 @@
 - High-cardinality categories: grouping rare levels and choosing the threshold, unseen levels, count encoding, skrub's `TableVectorizer`.
 - Target encoding and its leakage risk: smoothing, the naive leak, cross-fitting with `TargetEncoder`, its parameters, binary and multiclass targets, comparison of encoders.
 - Aggregation features from related tables: point-in-time aggregates, an out-of-time check, lags and rolling windows, as-of joins, `AggJoiner`.
-- Target leakage: derived and snapshot columns, detection, leakage through preprocessing and groups, a checklist.
+- Target leakage (an input that contains information about the target that is not known at prediction time): derived and snapshot columns, detection, leakage through preprocessing and groups, a checklist.
 - Custom transformers in pipelines: `FunctionTransformer`, a transformer class and its contract, tuning preprocessing.
-- Worked example: which feature groups help the Berlin price model.
+- Worked example: which constructed features help the Berlin price model?
 
 ## Team project until the next teaching day
 

@@ -11,15 +11,15 @@
 - k-fold and stratified cross-validation; how many folds; sorted data.
 - Grouped splits by host, hidden groups and time-series splits; all splitters side by side.
 - Bootstrap confidence interval of the error in euros, by listing and by host (cluster bootstrap).
-- Data leakage: preprocessing outside the cross-validation.
+- Data leakage (information that the model could not have at prediction time reaches it during training): preprocessing outside the cross-validation.
 - Data leakage: target leakage.
-- Preprocessing inside a Pipeline; worked example: which validation promise comes true for new hosts.
+- Preprocessing inside a Pipeline; worked example: which validation estimate holds for new hosts.
 
 ## 2 · Choosing settings: regularisation and tuning
 
 [Open notebook](workbooks/02-lecture-regularisation-and-tuning.ipynb)
 
-- Parameters and hyperparameters; locking the test hosts away first.
+- Parameters and hyperparameters; setting the test hosts aside first.
 - Ridge and lasso regularisation: coefficient paths, why scaling matters, `RidgeCV`.
 - Validation curves and learning curves; what noise is.
 - Grid search and randomised search, tuning ridge and lasso together, the one-standard-error rule.
@@ -28,6 +28,10 @@
 
 ## Team project until the next session
 
-Write a validation plan: how you split by time, which metrics you use, the uncertainty of the scores, and which inputs may not be used.
+Validation design: how the team splits the decisions and why, a time-ordered validation as a comparison, metrics, uncertainty of the scores, inputs that may not be used.
+
+## Setup
+
+- Internet access: notebook 01 downloads the IBM Telco churn table from GitHub.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

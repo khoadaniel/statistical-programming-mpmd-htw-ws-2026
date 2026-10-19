@@ -24,19 +24,21 @@ DEFAULT_DATA = Path(__file__).resolve().parents[5] / "case-study" / "data" / "eb
 
 
 def load_collection(data_dir: Path, n: int = 5000, seed: int = 0) -> dict[str, tuple[str, str]]:
-    """The course collection: a random sample of training decisions, {bti_reference: (heading, description)}."""
+    """The course collection: a random sample of the decisions, {bti_reference: (heading, description)}."""
     import pandas as pd
 
-    d = pd.read_parquet(data_dir / "train_sample.parquet", columns=["bti_reference", "heading", "description"])
+    d = pd.read_parquet(data_dir / "decisions.parquet", columns=["bti_reference", "heading", "description"])
     d = d.drop_duplicates("bti_reference").sample(n, random_state=seed)
     return {r.bti_reference: (r.heading, r.description) for r in d.itertuples()}
 
 
 def load_heading_texts(data_dir: Path) -> dict[str, str]:
+    """English text of every heading in the decisions, from the nomenclature file as published."""
     import pandas as pd
 
-    nom = pd.read_parquet(data_dir / "nomenclature.parquet")
-    return dict(zip(nom["heading"], nom["heading_description"], strict=True))
+    headings = pd.read_parquet(data_dir / "decisions.parquet", columns=["heading"])["heading"].unique()
+    taric = pd.read_excel(data_dir / "nomenclature" / "Nomenclature EN.xlsx", dtype=str).set_index("Goods code")
+    return {h: taric.at[f"{h}000000 80", "Description"] for h in headings}  # heading 6404 = "6404000000 80"
 
 
 def main() -> None:

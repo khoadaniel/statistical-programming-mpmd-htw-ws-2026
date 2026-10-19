@@ -124,8 +124,7 @@ def airbnb() -> None:
 
 def ebti() -> None:
     e = DATA / "ebti"
-    labelled = pd.concat([pd.read_parquet(e / "train.parquet"), pd.read_parquet(e / "val.parquet")])
-    nomenclature = pd.read_parquet(e / "nomenclature.parquet")
+    labelled = pd.read_parquet(e / "decisions.parquet")
     out = HERE / "ebti" / "figures"
 
     # 1 · languages
@@ -173,7 +172,7 @@ def ebti() -> None:
         "9405": "lamps and light fittings", "7318": "screws, bolts, nuts, washers",
     }
     top10 = counts.head(10)
-    lab = [f"{h}  {short_names.get(h, nomenclature.set_index('heading').heading_description.get(h, '')[:35])}"
+    lab = [f"{h}  {short_names[h]}"
            for h in top10.index]
     fig, ax = plt.subplots(figsize=(7, 4.2))
     ax.barh(lab[::-1], top10.values[::-1], color=BLUE, height=0.65)
@@ -181,7 +180,7 @@ def ebti() -> None:
         ax.text(v + 40, i, f"{v:,}", va="center", color=INK_2, fontsize=9)
     ax.set_xlim(0, top10.max() * 1.15)
     ax.set_title("The ten most frequent headings")
-    ax.set_xlabel("decisions (train + val)"); ax.xaxis.set_major_formatter(thousands)
+    ax.set_xlabel("decisions"); ax.xaxis.set_major_formatter(thousands)
     ax.grid(axis="y", visible=False)
     save(fig, out / "top-headings.png")
 

@@ -13,7 +13,7 @@
 - Prompt assembly with labelled sources and a token budget; answers with citations and their automatic checks.
 - Evaluating RAG: test sets, precision, recall@k, hit@k, MRR, standard errors, synthetic questions.
 - Groundedness, human ratings, an NLI judge and Cohen's kappa; end-to-end accuracy with an LLM judge.
-- Improving retrieval: chunk size, metadata filters, BM25 and hybrid search, weighted fusion, contextual enrichment, re-ranking.
+- Improving retrieval, measured on 500 requests: chunk size, metadata filters, BM25 and hybrid search, weighted fusion, contextual enrichment, re-ranking (BM25 and the cross-encoder were introduced in Session 14).
 - Worked example: a classification assistant that proposes a heading with cited BTI references, evaluated with heading hit@5.
 
 ## 2 · Agents and guardrails

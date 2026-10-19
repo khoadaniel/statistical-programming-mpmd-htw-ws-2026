@@ -1,4 +1,4 @@
-# Research notes — Python engineering, Git/GitHub, databases, visualisation, peer courses
+# Research notes: Python engineering, Git/GitHub, databases, visualisation, peer courses
 
 Links checked on 2026-09-24 (HTTP 200; final URLs after redirects).
 
@@ -18,12 +18,12 @@ Links checked on 2026-09-24 (HTTP 200; final URLs after redirects).
 | Scientific Python Development Guide | https://learn.scientific-python.org/development/ | Most current opinionated guide (pyproject, ruff, pre-commit, CI) |
 | PyPA Packaging tutorial | https://packaging.python.org/en/latest/tutorials/packaging-projects/ | |
 | Python Packages (py-pkgs) | https://py-pkgs.org/ | Full lifecycle. Uses Poetry, not uv |
-| Carpentries Incubator — Intermediate Research Software Development | https://carpentries-incubator.github.io/python-intermediate-development/ | One running project: envs, linting, pytest, CI, code review, packaging. Closest to our scope |
+| Carpentries Incubator: Intermediate Research Software Development | https://carpentries-incubator.github.io/python-intermediate-development/ | One running project: envs, linting, pytest, CI, code review, packaging. Closest to our scope |
 | Good enough practices in scientific computing | https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510 | Week-1 reading |
 | Research Software Engineering with Python | https://third-bit.com/py-rse/ | Exercises per chapter. 2021/22, conda-based |
 | Better Code, Better Science (Poldrack) | https://bettercode-book.org/ | New; includes a "Coding with AI" chapter |
 | Ten Simple Rules for AI-Assisted Coding in Science (2025) | https://arxiv.org/abs/2510.22254 | Basis for the course AI policy |
-| MIT Missing Semester 2026 — Agentic Coding / Code Quality | https://missing.csail.mit.edu/2026/agentic-coding/ · https://missing.csail.mit.edu/2026/code-quality/ | 6 exercises (Claude Code, Codex, opencode) |
+| MIT Missing Semester 2026: Agentic Coding / Code Quality | https://missing.csail.mit.edu/2026/agentic-coding/ · https://missing.csail.mit.edu/2026/code-quality/ | 6 exercises (Claude Code, Codex, opencode) |
 | CS50 AI policy / duck | https://cs50.harvard.edu/x/notes/ai/ · https://dl.acm.org/doi/10.1145/3626252.3630938 | Model course AI policy |
 | marimo / Jupytext | https://docs.marimo.io/ · https://jupytext.readthedocs.io/ | Notebooks git can diff |
 
@@ -31,14 +31,14 @@ Links checked on 2026-09-24 (HTTP 200; final URLs after redirects).
 | Title | URL | Notes |
 |---|---|---|
 | Software Carpentry git-novice | https://swcarpentry.github.io/git-novice/ | No branching/PRs |
-| Carpentries — branches & PRs | https://carpentries-incubator.github.io/git-novice-branch-pr/ | Fills that gap |
+| Carpentries: branches & PRs | https://carpentries-incubator.github.io/git-novice-branch-pr/ | Fills that gap |
 | CodeRefinery Git intro + Collaborative Git | https://coderefinery.github.io/git-intro/ · https://coderefinery.github.io/git-collaborative/ | European, well maintained, exercises |
-| MIT Missing Semester — Version Control | https://missing.csail.mit.edu/2026/version-control/ | Data model first |
+| MIT Missing Semester: Version Control | https://missing.csail.mit.edu/2026/version-control/ | Data model first |
 | Pro Git 2e | https://git-scm.com/book/en/v2 | Ch. 3, 6 |
 | GitHub Skills | https://github.com/skills/introduction-to-github · https://github.com/skills/review-pull-requests · https://github.com/skills/resolve-merge-conflicts · https://github.com/skills/test-with-actions | Auto-checked exercises |
 | Learn Git Branching | https://learngitbranching.js.org/ | Visual sandbox |
-| GitHub Actions — Python | https://docs.github.com/en/actions/tutorials/build-and-test-code/python | CI template |
-| Google Eng Practices — Code Review | https://google.github.io/eng-practices/review/ | Reviewer + author guides |
+| GitHub Actions: Python | https://docs.github.com/en/actions/tutorials/build-and-test-code/python | CI template |
+| Google Eng Practices: Code Review | https://google.github.io/eng-practices/review/ | Reviewer + author guides |
 | Codespaces / Education | https://docs.github.com/en/codespaces · https://github.com/education/students | Uniform environment |
 
 ## 3. Databases & data manipulation
@@ -84,4 +84,4 @@ Links checked on 2026-09-24 (HTTP 200; final URLs after redirects).
 | Python Data Science Handbook | https://jakevdp.github.io/PythonDataScienceHandbook/ | Free = 1st ed. (dated) |
 | TU Delft MUDE | https://mude.citg.tudelft.nl/ | EU MSc, Jupyter Book |
 
-Excluded (dead or unusable): merely-useful.tech, cs109a.org, CodeRefinery good-enough-practices page, UBC DSCI 513/532, COGS108 sites. Harvard CS109 is Canvas-only since ~2021.
+Excluded (unavailable or unusable): merely-useful.tech, cs109a.org, CodeRefinery good-enough-practices page, UBC DSCI 513/532, COGS108 sites. Harvard CS109 is Canvas-only since ~2021.

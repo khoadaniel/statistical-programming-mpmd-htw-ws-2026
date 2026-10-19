@@ -25,11 +25,11 @@
 
 ## Team project until the next session
 
-Data quality report of the decisions and project charter: use of the suggestions, metric, baseline, validation on `val.parquet` (the course split is random, not by time: say what that means for your estimate), inputs that may not be used.
+A data quality report of the decisions and a short project charter. The charter is the team's plan: use of the suggestions, metric and baseline, validation design, roles ([final project brief](../17-18-final-presentations/final-project.md#project-charter-session-4)). It is not graded; share it for feedback.
 
 ## Setup
 
-- Airbnb data: download `airbnb.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
+- Airbnb data: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - Validation tests: `uv run pytest sessions/04-data-quality/workbooks/quality -v`; set `AIRBNB_CLEAN_OUT` to the cleaned table of block 2 to run the tests on it too.
 - Extra 06 only: `uv run --with empiricaldist --with statadict jupyter lab`.
 

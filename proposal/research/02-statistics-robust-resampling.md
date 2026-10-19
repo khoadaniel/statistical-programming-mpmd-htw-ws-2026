@@ -1,4 +1,4 @@
-# Research notes — Statistics, robust methods, resampling, fairness
+# Research notes: Statistics, robust methods, resampling, fairness
 
 Links checked on 2026-09-24 (HTTP 200 unless marked). All free unless noted.
 Items marked [403] are MIT Press pages that block bots; each has an archive.org mirror that returned 200.
@@ -16,7 +16,7 @@ Items marked [403] are MIT Press pages that block bots; each has an archive.org 
 | Pingouin | https://pingouin-stats.org/ | Docs | Tests with effect sizes, CIs, Bayes factors | Examples |
 | statsmodels contingency tables / multitest | https://www.statsmodels.org/stable/contingency_tables.html | Docs | Chi-square, odds ratios, Holm/BH | Examples |
 | Statistical Rethinking 2026 (lectures) | https://github.com/rmcelreath/stat_rethinking_2026 · PyMC port https://github.com/pymc-devs/pymc-resources/tree/main/Rethinking_2 | Course (book paid) | Bayesian + causal thinking | Weekly HW + solutions |
-| Regression and Other Stories — Python/Bambi ports | https://avehtari.github.io/ROS-Examples/ · https://github.com/bambinos/educational-resources | Code ports | Regression examples | Worked examples |
+| Regression and Other Stories: Python/Bambi ports | https://avehtari.github.io/ROS-Examples/ · https://github.com/bambinos/educational-resources | Code ports | Regression examples | Worked examples |
 
 ## 2. Advanced methods
 | Title | URL | Type | Why |
@@ -78,6 +78,6 @@ Items marked [403] are MIT Press pages that block bots; each has an archive.org 
 | TabPFN (Nature 2025) | https://www.nature.com/articles/s41586-024-08328-6 · https://github.com/PriorLabs/TabPFN |
 
 ## Takeaways for the syllabus
-- Core spine: Think Stats 3e (recap) → ISLP + labs (advanced/resampling) → Fairness & ML + Fairlearn.
+- Core sequence: Think Stats 3e (recap) → ISLP + labs (advanced/resampling) → Fairness & ML + Fairlearn.
 - Graded documentation tasks: model info sheet (Kapoor & Narayanan), datasheet, model card.
 - R-only books (MSMB, van Buuren, Kuhn & Johnson) are conceptual references only; pair them with Python docs.

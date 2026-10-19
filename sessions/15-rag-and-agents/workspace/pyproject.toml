@@ -13,7 +13,7 @@ dependencies = [
 # real embeddings (downloads intfloat/multilingual-e5-small, about 470 MB, on first use)
 embeddings = ["sentence-transformers>=6.1"]
 # loading the case-study parquet files
-data = ["pandas>=3.0", "pyarrow>=26.0"]
+data = ["pandas>=3.0", "pyarrow>=26.0", "openpyxl>=3.1.5"]
 
 [dependency-groups]
 dev = ["pytest", "ruff"]

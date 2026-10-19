@@ -21,7 +21,7 @@ Before handing out the data, the lecturer removed personal data (host names, pro
 ## Why this dataset
 
 - **It is real and it is local.** Everyone has an opinion about Airbnb in Berlin, and every result can be checked against what you know about the city.
-- **It is messy in instructive ways.** A third of the listings show no price, minimum stays range from one night to a year, ratings cluster near the top, and the registration field contains numbers, company names and personal names. Sessions 3 and 4 work through these problems.
+- **Its data problems are useful to learn from.** A third of the listings show no price, minimum stays range from one night to a year, ratings cluster near the top, and the registration field contains numbers, company names and personal names. Sessions 3 and 4 work through these problems.
 - **It supports the whole first half of the course.** Prices for statistics, regression and tree-based models; locations and amenities for clustering; reviews per month as a demand series for forecasting; the weather as a candidate input that turns out not to help (Session 12).
 
 ## A first look
@@ -30,7 +30,7 @@ Before handing out the data, the lecturer removed personal data (host names, pro
 
 ![Map of Berlin with one dot per listing: 7,073 entire homes in blue and 3,003 private rooms in orange, densest in the inner districts](figures/map-room-types.png)
 
-Listings crowd into the inner city: Mitte, Friedrichshain-Kreuzberg and Pankow alone hold 58 % of them. **69 %** are entire homes or flats, **29 %** private rooms; hotel and shared rooms are rare (145 together). The 10,221 listings belong to 6,660 hosts, and 45 % of the listings belong to a host with more than one listing, which is why the held-back test set was split by host.
+Most listings are in the inner city: Mitte, Friedrichshain-Kreuzberg and Pankow alone hold 58 % of them. **69 %** are entire homes or flats, **29 %** private rooms; hotel and shared rooms are rare (145 together). The 10,221 listings belong to 6,660 hosts, and 45 % of the listings belong to a host with more than one listing, which is why the held-back test set was split by host.
 
 ### What a night costs
 
@@ -52,12 +52,12 @@ The minimum stay splits the listings into two groups. **54 %** accept stays of t
 
 ![Line chart of reviews per month from 2015 to 2026: a steady rise with summer peaks to about 4,500 in 2019, a collapse during the pandemic in 2020 and 2021, and a strong recovery to more than 11,000 in May 2026](figures/reviews-per-month.png)
 
-Airbnb publishes no bookings, but guests can review a stay, so the number of reviews per month is a common **proxy for demand**. It shows the summer peaks, the collapse during the pandemic (20,804 reviews in 2020 against 42,219 in 2019) and a strong recovery (102,810 in 2025). Read the long-term rise with care: the data contain only listings that were still online in June 2026, so listings that closed earlier, and their reviews, are missing (survivorship). Session 12 forecasts this series.
+Airbnb publishes no bookings, but guests can review a stay, so the number of reviews per month is a common **proxy for demand**. It shows the summer peaks, the collapse during the pandemic (20,804 reviews in 2020 against 42,219 in 2019) and a strong recovery (102,810 in 2025). Read the long-term rise with care: the data contain only listings that were still online in June 2026, so listings that closed earlier, and their reviews, are missing. This is called survivorship bias: only the listings that "survived" until the snapshot are in the data. Session 12 forecasts this series.
 
 ### Ratings and availability
 
 - Ratings are high: the median is **4.86 out of 5**, 62 % of the rated listings score 4.8 or more, and 20 % of all listings have no rating yet. A rating mostly separates good from very good.
-- 27 % of the listings are not available on a single day of the coming year (`availability_365` is 0): some are booked out, many are simply inactive.
+- 27 % of the listings are not available on a single day of the coming year (`availability_365` is 0): some are booked out, many are inactive.
 
 ## Things to keep in mind
 
