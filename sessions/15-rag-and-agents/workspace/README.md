@@ -37,8 +37,8 @@ uv run python -m bti_assistant.demo "Damenstiefel mit Oberteil aus Rindleder und
 
 The demo indexes a random sample of 5,000 decisions of `decisions.parquet` and prints the most similar ones with their
 headings and a similarity-weighted vote. For the query above, all five neighbours are German decisions on boots
-(headings 6403 and 6404) and the vote puts 6403 first. An English query such as "plastic toy car for
-children" finds mostly French and German toy decisions (9503), and the vote puts 9503 first.
+(headings 6401 and 6403) and the vote puts 6403 first. An English query such as "plastic toy car for
+children" finds French toy decisions (9503), and the vote puts 9503 first.
 
 ### LLM access
 

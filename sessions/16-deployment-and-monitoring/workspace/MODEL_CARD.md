@@ -57,17 +57,17 @@ Groups of requests for which the model may work better or worse than its average
 
 ## Training data
 
-- European Commission, EBTI database (BTI decisions valid on 2026-10-15, start of validity `<2023-10 to 2025-12>`), `<n>` decisions (`decisions.parquet`, SHA-256 in `metadata.json`)
+- European Commission, EBTI database (BTI decisions valid on 2026-10-01, start of validity `<2023-10 to 2025-12>`), `<n>` decisions (`decisions.parquet`, SHA-256 in `metadata.json`)
 - Input: the description of goods only. Not used: justification, keywords, CN code, end date (decided with or after the classification).
-- Label: the four-digit heading of the decision, taken by a customs authority; the data contain only decisions that were still valid on 2026-10-15.
-- Chapter shares in training: `<85: 11.7 %, 84: 8.8 %, 39: 7.2 %, ...>` *(example)*.
+- Label: the four-digit heading of the decision, taken by a customs authority; the data contain only decisions that were still valid on 2026-10-01.
+- Chapter shares in training: `<85: 11.7 %, 84: 8.7 %, 39: 7.1 %, ...>` *(example)*.
 
 ## Quantitative analyses
 
 | Data | Accuracy | Macro-F1 | Top-3 accuracy | Chapter accuracy |
 |---|---|---|---|---|
-| Validation, newest 20 % (from 2025-07) | `<0.803>` *(example)* | `<0.558>` | `<0.861>` | `<0.859>` |
-| Decisions of 2026, for v1 trained before 2026 | `<0.775>` *(example)* | | | |
+| Validation, newest 20 % (from 2025-07) | `<0.803>` *(example)* | `<0.551>` | `<0.861>` | `<0.859>` |
+| Decisions of 2026, for v1 trained before 2026 | `<0.780>` *(example)* | | | |
 | Reported score: your validation design, with its 95 % interval (also in the README) | `< >` | `< >` | | |
 | Factor: descriptions in German / French / other languages | `< >` | | | |
 | Factor: descriptions under 200 characters / longer | `< >` | | | |
@@ -84,7 +84,7 @@ Groups of requests for which the model may work better or worse than its average
 | Label shift | PSI of true chapter shares when labels arrive; share of unseen headings | `<...>` | retrain |
 | Performance | accuracy on newly labelled decisions | below validation − 0.03 | retrain and compare |
 
-- Observed so far: `<country PSI 0.036 (France's share rises); chapter label shift PSI 0.045; 0.2 % unseen headings; accuracy 0.775 on 2026 against 0.803 in validation>` *(example)*.
+- Observed so far: `<country PSI 0.035 (France's share rises); chapter label shift PSI 0.046; 0.2 % unseen headings; accuracy 0.780 on 2026 against 0.803 in validation>` *(example)*.
 - Retraining schedule: `<e.g. once a year when the new year of decisions is labelled, and after each HS revision>`.
 - Version history: `<1.0.0: decisions before 2026; 2.0.0: all training decisions including 2026, ...>`.
 
@@ -97,6 +97,6 @@ Groups of requests for which the model may work better or worse than its average
 ## Caveats and recommendations
 
 - Short descriptions often score below zero and miss the right heading; show the three suggestions with their scores, not one answer.
-- Many headings have fewer than ten training examples (long tail): macro-F1 `<0.56>` lies far below accuracy `<0.80>` *(example)*.
+- Many headings have fewer than ten training examples (long tail): macro-F1 `<0.55>` lies far below accuracy `<0.80>` *(example)*.
 - Re-evaluate after every nomenclature revision and before using the model on another tariff or language.
 - `<limitations you found in the error analysis>`

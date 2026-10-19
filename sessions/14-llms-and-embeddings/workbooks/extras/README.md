@@ -47,6 +47,6 @@ Downloaded at run time into the Hugging Face cache, not stored in the repository
 
 ## Data
 
-- European Commission, *European Binding Tariff Information (EBTI)* database, full export of 15 October 2026, prepared by the lecturer and downloaded as `ebti-v1.zip` from the course drive (see [case-study/README.md](../../../../case-study/README.md)); reuse with acknowledgement under Commission Decision 2011/833/EU.
+- European Commission, *European Binding Tariff Information (EBTI)* database, full export of 1 October 2026, prepared by the lecturer and downloaded as `ebti-v1.zip` from the course drive (see [case-study/README.md](../../../../case-study/README.md)); reuse with acknowledgement under Commission Decision 2011/833/EU.
 - European Commission, TARIC monthly extraction of 1 October 2026 (`Nomenclature EN.xlsx`), same reuse conditions.
 - The price example in block notebook 02 (0.15 and 0.60 USD per million input and output tokens) is OpenAI's list price for `gpt-4o-mini` at its release on 18 July 2024.

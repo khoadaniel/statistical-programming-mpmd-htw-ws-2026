@@ -12,9 +12,9 @@
 You set up your laptop once. It takes about 20 minutes and about 5 GB of free disk space.
 
 > [!IMPORTANT]
-> **The course material changes during the semester.** Notebooks are corrected, exercises are added, and the environment may get new packages. Run `git pull` (and `uv sync`) often, and **always before you start working on something**: before each session, before an exercise, before you open a notebook at home. Working on an old copy means old mistakes and missing files. See [Keeping up to date](#keeping-up-to-date).
+> **The course material changes during the semester.** Update your copy before you start working on something: see [Keeping up to date](#keeping-up-to-date).
 
-Everyone uses the same tools: **VS Code** as the editor, **Git** to get the course material, and **uv**, which installs Python and all course packages for you. You do not need to install Python yourself, and you do not need `pip` or Anaconda for this course. uv installs the exact Python version (3.14) and the package versions the course is tested with, so everyone has the same environment. If you already have Python or Anaconda on your computer, you can keep it; uv does not touch it.
+Everyone uses the same tools: **VS Code** as the editor, **Git** to get the course material, and **uv**, which installs Python 3.14 and the exact package versions the course is tested with. You do not need to install Python, `pip` or Anaconda yourself. If you already have Python or Anaconda, you can keep it; uv does not touch it.
 
 **Supported computers:** a Mac with Apple silicon (M1 or newer) and macOS 14 or newer; a Windows 10 or 11 PC with an Intel or AMD processor; Linux (x86-64 or ARM64) such as Ubuntu 22.04 or newer. Intel Macs and Windows PCs with an ARM processor are not supported: the machine-learning packages of the course no longer publish versions for them.
 
@@ -28,7 +28,8 @@ A **terminal** is where you type the commands below: on macOS the app *Terminal*
 | 3 | [Install uv](#step-3--install-uv) | `uv --version` |
 | 4 | [Get the course repository and create the environment](#step-4--get-the-course-repository-and-create-the-environment) | `uv sync` finishes |
 | 5 | [Check your setup](#step-5--check-your-setup) | `uv run check_setup` ends with ✅ |
-| 6 | [Open the repository in VS Code and run a notebook](#step-6--open-the-repository-in-vs-code-and-run-a-notebook) | the kernel reads `.venv` |
+| 6 | [Open the repository in VS Code and run a notebook](#step-6--open-the-repository-in-vs-code-and-run-a-notebook) | the kernel reads `statistical-programming (3.14…)` |
+| 7 | [Download the course data](#step-7--download-the-course-data) | the data check lists the files |
 
 ## Step 1 · Install VS Code
 
@@ -144,15 +145,28 @@ Fix what it reports and run it again until the last line starts with ✅. The ch
 1. Start VS Code, choose **File → Open Folder…** and select the folder `statistical-programming-mpmd-htw-ws-2026`. If VS Code asks whether you trust the authors, choose **Yes, I trust the authors**.
 2. VS Code offers to install the **recommended extensions** (Python, Jupyter, Ruff, Markdown Mermaid for the diagrams) in a pop-up at the bottom right; choose **Install**. If you missed it: open the Extensions view (the four squares on the left), type `@recommended` and install the four listed under *Workspace Recommendations*.
 3. Open `sessions/01-careers-and-python/workbooks/02-lecture-notebooks-python-and-numpy.ipynb` and run the first **code** cell (▶ to its left, or Shift+Enter).
-4. Look at the top right of the notebook: the kernel must read **.venv (Python 3.14…)**. VS Code picks the repository's `.venv` automatically. If it shows something else or asks you to choose, click it → **Python Environments…** → **.venv** (marked *Recommended*). You do this once; VS Code remembers it for the workspace.
+4. Look at the top right of the notebook: the kernel must read **statistical-programming (3.14…)**, the course environment in `.venv`. VS Code usually picks it automatically. If it shows something else, or asks you to select a kernel, choose the course environment yourself (see below). You do this once; VS Code remembers it for the folder.
+
+**Choosing the course environment.** Click the kernel name at the top right (or **Select Kernel**) → **Python Environments…**. The list shows every Python on your computer, so it may look like this:
+
+```text
++ Create Python Environment                                   Recommended   ← do not choose
+★ statistical-programming (3.14.7)   .venv/bin/python                       ← choose this one
+```
+
+Choose the entry named **statistical-programming** whose path is **`.venv/bin/python`** (on Windows `.venv\Scripts\python.exe`). The version numbers on your computer may differ. Do not choose *Create Python Environment*, even though VS Code marks it *Recommended*: it builds a new environment without the course packages. The other entries are Pythons installed elsewhere on your computer, without the course packages, even when their version is also 3.14.
 
 The repository contains the VS Code settings for this ([`.vscode/settings.json`](.vscode/settings.json), [`.vscode/extensions.json`](.vscode/extensions.json)). Terminals opened inside VS Code use the `.venv` automatically, so `python` and `pytest` there are the course versions.
+
+## Step 7 · Download the course data
+
+The notebooks read two datasets that are not in the repository. Download `airbnb-v1.zip` and `ebti-v1.zip` from the course drive and unzip them inside `case-study/data/`, as described in [Getting the data](case-study/README.md#getting-the-data), including the command that checks the result.
 
 You are ready for Session 1.
 
 ## Keeping up to date
 
-The course material is updated during the semester: corrections, new exercises and sometimes new packages. Pull the latest version **often, and always before you start working on something**, in the repository folder:
+Notebooks are corrected, exercises are added, and sometimes new packages are needed. Working on an old copy means old mistakes and missing files. Pull the latest version **before you start working on something**, in the repository folder:
 
 ```bash
 git pull
@@ -160,11 +174,11 @@ uv sync
 uv run check_setup
 ```
 
-Do it at the start of each session, before an exercise and before you work on a notebook at home. `git pull` fetches the new material; `uv sync` updates the environment if the course packages changed; `uv run check_setup` confirms that everything still works. If `git pull` reports a conflict with your changes in course files, keep your own work in copies (for example `my-notes.ipynb`) or in your team repository.
+Do it at the start of each session, before an exercise and before you open a notebook at home. `git pull` fetches the new material; `uv sync` updates the environment if the course packages changed; `uv run check_setup` confirms that everything still works. Keep your own work in copies (for example `my-notes.ipynb`) or in your team repository, so that `git pull` does not conflict with it ([Troubleshooting](#troubleshooting)).
 
 ## Later in the course
 
-- **Everything is in one environment.** `uv sync` installs all packages of the course at once, including PyTorch for the language-model sessions; there is nothing to add later. Four optional notebooks (Sessions 12 and 16) need older package versions and run in a temporary environment of their own; their session README gives the command.
+- **Everything is in one environment.** `uv sync` installs all packages of the course at once, including PyTorch for the language-model sessions; there is nothing to add later. A few optional notebooks in Sessions 12 and 16 need other package versions and run in a temporary environment of their own; their session README gives the command.
 - **Databases** (Session 3 onwards) use SQLite, which is part of Python: there is nothing to install. The deployment session (16) needs [Docker Desktop](https://www.docker.com/products/docker-desktop/); its README gives the commands.
 - **Language models** (Sessions 14–15) work with a local model through [Ollama](https://ollama.com/) or with any OpenAI-compatible API; see the session READMEs.
 - **Workspaces** (Sessions 2, 15, 16) are small projects with their own environment: `cd sessions/<session>/workspace`, then `uv sync` and `uv run pytest`. Session 2 also has a tiny [CLI workspace](sessions/02-software-engineering/cli-workspace/README.md), the command `staycost`, to try how a script becomes a command.
@@ -177,9 +191,9 @@ Run `uv run check_setup` first: most problems show up there, each with a line st
 |---|---|---|
 | `uv: command not found` (Windows: `uv is not recognized`) | The terminal was opened before uv was installed, so it does not know uv yet. | Close the terminal and open a new one. If that does not help, restart the computer. |
 | `uv run check_setup` says the command is not found | You are not in the repository folder, or your copy is older than this guide. | `cd` into the repository folder, run `git pull` and `uv sync`, then run the check again. |
-| When you run a notebook cell, VS Code asks you to **select a kernel**, or the top right of the notebook shows a Python other than `.venv (Python 3.14…)` | The notebook is not using the course environment. | Click the kernel name at the top right of the notebook (or **Select Kernel**) → **Python Environments…** → **.venv**. |
-| In that list (**Select Kernel → Python Environments…**) there is no entry called `.venv` | The course environment does not exist yet, or VS Code started before it was created. | 1. In a terminal in the repository folder run `uv sync`. 2. In VS Code press Ctrl+Shift+P (Cmd+Shift+P on a Mac), type **Reload Window** and press Enter. 3. Pick the kernel again; `.venv` is now in the list. Also check that you opened the repository folder itself with **File → Open Folder…**, not a single notebook file. |
-| `ModuleNotFoundError: No module named '…'` in a notebook | The notebook uses a different Python (see the kernel rows above), or your environment is older than the course material. | Check that the kernel is `.venv`; then run `git pull` and `uv sync`. |
+| When you run a notebook cell, VS Code asks you to **select a kernel**, or the top right of the notebook shows something other than `statistical-programming (3.14…)` | The notebook is not using the course environment. | Choose **statistical-programming** with the path `.venv/bin/python`, as in [Step 6](#step-6--open-the-repository-in-vs-code-and-run-a-notebook). |
+| In that list (**Select Kernel → Python Environments…**) there is no entry **statistical-programming** with the path `.venv/bin/python` | The course environment does not exist yet, or VS Code started before it was created. | 1. In a terminal in the repository folder run `uv sync`. 2. In VS Code press Ctrl+Shift+P (Cmd+Shift+P on a Mac), type **Reload Window** and press Enter. 3. Pick the kernel again; **statistical-programming** is now in the list. Also check that you opened the repository folder itself with **File → Open Folder…**, not a single notebook file. |
+| `ModuleNotFoundError: No module named '…'` in a notebook | The notebook uses a different Python (see the kernel rows above), or your environment is older than the course material. | Check that the kernel is **statistical-programming**; then run `git pull` and `uv sync`. |
 | Windows: `DLL load failed` or `[WinError 126]` when importing a package such as `torch` | The Microsoft Visual C++ runtime that some packages need is missing. | Download and run the [Microsoft Visual C++ Redistributable (X64)](https://aka.ms/vc14/vc_redist.x64.exe), then restart VS Code. |
 | Windows: "running scripts is disabled on this system" in the VS Code terminal | PowerShell blocks scripts by default. | In PowerShell run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, confirm with `Y`, open a new terminal. |
 | `git pull` says your local changes would be overwritten | You edited a file of the course material. | Save your work under a new name (for example `my-notes.ipynb`), then run `git restore <file>` for the course file and pull again. |

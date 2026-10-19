@@ -18,7 +18,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Participants | 22 students in seven teams (six of three, one of four) |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
 | Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-evaluation) |
-| Evaluation | Teams receive 102,440 labelled customs decisions and design their own validation; the lecturer holds back 17,074 decisions (one fold of seven, about 14 %, stratified by heading and language), the final evaluation set on which every team's API is scored after the code freeze |
+| Evaluation | Teams receive 103,656 labelled customs decisions and design their own validation; every team's API is scored on held-back decisions after the code freeze ([Section 4](#4-datasets-and-evaluation)) |
 | Assessment | One final project for all teams on the same task, graded once after its presentation, from the repository, the written report and the presentation (100 %) |
 
 ## Contents
@@ -495,7 +495,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Practice:* Train and tune gradient boosting models on the churn data. Case study: is a tree ensemble worth replacing the linear price model of Session 6? Compare a random forest and gradient boosting with it on host-grouped folds and interpret the winner
 
-**Team project until the next teaching day** (together with the task of Session 11, which follows on the same day). Interim review (10 minutes per team): data, validation plan, baselines, plan for Sessions 13–16.
+**Team project until the next teaching day** (together with the task of Session 11, which follows on the same day). Interim review (10 minutes per team): data, validation design, baselines, plan for Sessions 13–16.
 
 #### 📍 Session 11 · Unsupervised learning: clustering, dimensionality reduction and anomaly detection
 
@@ -699,7 +699,7 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 *Exercises and debrief*
 
-**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: a tested REST API that returns the heading for a description, monitoring plan and model card. The lecturer checks the interface; teams retrain on all their decisions, the newest included, and update their reported score. Code freeze with a release tag the day before Session 17.
+**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: a tested REST API that returns the heading for a description, monitoring plan and model card. The lecturer checks the interface; teams retrain on all their decisions, the newest included, and update their reported score. Code freeze: the tag `submission` on `main` the day before Session 17.
 
 ### Final presentations (Sessions 17–18)
 
@@ -743,7 +743,7 @@ The course works with the following public datasets. Each session uses the one t
 
 | Dataset | What it is | Used for |
 |---|---|---|
-| **Inside Airbnb, Berlin** | About 10,200 Berlin listings (a further 20 % are held back as a test set) with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
+| **Inside Airbnb, Berlin** | About 10,200 Berlin listings (more are held back as a test set) with price, district, size, ratings, availability and registration number, the availability calendar and the number of reviews per month since 2009 | Sessions 1–12: Python, classes, SQL, data quality, statistics, regression, validation, features, tree-based models, clustering, time series |
 | **Open-Meteo** (weather API) | Daily Berlin weather since 2016, fetched through a web API | Session 12 (weather as a factor in demand) and Session 16 (working with web APIs) |
 | **IBM Telco churn** | 7,043 telecom customers and whether they cancelled their contract | Churn prediction (named in the module description): logistic regression, classification metrics and thresholds, imbalance, trees, segments |
 | **EBTI** (EU customs decisions) | Binding tariff decisions published by the European Commission; the task is to predict the four-digit HS heading of a product from its description, written in 23 languages | Sessions 13–16: text classification, language models, retrieval, deployment; the final project |
@@ -769,43 +769,17 @@ The course works with the following public datasets. Each session uses the one t
 | 15 | EBTI | A classification assistant that cites similar past decisions; an agent with tools |
 | 16 | EBTI, Open-Meteo | Calling a web API; a service that suggests headings, drift, and retraining with the labels of 2026 after a simulated release |
 
-**EBTI.** A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The prepared data contain the decisions valid on 15 October 2026, which started between late 2023 and 2026. These are 122,003 decisions, or 119,514 when renewals that repeat another decision word for word are counted once. Students receive 102,440 of them, with 1,009 headings. The other 17,074 (one fold of seven, about 14 %, drawn at random and stratified by heading and language) are held back for evaluation. Descriptions are written in the language of the issuing country: 61 % German, 16 % French and the rest in more than 20 other EU languages. Each decision also carries English keywords. The EU goods nomenclature (TARIC) comes along raw, in English, German and French. The lecturer prepares the data once, and students download them from the course drive. Why these datasets were chosen is set out in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
+**EBTI.** A trader asks the customs authority of a member state how a product is classified in the customs tariff; the authority states the code in a binding decision, and the Commission publishes all decisions. The course uses the 120,932 decisions binding on 1 October 2026, the date of the EBTI export and of the nomenclature extraction: students receive 103,656 of them, and the rest are held back for the evaluation. The data, the download and the held-back sets of both datasets are described in [case-study/README.md](../case-study/README.md); why these datasets were chosen in [Premise, Section 6](PREMISE.md#6-choice-of-the-course-dataset).
 
 ### Evaluation
 
-- **Task:** predict the heading of a product from its description, and optionally its language.
-- **Data:** students receive 102,440 labelled decisions. There is no ready-made split: each team designs its own validation (how it splits the decisions, which metrics, how it measures uncertainty) and justifies it.
-- **Held back:** the lecturer holds back 17,074 decisions, one fold of seven (about 14 %) drawn at random and stratified by heading and language before the download is made. They form the final evaluation set and are never released.
-- **Metric:** accuracy, with macro-F1 reported alongside. Reference values from one possible validation design (one fold of a stratified 7-fold split by heading and language, 87,805 decisions for training and 14,635 for validation): always the most frequent heading 4.2 %; word TF-IDF with a linear model 85.6 % (50,000-decision sample) and 87.7 % (full training set); character TF-IDF 88.5 % (full training set). The macro-F1 of the same models is 0.000, 0.667, 0.706 and 0.718.
-- **Checkpoints:** in Session 13 (TF-IDF models) and Session 14 (embeddings or language models) teams may post their validation design and score on a class board. Posting is voluntary but recommended: the checkpoints are not graded, and they show early how other teams validate.
-- **Final evaluation:** each team delivers a REST API that returns the heading for a description, and reports the score of its final design. After the code freeze the lecturer runs every team's API on the final evaluation set. In Session 18 the independent score is compared with the reported one; the comparison is part of the criterion *Reliability of the results*.
-
-> [!NOTE]
-> **Licence and fairness.** The Commission permits reuse of the EBTI data with acknowledgement of the source. The lecturer prepares them once, and students download them from the course drive. Because decisions can be looked up in the public database, the score is not converted into marks. The final project is graded on the criteria of Section 6, and the service must be reproducible from the team's repository.
+Each team designs its own validation and reports the accuracy and macro-F1 of its final design. After the code freeze the lecturer sends the held-back decisions to every team's API, and Session 18 compares the independent score with the reported one. At two voluntary checkpoints (Sessions 13 and 14) teams can post their validation design and score on a class board. The procedure is specified in the [project brief](../sessions/17-18-final-presentations/final-project.md#how-the-evaluation-works); reference values from one possible validation design are in [case-study/README.md](../case-study/README.md#reference-values).
 
 ## 5. Final project
 
-All teams work on the same project: the task of [Section 4](#4-datasets-and-evaluation), a REST API that predicts the four-digit customs heading of a product from its description of goods, as accurately as possible on decisions the team has never seen. A single project lets teams follow and discuss each other's solutions, gives all of them the same workload, and makes the results comparable. Teams present their final solution in Sessions 17 and 18.
+All teams work on the same project: a REST API that predicts the four-digit customs heading of a product from its description, as accurately as possible on decisions the team has never seen. A single project lets teams follow and discuss each other's solutions, gives all of them the same workload, and makes the results comparable. The challenge is introduced in Session 1; the team project tasks at the end of each session (Section 3) build it step by step, and teams present it in Sessions 17 and 18.
 
-- **Task:** a model that suggests the heading of a new request to a customs officer, using only what exists when the request arrives (the description, and optionally its language).
-- **Deliverables:** a repository that reruns from the downloaded data to the running service on another computer; a written report with the reported score; a validated model compared with baselines, with the reported score of the final design; error analysis; a tested REST API that returns the heading and the top-3 headings, with a monitoring plan and a model card; the presentation.
-- **Accuracy and grade:** teams aim for the highest accuracy they can reach, but the score is not converted into marks. The grade rewards how a team frames the problem, handles the data, builds and validates the model and explains the results ([Section 6](#6-assessment)).
-
-**Timeline.** The challenge is introduced in Session 1. Teams first load, check and explore the data and set up baselines and a validation plan (Sessions 3–9), then build the text models in Sessions 13–16. The stages below are suggested check-ins, not deadlines: nothing is graded before the final presentation, and sharing intermediate results is not required. The lecturer reserves a limited amount of time at each check-in for teams that share their work, so that they get early feedback; questions about the task and the team work are welcome throughout.
-
-```mermaid
-flowchart LR
-  P1["<b>S1–S2</b><br/>Teams and repository"]:::found --> P2["<b>S3–S4</b><br/>Data loaded, quality report,<br/>project charter"]:::data
-  P2 --> P3["<b>S5–S9</b><br/>Exploration, validation plan,<br/>baselines"]:::ana --> P4["<b>S10</b><br/>Interim review"]:::ml
-  P4 --> P5["<b>S13–S14</b><br/>Text models,<br/>checkpoints 1 and 2"]:::ml --> P6["<b>S16</b><br/>API release,<br/>monitoring"]:::ml --> P7["<b>S17–18</b><br/>Final presentation (graded)"]:::pres
-  classDef found fill:#475569,stroke:#475569,color:#ffffff
-  classDef data fill:#2d7d74,stroke:#2d7d74,color:#ffffff
-  classDef ana fill:#6a5a8c,stroke:#6a5a8c,color:#ffffff
-  classDef ml fill:#3b5b8c,stroke:#3b5b8c,color:#ffffff
-  classDef pres fill:#636b78,stroke:#636b78,color:#ffffff
-```
-
-**Rules.** The work must be reproducible. The README of the tagged repository says how to rerun training and deployment, and the lecturer may rerun them. Scripts that fail lower the grade considerably, and a service that does not start from the tag is not evaluated. Teams collaborate through GitHub (branches, reviewed pull requests), and the Git history shows who did what. Training uses only the downloaded decisions: adding decisions from the public EBTI database would include the held-back evaluation decisions (data leakage). Looking up decisions in the public EBTI database, online or in a copy, is not allowed: the service must predict from the description. Columns that customs write with or after the decision (justification, keywords, CN code, chapter, end date) must not be model inputs.
+The [project brief](../sessions/17-18-final-presentations/final-project.md) is the reference for students: rules, deliverables, the API interface, how to submit, how the evaluation works, the suggested check-ins and the assessment criteria.
 
 ## 6. Assessment
 
@@ -814,29 +788,7 @@ flowchart LR
 > [!NOTE]
 > The module is assessed by one examination component: the final project, graded once after its presentation. The exercises in the sessions are not graded, and the independent score is not converted into marks. The module page currently lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The change to a single graded project presentation must be approved and announced at the start of the semester (RStPO §§ 9–14); the reasons are set out in [Premise, Section 7](PREMISE.md#7-choice-of-the-assessment-format).
 
-**What is assessed**
-
-- **Repository**, frozen with the tag `submission` on `main` the day before Session 17: code, a README that lets a reader rerun the work from the downloaded data to the running service (the lecturer may rerun training and deployment from it), documentation of data and decisions, and the Git history of commits and reviewed pull requests.
-- **Written report**: Part A on the team's work with the reported score of the final design, Part B with one entry per member, Part C on the use of AI tools.
-- **Presentation**: 15 minutes per team with a live demonstration, followed by 10 minutes of questions. Every member presents a part and answers individual questions.
-
-**How the grade is formed**
-
-- The first five criteria (80 %) are assessed per team. *Collaboration and presentation* (20 %) is assessed per member, from the member's entry in the report, the member's commits and pull requests, the presented part and the answers to individual questions.
-- The independent score, and how close it comes to the reported score, is evidence for the criteria *Model* and *Reliability of the results*, not a grade in itself: a lower score that is well validated and well explained can earn a better grade than a higher score that the team cannot explain.
-- The individual questions are recorded in a short protocol, so that individual grades can be justified.
-- Use of AI tools is permitted and documented with the HTW declaration; members must be able to explain any part of the code they submitted.
-
-**Assessment criteria**
-
-| Criterion | Weight | Evidence | Expected for a very good grade |
-|---|---|---|---|
-| Problem definition | 10 % | Report, presentation | The use of the suggestions is clear; metric, baseline and, if used, abstention are justified by that use |
-| Data | 20 % | Repository, rerun from the README | A pipeline that reruns from the downloaded data to the model on another computer; quality checked, with every cleaning decision recorded; inputs limited to what exists when a request arrives |
-| Model | 25 % | Repository, presentation | Several approaches compared fairly with the baseline and with each other on the same validation scheme; the final choice justified |
-| Reliability of the results | 15 % | Repository, independent evaluation, questions | A validation design of the team's own without leakage; uncertainty of the differences between models; error analysis by language, heading frequency and chapter; a reported score that the independent evaluation confirms, or a convincing explanation of the gap |
-| Delivery | 10 % | Live demonstration, evaluation run | A tested REST API that meets the interface, starts from the tag and returns the top-3 headings, with a monitoring plan and a model card |
-| Collaboration and presentation (per member) | 20 % | Report Part B, Git history and pull requests, presentation, questions | Own commits and reviewed pull requests with passing CI; a clear presented part; correct and confident answers to individual questions |
+The project is graded on the repository at its `submission` tag, the written report and the presentation, with six criteria. The first five (80 %) are assessed per team, *collaboration and presentation* (20 %) per member. The criteria, their evidence and what is expected for a very good grade are in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment).
 
 ```mermaid
 ---
@@ -913,21 +865,15 @@ Small differences in the goods lead to a different heading: the same boot with *
 | Heading | **6403**: footwear with outer soles of rubber, plastics or leather and uppers of leather | **Target** |
 | Keywords, justification, CN code | *covering the ankle, leather, outer soles, protective footwear, protective toe caps …* | Written with the decision: **not allowed as input** |
 
-The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about 70 % of cases. A model that uses it scores 0.98 in a validation that keeps this column, but only 0.80 on new requests, which have a description only.
+The last row is the course's main leakage example (Session 13). Customs writes the justification together with the decision, and it names the heading in about two thirds of cases. A model that uses it scores 0.98 in a validation that keeps this column, but only 0.80 on new requests, which have a description only.
 
-### The data in three charts
+### The data
 
-**Size and evaluation.** The course uses the 119,514 decisions that were valid on 15 October 2026, with renewals that repeat a decision word for word counted once. The lecturer holds back 17,074 of them, one fold of seven (about 14 %) drawn at random and stratified by heading and language, as the final evaluation set that no team sees. Students receive the other 102,440 and design their own validation. A deployed model would be trained on the past and used on the future. A random split does not reproduce this, so Session 13 adds a time-ordered validation within the data as a comparison.
+**Size and evaluation.** Students receive 103,656 decisions and design their own validation; the rest are held back ([Section 4](#4-datasets-and-evaluation)). A deployed model would be trained on the past and used on the future. A random split does not reproduce this, so Session 13 adds a time-ordered validation within the data as a comparison.
 
-![Bar chart of the 102,440 decisions students receive, by start year: 6,638 in 2023 (from October), 33,252 in 2024, 34,849 in 2025 and 27,701 in 2026 (to October)](assets/final-project/decisions-per-year.png)
+![Bar chart of the 103,656 decisions students receive, by start year: 7,850 in 2023 (from October), 33,223 in 2024, 34,839 in 2025 and 27,744 in 2026 (to 1 October)](assets/final-project/decisions-per-year.png)
 
-**Many languages.** Each authority writes in its own language. German and French dominate, and many languages have only a few thousand decisions.
-
-![Horizontal bar chart of the share of decisions by language, 23 languages in all: German 61 %, French 16 %, Dutch 4 %, Czech 4 %, Spanish 4 %, Polish 3 %, Italian 2 %, Swedish 1 %, 15 other languages 6 %](assets/final-project/languages.png)
-
-**Many classes and a long tail.** 1,009 headings occur in the decisions students receive. The most frequent one covers only 4 % of the decisions, while 377 headings, almost two in five, have fewer than ten examples. This is why the course reports macro-F1 next to accuracy.
-
-![Bar chart of decisions per heading for 1,009 headings on a log scale, sorted from the most to the least frequent; the most frequent heading 3926 (other articles of plastics, 4 %) has about 4,300 decisions, and 377 headings have fewer than 10](assets/final-project/long-tail.png)
+The languages and the long tail of headings (1,015 headings, 377 of them with fewer than ten decisions, which is why the course reports macro-F1 next to accuracy) are shown with charts in the [introduction to the EBTI data](../case-study/ebti/README.md#a-first-look).
 
 ### Testing for drift in the inputs
 
@@ -953,17 +899,17 @@ Because the evaluation set is drawn at random from the same years, the final eva
 
 ### How hard it is
 
-The reference results leave room for every method of the course. The simplest model, which always predicts the most frequent heading, is almost always wrong. Simple text models already reach about 86 %, and better features and more data push this towards 90 %. The last points are hard to gain, and each team must show with validation that a gain is real.
+The [reference results](../case-study/README.md#reference-values) leave room for every method of the course. The simplest model, which always predicts the most frequent heading, is almost always wrong. Simple text models already reach about 86 %, and better features and more data push this towards 90 %. The last points are hard to gain, and each team must show with validation that a gain is real.
 
 TF-IDF is only the starting point. Teams are free to try other approaches, for example a fine-tuned multilingual encoder model (BERT type), nearest past decisions in an embedding space, a two-step model that predicts the chapter first, a language model that chooses among candidate headings, retrieval of similar decisions, an ensemble, or other designs. How well these work on this task is open; finding out is part of the project.
 
-![Horizontal bar chart of accuracy on 14,635 validation decisions from one possible split. Measured: most frequent heading 4.2 %, word TF-IDF on a sample of 50,000 decisions 85.6 %, word TF-IDF on all 87,805 training decisions 87.7 %, character TF-IDF on all 87,805 training decisions 88.5 %. Below, marked with a question mark as open for the teams: fine-tuned multilingual encoder, TF-IDF combined with embeddings, embeddings with nearest past decisions, chapter first then heading, language model choosing among candidates, retrieval of similar decisions, ensemble, and other designs](assets/final-project/reference-accuracy.png)
+![Horizontal bar chart of accuracy on 14,808 validation decisions from one possible split. Measured: most frequent heading 4.2 %, word TF-IDF on a sample of 50,000 training decisions 85.9 %, word TF-IDF on all 88,848 training decisions 88.3 %, character TF-IDF on all 88,848 training decisions 89.0 %. Below, marked with a question mark as open for the teams: fine-tuned multilingual encoder, TF-IDF combined with embeddings, embeddings with nearest past decisions, chapter first then heading, language model choosing among candidates, retrieval of similar decisions, ensemble, and other designs](assets/final-project/reference-accuracy.png)
 
 ### A project in one picture
 
 ```mermaid
 flowchart LR
-  A["Prepared data<br/>(102,440 decisions)"] --> B["Load and query<br/>SQL"]
+  A["Prepared data<br/>(103,656 decisions)"] --> B["Load and query<br/>SQL"]
   B --> C["Quality checks<br/>placeholders, duplicates,<br/>forbidden columns"]
   C --> D["Exploration<br/>languages, long tail,<br/>change over time"]
   D --> E["Baselines and<br/>validation design"]

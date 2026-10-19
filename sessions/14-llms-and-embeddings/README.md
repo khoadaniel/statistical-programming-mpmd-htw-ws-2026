@@ -33,7 +33,7 @@ Decide with evidence whether embeddings or a language model improve the model; c
 ## Setup
 
 - Both notebooks download small models from the Hugging Face Hub on their first run (about 3.5 GB in total, cached in `~/.cache/huggingface/hub`); run them once before class.
-- The checkpoint-2 section encodes 64,635 descriptions (a training sample of 50,000 and the 14,635 validation decisions) once, which is slow on a laptop CPU: run it before class; later runs load the vectors from `workbooks/embeddings_cache/` (ignored by git).
+- The checkpoint-2 section encodes 64,808 descriptions (a training sample of 50,000 and the 14,808 validation decisions) once, which is slow on a laptop CPU: run it before class; later runs load the vectors from `workbooks/embeddings_cache/` (ignored by git).
 - For a real API model in Block 2, set `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY` (any OpenAI-compatible provider), or `OPENAI_API_KEY`, or run [Ollama](https://ollama.com) with `ollama pull qwen2.5:3b`. Without any of them the notebook uses the small local model `Qwen/Qwen2.5-0.5B-Instruct`. Never write a key into a notebook.
 - To regenerate the figures: `uv run python sessions/14-llms-and-embeddings/figures/make_figures.py`.
 

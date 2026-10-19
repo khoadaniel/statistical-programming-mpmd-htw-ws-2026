@@ -6,7 +6,7 @@ All teams work on the same task, in teams of three (one team of four), from Sess
 
 ```mermaid
 flowchart LR
-  A["📦 ebti-v1.zip<br/>102,440 labelled decisions"] --> B["🧪 Your validation design<br/>how you split, what you measure"]
+  A["📦 ebti-v1.zip<br/>103,656 labelled decisions"] --> B["🧪 Your validation design<br/>how you split, what you measure"]
   B --> C["🧠 Your model<br/>from a baseline to the best<br/>approach you can justify"]
   C --> D["🔌 Your REST API<br/>description in,<br/>heading out"]
   D --> E["🔒 Independent evaluation<br/>decisions you never see,<br/>run by the lecturer"]
@@ -34,45 +34,7 @@ Read these first: they apply from Session 1. Breaking a rule lowers the grade mo
 
 ## The data
 
-Download `airbnb-v1.zip` (Sessions 1–12) and `ebti-v1.zip` (the project, needed from Session 3) from the course drive and unzip both **inside `case-study/data/`** ([how](../../case-study/README.md#getting-the-data)). Then check the result from the repository folder; this command works on macOS, Linux and Windows:
-
-```bash
-uv run python -c "from pathlib import Path; [print(p) for p in sorted(Path('case-study/data').rglob('*'))]"
-```
-
-It prints one path per line, such as `case-study/data/ebti/decisions.parquet`. If the data are in the right place, the paths match this tree:
-
-```text
-case-study/data/
-├── .gitkeep
-├── README.md
-├── airbnb/
-│   ├── PROVENANCE.md
-│   ├── calendar.parquet
-│   ├── listings.parquet
-│   ├── neighbourhoods.geojson
-│   ├── reviews_monthly.parquet
-│   └── weather_daily.parquet
-└── ebti/
-    ├── decisions.parquet      about 57 MB
-    ├── nomenclature/          Nomenclature EN.xlsx, DE, FR and the Commission's guide to them
-    └── PROVENANCE.md          where every file comes from, and the data version
-```
-
-Typical mistakes: a doubled folder such as `case-study/data/ebti/ebti/` (the zip was unzipped into a folder of its own; move the inner folder up), or `airbnb/` and `ebti/` next to `case-study/` instead of inside `case-study/data/`. From Session 3, `airbnb/` also holds `airbnb.sqlite`, which you build yourself.
-
-**Why Parquet and not CSV?** [Parquet](https://parquet.apache.org/) is an open file format for tables, common in data platforms. Unlike a CSV text file it stores each column together with its type, compressed. For our data this matters:
-
-- **Types survive.** Headings are text with leading zeros: `0901` is coffee. Saved as CSV and read back with `pd.read_csv`, `0901` becomes the number `901`, and dates come back as plain text. In Parquet, headings stay text and dates stay dates.
-- **Smaller and faster.** `decisions.parquet` is about 57 MB; the same table as CSV is about 120 MB, and reading it takes longer.
-- **How to read it:** `pd.read_parquet("case-study/data/ebti/decisions.parquet")` in pandas, which uses the [pyarrow](https://arrow.apache.org/docs/python/) library in the background (both come with `uv sync`). Other tools read it too (Polars, DuckDB, Spark), but the course uses pandas. A Parquet file is binary, so it does not open in a text editor or Excel: look at it with `df.head()`, or write a small sample with `df.head(100).to_csv(...)` if you need a spreadsheet.
-
-Read [the introduction to the data](../../case-study/ebti/README.md) first: where it comes from, what a decision looks like, and its pitfalls.
-
-| File | Rows | Content |
-|---|---:|---|
-| `ebti/decisions.parquet` | 102,440 | decisions valid on 15 October 2026: issuing country, language, dates, description, English keywords, justification, CN code and the **heading** (your label) |
-| `ebti/nomenclature/Nomenclature EN.xlsx` (and `DE`, `FR`) | 25,866 each | the EU goods nomenclature (TARIC) of 1 October 2026, raw: every code of the customs tariff with its text and validity dates |
+You work with `ebti-v1.zip` from the course drive: 103,656 labelled decisions (`decisions.parquet`) and the EU goods nomenclature. [Getting the data](../../case-study/README.md#getting-the-data) explains the download and the files; [the introduction to the EBTI data](../../case-study/ebti/README.md) explains where the data come from, what a decision looks like and its pitfalls. Read both first.
 
 There is **no ready-made split**. How you divide the decisions to develop, tune and judge your model is your first design decision, and you justify it (Sessions 6–9). Things to weigh: about 1,000 headings, with a **long tail** (a few headings have thousands of decisions, hundreds have fewer than ten), 23 languages, decisions from late 2023 to 2026, and near-identical texts across decisions (exact repeats were removed).
 
@@ -135,7 +97,7 @@ uv run python case-study/evaluate_api.py --url http://localhost:8000 --data my_v
 The script first calls `GET /health`. It then sends each description to `POST /predict`, one at a time, and compares the answer with `heading`. At the end it prints five lines (the numbers here are an example):
 
 ```text
-decisions          17,074
+decisions          14,808
 failed requests    0
 accuracy           0.8810
 macro-F1           0.7120
@@ -149,8 +111,6 @@ seconds per answer median 0.015, max 0.210
 | `accuracy` | share of decisions whose `heading` was right: the main metric |
 | `macro-F1` | F1 per heading, averaged so that every heading counts equally: shows how you do on rare headings |
 | `seconds per answer` | median and slowest response time; both must stay under two seconds |
-
-The lecturer runs the same script on the independent evaluation set, so these are exactly the numbers you will see in Session 18.
 
 ### 2 · A written report with your reported score
 
@@ -170,7 +130,7 @@ You submit by setting **one Git tag named exactly `submission`** on your reposit
 **Steps** (one team member does this, after the team agrees that `main` is ready):
 
 1. Merge every pull request that should be part of the submission into `main`, and check that CI is green on `main`.
-2. Check the submission as a stranger would: clone the repository into a new folder, follow your README from `ebti-v1.zip` to the running service, and run `case-study/evaluate_api.py` against it (see [the API section](#1--a-rest-api)).
+2. Check the submission as a stranger would: clone the repository into a new folder, follow your README from `ebti-v1.zip` to the running service, and run `case-study/evaluate_api.py` against it (see [Check your API before you submit](#check-your-api-before-you-submit)).
 3. Set the tag on the latest commit of `main` and push it:
 
    ```bash
@@ -203,21 +163,11 @@ flowchart LR
   E --> F["Results<br/>in Session 18"]
 ```
 
-The evaluation set holds decisions of the same kind as yours (valid on 15 October 2026, all languages; one fold of seven, about 14 % or 17,074 decisions, drawn at random and stratified by heading and language), held back before `ebti-v1.zip` was made. They stay hidden until the end. To practise monitoring and retraining, Session 16 treats your own decisions of 2026 as the requests that arrive after a release.
+The evaluation set holds decisions of the same kind as yours, held back before `ebti-v1.zip` was made: a random sample with the same mix of headings and languages ([what was held back](../../case-study/README.md#ebti-classifying-goods-in-the-eu-customs-tariff-sessions-1316)). The lecturer runs the same script as in [Check your API before you submit](#check-your-api-before-you-submit) on it, so you see the same five lines in Session 18. To practise monitoring and retraining, Session 16 treats your own decisions of 2026 as the requests that arrive after a release.
 
 ## Suggested check-ins
 
-Nothing is graded before the final presentation, and you do not have to hand in or post anything along the way. The table is a suggested pace, not a list of deadlines; the only fixed date is the code freeze. The lecturer sets aside some time at each check-in to look at what teams share, so sharing your intermediate results is recommended: it is how you get early feedback and can correct your direction before the end. Questions about the project or the team work are welcome at any time, in class or as an issue in your repository.
-
-```mermaid
-flowchart LR
-  A["S1–S2<br/>teams, repository"] --> B["S3–S4<br/>data loaded,<br/>quality report, charter"]
-  B --> C["S5–S9<br/>exploration, validation<br/>design, baselines"]
-  C --> D["S10<br/>interim review"]
-  D --> E["S13–S14<br/>text models,<br/>checkpoints 1 and 2"]
-  E --> F["S16<br/>API release,<br/>monitoring"]
-  F --> G["S17–S18<br/>presentation,<br/>independent scores"]
-```
+Nothing is graded before the final presentation, and you do not have to hand in anything along the way. The table is a suggested pace; the only fixed date is the code freeze. At each check-in the lecturer looks at what teams choose to share, so sharing intermediate results is how you get early feedback.
 
 | Session | Suggested state of the work | What the lecturer offers |
 |---|---|---|
@@ -237,7 +187,7 @@ flowchart LR
 | Day before S17 | **Code freeze**: the tag `submission` set on `main` (**required**, see [How to submit](#how-to-submit-the-submission-tag)) | None |
 | S17–S18 | **Final presentation** (graded); independent scores revealed in Session 18 | Grade and written feedback |
 
-Posting at the checkpoints is voluntary. Teams that do see how the others validate, and see the gap between a reported and an independent score early, while there is still time to act on it.
+Posting at the checkpoints is voluntary. Teams that post see how the others validate, early enough to change their own design.
 
 ## Project charter (Session 4)
 
@@ -252,7 +202,7 @@ Half a page in your repository (`docs/charter.md`) with your **plan**, written b
 
 ## Presentation and assessment
 
-Each team presents for 15 minutes, including a live demonstration of the API, followed by 10 minutes of questions with individual questions to each member. The project is graded once, after the final presentation, on three things: the **repository** at its `submission` tag (including a rerun from its README and its Git history), the **written report** and the **presentation**. The first five criteria (80 %) are assessed per team; *collaboration and presentation* (20 %) per member, from your entry in Part B of the report, your commits and pull requests, your presented part and your answers.
+Each team presents for 15 minutes, including a live demonstration of the API, followed by 10 minutes of questions with individual questions to each member. The project is graded once, after the final presentation, on three things: the **repository** at its `submission` tag (including a rerun from its README and its Git history), the **written report** and the **presentation**. The first five criteria (80 %) are assessed per team; *collaboration and presentation* (20 %) per member, from your entry in Part B of the report, your commits and pull requests, your presented part and your answers. The individual questions are recorded in a short protocol.
 
 | Criterion | Weight | Evidence | Expected for a very good grade |
 |---|---|---|---|
@@ -273,23 +223,14 @@ Because choosing it is part of the work. Random, stratified (by heading, or by h
 **What should I report as "my score"?**
 The accuracy and macro-F1 of the design you submit, measured on decisions that played no part in building or tuning it, with an interval. If you tried many models, choose the final one before you look at that last measurement. Otherwise the score is too optimistic, because it also measures how well your choice fits that particular data.
 
-**Can I train on all 102,440 decisions for the final service?**
+**Can I train on all 103,656 decisions for the final service?**
 Yes, and it is usually a good idea once the design is fixed. Report the score you measured before the final refit and say so.
 
-**Will the evaluation set look like my data?**
-Yes: the same kind of decisions, drawn at random from the same pool before the download was made, with the same mix of headings and languages. It contains no decisions from `ebti-v1.zip`.
-
-**Is there a leaderboard during the course?**
-No hidden scores during the course. At the checkpoints in Sessions 13 and 14 teams may post their own validation score and design (voluntary, but recommended), so you can compare approaches. The independent scores are revealed once, in Session 18.
-
 **What if a heading in the evaluation set never occurs in my data?**
-It can happen for a few rare headings. No model trained on `ebti-v1.zip` gets them right; it costs every team the same.
+It happens for a few rare headings ([pitfalls of the data](../../case-study/ebti/README.md#things-to-keep-in-mind)). No model trained on `ebti-v1.zip` gets them right, so it costs every team the same.
 
 **Do I have to use a language model?**
-No. A well-tuned TF-IDF model is a strong baseline (about 0.88 accuracy in Session 13). Use embeddings or a language model only if your validation shows that they help.
-
-**How fast must the API be?**
-Under two seconds for one request on a laptop. The evaluation sends about 17,000 requests one after another.
+No. A well-tuned TF-IDF model is a strong baseline (about 0.88 accuracy, see the [reference values](../../case-study/README.md#reference-values)). Use embeddings or a language model only if your validation shows that they help.
 
 **What if the live demonstration fails?**
 Have a recorded fallback ready. The evaluation run uses your tag, not the demonstration.
@@ -299,6 +240,3 @@ Yes, for drafting and for code, as long as every member reviews the text, can ex
 
 **Who do I ask?**
 The lecturer, about the task, the data or the team work: open an issue in your team repository and mention the lecturer, or ask in class.
-
-**Is anything graded before the presentation?**
-No. Check-ins, checkpoints, the charter and the interim review are there for feedback. The grade comes only from the repository at its tag, the report and the presentation.

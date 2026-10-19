@@ -39,7 +39,7 @@ uv sync                                   # creates .venv with exactly the versi
 uv run pytest -q                          # 35 passed, 1 skipped (skops not installed), 2 xfailed (open exercises)
 uvx ruff check .
 
-# version 1 on all 102,440 decisions (a few minutes; accuracy 0.786, top-3 0.859 on the newest 20 %)
+# version 1 on all 103,656 decisions (a few minutes; accuracy 0.789, top-3 0.860 on the newest 20 % of them)
 uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet --version 1.0.0
 
 # start the API (Ctrl+C stops it) and open http://localhost:8000/docs
@@ -56,12 +56,12 @@ The tests never need the case-study data: `tests/conftest.py` trains a model on 
 
 **What the scores mean.** The model is a linear support vector machine on word TF-IDF features (Session 13).
 A score is its margin: above 0 the model votes for the heading, below 0 it is not convinced of any heading.
-Scores are not probabilities. For the boot request above, version 1 answers 6404 with score 0.30, and the correct
-heading 6403 is not among the three suggestions. Short descriptions, unlike the long descriptions of real
-decisions, give the model little information. A service would show such low-score answers as suggestions only and
+Scores are not probabilities. For the boot request above, version 1 of the first run (trained on all decisions)
+answers 6404 with score 0.46, and the correct heading 6403 is not among the three suggestions. Short descriptions,
+unlike the long descriptions of real decisions, give the model little information. A service would show such low-score answers as suggestions only and
 route them to an officer (Session 14, abstention).
 
-**Model size.** With about 1,000 headings and 157,000 words, the dense coefficient matrix takes about 1.3 GB.
+**Model size.** With about 1,000 headings and 158,000 words, the dense coefficient matrix takes about 1.3 GB.
 `train.py` sets coefficients with |w| < 0.05 to zero and stores them sparsely (`--prune`): about 1 % of the
 weights remain, validation accuracy is unchanged, and the model file has about 15 MB.
 
@@ -98,11 +98,13 @@ The exercises in class are at the end of the two block notebooks
    the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), check the API with
    `case-study/evaluate_api.py`, update the reported score in your README, and fill in `MODEL_CARD.md` for v2.
 
-With the course data, v1 trained on all decisions before 2026 has a time-based validation accuracy of 0.803, and
-the report on the 27,701 decisions of 2026 shows: description-length PSI 0.002, language PSI 0.035 and country PSI
-0.036 (France's share rises), predicted-chapter PSI 0.051, chapter label shift PSI 0.045, 0.2 % of the 2026
-headings never seen in training, and accuracy 0.775 against 0.803 in validation. The written rule (accuracy more
-than 0.03 below validation, or an input PSI above 0.25) is not met, but the margin is small: the drop is 0.027. No input
+With the course data, v1 of exercise 4, trained with `--before 2026-01-01` on all decisions before 2026, has a
+time-based validation accuracy of 0.8025 on the newest 20 % of those decisions. (The 0.789 of the first run above
+belongs to a different model: v1 trained on all decisions and validated on the newest 20 % of all of them, 2026
+included.) The report on the 27,744 decisions of 2026 shows: description-length PSI 0.002, language PSI 0.033 and
+country PSI 0.035 (France's share rises), predicted-chapter PSI 0.049, chapter label shift PSI 0.046, 0.2 % of the
+2026 headings never seen in training, and accuracy 0.7801 against 0.8025 in validation. The written rule (accuracy
+more than 0.03 below validation, or an input PSI above 0.25) is not met, but the margin is small: the drop is 0.022. No input
 PSI comes near 0.25, so the clearest warning sign comes from the labels, not from the input statistics. The block
 notebook shows that retraining with the labels of 2026 raises accuracy on newer decisions.
 

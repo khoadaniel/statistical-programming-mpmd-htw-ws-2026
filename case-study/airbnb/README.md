@@ -8,15 +8,7 @@ The dataset of Sessions 1–12: the Airbnb listings of Berlin, with prices, loca
 
 The daily weather comes from the [Open-Meteo](https://open-meteo.com) historical weather archive (CC BY 4.0): mean temperature, rain and hours of sunshine in Berlin since 1 January 2016.
 
-Before handing out the data, the lecturer removed personal data (host names, profile texts, photos, review texts, reviewer names, and names that hosts typed into the registration field) and held back 20 % of the listings as a test set (see [case-study/README.md](../README.md#inside-airbnb-berlin-sessions-112)). What you receive:
-
-| File | Rows | One row is |
-|---|---:|---|
-| `listings.parquet` | 10,221 | a listing: location, property, price per night, minimum stay, availability, reviews and ratings, host facts, registration number |
-| `calendar.parquet` | 3,759,500 | a listing on a day between 26 June 2026 and 2 July 2027: available or not, minimum stay |
-| `reviews_monthly.parquet` | 180,656 | a listing in a month: number of reviews written |
-| `weather_daily.parquet` | 3,830 | a day: temperature, rain, sunshine |
-| `neighbourhoods.geojson` | | the boundaries of the districts and neighbourhoods |
+Before handing out the data, the lecturer removed personal data and held back part of the listings. The files you receive, what was removed and what was held back are listed in [case-study/README.md](../README.md#inside-airbnb-berlin-sessions-112).
 
 ## Why this dataset
 

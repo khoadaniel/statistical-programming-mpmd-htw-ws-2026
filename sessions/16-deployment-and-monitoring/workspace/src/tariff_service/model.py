@@ -54,9 +54,9 @@ def build_pipeline(min_df: int = 2, alpha: float = 1e-5) -> Pipeline:
 def prune_coefficients(pipe: Pipeline, threshold: float = 0.05) -> float:
     """Set coefficients with |w| < threshold to zero and store them as a sparse matrix.
 
-    With about 900 headings and 80,000 words the dense coefficient matrix takes about 600 MB; on the case
+    With about 1,000 headings and 158,000 words the dense coefficient matrix takes about 1.3 GB; on the case
     study, pruning at 0.05 keeps about 1 % of the weights, the same validation accuracy and a model file of
-    about 8 MB. Returns the share of weights kept."""
+    about 15 MB. Returns the share of weights kept."""
     clf = pipe.named_steps["clf"]
     coef = np.asarray(clf.coef_.todense()) if hasattr(clf.coef_, "todense") else clf.coef_.copy()
     coef[np.abs(coef) < threshold] = 0.0
