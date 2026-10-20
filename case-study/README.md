@@ -42,7 +42,7 @@ unzip ~/Downloads/airbnb-v1.zip -d case-study/data/
 unzip ~/Downloads/ebti-v1.zip -d case-study/data/
 ```
 
-**Provenance and versions.** Each folder contains a `PROVENANCE.md`, the reference for where every file comes from, what was done to it, its licence, and the data version, which is also in the zip name (`airbnb-v1`, `ebti-v1`). If the lecturer corrects a dataset, a zip with a higher version appears on the course drive: delete the old folder, unzip the new one, and check the version at the top of `PROVENANCE.md`.
+**Read `PROVENANCE.md` first.** Each folder contains one: it explains what each file contains (what one row is, the columns, how the files link), where the files come from, what was changed, the licence and the data version, which is also in the zip name (`airbnb-v1`, `ebti-v1`). If the lecturer corrects a dataset, a zip with a higher version appears on the course drive: delete the old folder, unzip the new one, and check the version at the top of `PROVENANCE.md`.
 
 **Check the result** from the repository folder (works on macOS, Linux and Windows):
 
@@ -62,12 +62,12 @@ The Berlin listings of Inside Airbnb, snapshot of 26 June 2026, with the daily B
 
 | File in `airbnb/` | Rows | One row is |
 |---|---:|---|
-| `listings.parquet` | 10,221 | a listing: location (district, neighbourhood, coordinates), property, price per night, minimum nights, availability, reviews and ratings, host (no names), registration number |
-| `calendar.parquet` | 3,759,500 | a listing on a day between 26 June 2026 and 2 July 2027: available or not, minimum stay |
-| `reviews_monthly.parquet` | 180,656 | a listing in a month since 2009: number of reviews written (no review texts) |
-| `weather_daily.parquet` | 3,830 | a day since 2016: Berlin temperature, rain and sunshine from the Open-Meteo archive |
-| `neighbourhoods.geojson` | | the boundaries of the districts and neighbourhoods |
-| `PROVENANCE.md` | | where the files come from, the snapshot date, the data version |
+| `listings.parquet` | 10,221 | a listing |
+| `calendar.parquet` | 3,759,500 | a listing on one day of the following year |
+| `reviews_monthly.parquet` | 180,656 | a listing in a month with reviews |
+| `weather_daily.parquet` | 3,830 | a day of Berlin weather |
+| `neighbourhoods.geojson` | | a neighbourhood with its border, for maps |
+| `PROVENANCE.md` | | what each file contains, its columns, how the files link, where they come from |
 
 **The held-back listings.** Part of the listings is held back as a test set, together with their calendar and review rows. The split follows the course's prediction task, the price of a listing:
 
@@ -86,8 +86,9 @@ Binding Tariff Information decisions of the EU customs, published by the Europea
 
 | File in `ebti/` | Rows | One row is |
 |---|---:|---|
-| `decisions.parquet` | 103,656 | a decision: bti_reference, issuing_country, language, start_date, end_date, date_of_issue, description, keywords, classification_justification, cn_code, **heading** (the label), chapter |
-| `nomenclature/Nomenclature EN.xlsx` (and `DE`, `FR`) | 25,866 each | a line of the EU customs tariff (TARIC of 1 October 2026) in one language, with its validity dates; raw as published ([how to read it](ebti/README.md#the-nomenclature-file)) |
+| `decisions.parquet` | 103,656 | a decision: a description of goods and its code; **heading** is the label |
+| `nomenclature/Nomenclature EN.xlsx` (and `DE`, `FR`) | 25,866 each | a line of the EU customs tariff, raw as published |
+| `PROVENANCE.md` | | what each file contains, its columns, how the files link, where they come from |
 
 There is no ready-made training, validation or test split: designing it is part of the [final project](../sessions/17-18-final-presentations/final-project.md), which also describes the API, the evaluation and the grading.
 

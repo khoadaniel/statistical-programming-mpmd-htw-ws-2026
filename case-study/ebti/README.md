@@ -60,7 +60,7 @@ The median description has **89 words**; 80 % have between 41 and 159. Long enou
 
 ## The nomenclature file
 
-The folder `nomenclature/` holds the EU goods nomenclature as the European Commission publishes it, unchanged: the files `Nomenclature EN.xlsx`, `Nomenclature DE.xlsx` and `Nomenclature FR.xlsx` of the **TARIC monthly extraction of 1 October 2026**, from the Commission's CIRCABC group [TARIC & Quota Data and Information](https://circabc.europa.eu/ui/group/0e5f18c2-4b2f-42e9-aed4-dfe50ae1263b) (Library → TARIC data → 2026 → 10 - October). Each file lists every line of the customs tariff in one language, with its validity dates; the codes go down to ten digits, of which the first four are the heading. The files are raw: building a table of headings from them is part of your work.
+The folder `nomenclature/` holds the EU customs tariff of 1 October 2026 in English, German and French, as the European Commission publishes it: every line of the tariff with its code, its name and its validity dates. The files are raw: building a table of headings from them is part of your work. `PROVENANCE.md` in the data folder shows the first rows and how the codes link to the decisions.
 
 ## Licence and citation
 
