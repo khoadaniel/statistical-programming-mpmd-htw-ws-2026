@@ -1,6 +1,6 @@
 # Statistical Programming: Data Analytics and Machine Learning in Python
 
-**Course proposal · MPMD elective WP 5 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
+**Course proposal · MPMD elective WP 6 · HTW Berlin · Winter semester 2026/27 · Part 2 of 2: curriculum**
 
 > [!NOTE]
 > **Work in progress, open for review.** Last updated: 17 October 2026. Comments and suggestions are welcome.
@@ -11,7 +11,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 
 | Item | Proposal |
 |---|---|
-| Module | Statistical Programming (elective WP 5), 5 ECTS; proposed subtitle *Data Analytics and Machine Learning in Python* |
+| Module | Statistical Programming (elective WP 6), 5 ECTS; proposed subtitle *Data Analytics and Machine Learning in Python* |
 | Recommended semester | Semester 2 (elective slot 2.4), alongside 2.2 Data Mining; semester 3 remains possible |
 | Teaching time | 56 UE in 18 sessions on 14 teaching days between 22 October 2026 and 12 February 2027: four hybrid days in room TA C 207 (4, 6, 6 and 6 UE), the hybrid last day of presentations (8 UE) and nine online evenings (eight of 3 UE, one of 2 UE); days with more time hold two sessions ([Section 3](#3-sessions)) |
 | Workload | 5 ECTS = 135 h: 42 h contact time (56 UE) and about 93 h self-study and project work |
@@ -19,7 +19,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
 | Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-evaluation) |
 | Evaluation | Teams receive 103,656 labelled customs decisions and design their own validation; every team's API is scored on held-back decisions after the code freeze ([Section 4](#4-datasets-and-evaluation)) |
-| Assessment | One final project for all teams on the same task, graded once after its presentation, from the repository, the written report and the presentation (100 %) |
+| Assessment | One final project for all teams on the same task, worked on in teams and graded individually once after the presentation: individual presentation (20 %), individual paper and own code (80 %) |
 
 ## Contents
 
@@ -788,19 +788,15 @@ The [project brief](../sessions/17-18-final-presentations/final-project.md) is t
 > [!NOTE]
 > The module is assessed by one examination component: the final project, graded once after its presentation. The exercises in the sessions are not graded, and the independent score is not converted into marks. The module page currently lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The change to a single graded project presentation must be approved and announced at the start of the semester (RStPO §§ 9–14); the reasons are set out in [Premise, Section 7](PREMISE.md#7-choice-of-the-assessment-format).
 
-The project is graded on the repository at its `submission` tag, the written report and the presentation, with six criteria. The first five (80 %) are assessed per team, *collaboration and presentation* (20 %) per member. The criteria, their evidence and what is expected for a very good grade are in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment).
+Students work in teams, but no grade is given on the basis of group work: every student is graded individually, on two parts. The **individual presentation** (20 %) is the student's own area of responsibility within the team's talk and the answers to individual questions, which explain the choices made and their theoretical foundations, in the manner of a short job interview. The **individual paper and code** (80 %) is a paper that each student writes alone about their own part of the project (choices and alternatives, theoretical foundations, results and their reliability, lessons learned from the group work, use of AI), read together with the code the student wrote, as shown by their commits and pull requests at the `submission` tag. Within the 80 %, the lecturer considers problem definition, data, models, reliability of the results, delivery, code quality and collaboration, and theory and reflection, in one overall judgement without fixed weights, because students work on different parts. The details are in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment).
 
 ```mermaid
 ---
 config:
   theme: base
   themeVariables:
-      pie1: "#3b5b8c"
-      pie2: "#2d7d74"
-      pie3: "#6a5a8c"
-      pie4: "#475569"
-      pie5: "#8c4a5e"
-      pie6: "#4d7a45"
+      pie1: "#2d7d74"
+      pie2: "#3b5b8c"
       pieSectionTextColor: "#ffffff"
       pieLegendTextColor: "#6b7280"
       pieTitleTextColor: "#6b7280"
@@ -809,13 +805,9 @@ config:
       pieOpacity: "1"
 ---
 pie showData
-  title Weight of the assessment criteria (%)
-  "Problem definition" : 10
-  "Data" : 20
-  "Model" : 25
-  "Reliability of the results" : 15
-  "Delivery" : 10
-  "Collaboration and presentation" : 20
+  title Weight of the two individual parts of each grade (%)
+  "Individual paper and code" : 80
+  "Individual presentation" : 20
 ```
 
 ## Appendix. The final project at a glance

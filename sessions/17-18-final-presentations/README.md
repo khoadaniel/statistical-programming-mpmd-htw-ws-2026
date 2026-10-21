@@ -9,10 +9,11 @@ The last two sessions are reserved for the presentations of the seven teams: fou
 - [ ] Repository complete: README with setup instructions, reproducible data loading, tests passing in CI
 - [ ] Service with the top-3 headings and dashboard running together with Docker Compose, released through the CI/CD workflow with a version tag such as `v2.0.0` (Session 16); monitoring plan and model card in the repository
 - [ ] Tag `submission` set on `main` (a separate tag from the version tag; the same commit may carry both) and pushed at the code freeze (the day before Session 17; [how](final-project.md#how-to-submit-the-submission-tag)); `docker compose up` from the tag starts the API on port 8000, and it answers the interface of the final project (`POST /predict`, `GET /health`), checked with `case-study/evaluate_api.py`
-- [ ] Report in `docs/report.md`, written with the [report template](report-template.md): Part A with the reported score (accuracy and macro-F1 of the final design, how they were estimated, their uncertainty), Part B with an entry by every member, Part C on AI use
-- [ ] Every member has a part of the presentation and has reviewed at least two pull requests of others
+- [ ] Reported score in the *Results* section of the README (accuracy and macro-F1 of the final design, how they were estimated, their uncertainty)
+- [ ] One paper by every member, written alone with the [paper template](paper-template.md), with its section on AI use
+- [ ] Every member presents their own area of responsibility and has reviewed at least two pull requests of others
 - [ ] Rehearsed once with a timer (15 minutes)
-- [ ] HTW declaration on the use of AI tools added to the repository; every member has reviewed the report
+- [ ] HTW declaration on the use of AI tools attached to every paper
 
 ## Session 17 · Final project presentations I
 

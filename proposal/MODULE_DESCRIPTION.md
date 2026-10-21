@@ -85,6 +85,6 @@ By the end of the module, students will be able to:
 
 *Applicable provisions: §§ 9–14 RStPO.*
 
-- **Final project: 100 points**, assessed through a final presentation and written report.
+- **Final project: 100 points**, assessed individually through an individual presentation (20 points) and an individual paper with the student's own code (80 points).
 
-Students work on the project in teams but are graded individually on the basis of their final presentation and written report. Assessment considers problem definition, data preparation, methodological choices, validation, implementation and communication of results. Weekly exercises are not graded, and the model's evaluation score is not directly converted into marks.
+Students work on the project in teams, but each student is responsible for one area of it and is graded individually, on their own presentation, paper and code; no grade is given on the basis of group work. Assessment considers problem definition, data preparation, methodological choices, validation, implementation, communication of results and reflection on the group work. Weekly exercises are not graded, and the model's evaluation score is not directly converted into marks.
