@@ -25,6 +25,7 @@ A **terminal** is where you type the commands below: on macOS the app *Terminal*
 | 1 | [Install VS Code](#step-1--install-vs-code) | VS Code starts |
 | 2 | [Install Git](#step-2--install-git) | `git --version` |
 | 2b | [Create a GitHub account and tell Git who you are](#create-a-github-account-and-tell-git-who-you-are) | your profile page opens |
+| 2c | [Log in to GitHub from your laptop](#log-in-to-github-from-your-laptop) | `gh auth status` |
 | 3 | [Install uv](#step-3--install-uv) | `uv --version` |
 | 4 | [Get the course repository and create the environment](#step-4--get-the-course-repository-and-create-the-environment) | `uv sync` finishes |
 | 5 | [Check your setup](#step-5--check-your-setup) | `uv run check_setup` ends with ✅ |
@@ -86,6 +87,60 @@ git config --global user.email you@example.com
 ```
 
 Check it with `git config --global --list`. Have the account ready before Session 2 and share your username with your team.
+
+These two commands only label your commits; they do not log you in. GitHub asks who you are the first time you send work to it (`git push`), and it does not accept your GitHub password there. The next step sets up the login once, so that `git push` works.
+
+### Log in to GitHub from your laptop
+
+The GitHub command-line tool `gh` logs you in through your web browser and then lets Git use that login. Install it:
+
+<details open>
+<summary><b>macOS</b></summary>
+
+```bash
+brew install gh
+```
+</details>
+
+<details>
+<summary><b>Windows</b> (PowerShell)</summary>
+
+```powershell
+winget install --id GitHub.cli
+```
+
+If `winget` is not found, download the installer from **https://cli.github.com** instead.
+</details>
+
+<details>
+<summary><b>Linux</b></summary>
+
+```bash
+sudo apt install gh     # Ubuntu, Debian
+sudo dnf install gh     # Fedora
+```
+</details>
+
+Close the terminal and open a new one, then log in:
+
+```bash
+gh auth login
+```
+
+It asks a few questions; choose with the arrow keys and Enter:
+
+1. *Where do you use GitHub?* → **GitHub.com**
+2. *What is your preferred protocol for Git operations?* → **HTTPS**
+3. *Authenticate Git with your GitHub credentials?* → **Yes**
+4. *How would you like to authenticate?* → **Login with a web browser**
+
+It shows a one-time code. Press Enter, sign in to GitHub in the browser that opens, and type the code. Check the result:
+
+```bash
+gh auth status
+```
+
+It prints `Logged in to github.com account <your-username>`. You do this once per laptop; Git now pushes to GitHub without asking for a password. Source: [GitHub CLI manual](https://cli.github.com/manual/gh_auth_login).
 
 ## Step 3 · Install uv
 
@@ -196,6 +251,7 @@ Run `uv run check_setup` first: most problems show up there, each with a line st
 | `ModuleNotFoundError: No module named '…'` in a notebook | The notebook uses a different Python (see the kernel rows above), or your environment is older than the course material. | Check that the kernel is **statistical-programming**; then run `git pull` and `uv sync`. |
 | Windows: `DLL load failed` or `[WinError 126]` when importing a package such as `torch` | The Microsoft Visual C++ runtime that some packages need is missing. | Download and run the [Microsoft Visual C++ Redistributable (X64)](https://aka.ms/vc14/vc_redist.x64.exe), then restart VS Code. |
 | Windows: "running scripts is disabled on this system" in the VS Code terminal | PowerShell blocks scripts by default. | In PowerShell run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, confirm with `Y`, open a new terminal. |
+| `git push` asks for a username and password, or says `Password authentication is not supported` | Git is not logged in to GitHub, and GitHub does not accept your account password for Git. | Press Ctrl+C, then follow [Log in to GitHub from your laptop](#log-in-to-github-from-your-laptop) and push again. |
 | `git pull` says your local changes would be overwritten | You edited a file of the course material. | Save your work under a new name (for example `my-notes.ipynb`), then run `git restore <file>` for the course file and pull again. |
 | Anything else | | Post in the course forum: the full error message and the complete output of `uv run check_setup`. |
 
