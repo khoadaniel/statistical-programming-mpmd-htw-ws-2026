@@ -1,7 +1,7 @@
 [project]
 name = "statistical-programming"
 version = "2026.10"
-description = "Course environment for Statistical Programming: Data Analytics and Machine Learning in Python (MPMD, HTW Berlin)"
+description = "Course environment for Statistical Programming: Data Analytics and Machine Learning with Python (MPMD, HTW Berlin)"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     # notebooks

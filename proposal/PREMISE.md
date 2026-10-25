@@ -1,4 +1,4 @@
-# Statistical Programming: premise of the course design
+# Premise of the course design for Statistical Programming: Data Analytics and Machine Learning with Python
 
 **Course proposal · MPMD elective WP 6 · HTW Berlin · Winter semester 2026/27 · Part 1 of 2**
 
@@ -38,7 +38,7 @@ The regulations define the purpose of the module (AMBl. 15/2025, WP 6): students
 
 **Recommended semester: 2.** Taken alongside Data Mining, the module gives students the SQL, analysis and validation skills they need for 3.1 Lab, 3.4 and the thesis. Semester-3 entry remains possible; the only prerequisite is 1.2 Foundations.
 
-**Title.** The title in the regulations stays unchanged; the subtitle *Data Analytics and Machine Learning in Python* can be used in the module description and the course announcement without an amendment.
+**Title.** The title in the regulations stays unchanged; the subtitle *Data Analytics and Machine Learning with Python* can be used in the module description and the course announcement without an amendment.
 
 <details open>
 <summary>Agreements proposed with other modules</summary>

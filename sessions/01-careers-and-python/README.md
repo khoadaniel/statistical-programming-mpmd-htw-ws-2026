@@ -38,7 +38,7 @@
 
 ## Team project until the next session
 
-Teams of three are formed and read the [final project brief](../17-18-final-presentations/final-project.md).
+Teams are formed and read the [final project brief](../17-18-final-presentations/final-project.md).
 
 ## Setup
 

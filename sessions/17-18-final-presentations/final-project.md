@@ -2,7 +2,7 @@
 
 Every product that enters the European Union needs a customs code, and the code decides the duty. When traders are unsure, customs experts classify the product for them in a **Binding Tariff Information (BTI) decision**. Your team builds a service that reads such a product description, in any of 23 languages, and suggests the four-digit **heading**, so that a customs officer can check it faster.
 
-All teams work on the same task, in teams of three (one team of four), from Session 1 to Session 16, and present their solution in Session 17 or 18. The project is the only graded part of the module (100 %). You work as a team, but **every member is graded individually**: 20 % for your presentation and 80 % for your own paper and your own code ([Presentation and assessment](#presentation-and-assessment)).
+All teams work on the same task, from Session 1 to Session 16, and present their solution in Session 17 or 18. The project is the only graded part of the module (100 %). You work as a team, but **every member is graded individually**: 20 % for your presentation and 80 % for your own paper and your own code ([Presentation and assessment](#presentation-and-assessment)).
 
 ```mermaid
 flowchart LR

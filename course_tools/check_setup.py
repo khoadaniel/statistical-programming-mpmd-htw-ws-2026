@@ -187,7 +187,7 @@ def check_vscode() -> None:
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
-    print("Checking your setup for Statistical Programming (MPMD, HTW Berlin)")
+    print("Checking your setup for Statistical Programming: Data Analytics and Machine Learning with Python (MPMD, HTW Berlin)")
     for title, check in [
         ("Computer", check_computer),
         ("Tools", check_tools),

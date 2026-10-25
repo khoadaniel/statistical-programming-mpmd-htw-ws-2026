@@ -1,6 +1,4 @@
-# Statistical Programming
-
-*Data Analytics and Machine Learning in Python*
+# Statistical Programming: Data Analytics and Machine Learning with Python
 
 | Module information | Details |
 | :--- | :--- |

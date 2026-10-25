@@ -1,6 +1,6 @@
-# Statistical Programming: Data Analytics and Machine Learning in Python
+# Statistical Programming: Data Analytics and Machine Learning with Python
 
-Learning hub for the MPMD elective **WP 6 Statistical Programming** at HTW Berlin, winter semester 2026/27 (5 ECTS).
+Learning hub for **Statistical Programming: Data Analytics and Machine Learning with Python**, the MPMD elective WP 6 at HTW Berlin, winter semester 2026/27 (5 ECTS).
 
 The course takes you from Python and SQL through data preparation and applied statistics to machine learning, from regression to language models, and to deploying what you build. Every method is practised on a running case study and then applied in your team project.
 
