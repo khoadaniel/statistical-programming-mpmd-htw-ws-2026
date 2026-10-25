@@ -37,18 +37,18 @@ def load() -> pd.DataFrame:
 
 
 st.set_page_config(page_title="Berlin short-stay prices", layout="wide")
-short = load()
+short_stay_listings = load()
 
 st.title("Short-stay listings in Berlin: prices by district")
-st.caption(f"{len(short):,} listings with a price and a minimum stay below 28 nights. Inside Airbnb, "
-           f"snapshot of {short['last_scraped'].min():%d %B %Y} (CC BY 4.0). Listed prices per night, "
+st.caption(f"{len(short_stay_listings):,} listings with a price and a minimum stay below 28 nights. Inside Airbnb, "
+           f"snapshot of {short_stay_listings['last_scraped'].min():%d %B %Y} (CC BY 4.0). Listed prices per night, "
            "not paid prices.")
 
 # ---- filters -----------------------------------------------------------------------------
-room_types = st.sidebar.multiselect("Room types", sorted(short["room_type"].unique()),
+room_types = st.sidebar.multiselect("Room types", sorted(short_stay_listings["room_type"].unique()),
                                     default=["Entire home/apt"])
 guests = st.sidebar.slider("Guests (accommodates)", 1, 16, (1, 4))
-sel = short[short["room_type"].isin(room_types) & short["accommodates"].between(*guests)]
+sel = short_stay_listings[short_stay_listings["room_type"].isin(room_types) & short_stay_listings["accommodates"].between(*guests)]
 
 # ---- headline numbers --------------------------------------------------------------------
 c1, c2, c3 = st.columns(3)
