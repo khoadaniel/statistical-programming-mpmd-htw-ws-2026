@@ -1,0 +1,8 @@
+# Dana wants more Cola than the shelves hold. What does the checkout counter do?
+# Run it: uv run htw-checkout dana
+
+customer: Dana
+has_member_card: false
+items:
+  Bread: 1
+  Cola: 4

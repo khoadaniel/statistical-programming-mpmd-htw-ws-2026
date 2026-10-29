@@ -1,0 +1,17 @@
+# Next week's promotion: 5 EUR off from 30 EUR (Task 6). Cem hands over too little money (Task 8).
+# Run it: uv run htw-checkout cem
+
+customer: Cem
+has_member_card: false
+discount:
+  kind: threshold
+  minimum_subtotal: 30.00
+  amount_off: 5.00
+items:
+  Apples 1 kg: 2
+  Cola: 2
+  Cheese: 2
+  Bread: 3
+  Toothpaste: 2
+  Mineral water: 12
+paid: 30.00

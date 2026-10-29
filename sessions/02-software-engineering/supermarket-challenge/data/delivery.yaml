@@ -1,0 +1,8 @@
+# A delivery from the wholesaler (Task 3): product name: quantity.
+# Run it: uv run htw-shelves --delivery data/delivery.yaml
+# Then try a wrong line, such as `Caviar: 5` or `Cola: 0`, and run it again.
+
+items:
+  Cheese: 10
+  Cola: 24
+  Toothpaste: 12

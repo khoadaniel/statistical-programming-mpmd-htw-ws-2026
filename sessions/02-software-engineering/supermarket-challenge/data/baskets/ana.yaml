@@ -1,0 +1,15 @@
+# One customer at the checkout counter of HTW Markt.
+# Run it: uv run htw-checkout ana
+# Product names must match the shelves exactly; `uv run htw-shelves` lists them.
+
+customer: Ana
+has_member_card: true
+discount:              # a voucher; leave the three lines out for a customer without one
+  kind: percentage
+  percent: 10
+items:                 # product name: quantity
+  Bread: 1
+  Milk 1 l: 2
+  Mineral water: 6
+  Dish soap: 1
+paid: 20.00            # the money the customer hands over (Task 8)

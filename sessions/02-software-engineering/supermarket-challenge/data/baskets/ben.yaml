@@ -1,0 +1,10 @@
+# A big weekly shop with a member card and no voucher: more than 50 EUR (Task 5).
+# Run it: uv run htw-checkout ben
+
+customer: Ben
+has_member_card: true
+items:
+  Cheese: 4
+  Bread: 8
+  Apples 1 kg: 5
+paid: 60.00
