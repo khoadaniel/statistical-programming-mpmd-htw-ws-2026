@@ -75,7 +75,7 @@ git --version
 
 ### Create a GitHub account and tell Git who you are
 
-Your team works on GitHub from Session 2: a shared repository, branches, pull requests and reviews, and the lecturer reads the Git history to see who did what. So everyone needs a GitHub account:
+Your team works on GitHub from Session 2: a shared repository, branches, pull requests and reviews. Your own GitHub account is the evidence of your work in the final project ([how it is assessed](sessions/17-18-final-presentations/final-project.md#presentation-and-assessment)). So everyone needs a GitHub account:
 
 1. Sign up at **https://github.com/signup** (free). Choose a username you are happy to show an employer: your GitHub profile is part of your portfolio. Use an e-mail address you will keep after your studies.
 2. Optionally add your real name and a photo under **Settings → Public profile**, so that your team and the lecturer recognise you. Your profile is then at `https://github.com/<your-username>`; the lecturer's, for example, is [github.com/khoadaniel](https://github.com/khoadaniel).

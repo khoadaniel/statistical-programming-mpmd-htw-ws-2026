@@ -6,12 +6,13 @@ The last two sessions are reserved for the presentations of the teams, split ove
 
 ## Checklist one week before
 
-- [ ] Repository complete: README with setup instructions, reproducible data loading, tests passing in CI
+- [ ] Repository complete: `README.md`, `docs/charter.md` and `MODEL_CARD.md` ([what they contain](final-project.md#what-you-deliver)); tests passing in CI
 - [ ] Service with the top-3 headings and dashboard running together with Docker Compose, released through the CI/CD workflow with a version tag such as `v2.0.0` (Session 16); monitoring plan and model card in the repository
 - [ ] Tag `submission` set on `main` (a separate tag from the version tag; the same commit may carry both) and pushed at the code freeze (the day before Session 17; [how](final-project.md#how-to-submit-the-submission-tag)); `docker compose up` from the tag starts the API on port 8000, and it answers the interface of the final project (`POST /predict`, `GET /health`), checked with `case-study/evaluate_api.py`
 - [ ] Reported score in the *Results* section of the README (accuracy and macro-F1 of the final design, how they were estimated, their uncertainty)
-- [ ] One paper by every member, written alone with the [paper template](paper-template.md), with its section on AI use
-- [ ] Every member presents their own area of responsibility and has reviewed at least two pull requests of others
+- [ ] One paper by every member, written alone with the [individual paper template](individual-paper.md), with its section on AI use
+- [ ] Every member's pull requests come from their own GitHub account ([assessment](final-project.md#presentation-and-assessment))
+- [ ] Every member presents their own part
 - [ ] Rehearsed once with a timer (15 minutes)
 - [ ] HTW declaration on the use of AI tools attached to every paper
 

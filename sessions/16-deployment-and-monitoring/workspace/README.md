@@ -5,8 +5,8 @@ pydantic schemas that returns the **three highest-scoring HS headings** with the
 `TestClient`, a Dockerfile, a Compose file that runs dashboard and API together (with the prediction log in a
 SQLite file), CI and CD workflows for GitHub Actions, drift statistics as tested pure functions, a monitoring
 report and a model card template. The API answers the interface of the
-[final project](../../17-18-final-presentations/final-project.md): `POST /predict` with `description` and an optional
-`language` returns `heading` and `top`, `GET /health` answers `{"status": "ok", ...}`, port 8000, started with
+[final project](../../17-18-final-presentations/final-project.md): `POST /predict` with `description` (the only input the
+evaluation sends; an optional `language` is logged for monitoring) returns `heading` and `top`, `GET /health` answers `{"status": "ok", ...}`, port 8000, started with
 `docker compose up`. Session 16 builds version 1, trained on the decisions before 2026, and then version 2, trained on all decisions. Copy the
 folder into your team repository: running service and dashboard with Docker Compose and releasing through CI/CD is
 part of the team project.
@@ -45,10 +45,10 @@ uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decis
 # start the API (Ctrl+C stops it) and open http://localhost:8000/docs
 uv run uvicorn tariff_service.app:app --reload
 curl -X POST localhost:8000/predict -H "Content-Type: application/json" \
-     -d '{"description": "Stiefel, mit Laufsohlen aus Kautschuk, mit Oberteil aus Leder (Rindleder)", "language": "de"}'
+     -d '{"description": "Stiefel, mit Laufsohlen aus Kautschuk, mit Oberteil aus Leder (Rindleder)"}'
 
 # in a second terminal, from the repository root: the check the lecturer runs after the code freeze,
-# here on your own validation decisions (a Parquet file with description, language and heading)
+# here on your own validation decisions (a Parquet file with description and heading)
 uv run python case-study/evaluate_api.py --url http://localhost:8000 --data my_validation.parquet
 ```
 

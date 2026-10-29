@@ -6,10 +6,12 @@
 
 [Open notebook](workbooks/01-lecture-embeddings.ipynb)
 
-- Tokens and token counts per language, byte-pair encoding, `tiktoken` encodings, embeddings and cosine similarity, contextual embeddings, attention and pre-training.
+- What a language model does: next-token prediction, a bigram model counted on descriptions, generating text, why counting runs out, and what prediction teaches.
+- Tokens and token counts per language, byte-pair encoding, `tiktoken` encodings, embeddings and cosine similarity, contextual embeddings, attention, the transformer block, pre-training and post-training.
 - Encoder, decoder and encoder–decoder models, with one model of each family at work.
 - The Hugging Face pattern: Hub and model cards, tokeniser → model → outputs, a classification head, `pipeline()`, reproducibility.
 - Sentence-embedding models with sentence-transformers: prefixes, input limits, choosing a model.
+- Embedding models and language models: the embedding layer inside every model versus an embedding model, and how the two connect in RAG.
 - Semantic search across languages, re-ranking and BM25.
 - Clustering decisions on embeddings, with a t-SNE map.
 - Embedding features versus TF-IDF, and a learning curve.

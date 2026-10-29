@@ -2,9 +2,9 @@
 
     uv run python case-study/evaluate_api.py --url http://localhost:8000 --data my_validation.parquet
 
-The data file (Parquet or CSV) needs a `description` and a `heading` column; a `language` column is
-sent along when present. Every description is sent to `POST /predict` one by one; the script prints
-accuracy and macro-F1 against `heading`, how many requests failed, and the response times.
+The data file (Parquet or CSV) needs a `description` and a `heading` column. Every description is sent to
+`POST /predict` one by one, as the only input; the script prints accuracy and macro-F1 against `heading`,
+how many requests failed, and the 95th percentile of the response times.
 
 Students run it on their own validation decisions to check that the service answers the interface
 of the final project (sessions/17-18-final-presentations/final-project.md). The lecturer runs it on the
@@ -39,9 +39,7 @@ def predict_all(url: str, data: pd.DataFrame, timeout: float) -> tuple[list[str 
         if health.status_code != 200:
             sys.exit(f"GET /health answered {health.status_code}: is the service running at {url}?")
         for i, row in enumerate(data.itertuples(index=False), start=1):
-            body = {"description": row.description}
-            if "language" in data.columns and isinstance(row.language, str):
-                body["language"] = row.language
+            body = {"description": row.description}                # the description is the only input
             start = time.perf_counter()
             try:
                 answer = client.post("/predict", json=body)
@@ -74,7 +72,7 @@ def main() -> None:
     print(f"failed requests    {(pred == 'none').sum():,}")
     print(f"accuracy           {accuracy_score(data['heading'], pred):.4f}")
     print(f"macro-F1           {f1_score(data['heading'], pred, average='macro', zero_division=0):.4f}")
-    print(f"seconds per answer median {np.median(seconds):.3f}, max {np.max(seconds):.3f}")
+    print(f"latency P95        {np.percentile(seconds, 95):.3f} s")
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
 | Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-evaluation) |
 | Evaluation | Teams receive 103,656 labelled customs decisions and design their own validation; every team's API is scored on held-back decisions after the code freeze ([Section 4](#4-datasets-and-evaluation)) |
-| Assessment | One final project for all teams on the same task, worked on in teams and graded individually once after the presentation: individual presentation (20 %), individual paper and own code (80 %) |
+| Assessment | One final project for all teams on the same task, worked on in teams and graded individually once after the presentation; the grading rule is in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment) |
 
 ## Contents
 
@@ -67,7 +67,7 @@ Data roles share a common base and then divide: analysts work mainly with SQL, P
 <tr><td valign="top"><b>S11</b> Unsupervised learning: clustering, dimensionality reduction and anomaly detection</td><td align="center" valign="top">2</td><td valign="top"><b>1. Clustering</b><br>• Supervised and unsupervised learning<br>• Distance, similarity and scaling<br>• k-means computed by hand on a small example; choosing the number of clusters (elbow method, silhouette)<br>• Hierarchical clustering and dendrograms<br>• Density-based clustering (DBSCAN)<br>• Evaluating and interpreting clusters (silhouette, stability, cluster profiles)<br><br><b>2. Dimensionality reduction and anomaly detection</b><br>• Principal component analysis (explained variance, loadings)<br>• t-SNE and UMAP for visualisation<br>• Model-based anomaly detection with Isolation Forest and local outlier factor, continuing the outliers of Session 4<br>• Clusters and components as features</td><td valign="top">Data scientists; analysts for segmentation</td></tr>
 <tr><td valign="top"><b>S12</b> Time series forecasting</td><td align="center" valign="top">2</td><td valign="top"><b>1. Time series, baselines and exponential smoothing</b><br>• Time series: trend, seasonality, autocorrelation<br>• Aggregating to regular time intervals with pandas<br>• Baselines (naive, seasonal naive, moving average)<br>• Exponential smoothing with prediction intervals<br>• ARIMA as an outlook<br><br><b>2. Machine learning forecasts and backtesting</b><br>• Machine learning with lag features (using the tree-based models of Session 10)<br>• Rolling-origin backtesting<br>• Forecast metrics: MAE and MASE</td><td valign="top">Data scientists</td></tr>
 <tr><td valign="top"><b>S13</b> Classical NLP: bag-of-words, TF-IDF and text classification</td><td align="center" valign="top">2</td><td valign="top"><b>1. Text as data</b><br>• Documents, tokens and vocabulary<br>• Preprocessing (lower-casing, stop words, stemming and lemmatisation)<br>• Bag-of-words computed by hand; TF-IDF and n-grams<br>• Sparse, high-dimensional matrices<br>• Simple text statistics as features (length, digits, upper-case share)<br><br><b>2. Text classification and error analysis</b><br>• The EBTI task: predict the customs heading of a product from its description, in 23 languages<br>• Linear models for text classification<br>• Metrics for almost 1,000 classes: accuracy and macro-F1, rare headings, a time-ordered validation within the data as a comparison<br>• Error analysis of text models; the most informative n-grams per class<br>• Leakage through the customs' justification, a text that exists only after the decision<br>• Dimensionality reduction with truncated SVD<br>• Limits of word counts (word order, synonyms) as the motivation for language models</td><td valign="top">Data scientists</td></tr>
-<tr><td valign="top"><b>S14</b> Large language models I: transformer models, embeddings and their applications</td><td align="center" valign="top">2</td><td valign="top"><b>1. Embeddings: from words to vectors, and what they are good for</b><br>• From words to vectors: tokens, embeddings, attention and pre-training at a conceptual level<br>• Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models<br>• The Hugging Face pattern: models from the Hub, tokenizer → model → outputs, <code>pipeline</code><br>• Embedding models (sentence-transformers)<br>• Applications of embedding models: semantic search, clustering (with the methods of Session 11) and classification features compared with TF-IDF<br><br><b>2. Generative models through an API</b><br>• Applications of generative models: prompts, temperature, context window and costs<br>• Zero-shot and few-shot classification with structured output<br>• Comparison with a trained model on quality, cost, latency and data protection<br>• Abstention: route unsure cases to a customs officer</td><td valign="top">Data scientists, AI engineers</td></tr>
+<tr><td valign="top"><b>S14</b> Large language models I: transformer models, embeddings and their applications</td><td align="center" valign="top">2</td><td valign="top"><b>1. Embeddings: from words to vectors, and what they are good for</b><br>• What a language model does: next-token prediction, from n-gram counts to the building blocks of a large language model<br>• From words to vectors: tokens, embeddings, attention, pre-training and post-training at a conceptual level<br>• Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models<br>• The Hugging Face pattern: models from the Hub, tokenizer → model → outputs, <code>pipeline</code><br>• Embedding models (sentence-transformers); the embedding layer of a language model versus an embedding model<br>• Applications of embedding models: semantic search, clustering (with the methods of Session 11) and classification features compared with TF-IDF<br><br><b>2. Generative models through an API</b><br>• Applications of generative models: prompts, temperature, context window and costs<br>• Zero-shot and few-shot classification with structured output<br>• Comparison with a trained model on quality, cost, latency and data protection<br>• Abstention: route unsure cases to a customs officer</td><td valign="top">Data scientists, AI engineers</td></tr>
 <tr><td valign="top"><b>S15</b> Large language models II: retrieval-augmented generation and agents</td><td align="center" valign="top">2</td><td valign="top"><b>1. Retrieval-augmented generation and its evaluation</b><br>• Why retrieval: knowledge cut-off, hallucination, sources<br>• The components of RAG: chunking, embedding, vector search over stored embeddings (NumPy, with the decisions in SQLite), prompt assembly, answers with citations<br>• Evaluating RAG: a test set of questions, recall@k, groundedness and human ratings<br>• Improving retrieval (chunk size, hybrid search, re-ranking)<br><br><b>2. Agents and guardrails</b><br>• Agents: tool calling, the loop of planning, acting and observing, function schemas<br>• Risks (error propagation, costs, prompt injection) and guardrails</td><td valign="top">Data scientists, AI engineers</td></tr>
 <tr><td valign="top"><b>S16</b> Web APIs, deployment, monitoring and maintenance</td><td align="center" valign="top">2</td><td valign="top"><b>1. Web APIs and a released service</b><br>• How web APIs work: HTTP requests and responses, JSON, authentication, pagination and rate limits<br>• Requesting data from a web API with httpx<br>• From notebook to service: saving pipelines, versioning, pinned dependencies<br>• A prediction API with FastAPI and pydantic, and its tests<br>• Containers with Docker<br>• Continuous delivery with GitHub Actions<br><br><b>2. Architecture in the cloud, monitoring and maintenance</b><br>• System design: a data application as front end (dashboard), back end (model API) and database<br>• Cloud services for such an application on AWS: container registry, container hosting, managed database, file storage, monitoring<br>• Monitoring: data drift (KS test, population stability index) and label shift<br>• Retraining triggers and versioning<br>• Documenting a model in a model card</td><td valign="top">ML engineers, data scientists; analysts for dashboards</td></tr>
 <tr><td valign="top"><b>S17</b> Final project presentations I</td><td align="center" valign="top">2</td><td valign="top"><b>1. Presentations of the first half of the teams</b><br>• Presentations with live demonstration and individual questions<br>• Written peer feedback<br>• Common observations</td><td valign="top"></td></tr>
@@ -608,10 +608,11 @@ No prior knowledge of databases is assumed. The course uses SQLite: the whole da
 
 **Block 1 · Embeddings: from words to vectors, and what they are good for**
 
-- From words to vectors: tokens, embeddings, attention and pre-training at a conceptual level
+- What a language model does: next-token prediction, from n-gram counts to the building blocks of a large language model
+- From words to vectors: tokens, embeddings, attention, pre-training and post-training at a conceptual level
 - Encoder models (BERT type), decoder models (GPT type) and encoder–decoder models
 - The Hugging Face pattern: models from the Hub, tokenizer → model → outputs, `pipeline`
-- Embedding models (sentence-transformers)
+- Embedding models (sentence-transformers); the embedding layer of a language model versus an embedding model
 - Applications of embedding models: semantic search, clustering (with the methods of Session 11) and classification features compared with TF-IDF
 
 *Practice:* Tokenise descriptions and compare token counts across languages; compute semantic similarity between descriptions of the same goods in different languages; embedding features versus TF-IDF on a subsample; nearest-neighbour search over decisions in several languages
@@ -769,27 +770,7 @@ The [project brief](../sessions/17-18-final-presentations/final-project.md) is t
 > [!NOTE]
 > The module is assessed by one examination component: the final project, graded once after its presentation. The exercises in the sessions are not graded, and the independent score is not converted into marks. The module page currently lists a quiz (30 %), a take-home coding assignment (40 %) and an oral examination in the form of a job-interview simulation (30 %). The change to a single graded project presentation must be approved and announced at the start of the semester (RStPO §§ 9–14); the reasons are set out in [Premise, Section 7](PREMISE.md#7-choice-of-the-assessment-format).
 
-Students work in teams, but no grade is given on the basis of group work: every student is graded individually, on two parts. The **individual presentation** (20 %) is the student's own area of responsibility within the team's talk and the answers to individual questions, which explain the choices made and their theoretical foundations, in the manner of a short job interview. The **individual paper and code** (80 %) is a paper that each student writes alone about their own part of the project (choices and alternatives, theoretical foundations, results and their reliability, lessons learned from the group work, use of AI), read together with the code the student wrote, as shown by their commits and pull requests at the `submission` tag. Within the 80 %, the lecturer considers problem definition, data, models, reliability of the results, delivery, code quality and collaboration, and theory and reflection, in one overall judgement without fixed weights, because students work on different parts. The details are in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment).
-
-```mermaid
----
-config:
-  theme: base
-  themeVariables:
-      pie1: "#2d7d74"
-      pie2: "#3b5b8c"
-      pieSectionTextColor: "#ffffff"
-      pieLegendTextColor: "#6b7280"
-      pieTitleTextColor: "#6b7280"
-      pieStrokeColor: "#ffffff"
-      pieOuterStrokeWidth: "0px"
-      pieOpacity: "1"
----
-pie showData
-  title Weight of the two individual parts of each grade (%)
-  "Individual paper and code" : 80
-  "Individual presentation" : 20
-```
+Students work in teams, but no grade is given on the basis of group work: every student is graded individually, from their own presentation with individual questions, their own paper and their own code. The grading rule (its parts, criteria, points and the evidence checked for each criterion) is written in one place only, the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment), so that it is changed there and nowhere else.
 
 ## Appendix. The final project at a glance
 
@@ -834,7 +815,7 @@ Small differences in the goods lead to a different heading: the same boot with *
 | Field | Example | Role in the project |
 |---|---|---|
 | Description of goods | *Chaussures de protection, dites de sécurité, non reconnaissables comme étant pour homme ou femme, couvrant la cheville mais pas le mollet, dont le dessus est majoritairement en cuir naturel et dont la semelle extérieure est en matière plastique …* | **Input** |
-| Issuing country, language, date | France, French, October 2023 | Language: optional **input**; country and date for analysis |
+| Issuing country, language, date | France, French, October 2023 | For analysis only; **not an input** |
 | Heading | **6403**: footwear with outer soles of rubber, plastics or leather and uppers of leather | **Target** |
 | Keywords, justification, CN code | *covering the ankle, leather, outer soles, protective footwear, protective toe caps …* | Written with the decision: **not allowed as input** |
 

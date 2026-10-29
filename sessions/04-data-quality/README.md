@@ -25,7 +25,7 @@
 
 ## Team project until the next session
 
-A data quality report of the decisions and a short project charter. The charter is the team's plan: use of the suggestions, metric and baseline, validation design, roles ([final project brief](../17-18-final-presentations/final-project.md#project-charter-session-4)). It is not graded; share it for feedback.
+A data quality report of the decisions and a short project charter. The charter is the team's plan: use of the suggestions, metric and baseline, validation design, roles ([final project brief](../17-18-final-presentations/final-project.md#what-you-deliver)). It is not graded; share it for feedback.
 
 ## Setup
 
