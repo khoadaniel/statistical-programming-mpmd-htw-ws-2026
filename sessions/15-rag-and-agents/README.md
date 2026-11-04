@@ -59,7 +59,8 @@
 [Open notebook](workbooks/05-practice-trip-planner-agent.ipynb)
 
 - What an agent adds to a plain model call, then one agent built in steps: no tools, a first tool, a web service (Open-Meteo), a knowledge base, a calculator with rules, and memory.
-- Part 2: a team of agents (orchestrator-workers with `Send`), timed against the single agent.
+- Part 2: workflows of agents, all built with `create_agent`: two agents in a line (prompt chaining) as a LangGraph graph, then an orchestrator agent, one city agent per city in parallel with `Send`, and a synthesiser agent, timed against the chain and the single agent.
+- [Trip planner app](workbooks/trip_planner_app/README.md): the team of Step 8 as a live web page that draws the graph, the parallel city agents and the reducer while they run; it asks you when the request is unclear.
 
 ## 6 · Practice: an MCP server and an agent
 

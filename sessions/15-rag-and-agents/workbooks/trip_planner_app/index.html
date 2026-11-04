@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trip Planner Graph</title>
+<style>
+:root {
+  --bg: #f4f5f3; --panel: #ffffff; --ink: #24292b; --muted: #6b7275; --line: #d5d9d7;
+  --idle: #eef0ef; --idle-ink: #59605f;
+  --run: #1f7a4d; --run-soft: #e3f3ea;
+  --done: #2f6db3; --done-soft: #e5eef9;
+  --wait: #b85500; --wait-soft: #fbeee2;
+  --code-bg: #f2f4f3;
+  /* one colour per panel, so the four parts of the page are easy to tell apart */
+  --c-chat: #2f6db3; --c-graph: #1f7a4d; --c-time: #b85500; --c-inspect: #7a4fb0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15191a; --panel: #1d2223; --ink: #e6e9e8; --muted: #9aa3a2; --line: #343b3c;
+    --idle: #262c2d; --idle-ink: #b4bcbb;
+    --run: #4cc38a; --run-soft: #1b3428;
+    --done: #6ea8ec; --done-soft: #1c2a3b;
+    --wait: #f0a35c; --wait-soft: #3a2a1b;
+    --code-bg: #161a1b;
+    --c-chat: #6ea8ec; --c-graph: #4cc38a; --c-time: #f0a35c; --c-inspect: #b79ae6;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15191a; --panel: #1d2223; --ink: #e6e9e8; --muted: #9aa3a2; --line: #343b3c;
+  --idle: #262c2d; --idle-ink: #b4bcbb;
+  --run: #4cc38a; --run-soft: #1b3428;
+  --done: #6ea8ec; --done-soft: #1c2a3b;
+  --wait: #f0a35c; --wait-soft: #3a2a1b;
+  --code-bg: #161a1b;
+  --c-chat: #6ea8ec; --c-graph: #4cc38a; --c-time: #f0a35c; --c-inspect: #b79ae6;
+}
+* { box-sizing: border-box; border-radius: 0 !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; display: flex; flex-direction: column; height: 100vh; }
+header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+header .spacer { flex: 1; }
+button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; }
+button.primary { background: var(--run); border-color: var(--run); color: #fff; }
+button:disabled { opacity: .5; cursor: default; }
+main { display: grid; grid-template-columns: 330px minmax(0, 1fr) 400px; gap: 14px; padding: 14px; flex: 1; min-height: 0; }
+
+/* the intro: what the planner is for, what it needs, what it does with several cities */
+#intro { background: var(--panel); border-bottom: 1px solid var(--line); padding: 0 20px; }
+#intro summary { padding: 10px 0; font-weight: 700; cursor: pointer; }
+#intro .cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; padding: 0 0 14px; font-size: 13.5px; }
+#intro h3 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+#intro ul { margin: 0; padding-left: 18px; }
+#intro li { margin-bottom: 3px; }
+#intro .need { color: var(--wait); font-weight: 600; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--accent); display: flex; flex-direction: column; min-height: 0; }
+
+/* the header of each panel: number, title and what the panel shows */
+.panel-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.panel-head .num { flex: 0 0 26px; height: 26px; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; }
+.panel-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.panel-head p { margin: 0; font-size: 12.5px; color: var(--muted); }
+#chat { --accent: var(--c-chat); }
+#graph-panel { --accent: var(--c-graph); }
+#timeline-panel { --accent: var(--c-time); }
+#side { --accent: var(--c-inspect); }
+
+/* chat */
+#messages { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+.msg { padding: 9px 12px; max-width: 95%; font-size: 14px; border: 1px solid transparent; }
+.msg.user { align-self: flex-end; background: var(--done-soft); }
+.msg.agent { align-self: flex-start; background: var(--idle); }
+.msg.question { align-self: flex-start; background: var(--wait-soft); border-color: var(--wait); }
+.msg.final { align-self: flex-start; background: var(--run-soft); border-color: var(--run); }
+.msg .who { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 3px; }
+.msg.error { background: #fde8e8; color: #8a1c1c; }
+#examples { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 8px; }
+#examples button { font-size: 12px; padding: 4px 8px; color: var(--muted); }
+#composer { border-top: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#composer textarea { width: 100%; resize: vertical; min-height: 64px; font: inherit; padding: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+#composer .row { display: flex; gap: 8px; align-items: center; }
+#status { font-size: 12px; color: var(--muted); flex: 1; }
+#status.running { color: var(--run); }
+#status.paused { color: var(--wait); }
+
+/* graph */
+#center { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+#graph-panel { flex: 0 0 auto; }
+#graph { width: 100%; height: auto; display: block; padding: 4px 8px 4px; }
+.node rect, .node polygon { fill: var(--idle); stroke: var(--line); stroke-width: 1.5; pointer-events: all; }
+.node text { fill: var(--idle-ink); font-size: 13px; pointer-events: none; }
+.node .sub { font-size: 11px; fill: var(--muted); }
+.node .code { font-size: 10.5px; fill: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+.node { cursor: pointer; }
+.node:hover rect, .node:hover polygon { stroke: var(--c-inspect); }
+.node.running rect, .node.running polygon { fill: var(--run-soft); stroke: var(--run); stroke-width: 2.5; animation: pulse 1.1s ease-in-out infinite; }
+.node.done rect, .node.done polygon { fill: var(--done-soft); stroke: var(--done); stroke-width: 2; }
+.node.waiting rect { fill: var(--wait-soft); stroke: var(--wait); stroke-width: 2.5; }
+.node.ghost rect { fill: var(--panel); stroke-dasharray: 5 4; }
+.node.selected rect, .node.selected polygon { stroke: var(--c-inspect); stroke-width: 3.5; }
+@keyframes pulse { 50% { stroke-opacity: .35; } }
+.edge { fill: none; stroke: var(--line); stroke-width: 1.8; }
+.edge.cond { stroke-dasharray: 6 5; }
+.edge.lit { stroke: var(--done); }
+.edge-label { font-size: 11px; fill: var(--muted); }
+.token { fill: var(--run); }
+.flash { animation: flash .9s ease-out; }
+@keyframes flash { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
+#legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 14px 12px; font-size: 12px; color: var(--muted); }
+#legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; background: var(--c); border: 1.5px solid var(--b); }
+
+/* timeline */
+#timeline-panel { flex: 1; min-height: 0; }
+#timeline { overflow-y: auto; padding: 8px 14px 12px; }
+.tl-row { display: grid; grid-template-columns: 46px 190px 1fr; gap: 8px; align-items: center; font-size: 13px; padding: 3px 0; }
+.tl-step { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.tl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-track { position: relative; height: 16px; background: var(--idle); }
+.tl-bar { position: absolute; top: 0; height: 100%; background: var(--run); min-width: 3px; }
+.tl-bar.done { background: var(--done); }
+.tl-bar.waiting { background: var(--wait); }
+.tl-note { color: var(--muted); font-size: 12px; padding: 4px 0 8px; }
+.tl-step-head { border-top: 1px solid var(--line); margin-top: 4px; }
+
+/* right side: state, traces, node */
+#tabs { display: flex; gap: 0; padding: 10px 10px 0; border-bottom: 1px solid var(--line); }
+#tabs button { border-bottom: none; font-size: 13px; padding: 6px 12px; color: var(--muted); margin-right: -1px; }
+#tabs button.active { color: var(--ink); background: var(--bg); font-weight: 700; box-shadow: inset 0 3px 0 var(--c-inspect); }
+.tab { display: none; flex: 1; overflow-y: auto; padding: 12px 14px; background: var(--bg); }
+.tab.active { display: block; }
+.field { margin-bottom: 14px; }
+.field .key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.field .key b { color: var(--ink); }
+.box { background: var(--panel); border: 1px solid var(--line); padding: 8px 10px; font-size: 13px; }
+.box.empty { color: var(--muted); font-style: italic; }
+table.kv { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.kv td { padding: 3px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.kv td:first-child { font-family: ui-monospace, Menlo, monospace; color: var(--muted); width: 38%; }
+.missing { color: var(--wait); font-weight: 600; }
+.reducer-line { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--wait-soft); border: 1px solid var(--wait); padding: 6px 8px; margin-bottom: 8px; }
+.report { margin-bottom: 8px; }
+.report h4 { margin: 0 0 4px; font-size: 13px; }
+.new { animation: appear .8s ease-out; }
+@keyframes appear { from { background: var(--run-soft); transform: translateY(-4px); } to { transform: none; } }
+.card { background: var(--panel); border: 1px solid var(--line); margin-bottom: 10px; }
+.card > .head { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 600; }
+.card > .head .badge { font-weight: 400; font-size: 11px; padding: 2px 7px; background: var(--idle); color: var(--muted); }
+.card > .head .badge.running { background: var(--run-soft); color: var(--run); }
+.card > .head .badge.done { background: var(--done-soft); color: var(--done); }
+.card > .head .badge.waiting { background: var(--wait-soft); color: var(--wait); }
+.trace { list-style: none; margin: 0; padding: 6px 10px; font-size: 12.5px; }
+.trace li { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.trace li:last-child { border-bottom: none; }
+.trace .k { display: inline-block; min-width: 76px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.trace .call { color: var(--wait); font-family: ui-monospace, Menlo, monospace; }
+.trace .res { color: var(--muted); font-family: ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+.md p { margin: 0 0 6px; } .md ul { margin: 0 0 6px; padding-left: 18px; } .md h4 { margin: 6px 0 4px; font-size: 13px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); padding: 8px 10px; font-size: 12px; overflow-x: auto; margin: 6px 0 12px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.explain { font-size: 14px; margin-bottom: 10px; }
+.node-list { display: grid; gap: 6px; margin: 8px 0 14px; }
+.node-list button { text-align: left; font-size: 13px; }
+.node-list button b { font-family: ui-monospace, Menlo, monospace; font-weight: 600; }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+
+@media (max-width: 1150px) {
+  body { height: auto; }
+  #intro .cols { grid-template-columns: 1fr 1fr; }
+  main { grid-template-columns: 1fr; }
+  #messages { max-height: 340px; }
+  .tab { max-height: 560px; }
+  header p { display: none; }
+}
+@media (max-width: 600px) {
+  #intro .cols { grid-template-columns: 1fr; }
+  main { padding: 8px 16px; }
+  .tl-row { grid-template-columns: 40px 120px 1fr; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Trip planner: a team of agents in LangGraph</h1>
+    <p>Workbook 05, Step 8, live: the intake agent reads your request, the city agents work in parallel, the reducer joins their reports, and the synthesiser agent recommends one city.</p>
+  </div>
+  <div class="spacer"></div>
+  <button id="replay" title="Play back a recorded run, without an API key">Watch a recorded run</button>
+  <button id="theme" title="Switch light and dark">Theme</button>
+</header>
+
+<details id="intro" open>
+  <summary>What this planner does, and what it needs from you</summary>
+  <div class="cols">
+    <div>
+      <h3>The outcome</h3>
+      <p style="margin:0">One recommended city for a short, cheap trip from Berlin <b>this coming weekend</b>, with the travel, the bed, the money left per person and the weather for each city you compare.</p>
+    </div>
+    <div>
+      <h3>What it needs from you</h3>
+      <ul>
+        <li><span class="need">people</span>: how many travel</li>
+        <li><span class="need">budget</span>: in euros, for the whole group</li>
+        <li><span class="need">cities</span>: one to four cities to compare</li>
+        <li>nights: optional, 1 if you do not say</li>
+      </ul>
+    </div>
+    <div>
+      <h3>If something is missing</h3>
+      <ul>
+        <li>The graph <b>pauses and asks</b> you (the Ask user node). It never guesses people, budget or cities.</li>
+        <li>No city named? It asks, and names the cities of our travel guide: Prague, Vienna, Dresden.</li>
+        <li>More than four cities? It asks you to choose four.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>One city or several</h3>
+      <ul>
+        <li>One <b>city agent per city</b>, all at the same time; the reducer joins their reports.</li>
+        <li>One city: the synthesiser agent says whether it fits the budget. Several: it recommends one.</li>
+        <li>A city outside the guide gets the weather, but its prices are unknown, so it cannot be checked against the budget.</li>
+      </ul>
+    </div>
+  </div>
+</details>
+
+<main>
+  <!-- 1 chat -->
+  <section class="panel" id="chat">
+    <div class="panel-head"><span class="num">1</span><div><h2>Chat</h2><p>Your request, the questions of the graph, and the recommendation</p></div></div>
+    <div id="messages">
+      <div class="msg agent"><div class="who">Planner</div>Tell me how many of you travel, your total budget, and one to four cities to compare. I plan for the coming weekend. If something is missing, the graph pauses and asks you.</div>
+    </div>
+    <div id="examples"></div>
+    <div id="composer">
+      <textarea id="input" placeholder="For example: a cheap weekend for 2 people, Prague or Dresden, 300 EUR in total"></textarea>
+      <div class="row">
+        <span id="status">Ready.</span>
+        <button id="new-trip">New trip</button>
+        <button id="send" class="primary">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="center">
+    <!-- 2 graph -->
+    <div class="panel" id="graph-panel">
+      <div class="panel-head"><span class="num">2</span><div><h2>Graph</h2><p>Which node runs now. Click a node to see its code and its last input and output.</p></div></div>
+      <svg id="graph" viewBox="0 0 1000 440" role="img" aria-label="The trip planner graph"></svg>
+      <div id="legend">
+        <span style="--c: var(--idle); --b: var(--line)">waiting to run</span>
+        <span style="--c: var(--run-soft); --b: var(--run)">running</span>
+        <span style="--c: var(--done-soft); --b: var(--done)">finished</span>
+        <span style="--c: var(--wait-soft); --b: var(--wait)">paused: waiting for you</span>
+        <span style="--c: transparent; --b: var(--muted)">dashed edge: conditional, decided while the graph runs</span>
+      </div>
+    </div>
+    <!-- 3 timeline -->
+    <div class="panel" id="timeline-panel">
+      <div class="panel-head"><span class="num">3</span><div><h2>Timeline</h2><p>One row per task, grouped by step: rows in the same step ran at the same time</p></div></div>
+      <div id="timeline"></div>
+    </div>
+  </section>
+
+  <!-- 4 inspect -->
+  <section class="panel" id="side">
+    <div class="panel-head"><span class="num">4</span><div><h2>Inside the graph</h2><p>The shared state, each agent's trace, and the selected node</p></div></div>
+    <div id="tabs">
+      <button data-tab="state" class="active">State</button>
+      <button data-tab="traces">Agent traces</button>
+      <button data-tab="node">Node</button>
+    </div>
+    <div class="tab active" id="tab-state"></div>
+    <div class="tab" id="tab-traces"></div>
+    <div class="tab" id="tab-node"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+
+// ---------- names and explanations ----------
+// The name of each node in the graph, as the page shows it.
+const NAMES = { intake_agent: "Intake agent", ask_user: "Ask user", city_agent: "City agent", synthesiser_agent: "Synthesiser agent" };
+function taskName(task) { return (NAMES[task.node] || task.node) + (task.city ? " · " + task.city : ""); }
+
+const NODE_INFO = {
+  START: { title: "START", text: "The entry of the graph. <code>graph.stream({\"request\": ...})</code> writes your text into <code>state.request</code>; the edge leads to the intake agent.",
+    code: 'builder.add_edge(START, "intake_agent")' },
+  intake_agent: { title: "Intake agent (node intake_agent)", text: "An agent with <b>no tools</b>. It reads your text and fills in a <code>TripRequest</code>: people, budget, nights and the cities <b>you</b> name; it never picks cities itself. <code>response_format=TripRequest</code> makes its answer fit the schema. Whether something is missing is checked in Python afterwards, by <code>missing_items</code>, not by the model.",
+    code: 'intake_agent = create_agent(model=model, tools=[], system_prompt=INTAKE_RULES,\n                            response_format=TripRequest)\n\ndef run_intake_agent(state: PlannerState) -> dict:\n    result = intake_agent.invoke({"messages": [("user", state.request)]})\n    return {"trip": result["structured_response"]}' },
+  route: { title: "route_after_intake (conditional edge)", text: "Not a node: a function on the edge after the intake agent. It returns <code>\"ask_user\"</code> if people, budget or cities are missing, or if there are more than four cities; otherwise one <code>Send</code> per city. The list <code>[\"ask_user\", \"city_agent\"]</code> names the nodes it <b>may</b> start; on every run it decides which ones do.",
+    code: 'def route_after_intake(state):\n    if missing_items(state.trip):\n        return "ask_user"\n    return [Send("city_agent", CityJob(city=city, trip=state.trip))\n            for city in state.trip.cities]\n\nbuilder.add_conditional_edges("intake_agent", route_after_intake,\n                              ["ask_user", "city_agent"])' },
+  ask_user: { title: "Ask user (node ask_user, not an agent)", text: "Not an agent: the question is built in Python from the missing items, so it is the same every time. <code>interrupt()</code> pauses the graph and sends the question to you. The checkpointer saves the state under your <code>thread_id</code>. Your answer continues the run with <code>Command(resume=answer)</code>; the node adds it to the request, and the edge leads back to the intake agent.",
+    code: 'def ask_user(state):\n    answer = interrupt({"question": question})\n    return {"request": f"{state.request}\\nAnswer: {answer}"}\n\nbuilder.add_edge("ask_user", "intake_agent")\n# later, with the answer:\ngraph.stream(Command(resume=answer), config)' },
+  city_agent: { title: "City agent (node city_agent, once per Send)", text: "The same node runs once per <code>Send</code>, each time with its own <code>CityJob</code>. All runs are in the same step, so the city agents work at the same time. Each one has four tools and returns a list with <b>one</b> report.",
+    code: 'city_agent = create_agent(model=model,\n    tools=[next_weekend, weather_forecast, search_trip_guide, budget_per_person],\n    system_prompt=CITY_RULES)\n\ndef run_city_agent(job: CityJob) -> dict:\n    result = city_agent.invoke({"messages": [("user", brief)]})\n    return {"reports": [CityReport(city=job.city, report=...)]}' },
+  reducer: { title: "The reducer on state.reports (not a node)", text: "A rule on the state field <code>reports</code>. The city agents write to it in the same step. <code>operator.add</code> joins their lists: <code>[Prague] + [Dresden]</code>. Without the reducer, LangGraph would stop with <code>InvalidUpdateError</code>, because a field can take only one value per step.",
+    code: 'class PlannerState(BaseModel):\n    request: str\n    trip: TripRequest | None = None\n    reports: Annotated[list[CityReport], operator.add] = []\n    recommendation: str = ""' },
+  synthesiser_agent: { title: "Synthesiser agent (node synthesiser_agent)", text: "An agent with <b>no tools</b>. It starts only after <b>every</b> city agent has finished, reads all reports from the state and recommends one city.",
+    code: 'builder.add_edge("city_agent", "synthesiser_agent")\n\ndef run_synthesiser_agent(state):\n    result = synthesiser_agent.invoke({"messages": [("user", reports)]})\n    return {"recommendation": result["messages"][-1].text}' },
+  END: { title: "END", text: "The exit of the graph. The final state holds the request, the plan, all reports and the recommendation.",
+    code: 'builder.add_edge("synthesiser_agent", END)' },
+};
+
+const EXAMPLES = [
+  "A cheap weekend for 2 people, Prague or Dresden, 300 EUR in total",
+  "Three of us want to get out of Berlin this weekend. Ideas?",
+  "Two of us, 250 EUR, somewhere this weekend",
+  "Vienna, Prague or Dresden for 4 friends, 500 EUR, one night",
+];
+const EMPTY_TIMELINE = '<div class="tl-note">Each row is one task, one run of a node. Tasks with the same step number ran in the same step, at the same time. Send a trip to start.</div>';
+const EMPTY_TRACES = '<div class="box empty">Each agent\'s model calls and tool calls appear here while it works.</div>';
+
+// ---------- page state ----------
+const $ = (id) => document.getElementById(id);
+const svg = $("graph");
+const NS = "http://www.w3.org/2000/svg";
+let threadId = newThreadId();
+let running = false;
+let tripFinished = false;
+let planState = emptyState();
+let tasks = {};            // task_id -> {node, city, step, start, end, status, trace, input, result}
+let order = [];            // task ids in start order
+let lanes = [];            // city_agent task ids, in Send order
+let step = 0;
+let clockOffset = 0;       // active time of earlier runs, so the pause does not stretch the timeline
+let runStart = 0;
+let lastReducer = "";
+let selectedInfo = null;
+let nodeRuns = {};
+const nodeStatus = {};
+const litEdges = new Set();
+
+function newThreadId() { return "trip-" + Math.random().toString(36).slice(2, 10); }
+function emptyState() { return { request: "", trip: null, reports: [], recommendation: "" }; }
+function esc(text) { return String(text ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function now() { return running ? clockOffset + (performance.now() - runStart) / 1000 : clockOffset; }
+
+// A small Markdown renderer: headings, bold, lists and paragraphs.
+function md(text) {
+  const lines = esc(text).split("\n");
+  let html = "", list = false;
+  for (let line of lines) {
+    line = line.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+    const item = line.match(/^\s*[-*]\s+(.*)/);
+    if (item) { if (!list) { html += "<ul>"; list = true; } html += `<li>${item[1]}</li>`; continue; }
+    if (list) { html += "</ul>"; list = false; }
+    const head = line.match(/^#{1,4}\s+(.*)/);
+    if (head) html += `<h4>${head[1]}</h4>`;
+    else if (line.trim()) html += `<p>${line}</p>`;
+  }
+  return `<div class="md">${html}${list ? "</ul>" : ""}</div>`;
+}
+
+// ---------- the SVG graph ----------
+const MID = 170;
+const LANE = { x: 420, w: 200, h: 56, gap: 70 };
+
+function el(tag, attrs, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  (parent || svg).appendChild(node);
+  return node;
+}
+function laneY(index, count) { return MID - ((count - 1) * LANE.gap) / 2 + index * LANE.gap; }
+
+function drawGraph() {
+  svg.innerHTML = "";
+  const defs = el("defs", {});
+  const marker = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 z", fill: "var(--muted)" }, marker);
+
+  const count = lanes.length || 2;
+  // edges first, so the nodes are drawn on top
+  edge("e-start", "M64,170 L88,170");
+  edge("e-intake-route", "M242,170 L284,170");
+  edge("e-route-ask", "M320,206 C320,300 300,350 244,350", true);
+  edge("e-ask-intake", "M150,318 L150,202");
+  for (let i = 0; i < count; i++) {
+    const y = laneY(i, count);
+    edge(`e-send-${i}`, `M356,170 C390,170 390,${y} ${LANE.x - 2},${y}`, true);
+    edge(`e-lane-${i}`, `M${LANE.x + LANE.w},${y} C650,${y} 650,170 676,170`);
+  }
+  edge("e-reducer-synth", "M724,170 L756,170");
+  edge("e-synth-end", "M918,170 L944,170");
+
+  label(320, 124, "conditional edge", "middle");
+  label(258, 300, "missing?", "middle");
+  label(160, 270, "your answer", "start");
+  label(392, laneY(count - 1, count) + 54, "Send: one per city", "middle");
+  label(700, 214, "reducer", "middle");
+  label(700, 228, "operator.add", "middle");
+
+  // nodes
+  squareNode("START", 42, MID, "START");
+  boxNode("intake_agent", 90, MID - 30, 152, 60, "Intake agent", "no tools, structured output");
+  boxNode("ask_user", 90, 320, 152, 60, "Ask user", "interrupt(): asks you");
+  diamond("route", 320, MID);
+  for (let i = 0; i < count; i++) {
+    const taskId = lanes[i];
+    const task = taskId ? tasks[taskId] : null;
+    const y = laneY(i, count);
+    const g = boxNode(`lane-${i}`, LANE.x, y - LANE.h / 2, LANE.w, LANE.h,
+      task ? `City agent · ${task.city}` : "City agent",
+      task ? laneSub(task) : "one per city, started by Send");
+    g.dataset.info = "city_agent";
+    if (taskId) { g.dataset.task = taskId; g.classList.add(task.status); } else g.classList.add("ghost");
+  }
+  const reducer = el("g", { class: "node", id: "node-reducer", "data-info": "reducer" });
+  el("rect", { x: 678, y: MID - 22, width: 44, height: 44 }, reducer);
+  const plus = el("text", { x: 700, y: MID + 7, "text-anchor": "middle", "font-size": 22 }, reducer);
+  plus.textContent = "+";
+  boxNode("synthesiser_agent", 758, MID - 30, 160, 60, "Synthesiser agent", "no tools, recommends");
+  squareNode("END", 966, MID, "END");
+
+  // keep the status of the fixed nodes after a redraw
+  for (const [name, status] of Object.entries(nodeStatus)) if (status) $(`node-${name}`)?.classList.add(status);
+  for (const id of litEdges) $(id)?.classList.add("lit");
+  markSelected();
+  svg.querySelectorAll(".node").forEach((g) => g.addEventListener("click", () => selectNode(g.dataset.info, g.dataset.task)));
+}
+
+function edge(id, d, conditional) {
+  el("path", { id, d, class: "edge" + (conditional ? " cond" : ""), "marker-end": "url(#arrow)" });
+}
+function label(x, y, text, anchor) {
+  const t = el("text", { x, y, class: "edge-label", "text-anchor": anchor });
+  t.textContent = text;
+}
+function boxNode(id, x, y, w, h, title, sub) {
+  const g = el("g", { class: "node", id: `node-${id}`, "data-info": id });
+  el("rect", { x, y, width: w, height: h }, g);
+  const t = el("text", { x: x + w / 2, y: y + h / 2 - 3, "text-anchor": "middle", "font-weight": 600 }, g);
+  t.textContent = title;
+  const s = el("text", { x: x + w / 2, y: y + h / 2 + 14, "text-anchor": "middle", class: "sub" }, g);
+  s.textContent = sub;
+  return g;
+}
+function squareNode(id, cx, cy, text) {
+  const g = el("g", { class: "node", id: `node-${id}`, "data-info": id });
+  el("rect", { x: cx - 22, y: cy - 22, width: 44, height: 44 }, g);
+  const t = el("text", { x: cx, y: cy + 3, "text-anchor": "middle", "font-size": 9.5, "font-weight": 600 }, g);
+  t.textContent = text;
+}
+function diamond(id, cx, cy) {
+  const g = el("g", { class: "node", id: `node-${id}`, "data-info": id });
+  el("polygon", { points: `${cx},${cy - 36} ${cx + 36},${cy} ${cx},${cy + 36} ${cx - 36},${cy}` }, g);
+  const t = el("text", { x: cx, y: cy + 4, "text-anchor": "middle", "font-size": 10.5 }, g);
+  t.textContent = "route";
+}
+function laneSub(task) {
+  const models = task.trace.filter((t) => t.kind === "model_call").length;
+  const tools = task.trace.filter((t) => t.kind === "tool_result").length;
+  if (task.status === "done") return `report written · ${models} model, ${tools} tool calls`;
+  return `${models} model calls, ${tools} tool calls`;
+}
+
+function setNode(name, status) {
+  nodeStatus[name] = status;
+  const g = $(`node-${name}`);
+  if (!g) return;
+  g.classList.remove("running", "done", "waiting");
+  if (status) g.classList.add(status);
+}
+
+// A dot that travels along an edge.
+function travel(edgeId) {
+  const path = $(edgeId);
+  if (!path) return;
+  litEdges.add(edgeId);
+  path.classList.add("lit");
+  const length = path.getTotalLength();
+  const dot = el("rect", { width: 9, height: 9, class: "token" });
+  const t0 = performance.now();
+  (function frame(t) {
+    const p = Math.min((t - t0) / 650, 1);
+    const point = path.getPointAtLength(p * length);
+    dot.setAttribute("x", point.x - 4.5);
+    dot.setAttribute("y", point.y - 4.5);
+    if (p < 1) requestAnimationFrame(frame); else dot.remove();
+  })(t0);
+}
+
+function flash(name) {
+  const shape = $(`node-${name}`)?.querySelector("rect, polygon");
+  if (!shape) return;
+  shape.style.transformOrigin = "center"; shape.style.transformBox = "fill-box";
+  shape.classList.remove("flash"); void shape.getBoundingClientRect(); shape.classList.add("flash");
+}
+
+// ---------- handling the stream ----------
+function handle(event) {
+  if (event.type === "task_start") return onTaskStart(event);
+  if (event.type === "task_end") return onTaskEnd(event);
+  if (event.type === "inner") return onInner(event);
+  if (event.type === "update") return onUpdate(event);
+  if (event.type === "interrupt") return onInterrupt(event);
+  if (event.type === "done") return onDone(event);
+  if (event.type === "error") { addMessage("error", "Error", esc(event.message)); setStatus("The run stopped with an error.", ""); }
+}
+
+function onTaskStart(e) {
+  if (tasks[e.task_id]) {
+    // A paused task runs again after your answer (Command(resume=...)): same task, same step.
+    const task = tasks[e.task_id];
+    task.status = "running"; task.end = null;
+    setNode(e.node, "running");
+    setStatus(`Resuming ${NAMES[e.node]} with your answer`, "running");
+    renderTraces(); renderTimeline();
+    return;
+  }
+  const busy = order.some((id) => tasks[id].status === "running");
+  if (!busy) step += 1;
+  nodeRuns[e.node] = (nodeRuns[e.node] || 0) + 1;
+  tasks[e.task_id] = { node: e.node, city: e.city, step, start: now(), end: null, status: "running", trace: [], input: e.input, result: null };
+  order.push(e.task_id);
+  setStatus(`Step ${step}: ${taskName(tasks[e.task_id])} is running`, "running");
+
+  if (e.node === "intake_agent") {
+    setNode("START", "done");
+    travel(nodeRuns.intake_agent > 1 ? "e-ask-intake" : "e-start");
+    if (nodeStatus.ask_user === "waiting") setNode("ask_user", "done");
+    setNode("intake_agent", "running");
+  } else if (e.node === "ask_user") {
+    travel("e-intake-route"); setTimeout(() => travel("e-route-ask"), 300);
+    setNode("route", "done");
+    setNode("ask_user", "running");
+  } else if (e.node === "city_agent") {
+    lanes.push(e.task_id);
+    setNode("route", "done");
+    drawGraph();
+    const i = lanes.indexOf(e.task_id);
+    travel("e-intake-route");
+    setTimeout(() => travel(`e-send-${i}`), 300);
+  } else if (e.node === "synthesiser_agent") {
+    travel("e-reducer-synth");
+    setNode("synthesiser_agent", "running");
+  }
+  renderTraces(); renderTimeline();
+}
+
+function onTaskEnd(e) {
+  const task = tasks[e.task_id];
+  if (!task) return;
+  task.result = e.result;
+  task.end = now();
+  task.status = e.paused ? "waiting" : "done";
+  if (e.node === "city_agent") {
+    drawGraph();
+    travel(`e-lane-${lanes.indexOf(e.task_id)}`);
+  } else {
+    setNode(e.node, task.status);
+  }
+  if (e.node === "synthesiser_agent") { travel("e-synth-end"); setTimeout(() => setNode("END", "done"), 500); }
+  if (e.error) task.trace.push({ kind: "error", text: e.error });
+  renderTraces(); renderTimeline();
+}
+
+function onInner(e) {
+  const task = tasks[e.task_id];
+  if (!task) return;
+  task.trace.push(e);
+  if (task.node === "city_agent") {
+    const sub = $(`node-lane-${lanes.indexOf(e.task_id)}`)?.querySelector(".sub");
+    if (sub) sub.textContent = laneSub(task);
+  }
+  renderTraces();
+}
+
+function onUpdate(e) {
+  const u = e.update || {};
+  if (e.node === "intake_agent") planState.trip = u.trip;
+  if (e.node === "ask_user" && u.request) planState.request = u.request;
+  if (e.node === "city_agent" && u.reports) {
+    // The reducer at work: the new list is added to the old one.
+    const before = planState.reports.map((r) => r.city);
+    planState.reports = planState.reports.concat(u.reports);
+    lastReducer = `reports = [${before.join(", ")}] + [${u.reports.map((r) => r.city).join(", ")}]  →  [${planState.reports.map((r) => r.city).join(", ")}]`;
+    setNode("reducer", "done");
+    setTimeout(() => flash("reducer"), 500);
+  }
+  if (e.node === "synthesiser_agent") planState.recommendation = u.recommendation;
+  renderState(e.node === "city_agent" ? planState.reports.length - 1 : -1);
+}
+
+function onInterrupt(e) {
+  addMessage("question", "Planner asks (the graph is paused at Ask user)", esc(e.question));
+  setStatus("Paused at Ask user: answer the question to continue.", "paused");
+}
+
+function onDone(e) {
+  planState = e.state;
+  renderState(-1);
+  if (!e.paused) {
+    tripFinished = true;
+    setStatus("Finished. Send a new message to plan another trip.", "");
+    if (planState.recommendation) addMessage("final", "Recommendation of the synthesiser agent", md(planState.recommendation));
+  }
+  renderTimeline();
+}
+
+// ---------- panel 4: state, traces, node ----------
+function renderState(newIndex) {
+  const trip = planState.trip;
+  let tripHtml = '<div class="box empty">Not set yet: the intake agent writes it.</div>';
+  if (trip) {
+    const row = (k, v, missing) => `<tr><td>${k}</td><td class="${missing ? "missing" : ""}">${missing ? "missing" : esc(v)}</td></tr>`;
+    tripHtml = `<div class="box"><table class="kv">
+      ${row("people", trip.people, !trip.people)}
+      ${row("budget_eur", trip.budget_eur, !trip.budget_eur)}
+      ${row("nights", trip.nights)}
+      ${row("cities", (trip.cities || []).join(", "), !(trip.cities || []).length)}
+    </table></div>`;
+  }
+  const reports = planState.reports.length
+    ? planState.reports.map((r, i) => `<div class="box report ${i === newIndex ? "new" : ""}"><h4>City agent · ${esc(r.city)}</h4>${md(r.report)}</div>`).join("")
+    : '<div class="box empty">[] : each city agent adds a list with one report.</div>';
+  $("tab-state").innerHTML = `
+    <div class="field"><div class="key"><b>request</b>: str</div><div class="box ${planState.request ? "" : "empty"}">${planState.request ? esc(planState.request).replace(/\n/g, "<br>") : "Your text goes here."}</div></div>
+    <div class="field"><div class="key"><b>trip</b>: TripRequest, written by the intake agent</div>${tripHtml}</div>
+    <div class="field"><div class="key"><b>reports</b>: Annotated[list[CityReport], operator.add]</div>
+      ${lastReducer ? `<div class="reducer-line">${esc(lastReducer)}</div>` : ""}${reports}</div>
+    <div class="field"><div class="key"><b>recommendation</b>: str, written by the synthesiser agent</div><div class="box ${planState.recommendation ? "" : "empty"}">${planState.recommendation ? md(planState.recommendation) : "Empty until the synthesiser agent runs."}</div></div>`;
+}
+
+function renderTraces() {
+  if (!order.length) { $("tab-traces").innerHTML = EMPTY_TRACES; return; }
+  $("tab-traces").innerHTML = order.map((id) => {
+    const t = tasks[id];
+    const items = t.trace.map(traceItem).join("") || (t.node === "ask_user" ? '<li><span class="k">interrupt</span>The graph waits for your answer.</li>' : '<li class="res">starting …</li>');
+    return `<div class="card"><div class="head">${esc(taskName(t))}<span class="badge ${t.status}">step ${t.step} · ${t.status}</span></div><ul class="trace">${items}</ul></div>`;
+  }).join("");
+}
+
+function traceItem(item) {
+  if (item.kind === "model_call") return '<li><span class="k">model</span>call to Claude</li>';
+  if (item.kind === "model") {
+    let html = "";
+    for (const call of item.tool_calls) {
+      const kind = /^[A-Z]/.test(call.tool) ? "answer" : "asks for";
+      html += `<li><span class="k">${kind}</span><span class="call">${esc(call.tool)}(${esc(JSON.stringify(call.args))})</span></li>`;
+    }
+    if (item.text && !item.tool_calls.length) html += `<li><span class="k">reply</span>${md(item.text)}</li>`;
+    return html;
+  }
+  if (item.kind === "tool_result") return `<li><span class="k">${esc(item.tool)}</span><span class="res">${esc(item.content)}</span></li>`;
+  if (item.kind === "error") return `<li class="missing">${esc(item.text)}</li>`;
+  return "";
+}
+
+// The Node tab before a node is selected: a list of all nodes to choose from.
+function renderNodeOverview() {
+  const buttons = Object.entries(NODE_INFO).map(([key, info]) => `<button data-info="${key}"><b>${esc(info.title)}</b></button>`).join("");
+  $("tab-node").innerHTML = `<div class="explain">Click a node in the graph, or choose one here, to see what it does, its code, and the input and output of its last run.</div><div class="node-list">${buttons}</div>
+    <details><summary>The graph as LangGraph sees it (Mermaid from graph.get_graph())</summary><pre><code id="mermaid">loading …</code></pre></details>`;
+  $("tab-node").querySelectorAll(".node-list button").forEach((b) => b.addEventListener("click", () => selectNode(b.dataset.info)));
+  loadMermaid();
+}
+
+function selectNode(infoKey, taskId) {
+  const info = NODE_INFO[infoKey];
+  if (!info) return;
+  selectedInfo = taskId ? `task:${taskId}` : infoKey;
+  markSelected();
+  const task = taskId ? tasks[taskId] : lastTaskOf(infoKey);
+  let html = `<button id="back-to-list">← all nodes</button><h3 style="margin:10px 0 8px;font-size:15px">${esc(info.title)}</h3><div class="explain">${info.text}</div><pre><code>${esc(info.code)}</code></pre>`;
+  if (task) {
+    html += `<div class="field"><div class="key"><b>input</b> of the last run${task.city ? " (the Send payload)" : " (the state)"}</div><pre><code>${esc(JSON.stringify(task.input, null, 2))}</code></pre></div>`;
+    if (task.result) html += `<div class="field"><div class="key"><b>returned</b>: only the keys it changes</div><pre><code>${esc(JSON.stringify(task.result, null, 2))}</code></pre></div>`;
+  } else if (!["route", "reducer", "START", "END"].includes(infoKey)) {
+    html += '<div class="box empty">This node has not run yet in this trip.</div>';
+  }
+  $("tab-node").innerHTML = html;
+  $("back-to-list").addEventListener("click", () => { selectedInfo = null; markSelected(); renderNodeOverview(); });
+  showTab("node");
+}
+function markSelected() {
+  svg.querySelectorAll(".node.selected").forEach((n) => n.classList.remove("selected"));
+  if (!selectedInfo) return;
+  if (selectedInfo.startsWith("task:")) {
+    const i = lanes.indexOf(selectedInfo.slice(5));
+    $(`node-lane-${i}`)?.classList.add("selected");
+  } else {
+    svg.querySelectorAll(`.node[data-info="${selectedInfo}"]`).forEach((n) => n.classList.add("selected"));
+  }
+}
+function lastTaskOf(node) {
+  for (let i = order.length - 1; i >= 0; i--) if (tasks[order[i]].node === node) return tasks[order[i]];
+  return null;
+}
+function loadMermaid() {
+  fetch("/api/graph").then((r) => r.json()).then((d) => { const m = $("mermaid"); if (m) m.textContent = d.mermaid; })
+    .catch(() => { const m = $("mermaid"); if (m) m.textContent = "The server did not answer."; });
+}
+
+// ---------- panel 3: timeline ----------
+function renderTimeline() {
+  if (!order.length) { $("timeline").innerHTML = EMPTY_TIMELINE; return; }
+  const total = Math.max(now(), 1);
+  let html = '<div class="tl-note">The bars use active time: the pause while the graph waits for you is left out.</div>';
+  let lastStep = 0;
+  for (const id of order) {
+    const t = tasks[id];
+    const end = t.end ?? now();
+    const left = (t.start / total) * 100, width = ((end - t.start) / total) * 100;
+    html += `<div class="tl-row ${t.step !== lastStep ? "tl-step-head" : ""}">
+      <span class="tl-step">${t.step !== lastStep ? "step " + t.step : ""}</span>
+      <span class="tl-name">${esc(taskName(t))}</span>
+      <span class="tl-track"><span class="tl-bar ${t.status}" style="left:${left}%;width:${width}%" title="${(end - t.start).toFixed(1)} s"></span></span></div>`;
+    lastStep = t.step;
+  }
+  html += `<div class="tl-note">Active time so far: ${total.toFixed(1)} s</div>`;
+  $("timeline").innerHTML = html;
+}
+
+// ---------- panel 1: chat ----------
+function addMessage(kind, who, html) {
+  const div = document.createElement("div");
+  div.className = "msg " + kind;
+  div.innerHTML = `<div class="who">${esc(who)}</div>${html}`;
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+function setStatus(text, kind) { const s = $("status"); s.textContent = text; s.className = kind || ""; }
+
+function resetTrip() {
+  threadId = newThreadId();
+  tripFinished = false;
+  planState = emptyState();
+  tasks = {}; order = []; lanes = []; step = 0; clockOffset = 0; lastReducer = ""; nodeRuns = {}; selectedInfo = null;
+  for (const k of Object.keys(nodeStatus)) delete nodeStatus[k];
+  litEdges.clear();
+  drawGraph(); renderState(-1); renderTraces(); renderTimeline(); renderNodeOverview();
+  setStatus("Ready.", "");
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The events of a live run, read line by line from the server's stream.
+async function* liveEvents(text) {
+  const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ thread_id: threadId, message: text }) });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) return;
+    buffer += decoder.decode(value, { stream: true });
+    let cut;
+    while ((cut = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, cut); buffer = buffer.slice(cut + 1);
+      if (line.trim()) yield JSON.parse(line);
+    }
+  }
+}
+
+// The events of a recorded run, played back with short pauses.
+const REPLAY_DELAY = { task_start: 500, inner: 260, update: 450, task_end: 350, interrupt: 300, done: 100 };
+async function* recordedEvents(events) {
+  for (const event of events) { await sleep(REPLAY_DELAY[event.type] ?? 200); yield event; }
+}
+
+async function runSegment(text, events) {
+  if (tripFinished) { resetTrip(); addMessage("agent", "Planner", "New trip: a new thread_id, so a new, empty state."); }
+  addMessage("user", "You", esc(text));
+  if (!planState.request) planState.request = text;
+  renderState(-1);
+  running = true; $("send").disabled = true; $("new-trip").disabled = true; $("replay").disabled = true;
+  runStart = performance.now();
+  setStatus("Starting the graph …", "running");
+  const timer = setInterval(renderTimeline, 250);
+  try {
+    for await (const event of events) handle(event);
+  } catch (error) {
+    addMessage("error", "Error", esc("The server did not answer. Is app.py running? " + error));
+    setStatus("No connection to the server.", "");
+  }
+  clearInterval(timer);
+  clockOffset = now();
+  running = false; $("send").disabled = false; $("new-trip").disabled = false; $("replay").disabled = false;
+  renderTimeline();
+}
+
+async function send(text) {
+  text = text.trim();
+  if (!text || running) return;
+  $("input").value = "";
+  await runSegment(text, liveEvents(text));
+}
+
+async function replay() {
+  if (running) return;
+  const recording = await (await fetch("/recorded_run.json")).json();
+  resetTrip();
+  addMessage("agent", "Planner", `A recorded run (${esc(recording.recorded)}): no API key needed. The events play back in the order the graph sent them.`);
+  for (const segment of recording.segments) {
+    await sleep(800);
+    await runSegment(segment.message, recordedEvents(segment.events));
+  }
+}
+
+// ---------- wiring the page ----------
+function showTab(name) {
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + name));
+}
+document.querySelectorAll("#tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+$("send").addEventListener("click", () => send($("input").value));
+$("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("input").value); } });
+$("new-trip").addEventListener("click", () => { resetTrip(); addMessage("agent", "Planner", "New trip. Where to, for how many people, and with which budget?"); });
+$("replay").addEventListener("click", replay);
+$("theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+for (const text of EXAMPLES) {
+  const b = document.createElement("button");
+  b.textContent = text;
+  b.addEventListener("click", () => { $("input").value = text; $("input").focus(); });
+  $("examples").appendChild(b);
+}
+resetTrip();
+// Links such as index.html#replay or #node=city_agent open the page in that state.
+if (location.hash === "#replay") replay();
+const linked = location.hash.match(/^#node=(\w+)/);
+if (linked) selectNode(linked[1]);
+</script>
+</body>
+</html>
