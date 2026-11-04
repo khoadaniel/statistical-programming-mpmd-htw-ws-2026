@@ -13,6 +13,8 @@
 - Automated tests with pytest: why test, fixtures, parametrize, choosing test cases, test-driven development.
 - Worked example: does every Berlin listing pass the rules of `ListingRecord`?
 
+**Practice first:** [Python classes, step by step](workbooks/03-practice-python-classes.ipynb) builds a product, a shopping cart and their subclasses one idea at a time, as a warm-up for the [supermarket challenge](supermarket-challenge/README.md).
+
 ## 2 · From notebook to application, Git and continuous integration
 
 [Open notebook](workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb)
@@ -33,7 +35,7 @@ Team repository from the template, with branch protection and CI (exercise 2.5).
 - A free [GitHub account](https://github.com/signup), and your name and e-mail set in Git: `git config --global user.name "..."` and `git config --global user.email "..."`.
 - The [workspace](workspace/README.md) is its own uv project: `cd sessions/02-software-engineering/workspace`, then `uv run pytest -q`. Its command `listing-summary` reads the case-study listings: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - The [CLI workspace](cli-workspace/README.md) is a second, tiny uv project with no data: the command `staycost` built in the seven steps of block 2. `cd sessions/02-software-engineering/cli-workspace`, then `uv run staycost 80 --nights 3`.
-- The [supermarket challenge](supermarket-challenge/README.md) is a third uv project: HTW Markt, a small shop in plain classes, with eight tasks on lists, dictionaries, `if` statements and the four principles of block 1. `cd sessions/02-software-engineering/supermarket-challenge`, then `uv run htw-checkout ana`.
+- The [supermarket challenge](supermarket-challenge/README.md) is a third uv project: HTW Markt, a small shop in plain classes, with three short tasks on inheritance, an abstract class and your own exception. `cd sessions/02-software-engineering/supermarket-challenge`, then `uv run htw-checkout ana`.
 - The notebooks contain Mermaid diagrams: VS Code shows them with the extension *Markdown Mermaid* (`bierner.markdown-mermaid`); JupyterLab 4.1 and newer renders them without an extension.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

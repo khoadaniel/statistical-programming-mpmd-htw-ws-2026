@@ -6,9 +6,10 @@
 
 [Open notebook](workbooks/01-lecture-embeddings.ipynb)
 
-- What a language model does: next-token prediction, a bigram model counted on descriptions, generating text, why counting runs out, and what prediction teaches.
-- Tokens and token counts per language, byte-pair encoding, `tiktoken` encodings, embeddings and cosine similarity, contextual embeddings, attention, the transformer block, pre-training and post-training.
-- Encoder, decoder and encoder–decoder models, with one model of each family at work.
+- What a language model does: a timeline from counting to the Transformer, next-token prediction, a bigram model counted on descriptions, generating text, why counting runs out, and what prediction teaches.
+- Tokens and token counts per language, byte-pair encoding, `tiktoken` encodings, embeddings and cosine similarity.
+- The Transformer: attention, multi-head attention, the transformer block, the causal mask and cross-attention. The slides also read “Attention Is All You Need” and show the code in PyTorch.
+- Architectures: encoder, decoder and encoder–decoder models with one model of each family at work, pre-training and post-training. The slides add modern decoders, mixture of experts and what is public about the largest models.
 - The Hugging Face pattern: Hub and model cards, tokeniser → model → outputs, a classification head, `pipeline()`, reproducibility.
 - Sentence-embedding models with sentence-transformers: prefixes, input limits, choosing a model.
 - Embedding models and language models: the embedding layer inside every model versus an embedding model, and how the two connect in RAG.

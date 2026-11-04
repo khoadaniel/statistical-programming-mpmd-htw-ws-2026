@@ -28,6 +28,51 @@
 - Guardrails: allow-list, schema validation, read-only SQLite, step and token limits, human confirmation, input and output checks.
 - Worked example: an agent with three tools evaluated on ten tasks, including a prompt injection.
 
+## 3 · Agents with LangChain
+
+[Open notebook](workbooks/03-lecture-agents-with-langchain.ipynb)
+
+- Setup: a Claude API key in a `.env` file, Claude Haiku 5.5, costs.
+- The chat model `ChatAnthropic` with `max_tokens`; `invoke`, `stream`, `batch`; messages and `.text`.
+- Few-shot prompting: zero-shot and few-shot messages, dynamic selection of examples by similarity.
+- The concept of a tool, `@tool`, the tool definition as the instruction Claude reads, the system prompt, `bind_tools` and the manual loop.
+- `create_agent` as a wrapper around a model; `ToolRuntime` and context; tool errors.
+- Structured output, streaming, short-term memory and checkpointers.
+- Graphs on a café inbox: `StateGraph`, state, nodes (a function, a model call, an agent), edges, conditional edges, `compile`; reducers on a shared shopping list; stream modes.
+- Worked example: the same agent rebuilt by hand as a graph.
+
+## 4 · Agent architectures with LangGraph
+
+[Open notebook](workbooks/04-lecture-agent-architectures-with-langgraph.ipynb)
+
+- The five patterns of the docs and their comparison: subagents with a supervisor, handoffs, skills, router, custom workflow.
+- `Command` and `goto`, `Send` and map-reduce, subgraphs, orchestrator-workers.
+- The handoff mechanism and what context passes; swarm-style peer handoffs with `create_agent` and tools.
+- Human in the loop with `interrupt`, custom and built-in middleware, context engineering.
+- Long-term memory and stores, time travel, durable execution, guardrails.
+- Model Context Protocol, Deep Agents, Functional API, unit testing, tracing.
+- Worked example: an EBTI agent with three tools and ten tasks, including a prompt injection.
+- Evaluating an agent: golden dataset, outcome and trajectory graders, pass@k and pass^k, an LLM judge, TPR and TNR, the Rogan-Gladen correction.
+
+## 5 · Practice: a weekend trip planner agent
+
+[Open notebook](workbooks/05-practice-trip-planner-agent.ipynb)
+
+- What an agent adds to a plain model call, then one agent built in steps: no tools, a first tool, a web service (Open-Meteo), a knowledge base, a calculator with rules, and memory.
+- Part 2: a team of agents (orchestrator-workers with `Send`), timed against the single agent.
+
+## 6 · Practice: an MCP server and an agent
+
+[Open notebook](workbooks/06-practice-mcp-server-and-agent.ipynb)
+
+- Build an MCP server with FastMCP, run it over stdio and HTTP, connect a LangChain agent, and spot tool poisoning.
+
+## 7 · Practice: evaluating an agent
+
+[Open notebook](workbooks/07-practice-evaluating-an-agent.ipynb)
+
+- Code graders, pass@k and pass^k, and an LLM judge checked against hand labels.
+
 ## Team project until the next session
 
 Optional language-model component (for example a classification assistant with retrieval), with its evaluation.
@@ -35,7 +80,12 @@ Optional language-model component (for example a classification assistant with r
 ## Setup
 
 - Models are downloaded from the Hugging Face Hub on first use: `intfloat/multilingual-e5-small`, `cross-encoder/ms-marco-MiniLM-L-6-v2`, `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli`. Embeddings are cached in the system's temporary folder.
-- Language model (optional): any OpenAI-compatible endpoint with tool calling, set by `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY`, or `OPENAI_API_KEY`, or a local [Ollama](https://ollama.com/) server (`ollama pull llama3.2`). Without one, the model cells print a message and show a saved example, and the agent runs with a scripted model. Never write a key into a notebook.
+- Language model for notebooks 01 and 02 (optional): any OpenAI-compatible endpoint with tool calling, set by `LLM_BASE_URL`, `LLM_MODEL` and `LLM_API_KEY`, or `OPENAI_API_KEY`, or a local [Ollama](https://ollama.com/) server (`ollama pull llama3.2`). Without one, the model cells print a message and show a saved example, and the agent runs with a scripted model. Never write a key into a notebook.
+- Notebooks 03 and 04 call Claude Haiku 5.5 (`claude-haiku-5-5`) through the Claude API, so you need your own API key:
+  1. Create a key on the [API keys](https://platform.claude.com/settings/keys) page of the Claude Console.
+  2. In `workbooks/`, copy `.env.example` to `.env` and paste the key after `ANTHROPIC_API_KEY=`. Git ignores `.env`; never type the key into a notebook.
+  3. In the Console, set a monthly spending limit under **Settings > Billing**.
+- Cost of notebooks 03 and 04: Haiku 5.5 costs 0.10 USD per million input tokens and 0.50 USD per million output tokens ([pricing](https://platform.claude.com/docs/en/about-claude/pricing), 3 November 2026). A full run of notebook 03 costs a few cents, and notebook 04 well under one euro. Cells that call Claude are saved without output and show a result only when you run them. The setup section of notebook 03 explains the details.
 - [`workspace/`](workspace/README.md) holds the same assistant as tested software (package `bti_assistant`): `cd workspace && uv run pytest -q`.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

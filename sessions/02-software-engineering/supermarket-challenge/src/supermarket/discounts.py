@@ -1,7 +1,7 @@
 """Discounts: the rules that lower the price at the checkout.
 
 Discount is an abstract base class. The Checkout only ever calls `discount.apply(subtotal)`, so it
-works with every kind of discount, including kinds that are written later (Task 6).
+works with every kind of discount, including kinds that are written later (Task 2).
 
     Discount (abstract)
     ├── NoDiscount            nothing comes off
@@ -69,4 +69,24 @@ class PercentageDiscount(Discount):
         return f"{self.percent:g} % off"  # :g writes 10.0 as 10
 
 
-# Task 6: write the class ThresholdDiscount here.
+class ThresholdDiscount(Discount):
+    """Task 2: a fixed amount off from a minimum subtotal, for example 5 EUR off from 30 EUR.
+
+    Attributes:
+        minimum_subtotal: The subtotal in EUR from which the discount applies.
+        amount_off: How many EUR come off.
+    """
+
+    def __init__(self, minimum_subtotal: float, amount_off: float) -> None:
+        """Step 1: store both numbers."""
+        raise NotImplementedError("Task 2")
+
+    def amount(self, subtotal: float) -> float:
+        """Step 2: amount_off if the subtotal is at least minimum_subtotal, otherwise 0.
+
+        apply() is inherited from Discount: it subtracts this amount, so write only amount().
+        """
+        raise NotImplementedError("Task 2")
+
+    def __str__(self) -> str:
+        return f"{self.amount_off:.2f} EUR off from {self.minimum_subtotal:.2f} EUR"

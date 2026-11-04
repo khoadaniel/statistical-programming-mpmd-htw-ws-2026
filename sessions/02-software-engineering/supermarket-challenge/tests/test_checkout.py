@@ -1,37 +1,28 @@
-"""Tests of checkout.py: scanning, totals, the receipt. Task 5 and Task 8 tests are skipped.
+"""Tests of checkout.py: scanning, totals, the receipt and the payment.
 
-Each test is a function whose name starts with test_. pytest finds and runs them all. The
-parameter `inventory` or `checkout` is a fixture from conftest.py: pytest builds a fresh sample
-shop for each test. A line @pytest.mark.skip(...) above a test switches it off until you
-start that task; delete the line to switch the test on.
+Tests marked @pytest.mark.task(N) check your work on Task N. Until you start the task, pytest
+reports them as "not started yet".
 """
 
 import pytest
 
-from supermarket.checkout import Checkout
+from supermarket.checkout import Checkout, UnknownProductError
 from supermarket.discounts import PercentageDiscount
-from supermarket.errors import OutOfStockError, SupermarketError
-from supermarket.inventory import Inventory
+from supermarket.products import Product
 
 
-def test_scan_moves_items_from_the_shelf_to_the_cart(checkout: Checkout):
+def test_scan_puts_the_items_in_the_cart(checkout: Checkout):
     checkout.scan("Bread", quantity=2)
-    assert checkout.cart.item_count() == 2
-    assert checkout.inventory.quantity_of("Bread") == 6
+    assert checkout.cart.quantities() == {"Bread": 2}
 
 
-def test_scan_more_than_is_in_stock(checkout: Checkout):
-    with pytest.raises(OutOfStockError):
-        checkout.scan("Cola", quantity=4)
-
-
-def test_every_error_of_the_package_is_a_supermarket_error(checkout: Checkout):
-    with pytest.raises(SupermarketError):
+def test_an_unknown_product_is_refused(checkout: Checkout):
+    with pytest.raises(UnknownProductError):
         checkout.scan("Caviar")
 
 
-def test_total_after_a_percentage_discount(inventory: Inventory):
-    checkout = Checkout(inventory, discount=PercentageDiscount(10))
+def test_total_after_a_percentage_discount(catalogue: dict[str, Product]):
+    checkout = Checkout(catalogue, discount=PercentageDiscount(10))
     checkout.scan("Bread", quantity=2)  # 2 x 3.00
     assert checkout.total() == 5.40
 
@@ -41,50 +32,24 @@ def test_receipt_ends_with_the_total(checkout: Checkout):
     assert checkout.receipt().splitlines()[-1].endswith("3.00")
 
 
-@pytest.mark.skip(reason="Task 5: delete this line when you start the task")
-@pytest.mark.parametrize(
-    "has_member_card, bread_count, expected_points",
-    [
-        (False, 8, 0),  # no card: no points, whatever the total
-        (True, 5, 15),  # total 15.00: 1 point per full euro
-        (True, 8, 24),  # total 24.00: 1 point per full euro
-        (True, 1, 3),  # total 3.00: 1 point per full euro
-    ],
-)
-def test_loyalty_points(inventory: Inventory, has_member_card, bread_count, expected_points):
-    checkout = Checkout(inventory, has_member_card=has_member_card)
-    checkout.scan("Bread", quantity=bread_count)
-    assert checkout.loyalty_points() == expected_points
-
-
-@pytest.mark.skip(reason="Task 5: delete this line when you start the task")
-def test_loyalty_points_double_from_fifty_euros(inventory: Inventory):
-    checkout = Checkout(inventory, has_member_card=True)
-    checkout.scan("Cheese", quantity=4)  # 14.92
-    checkout.scan("Bread", quantity=8)  # 24.00
-    checkout.scan("Apples 1 kg", quantity=5)  # 12.25 -> total 51.17
-    assert checkout.loyalty_points() == 102
-
-
-@pytest.mark.skip(reason="Task 5: delete this line when you start the task")
-def test_loyalty_points_count_the_total_after_the_discount(inventory: Inventory):
-    checkout = Checkout(inventory, discount=PercentageDiscount(50), has_member_card=True)
-    checkout.scan("Bread", quantity=5)  # 15.00 -> 7.50 after the discount
-    assert checkout.loyalty_points() == 7
-
-
-@pytest.mark.skip(reason="Task 8: delete this line when you start the task")
+@pytest.mark.task(3)
 def test_pay_returns_the_change(checkout: Checkout):
     checkout.scan("Bread", quantity=2)  # 6.00
     assert checkout.pay(10.00) == 4.00
     assert checkout.pay(6.00) == 0.00
 
 
-@pytest.mark.skip(reason="Task 8: delete this line when you start the task")
-def test_pay_refuses_too_little_money(checkout: Checkout):
-    from supermarket.errors import PaymentError
+@pytest.mark.task(3)
+def test_too_little_money_is_refused(checkout: Checkout):
+    from supermarket.checkout import PaymentError
 
-    checkout.scan("Bread", quantity=2)  # 6.00
-    with pytest.raises(PaymentError):
+    checkout.scan("Bread", quantity=2)
+    with pytest.raises(PaymentError, match="6.00"):
         checkout.pay(5.00)
+
+
+@pytest.mark.task(3)
+def test_a_payment_error_is_a_supermarket_error():
+    from supermarket.checkout import PaymentError, SupermarketError
+
     assert issubclass(PaymentError, SupermarketError)

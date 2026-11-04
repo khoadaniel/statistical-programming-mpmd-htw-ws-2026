@@ -1,0 +1,13 @@
+# What HTW Markt sells: one line per product. Change a price here, not in the Python code.
+#   kind       which class the program creates: food, non-food or drink
+#   net_price  the price in EUR before VAT; the program computes the shelf price
+
+products:
+  - {name: Apples 1 kg, kind: food, net_price: 2.29}
+  - {name: Bread, kind: food, net_price: 2.80}
+  - {name: Milk 1 l, kind: food, net_price: 1.09}
+  - {name: Cheese, kind: food, net_price: 3.49}
+  - {name: Mineral water, kind: drink, net_price: 0.49}
+  - {name: Cola, kind: drink, net_price: 1.09}
+  - {name: Dish soap, kind: non-food, net_price: 1.95}
+  - {name: Toothpaste, kind: non-food, net_price: 1.49}

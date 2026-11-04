@@ -48,6 +48,7 @@ class Product(ABC):
 
     @net_price.setter
     def net_price(self, new_net_price: float) -> None:
+        """Set the price; a negative price is refused."""
         if new_net_price < 0:
             raise ValueError(f"the price of {self.name!r} cannot be negative")
         self._net_price = new_net_price
@@ -121,4 +122,32 @@ class BottledDrink(Product):
         return round(super().gross_price() + self.deposit, 2)
 
 
-# Task 4: write the class FreshProduct here.
+FRESH_DISCOUNT_RATE = 0.30  # 30 % off on the use-by day and the day before
+
+
+class FreshProduct(FoodProduct):
+    """Task 1: a food product with a use-by date, cheaper on its last days.
+
+    A fresh product is a food product (inheritance): it keeps the VAT rate and the category of
+    FoodProduct, and changes only the price on its last days.
+
+    Attributes:
+        days_until_use_by: 0 is the use-by day itself; below 0, the date has passed.
+    """
+
+    def __init__(self, name: str, net_price: float, days_until_use_by: int) -> None:
+        """Step 1: let the parent store and check name and net_price, then store days_until_use_by."""
+        raise NotImplementedError("Task 1")
+
+    def gross_price(self) -> float:
+        """Step 2: the food price, FRESH_DISCOUNT_RATE lower when days_until_use_by is 1 or less.
+
+        Example:
+            FreshProduct("Cheese sandwich", 3.00, days_until_use_by=1).gross_price() is 2.25:
+            3.00 plus 7 % VAT is 3.21, minus 30 % is 2.247, rounded 2.25.
+        """
+        raise NotImplementedError("Task 1")
+
+    def is_sellable(self) -> bool:
+        """Step 3: False once the use-by date has passed, otherwise True."""
+        raise NotImplementedError("Task 1")

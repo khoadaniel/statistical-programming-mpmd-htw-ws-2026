@@ -1,9 +1,7 @@
-"""Tests of products.py: VAT, deposit, categories and the price rule. Task 4 tests are skipped.
+"""Tests of products.py: VAT, deposit and the price rule.
 
-Each test is a function whose name starts with test_. pytest finds and runs them all. The
-parameter `inventory` or `checkout` is a fixture from conftest.py: pytest builds a fresh sample
-shop for each test. A line @pytest.mark.skip(...) above a test switches it off until you
-start that task; delete the line to switch the test on.
+Tests marked @pytest.mark.task(N) check your work on Task N. Until you start the task, pytest
+reports them as "not started yet".
 """
 
 import pytest
@@ -48,29 +46,29 @@ def test_a_negative_price_is_refused_after_creation_too():
         bread.net_price = -1.00
 
 
-@pytest.mark.skip(reason="Task 4: delete this line when you start the task")
+@pytest.mark.task(1)
 def test_fresh_product_is_food():
     from supermarket.products import FreshProduct
 
-    strawberries = FreshProduct("Strawberries", 3.00, days_until_best_before=5)
-    assert isinstance(strawberries, FoodProduct)
-    assert strawberries.category == "food"
-    assert strawberries.gross_price() == 3.21
+    sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by=5)
+    assert isinstance(sandwich, FoodProduct)
+    assert sandwich.category == "food"
+    assert sandwich.gross_price() == 3.21
 
 
-@pytest.mark.skip(reason="Task 4: delete this line when you start the task")
-@pytest.mark.parametrize("days_until_best_before", [1, 0])
-def test_fresh_product_costs_less_on_its_last_day(days_until_best_before):
+@pytest.mark.task(1)
+@pytest.mark.parametrize("days_until_use_by", [1, 0])
+def test_fresh_product_costs_less_on_its_last_day(days_until_use_by):
     from supermarket.products import FreshProduct
 
-    strawberries = FreshProduct("Strawberries", 3.00, days_until_best_before)
-    assert strawberries.gross_price() == 2.25
+    sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by)
+    assert sandwich.gross_price() == 2.25
 
 
-@pytest.mark.skip(reason="Task 4: delete this line when you start the task")
-def test_fresh_product_past_its_best_before_date_cannot_be_sold():
+@pytest.mark.task(1)
+def test_fresh_product_past_its_use_by_date_cannot_be_sold():
     from supermarket.products import FreshProduct
 
-    strawberries = FreshProduct("Strawberries", 3.00, days_until_best_before=-1)
-    assert not strawberries.is_sellable()
-    assert FreshProduct("Strawberries", 3.00, days_until_best_before=0).is_sellable()
+    sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by=-1)
+    assert not sandwich.is_sellable()
+    assert FreshProduct("Cheese sandwich", 3.00, days_until_use_by=0).is_sellable()

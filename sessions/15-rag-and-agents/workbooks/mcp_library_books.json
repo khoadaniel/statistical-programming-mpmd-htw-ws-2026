@@ -1,0 +1,13 @@
+{
+  "library": "Spree Campus Library (a made-up library for this workbook)",
+  "books": [
+    {"id": "B01", "title": "Python for Data Analysis", "author": "Wes McKinney", "year": 2022, "topic": "python", "copies": 3, "on_loan": 3, "next_due": "2026-11-12"},
+    {"id": "B02", "title": "An Introduction to Statistical Learning", "author": "Gareth James and others", "year": 2023, "topic": "machine learning", "copies": 4, "on_loan": 2, "next_due": "2026-11-20"},
+    {"id": "B03", "title": "Hands-On Machine Learning with Scikit-Learn and PyTorch", "author": "Aurélien Géron", "year": 2025, "topic": "machine learning", "copies": 2, "on_loan": 2, "next_due": "2026-11-09"},
+    {"id": "B04", "title": "Speech and Language Processing", "author": "Daniel Jurafsky and James H. Martin", "year": 2025, "topic": "language models", "copies": 2, "on_loan": 0, "next_due": null},
+    {"id": "B05", "title": "Designing Machine Learning Systems", "author": "Chip Huyen", "year": 2022, "topic": "machine learning", "copies": 1, "on_loan": 0, "next_due": null},
+    {"id": "B06", "title": "AI Engineering", "author": "Chip Huyen", "year": 2025, "topic": "language models", "copies": 2, "on_loan": 1, "next_due": "2026-11-18"},
+    {"id": "B07", "title": "Fluent Python", "author": "Luciano Ramalho", "year": 2022, "topic": "python", "copies": 2, "on_loan": 1, "next_due": "2026-11-15"},
+    {"id": "B08", "title": "SQL for Data Scientists", "author": "Renée M. P. Teate", "year": 2021, "topic": "databases", "copies": 1, "on_loan": 1, "next_due": "2026-11-26"}
+  ]
+}

@@ -7,7 +7,7 @@
 [Open notebook](workbooks/01-lecture-relational-databases-and-first-queries.ipynb)
 
 - Tables, rows, columns and SQLite's data types; dates as text, true/false as 1/0; `STRICT` tables and `CAST`.
-- Primary keys, foreign keys and relationships, checked on the course data; normalisation and star schemas.
+- Primary keys, foreign keys and relationships, checked on the course data; normalisation, star and snowflake schemas.
 - SQLite as a database in one file: connections, `sqlite_master`, database browsers.
 - `CREATE TABLE` with constraints, `INSERT`, and the SQLite equivalents of `COPY`.
 - `SELECT`, `WHERE`, `ORDER BY`, `LIMIT` and the logical order of the clauses.
@@ -21,7 +21,7 @@
 - `GROUP BY` and `HAVING`; shares as averages of 0/1 values.
 - Inner, left, right, full and cross joins; anti-joins, and the duplicated rows that one-to-many joins can produce.
 - Subqueries and common table expressions, including recursive ones.
-- Window functions: rankings, running totals, `LAG`, `LEAD` and moving averages.
+- Window functions: `PARTITION BY`, frames with `ROWS BETWEEN`, rankings, running totals, `LAG`, `LEAD` and moving averages.
 - Python's `sqlite3`: connections, cursors, parameters, transactions, pandas, scripts, and SQL written by a language model.
 - Worked example: district price rankings and reviews per district.
 

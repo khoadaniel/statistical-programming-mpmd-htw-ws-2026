@@ -10,6 +10,7 @@ dist/
 venv/
 .env
 .env.*
+!.env.example
 
 # Tool caches
 .pytest_cache/
@@ -46,3 +47,5 @@ case-study/lecturer/
 internal/
 teaching-notes/
 /prototype/
+# Special session 99 (still in review)
+sessions/99-*/
