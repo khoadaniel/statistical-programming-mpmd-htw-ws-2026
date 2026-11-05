@@ -1,8 +1,8 @@
 """The trip planner of workbook 05 as one LangGraph graph, with three agents.
 
-intake agent (reads the request; the graph asks the user when people, budget or cities are missing)
+orchestrator agent (reads the request; the graph asks the user when people, budget or cities are missing)
   -> one city agent per city, in parallel (Send); a reducer (operator.add) joins their reports
-  -> synthesiser agent (compares the reports and recommends one city)
+  -> recommender agent (compares the reports and recommends one city)
 """
 import json
 import operator
@@ -121,7 +121,7 @@ def budget_per_person(total_budget_eur: float, people: int, nights: int,
 # ---------- the agents ----------
 
 class TripRequest(BaseModel):
-    """What the intake agent reads from the user's text."""
+    """What the orchestrator agent reads from the user's text."""
 
     people: int | None = Field(None, description="Number of travellers; null if the user did not say it")
     budget_eur: float | None = Field(None, description="Total budget of the whole group in euros; null if the user did not say it")
@@ -130,7 +130,7 @@ class TripRequest(BaseModel):
                               description="The destination cities the user names, in English; empty if the user named none")
 
 
-INTAKE_RULES = """You read a trip request from students who live in Berlin and fill in the plan.
+ORCHESTRATOR_RULES = """You read a trip request from students who live in Berlin and fill in the plan.
 Rules:
 - Fill in only what the user said. Use null for the number of people or the budget if the user did not give it.
 - Put only the cities that the user names into cities. If the user names no city, leave cities empty,
@@ -147,16 +147,16 @@ Rules:
 - Report in at most 8 lines: the dates, the travel, the bed, the money left per person, the weather and what to pack.
 - Do not compare with other cities."""
 
-SYNTHESISER_RULES = """You compare trip options for students who live in Berlin.
+RECOMMENDER_RULES = """You compare trip options for students who live in Berlin.
 Use only the facts in the reports. Never recommend a plan over the budget; if nothing fits, say so.
 If there is only one report, say whether that trip fits the budget.
 Recommend one city in at most 6 lines."""
 
-intake_agent = create_agent(model=model, tools=[], system_prompt=INTAKE_RULES, response_format=TripRequest)
+orchestrator_agent = create_agent(model=model, tools=[], system_prompt=ORCHESTRATOR_RULES, response_format=TripRequest)
 city_agent = create_agent(model=model,
                           tools=[next_weekend, weather_forecast, search_trip_guide, budget_per_person],
                           system_prompt=CITY_RULES)
-synthesiser_agent = create_agent(model=model, tools=[], system_prompt=SYNTHESISER_RULES)
+recommender_agent = create_agent(model=model, tools=[], system_prompt=RECOMMENDER_RULES)
 
 
 # ---------- the graph ----------
@@ -204,14 +204,14 @@ def missing_items(trip: TripRequest) -> list[str]:
     return missing
 
 
-def run_intake_agent(state: PlannerState) -> dict:
-    """Node intake_agent: the intake agent turns the user's text into a TripRequest."""
-    result = intake_agent.invoke({"messages": [("user", state.request)]})
+def run_orchestrator_agent(state: PlannerState) -> dict:
+    """Node orchestrator_agent: the orchestrator agent turns the user's text into a TripRequest."""
+    result = orchestrator_agent.invoke({"messages": [("user", state.request)]})
     return {"trip": result["structured_response"]}
 
 
-def route_after_intake(state: PlannerState) -> str | list[Send]:
-    """Conditional edge after the intake agent: ask the user if something is missing, otherwise one Send per city."""
+def route_after_orchestrator(state: PlannerState) -> str | list[Send]:
+    """Conditional edge after the orchestrator agent: ask the user if something is missing, otherwise one Send per city."""
     if missing_items(state.trip):
         return "ask_user"
     return [Send("city_agent", CityJob(city=city, trip=state.trip)) for city in state.trip.cities]
@@ -235,26 +235,26 @@ def run_city_agent(job: CityJob) -> dict:
     return {"reports": [CityReport(city=job.city, report=result["messages"][-1].text)]}
 
 
-def run_synthesiser_agent(state: PlannerState) -> dict:
-    """Node synthesiser_agent: the synthesiser agent compares the reports and recommends one city."""
+def run_recommender_agent(state: PlannerState) -> dict:
+    """Node recommender_agent: the recommender agent compares the reports and recommends one city."""
     reports = "\n\n".join(f"## {report.city}\n{report.report}" for report in state.reports)
-    result = synthesiser_agent.invoke({"messages": [("user", f"Request: {state.request}\n\nReports:\n{reports}")]})
+    result = recommender_agent.invoke({"messages": [("user", f"Request: {state.request}\n\nReports:\n{reports}")]})
     return {"recommendation": result["messages"][-1].text}
 
 
 def build_graph():
     builder = StateGraph(PlannerState)
     # Each agent runs in a node of the same name.
-    builder.add_node("intake_agent", run_intake_agent)
+    builder.add_node("orchestrator_agent", run_orchestrator_agent)
     builder.add_node("ask_user", ask_user)
     builder.add_node("city_agent", run_city_agent)
-    builder.add_node("synthesiser_agent", run_synthesiser_agent)
-    builder.add_edge(START, "intake_agent")
-    # The list names the nodes route_after_intake MAY start: ask_user, or city_agent once per city.
-    builder.add_conditional_edges("intake_agent", route_after_intake, ["ask_user", "city_agent"])
-    builder.add_edge("ask_user", "intake_agent")
-    builder.add_edge("city_agent", "synthesiser_agent")
-    builder.add_edge("synthesiser_agent", END)
+    builder.add_node("recommender_agent", run_recommender_agent)
+    builder.add_edge(START, "orchestrator_agent")
+    # The list names the nodes route_after_orchestrator MAY start: ask_user, or city_agent once per city.
+    builder.add_conditional_edges("orchestrator_agent", route_after_orchestrator, ["ask_user", "city_agent"])
+    builder.add_edge("ask_user", "orchestrator_agent")
+    builder.add_edge("city_agent", "recommender_agent")
+    builder.add_edge("recommender_agent", END)
     # The checkpointer keeps the state of each conversation, so a paused run can continue after the answer.
     # The serializer may read our own Pydantic classes back from the checkpoint.
     serde = JsonPlusSerializer(allowed_msgpack_modules=[

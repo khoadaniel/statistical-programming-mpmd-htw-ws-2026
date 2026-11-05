@@ -15,33 +15,33 @@ A small web page that runs the trip planner of workbook 05 as one LangGraph grap
 | cities: one to four cities to compare | yes | the graph asks you, and names the cities of the travel guide: Prague, Vienna, Dresden |
 | nights | no | 1 night |
 
-The dates are always the coming weekend. The planner never guesses people, budget or cities: the intake agent writes down only what you said, and the Python function `missing_items` decides what is missing. More than four cities? The graph asks you to choose four.
+The dates are always the coming weekend. The planner never guesses people, budget or cities: the orchestrator agent writes down only what you said, and the Python function `missing_items` decides what is missing. More than four cities? The graph asks you to choose four.
 
-**One city or several.** The graph starts one city agent per city, all at the same time. With one city, the synthesiser agent says whether the trip fits the budget; with several, it recommends one. Only Prague, Vienna and Dresden have prices in the travel guide. Another city gets the weather, but its prices are unknown, so it cannot be checked against the budget.
+**One city or several.** The graph starts one city agent per city, all at the same time. With one city, the recommender agent says whether the trip fits the budget; with several, it recommends one. Only Prague, Vienna and Dresden have prices in the travel guide. Another city gets the weather, but its prices are unknown, so it cannot be checked against the budget.
 
 ## The graph
 
 ```mermaid
 flowchart LR
-    start_node([START]) --> intake_agent["Intake agent<br/>no tools, response_format=TripRequest"]
-    intake_agent --> route{"route_after_intake<br/>conditional edge"}
+    start_node([START]) --> orchestrator_agent["Orchestrator agent<br/>no tools, response_format=TripRequest"]
+    orchestrator_agent --> route{"route_after_orchestrator<br/>conditional edge"}
     route -. "people, budget or cities missing" .-> ask_user["Ask user<br/>interrupt(): pauses for your answer"]
-    ask_user -- "your answer" --> intake_agent
+    ask_user -- "your answer" --> orchestrator_agent
     route -. "Send: one per city" .-> city_prague["City agent: Prague<br/>4 tools"]
     route -. "Send" .-> city_vienna["City agent: Vienna<br/>4 tools"]
     route -. "Send" .-> city_dresden["City agent: Dresden<br/>4 tools"]
     city_prague -- "reports: [Prague]" --> reducer[["reducer on state.reports<br/>operator.add joins the lists"]]
     city_vienna -- "reports: [Vienna]" --> reducer
     city_dresden -- "reports: [Dresden]" --> reducer
-    reducer --> synthesiser_agent["Synthesiser agent<br/>no tools, recommends one city"]
-    synthesiser_agent --> end_node([END])
+    reducer --> recommender_agent["Recommender agent<br/>no tools, recommends one city"]
+    recommender_agent --> end_node([END])
 
     classDef agent fill:#e3f3ea,stroke:#1f7a4d,color:#1b3428
     classDef human fill:#fbeee2,stroke:#b85500,color:#5a2a00
     classDef edgefn fill:#e5eef9,stroke:#2f6db3,color:#1c2a3b
     classDef reducerfn fill:#efe7f8,stroke:#7a4fb0,color:#3a2257
     classDef terminal fill:#eef0ef,stroke:#8a9190,color:#24292b
-    class intake_agent,city_prague,city_vienna,city_dresden,synthesiser_agent agent
+    class orchestrator_agent,city_prague,city_vienna,city_dresden,recommender_agent agent
     class ask_user human
     class route edgefn
     class reducer reducerfn
@@ -52,19 +52,19 @@ flowchart LR
 |---|---|
 | green | an **agent**, built with `create_agent` |
 | orange | **Ask user**: not an agent; `interrupt()` pauses the graph until you answer |
-| blue | the **conditional edge** `route_after_intake`: a function, not a node |
+| blue | the **conditional edge** `route_after_orchestrator`: a function, not a node |
 | purple | the **reducer** on `state.reports`: a rule on the state, not a node |
 
 The diagram shows three cities; the number of city agents is the number of cities in your request.
 
 | Part | In the code | From workbook 05 |
 |---|---|---|
-| Intake agent | node `intake_agent`; `create_agent(..., response_format=TripRequest)` | the orchestrator agent of Step 8 |
-| Conditional edge | `route_after_intake`: `"ask_user"` or one `Send("city_agent", CityJob(...))` per city | Lesson 2 of Step 8 |
+| Orchestrator agent | node `orchestrator_agent`; `create_agent(..., response_format=TripRequest)` | Step 8 |
+| Conditional edge | `route_after_orchestrator`: `"ask_user"` or one `Send("city_agent", CityJob(...))` per city | Lesson 2 of Step 8 |
 | Ask user | node `ask_user`; `interrupt()` and `Command(resume=answer)` | new: human in the loop |
 | City agent | node `city_agent`; the four tools of Part 1 | Step 8 |
 | Reducer | `reports: Annotated[list[CityReport], operator.add]` | Lesson 1 of Step 8 |
-| Synthesiser agent | node `synthesiser_agent`; no tools | Step 8 |
+| Recommender agent | node `recommender_agent`; no tools | the synthesiser agent of Step 8 |
 
 ## The page
 

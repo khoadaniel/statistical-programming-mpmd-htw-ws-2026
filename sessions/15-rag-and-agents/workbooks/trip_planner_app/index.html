@@ -44,7 +44,13 @@ header .spacer { flex: 1; }
 button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; }
 button.primary { background: var(--run); border-color: var(--run); color: #fff; }
 button:disabled { opacity: .5; cursor: default; }
-main { display: grid; grid-template-columns: 330px minmax(0, 1fr) 400px; gap: 14px; padding: 14px; flex: 1; min-height: 0; }
+main { --chat-w: 330px; --side-w: 400px; display: grid; grid-template-columns: var(--chat-w) 14px minmax(0, 1fr) 14px var(--side-w); padding: 14px; flex: 1; min-height: 0; }
+
+/* drag handles between the panels: drag left or right to make the chat or the inspect panel wider or narrower; double-click to reset */
+.gutter { cursor: col-resize; position: relative; touch-action: none; }
+.gutter::after { content: ""; position: absolute; top: 0; bottom: 0; left: 5px; width: 4px; background: transparent; transition: background .15s; }
+.gutter:hover::after, .gutter.dragging::after { background: var(--line); }
+body.resizing { cursor: col-resize; user-select: none; }
 
 /* the intro: what the planner is for, what it needs, what it does with several cities */
 #intro { background: var(--panel); border-bottom: 1px solid var(--line); padding: 0 20px; }
@@ -167,7 +173,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 @media (max-width: 1150px) {
   body { height: auto; }
   #intro .cols { grid-template-columns: 1fr 1fr; }
-  main { grid-template-columns: 1fr; }
+  main { grid-template-columns: 1fr; gap: 14px; }
+  .gutter { display: none; }
   #messages { max-height: 340px; }
   .tab { max-height: 560px; }
   header p { display: none; }
@@ -183,7 +190,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 <header>
   <div>
     <h1>Trip planner: a team of agents in LangGraph</h1>
-    <p>Workbook 05, Step 8, live: the intake agent reads your request, the city agents work in parallel, the reducer joins their reports, and the synthesiser agent recommends one city.</p>
+    <p>Workbook 05, Step 8, live: the orchestrator agent reads your request, the city agents work in parallel, the reducer joins their reports, and the recommender agent recommends one city.</p>
   </div>
   <div class="spacer"></div>
   <button id="replay" title="Play back a recorded run, without an API key">Watch a recorded run</button>
@@ -218,7 +225,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
       <h3>One city or several</h3>
       <ul>
         <li>One <b>city agent per city</b>, all at the same time; the reducer joins their reports.</li>
-        <li>One city: the synthesiser agent says whether it fits the budget. Several: it recommends one.</li>
+        <li>One city: the recommender agent says whether it fits the budget. Several: it recommends one.</li>
         <li>A city outside the guide gets the weather, but its prices are unknown, so it cannot be checked against the budget.</li>
       </ul>
     </div>
@@ -243,6 +250,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
     </div>
   </section>
 
+  <div class="gutter" data-var="--chat-w" data-dir="1" title="Drag to resize the chat. Double-click to reset."></div>
+
   <section id="center">
     <!-- 2 graph -->
     <div class="panel" id="graph-panel">
@@ -263,6 +272,8 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
     </div>
   </section>
 
+  <div class="gutter" data-var="--side-w" data-dir="-1" title="Drag to resize the panel. Double-click to reset."></div>
+
   <!-- 4 inspect -->
   <section class="panel" id="side">
     <div class="panel-head"><span class="num">4</span><div><h2>Inside the graph</h2><p>The shared state, each agent's trace, and the selected node</p></div></div>
@@ -282,26 +293,26 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 
 // ---------- names and explanations ----------
 // The name of each node in the graph, as the page shows it.
-const NAMES = { intake_agent: "Intake agent", ask_user: "Ask user", city_agent: "City agent", synthesiser_agent: "Synthesiser agent" };
+const NAMES = { orchestrator_agent: "Orchestrator agent", ask_user: "Ask user", city_agent: "City agent", recommender_agent: "Recommender agent" };
 function taskName(task) { return (NAMES[task.node] || task.node) + (task.city ? " · " + task.city : ""); }
 
 const NODE_INFO = {
-  START: { title: "START", text: "The entry of the graph. <code>graph.stream({\"request\": ...})</code> writes your text into <code>state.request</code>; the edge leads to the intake agent.",
-    code: 'builder.add_edge(START, "intake_agent")' },
-  intake_agent: { title: "Intake agent (node intake_agent)", text: "An agent with <b>no tools</b>. It reads your text and fills in a <code>TripRequest</code>: people, budget, nights and the cities <b>you</b> name; it never picks cities itself. <code>response_format=TripRequest</code> makes its answer fit the schema. Whether something is missing is checked in Python afterwards, by <code>missing_items</code>, not by the model.",
-    code: 'intake_agent = create_agent(model=model, tools=[], system_prompt=INTAKE_RULES,\n                            response_format=TripRequest)\n\ndef run_intake_agent(state: PlannerState) -> dict:\n    result = intake_agent.invoke({"messages": [("user", state.request)]})\n    return {"trip": result["structured_response"]}' },
-  route: { title: "route_after_intake (conditional edge)", text: "Not a node: a function on the edge after the intake agent. It returns <code>\"ask_user\"</code> if people, budget or cities are missing, or if there are more than four cities; otherwise one <code>Send</code> per city. The list <code>[\"ask_user\", \"city_agent\"]</code> names the nodes it <b>may</b> start; on every run it decides which ones do.",
-    code: 'def route_after_intake(state):\n    if missing_items(state.trip):\n        return "ask_user"\n    return [Send("city_agent", CityJob(city=city, trip=state.trip))\n            for city in state.trip.cities]\n\nbuilder.add_conditional_edges("intake_agent", route_after_intake,\n                              ["ask_user", "city_agent"])' },
-  ask_user: { title: "Ask user (node ask_user, not an agent)", text: "Not an agent: the question is built in Python from the missing items, so it is the same every time. <code>interrupt()</code> pauses the graph and sends the question to you. The checkpointer saves the state under your <code>thread_id</code>. Your answer continues the run with <code>Command(resume=answer)</code>; the node adds it to the request, and the edge leads back to the intake agent.",
-    code: 'def ask_user(state):\n    answer = interrupt({"question": question})\n    return {"request": f"{state.request}\\nAnswer: {answer}"}\n\nbuilder.add_edge("ask_user", "intake_agent")\n# later, with the answer:\ngraph.stream(Command(resume=answer), config)' },
+  START: { title: "START", text: "The entry of the graph. <code>graph.stream({\"request\": ...})</code> writes your text into <code>state.request</code>; the edge leads to the orchestrator agent.",
+    code: 'builder.add_edge(START, "orchestrator_agent")' },
+  orchestrator_agent: { title: "Orchestrator agent (node orchestrator_agent)", text: "An agent with <b>no tools</b>. It reads your text and fills in a <code>TripRequest</code>: people, budget, nights and the cities <b>you</b> name; it never picks cities itself. <code>response_format=TripRequest</code> makes its answer fit the schema. Whether something is missing is checked in Python afterwards, by <code>missing_items</code>, not by the model.",
+    code: 'orchestrator_agent = create_agent(model=model, tools=[], system_prompt=ORCHESTRATOR_RULES,\n                            response_format=TripRequest)\n\ndef run_orchestrator_agent(state: PlannerState) -> dict:\n    result = orchestrator_agent.invoke({"messages": [("user", state.request)]})\n    return {"trip": result["structured_response"]}' },
+  route: { title: "route_after_orchestrator (conditional edge)", text: "Not a node: a function on the edge after the orchestrator agent. It returns <code>\"ask_user\"</code> if people, budget or cities are missing, or if there are more than four cities; otherwise one <code>Send</code> per city. The list <code>[\"ask_user\", \"city_agent\"]</code> names the nodes it <b>may</b> start; on every run it decides which ones do.",
+    code: 'def route_after_orchestrator(state):\n    if missing_items(state.trip):\n        return "ask_user"\n    return [Send("city_agent", CityJob(city=city, trip=state.trip))\n            for city in state.trip.cities]\n\nbuilder.add_conditional_edges("orchestrator_agent", route_after_orchestrator,\n                              ["ask_user", "city_agent"])' },
+  ask_user: { title: "Ask user (node ask_user, not an agent)", text: "Not an agent: the question is built in Python from the missing items, so it is the same every time. <code>interrupt()</code> pauses the graph and sends the question to you. The checkpointer saves the state under your <code>thread_id</code>. Your answer continues the run with <code>Command(resume=answer)</code>; the node adds it to the request, and the edge leads back to the orchestrator agent.",
+    code: 'def ask_user(state):\n    answer = interrupt({"question": question})\n    return {"request": f"{state.request}\\nAnswer: {answer}"}\n\nbuilder.add_edge("ask_user", "orchestrator_agent")\n# later, with the answer:\ngraph.stream(Command(resume=answer), config)' },
   city_agent: { title: "City agent (node city_agent, once per Send)", text: "The same node runs once per <code>Send</code>, each time with its own <code>CityJob</code>. All runs are in the same step, so the city agents work at the same time. Each one has four tools and returns a list with <b>one</b> report.",
     code: 'city_agent = create_agent(model=model,\n    tools=[next_weekend, weather_forecast, search_trip_guide, budget_per_person],\n    system_prompt=CITY_RULES)\n\ndef run_city_agent(job: CityJob) -> dict:\n    result = city_agent.invoke({"messages": [("user", brief)]})\n    return {"reports": [CityReport(city=job.city, report=...)]}' },
   reducer: { title: "The reducer on state.reports (not a node)", text: "A rule on the state field <code>reports</code>. The city agents write to it in the same step. <code>operator.add</code> joins their lists: <code>[Prague] + [Dresden]</code>. Without the reducer, LangGraph would stop with <code>InvalidUpdateError</code>, because a field can take only one value per step.",
     code: 'class PlannerState(BaseModel):\n    request: str\n    trip: TripRequest | None = None\n    reports: Annotated[list[CityReport], operator.add] = []\n    recommendation: str = ""' },
-  synthesiser_agent: { title: "Synthesiser agent (node synthesiser_agent)", text: "An agent with <b>no tools</b>. It starts only after <b>every</b> city agent has finished, reads all reports from the state and recommends one city.",
-    code: 'builder.add_edge("city_agent", "synthesiser_agent")\n\ndef run_synthesiser_agent(state):\n    result = synthesiser_agent.invoke({"messages": [("user", reports)]})\n    return {"recommendation": result["messages"][-1].text}' },
+  recommender_agent: { title: "Recommender agent (node recommender_agent)", text: "An agent with <b>no tools</b>. It starts only after <b>every</b> city agent has finished, reads all reports from the state and recommends one city.",
+    code: 'builder.add_edge("city_agent", "recommender_agent")\n\ndef run_recommender_agent(state):\n    result = recommender_agent.invoke({"messages": [("user", reports)]})\n    return {"recommendation": result["messages"][-1].text}' },
   END: { title: "END", text: "The exit of the graph. The final state holds the request, the plan, all reports and the recommendation.",
-    code: 'builder.add_edge("synthesiser_agent", END)' },
+    code: 'builder.add_edge("recommender_agent", END)' },
 };
 
 const EXAMPLES = [
@@ -375,16 +386,16 @@ function drawGraph() {
   const count = lanes.length || 2;
   // edges first, so the nodes are drawn on top
   edge("e-start", "M64,170 L88,170");
-  edge("e-intake-route", "M242,170 L284,170");
+  edge("e-orchestrator-route", "M242,170 L284,170");
   edge("e-route-ask", "M320,206 C320,300 300,350 244,350", true);
-  edge("e-ask-intake", "M150,318 L150,202");
+  edge("e-ask-orchestrator", "M150,318 L150,202");
   for (let i = 0; i < count; i++) {
     const y = laneY(i, count);
     edge(`e-send-${i}`, `M356,170 C390,170 390,${y} ${LANE.x - 2},${y}`, true);
     edge(`e-lane-${i}`, `M${LANE.x + LANE.w},${y} C650,${y} 650,170 676,170`);
   }
-  edge("e-reducer-synth", "M724,170 L756,170");
-  edge("e-synth-end", "M918,170 L944,170");
+  edge("e-reducer-rec", "M724,170 L756,170");
+  edge("e-rec-end", "M918,170 L944,170");
 
   label(320, 124, "conditional edge", "middle");
   label(258, 300, "missing?", "middle");
@@ -395,7 +406,7 @@ function drawGraph() {
 
   // nodes
   squareNode("START", 42, MID, "START");
-  boxNode("intake_agent", 90, MID - 30, 152, 60, "Intake agent", "no tools, structured output");
+  boxNode("orchestrator_agent", 90, MID - 30, 152, 60, "Orchestrator agent", "no tools, structured output");
   boxNode("ask_user", 90, 320, 152, 60, "Ask user", "interrupt(): asks you");
   diamond("route", 320, MID);
   for (let i = 0; i < count; i++) {
@@ -412,7 +423,7 @@ function drawGraph() {
   el("rect", { x: 678, y: MID - 22, width: 44, height: 44 }, reducer);
   const plus = el("text", { x: 700, y: MID + 7, "text-anchor": "middle", "font-size": 22 }, reducer);
   plus.textContent = "+";
-  boxNode("synthesiser_agent", 758, MID - 30, 160, 60, "Synthesiser agent", "no tools, recommends");
+  boxNode("recommender_agent", 758, MID - 30, 160, 60, "Recommender agent", "no tools, recommends");
   squareNode("END", 966, MID, "END");
 
   // keep the status of the fixed nodes after a redraw
@@ -518,13 +529,13 @@ function onTaskStart(e) {
   order.push(e.task_id);
   setStatus(`Step ${step}: ${taskName(tasks[e.task_id])} is running`, "running");
 
-  if (e.node === "intake_agent") {
+  if (e.node === "orchestrator_agent") {
     setNode("START", "done");
-    travel(nodeRuns.intake_agent > 1 ? "e-ask-intake" : "e-start");
+    travel(nodeRuns.orchestrator_agent > 1 ? "e-ask-orchestrator" : "e-start");
     if (nodeStatus.ask_user === "waiting") setNode("ask_user", "done");
-    setNode("intake_agent", "running");
+    setNode("orchestrator_agent", "running");
   } else if (e.node === "ask_user") {
-    travel("e-intake-route"); setTimeout(() => travel("e-route-ask"), 300);
+    travel("e-orchestrator-route"); setTimeout(() => travel("e-route-ask"), 300);
     setNode("route", "done");
     setNode("ask_user", "running");
   } else if (e.node === "city_agent") {
@@ -532,11 +543,11 @@ function onTaskStart(e) {
     setNode("route", "done");
     drawGraph();
     const i = lanes.indexOf(e.task_id);
-    travel("e-intake-route");
+    travel("e-orchestrator-route");
     setTimeout(() => travel(`e-send-${i}`), 300);
-  } else if (e.node === "synthesiser_agent") {
-    travel("e-reducer-synth");
-    setNode("synthesiser_agent", "running");
+  } else if (e.node === "recommender_agent") {
+    travel("e-reducer-rec");
+    setNode("recommender_agent", "running");
   }
   renderTraces(); renderTimeline();
 }
@@ -553,7 +564,7 @@ function onTaskEnd(e) {
   } else {
     setNode(e.node, task.status);
   }
-  if (e.node === "synthesiser_agent") { travel("e-synth-end"); setTimeout(() => setNode("END", "done"), 500); }
+  if (e.node === "recommender_agent") { travel("e-rec-end"); setTimeout(() => setNode("END", "done"), 500); }
   if (e.error) task.trace.push({ kind: "error", text: e.error });
   renderTraces(); renderTimeline();
 }
@@ -571,7 +582,7 @@ function onInner(e) {
 
 function onUpdate(e) {
   const u = e.update || {};
-  if (e.node === "intake_agent") planState.trip = u.trip;
+  if (e.node === "orchestrator_agent") planState.trip = u.trip;
   if (e.node === "ask_user" && u.request) planState.request = u.request;
   if (e.node === "city_agent" && u.reports) {
     // The reducer at work: the new list is added to the old one.
@@ -581,7 +592,7 @@ function onUpdate(e) {
     setNode("reducer", "done");
     setTimeout(() => flash("reducer"), 500);
   }
-  if (e.node === "synthesiser_agent") planState.recommendation = u.recommendation;
+  if (e.node === "recommender_agent") planState.recommendation = u.recommendation;
   renderState(e.node === "city_agent" ? planState.reports.length - 1 : -1);
 }
 
@@ -596,7 +607,7 @@ function onDone(e) {
   if (!e.paused) {
     tripFinished = true;
     setStatus("Finished. Send a new message to plan another trip.", "");
-    if (planState.recommendation) addMessage("final", "Recommendation of the synthesiser agent", md(planState.recommendation));
+    if (planState.recommendation) addMessage("final", "Recommender agent", md(planState.recommendation));
   }
   renderTimeline();
 }
@@ -604,7 +615,7 @@ function onDone(e) {
 // ---------- panel 4: state, traces, node ----------
 function renderState(newIndex) {
   const trip = planState.trip;
-  let tripHtml = '<div class="box empty">Not set yet: the intake agent writes it.</div>';
+  let tripHtml = '<div class="box empty">Not set yet: the orchestrator agent writes it.</div>';
   if (trip) {
     const row = (k, v, missing) => `<tr><td>${k}</td><td class="${missing ? "missing" : ""}">${missing ? "missing" : esc(v)}</td></tr>`;
     tripHtml = `<div class="box"><table class="kv">
@@ -619,10 +630,10 @@ function renderState(newIndex) {
     : '<div class="box empty">[] : each city agent adds a list with one report.</div>';
   $("tab-state").innerHTML = `
     <div class="field"><div class="key"><b>request</b>: str</div><div class="box ${planState.request ? "" : "empty"}">${planState.request ? esc(planState.request).replace(/\n/g, "<br>") : "Your text goes here."}</div></div>
-    <div class="field"><div class="key"><b>trip</b>: TripRequest, written by the intake agent</div>${tripHtml}</div>
+    <div class="field"><div class="key"><b>trip</b>: TripRequest, written by the orchestrator agent</div>${tripHtml}</div>
     <div class="field"><div class="key"><b>reports</b>: Annotated[list[CityReport], operator.add]</div>
       ${lastReducer ? `<div class="reducer-line">${esc(lastReducer)}</div>` : ""}${reports}</div>
-    <div class="field"><div class="key"><b>recommendation</b>: str, written by the synthesiser agent</div><div class="box ${planState.recommendation ? "" : "empty"}">${planState.recommendation ? md(planState.recommendation) : "Empty until the synthesiser agent runs."}</div></div>`;
+    <div class="field"><div class="key"><b>recommendation</b>: str, written by the recommender agent</div><div class="box ${planState.recommendation ? "" : "empty"}">${planState.recommendation ? md(planState.recommendation) : "Empty until the recommender agent runs."}</div></div>`;
 }
 
 function renderTraces() {
@@ -822,6 +833,38 @@ for (const text of EXAMPLES) {
   b.addEventListener("click", () => { $("input").value = text; $("input").focus(); });
   $("examples").appendChild(b);
 }
+// Drag handles: resize the chat (left) and the inspect panel (right); the widths are remembered in this browser.
+const mainEl = document.querySelector("main");
+const WIDTH_DEFAULTS = { "--chat-w": 330, "--side-w": 400 };
+function setWidth(name, px) {
+  const other = name === "--chat-w" ? "--side-w" : "--chat-w";
+  const otherPx = parseFloat(getComputedStyle(mainEl).getPropertyValue(other)) || WIDTH_DEFAULTS[other];
+  const max = mainEl.clientWidth - otherPx - 28 - 28 - 360;  // keep at least 360px for the graph
+  px = Math.round(Math.max(220, Math.min(px, max)));
+  mainEl.style.setProperty(name, px + "px");
+  try { localStorage.setItem("trip-planner" + name, px); } catch (e) {}
+}
+for (const name of Object.keys(WIDTH_DEFAULTS)) {
+  try { const saved = localStorage.getItem("trip-planner" + name); if (saved) mainEl.style.setProperty(name, saved + "px"); } catch (e) {}
+}
+document.querySelectorAll(".gutter").forEach(g => {
+  g.addEventListener("pointerdown", ev => {
+    ev.preventDefault();
+    g.setPointerCapture(ev.pointerId);
+    const name = g.dataset.var, dir = Number(g.dataset.dir);
+    const startX = ev.clientX;
+    const startW = parseFloat(getComputedStyle(mainEl).getPropertyValue(name));
+    g.classList.add("dragging"); document.body.classList.add("resizing");
+    const move = e => setWidth(name, startW + dir * (e.clientX - startX));
+    const up = () => {
+      g.classList.remove("dragging"); document.body.classList.remove("resizing");
+      g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up);
+    };
+    g.addEventListener("pointermove", move); g.addEventListener("pointerup", up);
+  });
+  g.addEventListener("dblclick", () => setWidth(g.dataset.var, WIDTH_DEFAULTS[g.dataset.var]));
+});
+
 resetTrip();
 // Links such as index.html#replay or #node=city_agent open the page in that state.
 if (location.hash === "#replay") replay();

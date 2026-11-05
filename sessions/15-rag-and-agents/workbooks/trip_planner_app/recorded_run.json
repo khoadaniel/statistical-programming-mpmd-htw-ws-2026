@@ -6,7 +6,7 @@
    "events": [
     {
      "type": "task_start",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "task_id": "d5ea493f-6e54-7c86-85f1-2ab04e8dc168",
      "input": {
       "request": "Three of us want to get out of Berlin this weekend. Ideas?",
@@ -17,13 +17,13 @@
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "d5ea493f-6e54-7c86-85f1-2ab04e8dc168",
      "kind": "model_call"
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "d5ea493f-6e54-7c86-85f1-2ab04e8dc168",
      "kind": "model",
      "text": "",
@@ -40,7 +40,7 @@
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "d5ea493f-6e54-7c86-85f1-2ab04e8dc168",
      "kind": "tool_result",
      "tool": "TripRequest",
@@ -48,7 +48,7 @@
     },
     {
      "type": "update",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "update": {
       "trip": {
        "people": 3,
@@ -60,7 +60,7 @@
     },
     {
      "type": "task_end",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "task_id": "d5ea493f-6e54-7c86-85f1-2ab04e8dc168",
      "error": null,
      "result": {
@@ -159,7 +159,7 @@
     },
     {
      "type": "task_start",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "task_id": "59daf902-ae6c-e8c6-06df-67609d6b682f",
      "input": {
       "request": "Three of us want to get out of Berlin this weekend. Ideas?\nAnswer to \"Please tell me the total budget for the whole group, in euros; and which cities to compare: our travel guide has prices for Prague, Vienna and Dresden (name one or more, or say \"all three\").\": 450 EUR in total, compare all three",
@@ -175,13 +175,13 @@
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "59daf902-ae6c-e8c6-06df-67609d6b682f",
      "kind": "model_call"
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "59daf902-ae6c-e8c6-06df-67609d6b682f",
      "kind": "model",
      "text": "",
@@ -203,7 +203,7 @@
     },
     {
      "type": "inner",
-     "parent": "intake_agent",
+     "parent": "orchestrator_agent",
      "task_id": "59daf902-ae6c-e8c6-06df-67609d6b682f",
      "kind": "tool_result",
      "tool": "TripRequest",
@@ -211,7 +211,7 @@
     },
     {
      "type": "update",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "update": {
       "trip": {
        "people": 3,
@@ -227,7 +227,7 @@
     },
     {
      "type": "task_end",
-     "node": "intake_agent",
+     "node": "orchestrator_agent",
      "task_id": "59daf902-ae6c-e8c6-06df-67609d6b682f",
      "error": null,
      "result": {
@@ -696,7 +696,7 @@
     },
     {
      "type": "task_start",
-     "node": "synthesiser_agent",
+     "node": "recommender_agent",
      "task_id": "75d5b7d4-3c07-aae8-9ee1-0a25dc4a7f3d",
      "input": {
       "request": "Three of us want to get out of Berlin this weekend. Ideas?\nAnswer to \"Please tell me the total budget for the whole group, in euros; and which cities to compare: our travel guide has prices for Prague, Vienna and Dresden (name one or more, or say \"all three\").\": 450 EUR in total, compare all three",
@@ -729,13 +729,13 @@
     },
     {
      "type": "inner",
-     "parent": "synthesiser_agent",
+     "parent": "recommender_agent",
      "task_id": "75d5b7d4-3c07-aae8-9ee1-0a25dc4a7f3d",
      "kind": "model_call"
     },
     {
      "type": "inner",
-     "parent": "synthesiser_agent",
+     "parent": "recommender_agent",
      "task_id": "75d5b7d4-3c07-aae8-9ee1-0a25dc4a7f3d",
      "kind": "model",
      "text": "**Recommendation: Dresden.** All three trips fit the 450 EUR budget (150 EUR per person):\n- **Dresden:** 50 EUR per person for fare and bed, leaving 100 EUR. Shortest bus ride (about 2.5 hours), with free Elbe meadow and Neustadt walks.\n- **Prague:** 65 EUR per person, leaving 85 EUR. About 4.5 hours by bus.\n- **Vienna:** 105 EUR per person, leaving 45 EUR. About 9.5 hours by bus.",
@@ -743,14 +743,14 @@
     },
     {
      "type": "update",
-     "node": "synthesiser_agent",
+     "node": "recommender_agent",
      "update": {
       "recommendation": "**Recommendation: Dresden.** All three trips fit the 450 EUR budget (150 EUR per person):\n- **Dresden:** 50 EUR per person for fare and bed, leaving 100 EUR. Shortest bus ride (about 2.5 hours), with free Elbe meadow and Neustadt walks.\n- **Prague:** 65 EUR per person, leaving 85 EUR. About 4.5 hours by bus.\n- **Vienna:** 105 EUR per person, leaving 45 EUR. About 9.5 hours by bus."
      }
     },
     {
      "type": "task_end",
-     "node": "synthesiser_agent",
+     "node": "recommender_agent",
      "task_id": "75d5b7d4-3c07-aae8-9ee1-0a25dc4a7f3d",
      "error": null,
      "result": {
