@@ -36,6 +36,7 @@ Team repository from the template, with branch protection and CI (exercise 2.5).
 - The [workspace](workspace/README.md) is its own uv project: `cd sessions/02-software-engineering/workspace`, then `uv run pytest -q`. Its command `listing-summary` reads the case-study listings: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
 - The [CLI workspace](cli-workspace/README.md) is a second, tiny uv project with no data: the command `staycost` built in the seven steps of block 2. `cd sessions/02-software-engineering/cli-workspace`, then `uv run staycost 80 --nights 3`.
 - The [supermarket challenge](supermarket-challenge/README.md) is a third uv project: HTW Markt, a small shop in plain classes, with three short tasks on inheritance, an abstract class and your own exception. `cd sessions/02-software-engineering/supermarket-challenge`, then `uv run htw-checkout ana`.
+- The [Git workspace](git-workspace/README.md) holds four small classes for the team activity at the end of the Git deck: in pairs, you share one fork, open pull requests that merge cleanly, then resolve a conflict on the same line. Run it with `python3 main.py`; no uv needed.
 - The notebooks contain Mermaid diagrams: VS Code shows them with the extension *Markdown Mermaid* (`bierner.markdown-mermaid`); JupyterLab 4.1 and newer renders them without an extension.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

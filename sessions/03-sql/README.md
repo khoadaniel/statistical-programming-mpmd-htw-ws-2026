@@ -10,7 +10,7 @@
 - Primary keys, foreign keys and relationships, checked on the course data; normalisation, star and snowflake schemas.
 - SQLite as a database in one file: connections, `sqlite_master`, database browsers.
 - `CREATE TABLE` with constraints, `INSERT`, and the SQLite equivalents of `COPY`.
-- `SELECT`, `WHERE`, `ORDER BY`, `LIMIT` and the logical order of the clauses.
+- `SELECT`, `WHERE`, `ORDER BY`, `LIMIT` and the logical order of the clauses; text patterns with `LIKE`, `GLOB` and `REGEXP`.
 - NULL values and three-valued logic.
 - Worked example: a weekend flat for a family.
 
