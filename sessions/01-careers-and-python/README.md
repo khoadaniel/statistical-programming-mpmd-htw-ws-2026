@@ -36,6 +36,28 @@
 - Method chaining, and tips for using AI coding assistants.
 - Worked example: five questions about the Berlin listings.
 
+## 4 · Reshaping tables: crosstab, melt, pivot and pivot_table
+
+[Open notebook](workbooks/04-lecture-reshaping-tables.ipynb)
+
+- Long and wide tables, and which tool goes which way.
+- `crosstab`: counts of category pairs, totals with `margins`, shares with `normalize`, other summaries.
+- `melt`: column names become values; its four parameters.
+- `pivot`: values become column names; the duplicates rule; the round trip with `melt`.
+- `pivot_table`: pivot that aggregates; `margins`, `fill_value`, several statistics; `pivot_table` as a `groupby`.
+- Worked example: room types across the Berlin districts.
+
+## 5 · Plotting with pandas
+
+[Open notebook](workbooks/05-lecture-plotting-with-pandas.ipynb)
+
+- The generic plot call `data.plot.kind(options)` and what goes on each axis.
+- Histograms and box plots by group, scatter plots with colour, a map from longitude and latitude.
+- Bar charts of counts, stacked bars from a cross table, line charts with a rolling mean.
+- Several panels: `subplots` and `layout`, shared bins, `DataFrame.hist`, the scatter matrix.
+- Styling: title, labels, size, log scale, colours, the Axes after the call, saving a figure.
+- Worked example: where are the expensive listings?
+
 ## Team project until the next session
 
 Teams are formed and read the [final project brief](../17-18-final-presentations/final-project.md).
