@@ -1,6 +1,6 @@
-"""Build the course's PostgreSQL database of the Berlin Airbnb case study (pilot).
+"""Build the course's PostgreSQL database of the Berlin Airbnb case study.
 
-The PostgreSQL counterpart of make_airbnb_sqlite.py. It starts (or reuses) a local PostgreSQL server whose
+Session 3 queries the Inside Airbnb Berlin snapshot with SQL. This script starts (or reuses) a local PostgreSQL server whose
 data live in case-study/data/airbnb/pgdata/, creates the database `airbnb` and stores three tables in it:
 
     listings   one row per listing (id is the primary key)
@@ -12,7 +12,7 @@ stays true/false. The rows are loaded with COPY, PostgreSQL's command for bulk l
 
 The server comes from the package pixeltable-pgserver, which ships the PostgreSQL programs as a Python wheel:
 
-    uv run --with pixeltable-pgserver --with "psycopg[binary]" python sessions/03-sql/workbooks/pilot-postgres/make_airbnb_postgres.py
+    uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py
     ... make_airbnb_postgres.py --force      # drop and rebuild the three tables
 
 The output lies in case-study/data/, which is not committed to Git.
@@ -30,7 +30,7 @@ import pandas as pd
 import pixeltable_pgserver as pgserver
 import psycopg
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 PARQUET = ROOT / "case-study" / "data" / "airbnb"
 PGDATA = PARQUET / "pgdata"
 DATABASE = "airbnb"

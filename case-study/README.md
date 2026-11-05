@@ -50,7 +50,7 @@ unzip ~/Downloads/ebti-v1.zip -d case-study/data/
 uv run python -c "from pathlib import Path; [print(p) for p in sorted(Path('case-study/data').rglob('*'))]"
 ```
 
-The file names must match the tables below. A common mistake is a doubled folder such as `case-study/data/ebti/ebti/` (the zip was unzipped into a folder of its own): move the inner folder up. Session 3 also builds a SQLite database from the Airbnb files: `uv run python sessions/03-sql/workbooks/make_airbnb_sqlite.py` writes `case-study/data/airbnb/airbnb.sqlite` (about 100 MB). Everything in `case-study/data/` except its README is ignored by Git, so the data stay on your computer.
+The file names must match the tables below. A common mistake is a doubled folder such as `case-study/data/ebti/ebti/` (the zip was unzipped into a folder of its own): move the inner folder up. Session 3 also loads the Airbnb files into a local PostgreSQL database: `uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py` starts the server and stores its data in `case-study/data/airbnb/pgdata/` (about 700 MB). Everything in `case-study/data/` except its README is ignored by Git, so the data stay on your computer.
 
 **Why Parquet and not CSV?** [Parquet](https://parquet.apache.org/) is an open file format for tables that stores each column with its type, compressed. Headings keep their leading zeros (`0901` is coffee; a CSV read back with `pd.read_csv` turns it into the number `901`), dates stay dates, and `decisions.parquet` is about half the size of the same table as CSV. Read a file with `pd.read_parquet(path)`. A Parquet file is binary, so it does not open in a text editor or Excel: use `df.head()`, or write a sample with `df.head(100).to_csv(...)`.
 

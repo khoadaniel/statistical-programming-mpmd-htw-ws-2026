@@ -28,7 +28,7 @@ flowchart LR
 | 0 | [Playground: NumPy, pandas and the Berlin Airbnb data, ready to try](sessions/00-playground/) |
 | 1 | [Data careers, the final project challenge, NumPy and pandas](sessions/01-careers-and-python/) |
 | 2 | [Software engineering for data work](sessions/02-software-engineering/) |
-| 3 | [Relational databases and SQL with SQLite](sessions/03-sql/) |
+| 3 | [Relational databases and SQL with PostgreSQL](sessions/03-sql/) |
 | 4 | [Data quality and preparation](sessions/04-data-quality/) |
 | 5 | [Exploratory analysis and statistics recap](sessions/05-eda-and-statistics/) |
 | 6 | [Introduction to machine learning with regression](sessions/06-regression/) |

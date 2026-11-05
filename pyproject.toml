@@ -12,7 +12,9 @@ dependencies = [
     "pandas>=3.0",
     "pyarrow>=25.0",
     "polars>=2.0",  # used by a few third-party extras and the scikit-learn gallery example in Session 12; not taught
-    "sqlalchemy>=2.1",  # SQL databases from Python (Session 15 extras); the course database is SQLite (sqlite3)
+    "sqlalchemy>=2.1",  # SQL databases from Python (Session 15 extras); the course database is PostgreSQL (psycopg)
+    "pixeltable-pgserver>=0.7.2",  # a local PostgreSQL server started from Python: the course database from Session 3
+    "psycopg[binary]>=3.2",  # the PostgreSQL driver for Python (Session 3 onwards)
     # visualisation and reporting
     "matplotlib>=3.11",
     "seaborn>=0.13",

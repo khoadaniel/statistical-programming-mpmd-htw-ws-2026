@@ -234,7 +234,7 @@ Do it at the start of each session, before an exercise and before you open a not
 ## Later in the course
 
 - **Everything is in one environment.** `uv sync` installs all packages of the course at once, including PyTorch for the language-model sessions; there is nothing to add later. A few optional notebooks in Sessions 12 and 16 need other package versions and run in a temporary environment of their own; their session README gives the command.
-- **Databases** (Session 3 onwards) use SQLite, which is part of Python: there is nothing to install. The deployment session (16) needs [Docker Desktop](https://www.docker.com/products/docker-desktop/); its README gives the commands.
+- **Databases** (Session 3 onwards) use PostgreSQL. The course environment includes it as the package `pixeltable-pgserver`, which starts a local server from Python: there is nothing else to install. The deployment session (16) needs [Docker Desktop](https://www.docker.com/products/docker-desktop/); its README gives the commands.
 - **Language models** (Sessions 14–15) work with a local model through [Ollama](https://ollama.com/) or with any OpenAI-compatible API; see the session READMEs.
 - **Workspaces** (Sessions 2, 15, 16) are small projects with their own environment: `cd sessions/<session>/workspace`, then `uv sync` and `uv run pytest`. Session 2 also has a tiny [CLI workspace](sessions/02-software-engineering/cli-workspace/README.md), the command `staycost`, to try how a script becomes a command.
 
