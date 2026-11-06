@@ -1,0 +1,41 @@
+# pyproject.toml describes the project: its name, what it needs and how to start it.
+# The format is TOML: a line in [square brackets] opens a table (a section), and each line under it
+# is `key = value`. Text is in "quotes", a list is in [square brackets], `#` starts a comment.
+# `uv init --package gradebook` wrote the first version of this file; uv add and uv remove keep it up to date.
+
+# [project]: the facts about the project itself, the same for every tool.
+[project]
+# The project's name. `uv init gradebook` takes it from the folder name you give.
+# It is also the import name (the folder src/gradebook/); a dash in the name becomes an underscore there:
+# the project "my-gradebook" is imported as `my_gradebook`.
+name = "gradebook"
+version = "0.1.0"
+description = "A small student gradebook that shows how modules in a uv project import each other (Session 2)"
+readme = "README.md"
+# The Python versions the project runs on: 3.14 or newer.
+requires-python = ">=3.14"
+# The libraries the project needs to run, with their versions, e.g. ["pandas>=3.0"].
+# Do not edit this list by hand: `uv add pandas` adds a line, `uv remove pandas` removes it.
+dependencies = []
+
+# [project.scripts]: the entry point, the terminal command that starts the app.
+# Read the line as: the command `gradebook` = call the function `main` in the module `gradebook.cli`.
+# The value has the form "module:function": the dotted name of the module, a colon, the function name.
+# `uv sync` (or the first `uv run`) writes a small launcher file .venv/bin/gradebook that makes this call.
+[project.scripts]
+gradebook = "gradebook.cli:main"
+
+# [build-system]: the tool that turns src/gradebook/ into an installable package (the build backend).
+# Here uv's own backend, uv_build; "requires" is a list of version ranges, separated by commas.
+[build-system]
+requires = ["uv_build>=0.9,<0.14"]
+build-backend = "uv_build"
+
+# [dependency-groups]: tools for the people who develop the project, not for its users.
+# `uv add --dev pytest` adds a line to the group "dev"; `uv run` installs this group by default.
+[dependency-groups]
+dev = ["pytest>=9.1"]
+
+# [tool.<name>]: settings for one tool. Here pytest: look for tests in the folder tests/.
+[tool.pytest.ini_options]
+testpaths = ["tests"]

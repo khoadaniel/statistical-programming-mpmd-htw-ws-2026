@@ -35,4 +35,6 @@ Download `ebti-v1.zip` from the course drive and unzip it into `case-study/data/
 - Build the course database once: `uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py` starts a local PostgreSQL server (data in `case-study/data/airbnb/pgdata/`, not committed) and loads the tables into the database `airbnb`. The notebooks run this step themselves; `--force` rebuilds the tables, for example after exercise 2.9.
 - Optional: a database client such as [DBeaver](https://dbeaver.io/) or [pgAdmin](https://www.pgadmin.org/) to look at the tables while the server runs.
 
+[SQL playground](playground/README.md): an empty PostgreSQL server with three small tables (students, courses, scores) to try queries on your own.
+
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)
