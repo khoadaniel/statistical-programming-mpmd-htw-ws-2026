@@ -6,15 +6,15 @@
 
 [Open notebook](workbooks/01-lecture-clustering.ipynb)
 
-- Supervised and unsupervised learning: no target, three kinds of evidence instead of a test score.
+- Supervised and unsupervised learning: no target, no single right clustering; the same customers segmented two ways, and why the people who use the groups decide.
 - Distance, similarity and scaling: Euclidean, Manhattan and cosine side by side; why units decide the result.
 - k-means: computed by hand, as expectation–maximisation, where it fails, digits and colour compression.
-- Choosing the number of clusters: elbow, silhouette and silhouette plots on the Telco customers.
-- From customers to listings: the Berlin listings as six standardised features.
-- Hierarchical clustering and dendrograms: linkages compared, cutting the tree, Ward on the Berlin listings.
-- Density-based clustering: core, border and noise points, DBSCAN hot spots on the map, HDBSCAN, all methods on toy data.
+- Choosing the number of clusters: elbow, silhouette and silhouette plots on the Telco customers; the iris flowers, two groups or three.
+- Hierarchical clustering and dendrograms: linkages compared, Ward on the wine data, cutting the tree.
+- Density-based clustering: core, border and noise points, HDBSCAN, all methods on toy data.
+- The clustering families on the wine data and on two half-moons, in one loop.
 - Evaluating and interpreting clusters: separation, bootstrap stability, the adjusted Rand index.
-- Worked example: what kinds of Airbnb offers exist in Berlin?
+- Worked example: what kinds of Airbnb offers exist in Berlin? From the data to five named offer types, with Ward, k-means, hot spots on the map and DBSCAN.
 
 ## 2 · Dimensionality reduction and anomaly detection
 

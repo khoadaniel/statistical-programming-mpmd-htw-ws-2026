@@ -54,7 +54,7 @@
 - The generic plot call `data.plot.kind(options)` and what goes on each axis.
 - Histograms and box plots by group, scatter plots with colour, a map from longitude and latitude.
 - Bar charts of counts, stacked bars from a cross table, line charts with a rolling mean.
-- Several panels: `subplots` and `layout`, shared bins, `DataFrame.hist`, the scatter matrix.
+- Several panels: `subplots` and `layout`, and a layout that is too small.
 - Styling: title, labels, size, log scale, colours, the Axes after the call, saving a figure.
 - Worked example: where are the expensive listings?
 

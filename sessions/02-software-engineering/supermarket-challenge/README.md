@@ -1,188 +1,216 @@
 # HTW Markt · the code challenge of Session 2
 
-## What this software does
+## The story
 
-HTW Markt is the program behind the till of a small shop on campus. A customer brings a basket; the program finds each product, adds up the prices with VAT, lowers the total with a voucher, prints a receipt and works out the change.
+It is Friday, 18:00, at HTW Markt, the small shop on campus. Every evening the shop throws away the sandwiches it did not sell. The owner wants to change this with two new rules:
 
-You are the new developer. The program already works for most customers, and the owner has three wishes. Each wish practises one idea of this session:
+1. **On its last day, a sandwich costs 30 % less**, so that someone buys it.
+2. **A sandwich past its use-by date is never sold**, because that is not allowed.
 
-| Task | The owner asks | You practise |
-|---|---|---|
-| [1](#task-1--sell-sandwiches-cheaper-on-their-last-day) | "Sell sandwiches 30 % cheaper on their last day." | inheritance and `super()` |
-| [2](#task-2--5-euros-off-from-30-euros) | "Next week: 5 euros off for everyone who spends 30 euros." | an abstract class and polymorphism |
-| [3](#task-3--tell-the-cashier-how-much-change-to-give) | "Tell the cashier how much change to give." | your own exception |
+The till, the program at the checkout, does not know these rules yet. Lina, the last customer of the day, is waiting with two cheese sandwiches that must be eaten today, one egg sandwich from yesterday, a bottle of water and a bag of apples. She pays with a 10-euro note.
 
-You do not start from an empty file. You continue code that someone else wrote, as most developers do, so read it before you change it.
+**Your goal: teach the till the two rules, so that it can serve Lina.** You are the new developer: the program was written by someone else, and you add three small pieces to it.
 
-## Run it
+## Step 1 · See the problem
 
-Run every command from this folder. The first `uv run` creates `.venv` here and installs the project.
+Open a terminal in this folder and ask the till to serve Lina:
 
 ```bash
 cd sessions/02-software-engineering/supermarket-challenge
-uv run htw-checkout ana     # Ana's basket, from data/baskets/ana.yaml
-uv run pytest -q            # 19 passed, 11 skipped: the skipped tests are your three tasks
+uv run htw-checkout lina
 ```
 
+The first `uv run` creates `.venv` in this folder and installs the project. The till answers:
+
 ```
-HTW Markt · Ana · discount: 10 % off
+HTW Markt · Friday, 18:00 · customer: Lina
+
+The till cannot start: the shelf has sandwiches, and the class FreshProduct
+cannot create them yet (Task 1).
+```
+
+The shelf (`data/catalogue.yaml`) has sandwiches on it, and the program does not know how to handle a product with a use-by date. Lina's basket is in `data/baskets/lina.yaml`: open both files and look at them.
+
+## Step 2 · See the goal
+
+When your three tasks are done, the same command prints this:
+
+```
+HTW Markt · Friday, 18:00 · customer: Lina
+
+Not sold: Egg sandwich is past its use-by date          ← Task 2
 
 Qty   Product              Price   Amount
-  1 x Bread                 3.00     3.00
-  2 x Milk 1 l              1.17     2.34
-  6 x Mineral water         0.83     4.98
-  1 x Dish soap             2.32     2.32
+  2 x Cheese sandwich       2.25     4.50               ← Task 1
+  1 x Mineral water         0.83     0.83
+  1 x Apples 1 kg           2.45     2.45
 -----------------------------------------
-Subtotal                            12.64
-Discount                            -1.26
-Total EUR                           11.38
+Total EUR                            7.78
 
-Paid      : 20.00
-Change    : not available yet (Task 3)
+Paid      : 10.00
+Change    : 2.22                                         ← Task 3
 ```
 
-*Price* is the shelf price of one item: bread costs 2.80 EUR net, plus 7 % VAT, so 3.00. Mineral water costs 0.49 net, plus 19 % VAT, plus the 0.25 deposit: 0.83.
+Each task makes one more line of this screen right, and each one practises one idea of this session:
 
-## The code you inherit
+| Task | The till learns to … | You practise |
+|---|---|---|
+| [1](#task-1--sandwiches-cost-less-on-their-last-day) | create sandwiches and lower their price on the last day | inheritance and `super()` |
+| [2](#task-2--never-sell-a-sandwich-past-its-date) | refuse the egg sandwich from yesterday | overriding a method, and your own exception |
+| [3](#task-3--give-lina-her-change) | tell the cashier how much change to give | raising an exception for bad input |
 
-The data lives in YAML files, plain text that Python reads into dictionaries, so the owner can change a price without touching the code:
+## Step 3 · Find your way in the code
 
-```
-supermarket-challenge/
-├── data/
-│   ├── catalogue.yaml      what the shop sells: name, kind, net price
-│   └── baskets/            one file per customer: ana.yaml, cem.yaml
-├── src/supermarket/
-│   ├── products.py         Product (abstract), FoodProduct, NonFoodProduct, BottledDrink
-│   ├── cart.py             ShoppingCart: the items in a list
-│   ├── discounts.py        Discount (abstract), NoDiscount, PercentageDiscount
-│   ├── checkout.py         Checkout, and the shop's exceptions
-│   └── cli.py              the command htw-checkout: reads the files, prints the receipt
-└── tests/                  one test file per module
-```
+You only need four files. They are in `src/supermarket/`:
+
+| File | What it holds | You change it in |
+|---|---|---|
+| `products.py` | the kinds of product and their prices: `FoodProduct`, `BottledDrink`, … and `FreshProduct` | Tasks 1 and 2 |
+| `cart.py` | `ShoppingCart`: the list of items a customer has chosen | (nothing to change) |
+| `checkout.py` | `Checkout`: finds a product, puts it in the cart, takes the payment; the shop's errors | Tasks 2 and 3 |
+| `cli.py` | the command `htw-checkout`: reads the files and prints the screen above | (nothing to change) |
+
+The classes fit together like this. Green ones work already; the dashed orange one is yours.
 
 ```mermaid
-flowchart TB
-    Checkout["<b>Checkout</b><br/>scan(), total(), receipt()<br/>pay(): Task 3"]
+flowchart LR
+    Checkout["<b>Checkout</b><br/>scan(), total(), pay()"]
     Cart["<b>ShoppingCart</b>"]
-    Discount["<b>Discount</b> (abstract)<br/>amount(), apply()"]
-    Product["<b>Product</b> (abstract)<br/>vat_rate(), gross_price()"]
+    Product["<b>Product</b> (abstract)<br/>gross_price(), is_sellable()"]
     Food["FoodProduct"]
-    NonFood["NonFoodProduct"]
-    Drink["BottledDrink"]
-    Fresh["FreshProduct<br/>Task 1"]
-    Percent["PercentageDiscount"]
-    Threshold["ThresholdDiscount<br/>Task 2"]
+    Other["NonFoodProduct,<br/>BottledDrink"]
+    Fresh["<b>FreshProduct</b><br/>Tasks 1 and 2"]
 
     Checkout -->|has a| Cart
-    Checkout -->|has a| Discount
     Cart -->|has many| Product
     Food -->|is a| Product
-    NonFood -->|is a| Product
-    Drink -->|is a| Product
+    Other -->|is a| Product
     Fresh -.->|is a| Food
-    Percent -->|is a| Discount
-    Threshold -.->|is a| Discount
 
-    classDef abstract fill:#dbeafe,stroke:#1d4ed8,color:#111827
     classDef done fill:#dcfce7,stroke:#15803d,color:#111827
     classDef task fill:#ffedd5,stroke:#c2410c,stroke-dasharray:6 4,color:#111827
-    class Product,Discount abstract
-    class Checkout,Cart,Food,NonFood,Drink,Percent done
-    class Fresh,Threshold task
+    class Checkout,Cart,Product,Food,Other done
+    class Fresh task
 ```
 
-Blue boxes are abstract classes, green ones work now, the dashed orange ones are yours. **is a** is inheritance; **has a** is composition. The [practice notebook](../workbooks/03-practice-python-classes.ipynb) builds smaller versions of these classes step by step.
+**is a** means inheritance: a fresh product *is a* food product. **has a** means composition: a checkout *has a* cart. The [practice notebook](../workbooks/03-practice-python-classes.ipynb) builds smaller versions of these classes step by step.
 
-**Before you start**, read `products.py` and answer: which method must every subclass of `Product` write, and what does `BottledDrink.gross_price` add to the price of its parent?
+**Before you start**, open `products.py` and find `BottledDrink`. Its `gross_price()` calls `super().gross_price()`: what does that call return, and what does `BottledDrink` add to it? You write the same pattern in Task 1.
 
-## Tasks
+## How to work on a task
 
-Work in pairs, one task after the other. For each task:
+Work in pairs, one task after the other.
 
-1. Open the file named in the task. The place is marked `Task N`; the docstrings there number the steps.
-2. Replace each `raise NotImplementedError("Task N")` with your code.
-3. Run `uv run pytest -q`. The tests of a task you have not started are listed as **not started yet**; once you write code, they run and pass or fail.
-4. Try the command in *Try it*: the line that said `not available yet (Task N)` now shows your result.
+1. Open the file named in the task. Each place to change is marked `Task N, step k`.
+2. Replace each `raise NotImplementedError("Task N")`, or the comment that marks the place, with your code.
+3. Run the tests: `uv run pytest -q`. At the start you see `13 passed, 12 skipped`. The skipped tests check your tasks: they are listed as **not started yet** until you write code, and then they pass or fail.
+4. Run `uv run htw-checkout lina` and compare the screen with the goal above.
 
-You never need to edit the test files. When all three tasks are done, `uv run pytest -q` reports 30 passed.
+You never need to edit the test files. When all three tasks are done, `uv run pytest -q` reports `25 passed`.
 
-### When a test fails
+### Task 1 · Sandwiches cost less on their last day
 
-A failing test is not a grade; it tells you what to fix. Read it from the bottom up:
+> *The owner: "A sandwich is a food product like bread, with 7 % VAT. The difference is its use-by date. On that day and on the day before, it costs 30 % less."*
+
+In `products.py`, the class `FreshProduct` is started for you. It already inherits from `FoodProduct`, because a fresh product **is a** food product. Write two methods:
+
+1. `__init__(name, net_price, days_until_use_by)`: let the parent class store the name and the price, then store `days_until_use_by`. This number counts days from today: 0 means "use by today", -1 means "use by yesterday".
+2. `gross_price()`: the normal food price, but 30 % lower when `days_until_use_by` is 1 or less.
+
+Check: `uv run pytest -q tests/test_products.py`.
+
+Run `uv run htw-checkout lina`. The till starts now, and a cheese sandwich costs 2.25 instead of 3.21. But look at the receipt: the egg sandwich from yesterday is on it. The till sells it, and the screen says `Use-by dates are not checked yet (Task 2)`.
+
+### Task 2 · Never sell a sandwich past its date
+
+> *The owner: "The till must refuse a sandwich after its use-by date, and tell the cashier why."*
+
+Every product answers the question `is_sellable()`. `Product` already says `True` for all products. A fresh product needs its own answer, and the checkout needs a clear error when the answer is no.
+
+1. In `checkout.py`, write the class `ExpiredProductError`, a subclass of `SupermarketError`. Look at `UnknownProductError` above it: yours needs two lines.
+2. In `products.py`, write `FreshProduct.is_sellable()`: `False` once the use-by date has passed, otherwise `True`.
+3. In `checkout.py`, in `Checkout.scan()`: if the product is not sellable, raise `ExpiredProductError` with a message that names the product, before the product goes into the cart.
+
+Check: `uv run pytest -q`.
+
+Run `uv run htw-checkout lina`. The screen now says `Not sold: Egg sandwich is past its use-by date`, and the egg sandwich is no longer on the receipt. You did not change `cli.py`: it catches every `SupermarketError`, and your new error is one.
+
+### Task 3 · Give Lina her change
+
+> *The owner: "The till must say how much change to give back. If the money is not enough, it must say so."*
+
+In `checkout.py`, write `Checkout.pay(amount_given)`:
+
+- If `amount_given` is less than `total()`, raise `PaymentError` (already written at the top of the file) with a message that names both amounts.
+- Otherwise, return the change, rounded to cents.
+
+Check: `uv run pytest -q`: `25 passed`.
+
+Run `uv run htw-checkout lina`. The last line says `Change    : 2.22`. Lina is served, and the shop has sold two sandwiches it would otherwise have thrown away.
+
+Now try the other case: change `paid: 10.00` to `paid: 5.00` in `data/baskets/lina.yaml` and run the command again. The till prints `Not enough money: 5.00 EUR given, 7.78 EUR to pay`. Change it back afterwards.
+
+## When a test fails
+
+A failing test is not a grade: it tells you what to fix. Read it from the bottom up:
 
 ```
->       assert ThresholdDiscount(minimum_subtotal=30, amount_off=5).apply(subtotal) == expected_total
-E       AssertionError: assert 30.0 == 25.0
-tests/test_discounts.py:33: AssertionError
+>       assert sandwich.gross_price() == 2.25
+E       AssertionError: assert 3.21 == 2.25
+tests/test_products.py:70: AssertionError
 ```
 
-The test spent exactly 30 EUR and expected 25.00 after the discount, but got 30.0: no discount came off. Here the cause was `>` instead of `>=` in `amount()`: "from 30 euros" includes 30 itself. The values on the line `E` are always *what your code gave == what the test expected*.
-
-### Task 1 · "Sell sandwiches cheaper on their last day."
-
-*"Our sandwiches have a use-by date. On that day and the day before, they are 30 % cheaper, so that we sell them instead of throwing them away. After the date, we must not sell them at all."*
-
-In `products.py`, the class `FreshProduct` is started for you: it already inherits from `FoodProduct`, because a fresh product **is a** food product. Fill in its three methods:
-
-1. `__init__` takes `name`, `net_price` and `days_until_use_by` (0 is the use-by day itself; below 0, the date has passed).
-2. `gross_price()` is 30 % lower than the food price when `days_until_use_by` is 1 or less.
-3. `is_sellable()` returns `False` once the date has passed.
-4. Put it on the shelves: add `"fresh": FreshProduct` to `PRODUCT_CLASSES` in `cli.py`, and this line to `data/catalogue.yaml`:
-
-  ```yaml
-  - {name: Cheese sandwich, kind: fresh, net_price: 3.00, days_until_use_by: 1}
-  ```
-
-Check: `uv run pytest -q tests/test_products.py`. Try it: add `Cheese sandwich: 2` to a basket; each sandwich costs 2.25 (3.00 plus 7 % VAT is 3.21, minus 30 %).
-
-### Task 2 · "5 euros off from 30 euros."
-
-*"Next week, everybody who spends 30 euros or more gets 5 euros off. The week after, it may be 10 off from 50, so I must be able to change the numbers."*
-
-In `discounts.py`, the class `ThresholdDiscount` is started for you: it **is a** `Discount`. Fill in its two methods:
-
-1. `__init__` stores `minimum_subtotal` and `amount_off`.
-2. `amount(subtotal)` returns `amount_off` when the subtotal is at least `minimum_subtotal`, otherwise 0.
-
-Do not change `checkout.py`: the checkout already works with every kind of discount. That is the point of the abstract class.
-
-Check: `uv run pytest -q tests/test_discounts.py`. Try it: `uv run htw-checkout cem` gives Subtotal 37.96, Discount -5.00, Total EUR 32.96.
-
-### Task 3 · "Tell the cashier how much change to give."
-
-*"The program must say how much change to give back. If the money is not enough, it must say so clearly."*
-
-In `checkout.py`:
-
-1. Write the exception class `PaymentError`, a subclass of `SupermarketError`. This one you write from scratch: it needs two lines.
-2. Write `Checkout.pay(amount_given)`: return the change, rounded to cents. If `amount_given` is less than the total, raise `PaymentError` with a message that names both amounts.
-
-Check: `uv run pytest -q tests/test_checkout.py`. Try it: `uv run htw-checkout ana` ends with `Change : 8.62`; `uv run htw-checkout cem` ends with `Not enough money: 30.00 EUR given, 32.96 EUR to pay`.
-
-### Stretch · if you finish early
-
-Write the test first, watch it fail, then the code. Choose one:
-
-- The checkout refuses a sandwich past its use-by date: a product that `is_sellable()` says cannot be sold. Give `Product` an `is_sellable()` that returns `True`, so that `scan` never needs to ask which kind of product it has.
-- A new class `BuyTwoPayOne` for one product name: every second item of it is free.
+The line `E` reads *what your code gave == what the test expected*. Here the test created a sandwich with one day left and expected the lower price, 2.25, but got the normal price, 3.21. The cause was `< 1` instead of `<= 1` in `gross_price()`: "on that day and on the day before" includes the day before, so 1 must count, too.
 
 ## Hints
 
-Read a hint only when you are stuck.
+Open a hint only when you are stuck.
 
-**Task 1.** The first line of `__init__` is `super().__init__(name, net_price)`: the parent sets and checks the name and the price, you store only `days_until_use_by`. In `gross_price`, start from `super().gross_price()`, use the constant `FRESH_DISCOUNT_RATE`, and round to cents. `is_sellable` can return the comparison itself: `return self.days_until_use_by >= 0`. In `cli.py`, also import `FreshProduct`.
+<details>
+<summary>Task 1</summary>
 
-**Task 2.** `PercentageDiscount`, just above, is the example to follow: store the numbers on `self`, then compare in `amount`. "From 30 euros" includes 30 itself, so use `>=`.
+The first line of `__init__` is `super().__init__(name, net_price)`: the parent stores and checks the name and the price. After it, you store only the new attribute: `self.days_until_use_by = days_until_use_by`.
 
-**Task 3.** An exception class needs only a docstring: `class PaymentError(SupermarketError):` and a line `"""..."""` below it, like `UnknownProductError` above it. Compare with `self.total()`, not `self.subtotal()`: the customer pays the price after the discount. You do not need to change `cli.py`: it catches every `SupermarketError`, and your `PaymentError` is one.
+In `gross_price()`, start from `super().gross_price()`, which is the food price with VAT. Multiply it by `1 - FRESH_DISCOUNT_RATE` when the days are 1 or less, and round to cents with `round(..., 2)`. `BottledDrink.gross_price()` is an example of the same pattern.
+
+</details>
+
+<details>
+<summary>Task 2</summary>
+
+An exception class needs only a line and a docstring:
+
+```python
+class ExpiredProductError(SupermarketError):
+    """Raised when ..."""
+```
+
+`is_sellable()` can return the comparison itself: `return self.days_until_use_by >= 0`. Use-by day 0 is today, so it can still be sold.
+
+In `scan()`, the variable `product` already holds the product. Write `if not product.is_sellable():` and, below it, `raise ExpiredProductError(f"{product.name} is past its use-by date")`. Put it before `self.cart.add(...)`, so that a refused product never reaches the cart. `scan()` does not ask which kind of product it has: bread answers `True` from `Product`, a sandwich answers from `FreshProduct`. That is polymorphism.
+
+</details>
+
+<details>
+<summary>Task 3</summary>
+
+Store `self.total()` in a variable first, so that you compute it only once. Compare with `<`: a customer who pays exactly the total gets 0.00 back. A message with both amounts: `f"{amount_given:.2f} EUR given, {total:.2f} EUR to pay"`.
+
+</details>
+
+## If you finish early
+
+Write the test first, watch it fail, then write the code. Choose one:
+
+- At closing time, the staff take every expired product off the shelf. Write a function `expired_products(catalogue)` in `checkout.py` that returns the names of all products that are not sellable. For tonight's shelf it returns `["Egg sandwich"]`.
+- After 20:00, the owner wants 50 % off on the last day instead of 30 %. Where would you change the code, and how would a test check it?
 
 ## Rules for your code
 
 The code you add should read like the code that is already there.
 
-- **Names say what a thing is**: `days_until_use_by`, not `d`. True-or-false methods start with `is_`.
-- **No magic numbers**: a number with a meaning gets a constant in capital letters, as `STANDARD_VAT_RATE = 0.19`.
+- **Names say what a thing is**: `days_until_use_by`, not `d`. Methods that answer yes or no start with `is_`.
+- **No magic numbers**: a number with a meaning gets a constant in capital letters, as `FRESH_DISCOUNT_RATE = 0.30`.
 - **Refuse bad input with an exception** that names the problem; never return `None` or a message string.
 - **Every class and method has a docstring and type hints.**
 - **Classes return values; only `cli.py` prints**, so that the tests can check every result.

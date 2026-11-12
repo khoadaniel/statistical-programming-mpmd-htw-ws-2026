@@ -6,13 +6,16 @@ pytest passes the fixtures below to every test that names them as a parameter.
 import pytest
 
 from supermarket.checkout import Checkout
-from supermarket.cli import load_catalogue
-from supermarket.products import Product
+from supermarket.products import BottledDrink, FoodProduct, Product
 
 
 @pytest.fixture
 def catalogue() -> dict[str, Product]:
-    return load_catalogue()
+    """A small catalogue without fresh products, so that these tests work before Task 1."""
+    return {
+        "Bread": FoodProduct("Bread", 2.80),  # shelf price 3.00
+        "Mineral water": BottledDrink("Mineral water", 0.49),  # shelf price 0.83
+    }
 
 
 @pytest.fixture

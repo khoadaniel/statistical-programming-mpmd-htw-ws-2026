@@ -28,6 +28,16 @@
 - Communicating findings in a short report or a Streamlit dashboard.
 - Do district price differences remain once room type and size are held fixed?
 
+## 3 · Statistical testing in the software lifecycle: three case studies
+
+[Open notebook](workbooks/03-lecture-testing-in-the-software-lifecycle.ipynb)
+
+- Two probabilities: P(data | H0) and P(H0 | data), Bayes' rule, the test in five steps, errors, power and intervals.
+- Choosing a test from how the data were made: paired, randomised or neither.
+- Case 1, two models on one test set: Wilson intervals, McNemar's test, paired bootstrap, paired errors for regression.
+- Case 2, two model versions online: sample size, the sample-ratio check, the two-proportion z-test, peeking, a Bayesian reading, CUPED.
+- Case 3, a dashboard metric after a release: placebo tests, difference-in-differences, a counterfactual forecast.
+
 ## Team project until the next session
 
 Exploratory findings: decisions per heading, language, member state and year, and the long tail of rare headings (the many headings with only a few decisions each), presented in a short team review.

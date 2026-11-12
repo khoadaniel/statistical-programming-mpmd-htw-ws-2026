@@ -15,7 +15,7 @@
 - Data leakage: target leakage.
 - Preprocessing inside a Pipeline; worked example: which validation estimate holds for new hosts.
 
-## 2 · Choosing settings: regularisation and tuning
+## 2 · Hyperparameter tuning: regularisation and searches
 
 [Open notebook](workbooks/02-lecture-regularisation-and-tuning.ipynb)
 

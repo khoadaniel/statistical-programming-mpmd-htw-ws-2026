@@ -1,6 +1,6 @@
 # Session 8 · Classification and evaluation metrics
 
-> **Guiding question.** Which customers will cancel, and how do we measure whether a classifier is good enough?
+> **Guiding question.** When a classifier says yes, how far can we trust it, and where should we draw the line? The running case: which customers will cancel.
 
 ## 1 · Classifiers, pipelines and the confusion matrix
 

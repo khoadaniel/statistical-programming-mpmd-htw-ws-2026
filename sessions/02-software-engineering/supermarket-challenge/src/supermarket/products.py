@@ -6,6 +6,7 @@ its VAT rate or a bottle deposit.
 
     Product (abstract)
     ├── FoodProduct       7 % VAT
+    │   └── FreshProduct  a food product with a use-by date (Tasks 1 and 2)
     ├── NonFoodProduct   19 % VAT
     └── BottledDrink     19 % VAT, plus the deposit
 """
@@ -72,6 +73,15 @@ class Product(ABC):
         """
         return round(self.net_price * (1 + self.vat_rate()), 2)
 
+    def is_sellable(self) -> bool:
+        """True if the shop may sell this product today.
+
+        Most products can always be sold, so this method says True. A subclass with a rule of its
+        own, such as a use-by date, writes its own is_sellable. The checkout calls it for every
+        product and never needs to ask which kind of product it has (polymorphism).
+        """
+        return True
+
     def __repr__(self) -> str:
         # What print() and the notebook show for a product, for example FoodProduct('Bread', 2.8).
         return f"{type(self).__name__}({self.name!r}, {self.net_price})"
@@ -126,28 +136,33 @@ FRESH_DISCOUNT_RATE = 0.30  # 30 % off on the use-by day and the day before
 
 
 class FreshProduct(FoodProduct):
-    """Task 1: a food product with a use-by date, cheaper on its last days.
+    """A food product with a use-by date, such as a sandwich: cheaper on its last days.
 
     A fresh product is a food product (inheritance): it keeps the VAT rate and the category of
-    FoodProduct, and changes only the price on its last days.
+    FoodProduct, and changes only what is new: the price on its last days (Task 1) and the rule
+    that it cannot be sold after its use-by date (Task 2).
 
     Attributes:
-        days_until_use_by: 0 is the use-by day itself; below 0, the date has passed.
+        days_until_use_by: Days from today to the use-by date. 0 means "use by today",
+            1 means "use by tomorrow", -1 means "use by yesterday": the date has passed.
     """
 
     def __init__(self, name: str, net_price: float, days_until_use_by: int) -> None:
-        """Step 1: let the parent store and check name and net_price, then store days_until_use_by."""
+        """Task 1, step 1: let the parent store and check name and net_price, then store days_until_use_by."""
         raise NotImplementedError("Task 1")
 
     def gross_price(self) -> float:
-        """Step 2: the food price, FRESH_DISCOUNT_RATE lower when days_until_use_by is 1 or less.
+        """Task 1, step 2: the food price, FRESH_DISCOUNT_RATE lower when days_until_use_by is 1 or less.
 
         Example:
-            FreshProduct("Cheese sandwich", 3.00, days_until_use_by=1).gross_price() is 2.25:
+            FreshProduct("Cheese sandwich", 3.00, days_until_use_by=0).gross_price() is 2.25:
             3.00 plus 7 % VAT is 3.21, minus 30 % is 2.247, rounded 2.25.
         """
         raise NotImplementedError("Task 1")
 
     def is_sellable(self) -> bool:
-        """Step 3: False once the use-by date has passed, otherwise True."""
-        raise NotImplementedError("Task 1")
+        """Task 2, step 2: False once the use-by date has passed, otherwise True.
+
+        This method replaces Product.is_sellable for fresh products only.
+        """
+        raise NotImplementedError("Task 2")

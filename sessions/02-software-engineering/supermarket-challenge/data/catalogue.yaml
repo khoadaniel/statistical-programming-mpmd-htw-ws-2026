@@ -1,6 +1,8 @@
-# What HTW Markt sells: one line per product. Change a price here, not in the Python code.
-#   kind       which class the program creates: food, non-food or drink
-#   net_price  the price in EUR before VAT; the program computes the shelf price
+# What HTW Markt has on its shelves this Friday: one line per product.
+# Change a price here, not in the Python code.
+#   kind               which class the program creates: food, fresh, non-food or drink
+#   net_price          the price in EUR before VAT; the program computes the shelf price
+#   days_until_use_by  fresh products only: 0 = use by today, -1 = use by yesterday
 
 products:
   - {name: Apples 1 kg, kind: food, net_price: 2.29}
@@ -11,3 +13,6 @@ products:
   - {name: Cola, kind: drink, net_price: 1.09}
   - {name: Dish soap, kind: non-food, net_price: 1.95}
   - {name: Toothpaste, kind: non-food, net_price: 1.49}
+  - {name: Hummus wrap, kind: fresh, net_price: 3.50, days_until_use_by: 3}
+  - {name: Cheese sandwich, kind: fresh, net_price: 3.00, days_until_use_by: 0}
+  - {name: Egg sandwich, kind: fresh, net_price: 2.60, days_until_use_by: -1}

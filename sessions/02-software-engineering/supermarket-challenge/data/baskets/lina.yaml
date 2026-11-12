@@ -1,0 +1,9 @@
+# Lina, the last customer on Friday evening. Run it: uv run htw-checkout lina
+
+customer: Lina
+items:                 # product name: quantity
+  Cheese sandwich: 2   # use by today: 30 % off (Task 1)
+  Egg sandwich: 1      # use by yesterday: must not be sold (Task 2)
+  Mineral water: 1
+  Apples 1 kg: 1
+paid: 10.00            # the money Lina hands over (Task 3)

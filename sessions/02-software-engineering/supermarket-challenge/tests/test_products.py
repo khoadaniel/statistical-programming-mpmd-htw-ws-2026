@@ -1,4 +1,4 @@
-"""Tests of products.py: VAT, deposit and the price rule.
+"""Tests of products.py: VAT, deposit, the price rule and the use-by date.
 
 Tests marked @pytest.mark.task(N) check your work on Task N. Until you start the task, pytest
 reports them as "not started yet".
@@ -46,19 +46,24 @@ def test_a_negative_price_is_refused_after_creation_too():
         bread.net_price = -1.00
 
 
+def test_a_product_can_be_sold_unless_its_class_says_otherwise():
+    assert FoodProduct("Bread", 2.80).is_sellable()
+
+
 @pytest.mark.task(1)
 def test_fresh_product_is_food():
     from supermarket.products import FreshProduct
 
-    sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by=5)
-    assert isinstance(sandwich, FoodProduct)
-    assert sandwich.category == "food"
-    assert sandwich.gross_price() == 3.21
+    wrap = FreshProduct("Hummus wrap", 3.00, days_until_use_by=5)
+    assert isinstance(wrap, FoodProduct)
+    assert wrap.category == "food"
+    assert wrap.days_until_use_by == 5
+    assert wrap.gross_price() == 3.21  # five days left: the normal food price
 
 
 @pytest.mark.task(1)
 @pytest.mark.parametrize("days_until_use_by", [1, 0])
-def test_fresh_product_costs_less_on_its_last_day(days_until_use_by):
+def test_fresh_product_costs_less_on_its_last_days(days_until_use_by):
     from supermarket.products import FreshProduct
 
     sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by)
@@ -66,9 +71,16 @@ def test_fresh_product_costs_less_on_its_last_day(days_until_use_by):
 
 
 @pytest.mark.task(1)
+def test_fresh_product_refuses_a_negative_price():
+    from supermarket.products import FreshProduct
+
+    with pytest.raises(ValueError):
+        FreshProduct("Cheese sandwich", -1.00, days_until_use_by=0)
+
+
+@pytest.mark.task(2)
 def test_fresh_product_past_its_use_by_date_cannot_be_sold():
     from supermarket.products import FreshProduct
 
-    sandwich = FreshProduct("Cheese sandwich", 3.00, days_until_use_by=-1)
-    assert not sandwich.is_sellable()
+    assert not FreshProduct("Egg sandwich", 2.60, days_until_use_by=-1).is_sellable()
     assert FreshProduct("Cheese sandwich", 3.00, days_until_use_by=0).is_sellable()

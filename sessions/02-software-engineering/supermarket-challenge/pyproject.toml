@@ -1,11 +1,11 @@
 [project]
 name = "supermarket"
 version = "0.1.0"
-description = "HTW Markt, a small supermarket in plain Python classes: the code challenge of Session 2"
+description = "HTW Markt, a small shop in plain Python classes: the code challenge of Session 2"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "pyyaml>=6.0",  # reads the YAML files in data/: the catalogue and the baskets
+    "pyyaml>=6.0",  # reads the YAML files in data/: the catalogue and the basket
 ]
 
 # The terminal command `htw-checkout` calls the function `checkout_main` in the module `supermarket.cli`.

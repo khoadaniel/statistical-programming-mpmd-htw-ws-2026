@@ -1,11 +1,10 @@
 """The checkout counter, where one customer pays.
 
 A Checkout brings the other parts together (composition): it has the catalogue to find products
-in, a ShoppingCart to put them in, and a Discount to lower the total.
+in, and a ShoppingCart to put them in.
 """
 
 from supermarket.cart import ShoppingCart
-from supermarket.discounts import Discount, NoDiscount
 from supermarket.products import Product
 
 
@@ -17,7 +16,11 @@ class UnknownProductError(SupermarketError):
     """Raised when the shop does not sell a product with the name that was asked for."""
 
 
-# Task 3, step 1: write the class PaymentError here, as a subclass of SupermarketError.
+class PaymentError(SupermarketError):
+    """Raised when a customer hands over less money than they must pay."""
+
+
+# Task 2, step 1: write the class ExpiredProductError here, as a subclass of SupermarketError.
 
 
 class Checkout:
@@ -26,39 +29,32 @@ class Checkout:
     Attributes:
         catalogue: The products the shop sells, by name: {"Bread": FoodProduct("Bread", 2.8), ...}.
         cart: The customer's ShoppingCart; a new Checkout starts with an empty one.
-        discount: The customer's Discount; NoDiscount() if none is given.
     """
 
-    def __init__(self, catalogue: dict[str, Product], discount: Discount | None = None) -> None:
+    def __init__(self, catalogue: dict[str, Product]) -> None:
         self.catalogue = catalogue
         self.cart = ShoppingCart()
-        # No discount given: use NoDiscount(), so that total() works the same way for everyone.
-        self.discount = discount if discount is not None else NoDiscount()
 
     def scan(self, product_name: str, quantity: int = 1) -> None:
         """Scan a product: find it in the catalogue and put it in the cart.
 
         Raises:
             UnknownProductError: If the shop does not sell this product.
+            ExpiredProductError: If the product cannot be sold today (Task 2).
         """
         if product_name not in self.catalogue:
             raise UnknownProductError(f"the shop does not sell {product_name!r}")
-        self.cart.add(self.catalogue[product_name], quantity)
-
-    def subtotal(self) -> float:
-        """The price of everything in the cart, in EUR, before the discount."""
-        return self.cart.subtotal()
+        product = self.catalogue[product_name]
+        # Task 2, step 3: if the product is not sellable, raise ExpiredProductError here,
+        # with a message that names the product. The product must not reach the cart.
+        self.cart.add(product, quantity)
 
     def total(self) -> float:
-        """What the customer pays, in EUR: the subtotal after the discount.
-
-        The checkout does not know which kind of discount it has. It calls apply(), and the
-        discount object runs its own amount() (polymorphism).
-        """
-        return self.discount.apply(self.subtotal())
+        """What the customer pays, in EUR: the sum of the shelf prices of everything in the cart."""
+        return self.cart.subtotal()
 
     def pay(self, amount_given: float) -> float:
-        """Task 3, step 2: the customer pays; return the change.
+        """Task 3: the customer pays; return the change.
 
         Args:
             amount_given: The money the customer hands over, in EUR.
@@ -72,9 +68,9 @@ class Checkout:
         raise NotImplementedError("Task 3")
 
     def receipt(self) -> str:
-        """The receipt as text: one row per product, then subtotal, discount and total.
+        """The receipt as text: one row per product, then the total.
 
-        Example of one row: "  2 x Milk 1 l              1.17     2.34"
+        Example of one row: "  2 x Cheese sandwich       2.25     4.50"
         """
         rows = [f"{'Qty':>3}   {'Product':<20}{'Price':>6}{'Amount':>9}"]
         for product_name, quantity in self.cart.quantities().items():
@@ -84,7 +80,5 @@ class Checkout:
                 f"{quantity:>3} x {product_name:<20}{shelf_price:>6.2f}{shelf_price * quantity:>9.2f}"
             )
         rows.append("-" * 41)
-        rows.append(f"{'Subtotal':<32}{self.subtotal():>9.2f}")
-        rows.append(f"{'Discount':<32}{self.total() - self.subtotal():>9.2f}")
         rows.append(f"{'Total EUR':<32}{self.total():>9.2f}")
         return "\n".join(rows)  # join the rows with line breaks into one text
