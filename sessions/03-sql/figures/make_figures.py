@@ -89,6 +89,117 @@ def reviews_per_year():
     save(fig, "reviews-per-year-window.png")
 
 
+# ---------------------------------------------------------------- ER diagrams of the star-vs-snowflake playground
+FACT, DIM, SPLIT, REPEAT = "#eb6834", "#2a78d6", "#1baf7a", "#fde3d8"
+
+
+def entity(ax, x, y, name, columns, head=DIM, w=3.1, rh=0.36):
+    """An ER box with its top-left corner at (x, y): a coloured title bar, then one row per column.
+    columns: (key, name, note), key "PK", "FK", "PK, FK" or ""; a note "repeated" fills the row in light orange.
+    Returns the y of each column's row centre, and the box's left and right edge."""
+    ax.add_patch(plt.Rectangle((x, y - rh), w, rh, facecolor=head, edgecolor=head, lw=1))
+    ax.text(x + w / 2, y - rh / 2, name, ha="center", va="center", fontsize=10, fontweight="bold", color="white")
+    rows = {}
+    for i, (key, col, note) in enumerate(columns):
+        top = y - (i + 1) * rh
+        face = REPEAT if note == "repeated" else "white"
+        ax.add_patch(plt.Rectangle((x, top - rh), w, rh, facecolor=face, edgecolor=MUTED, lw=0.8))
+        ax.text(x + 0.1, top - rh / 2, key, ha="left", va="center", fontsize=8, fontweight="bold", color=MUTED)
+        ax.text(x + 0.85, top - rh / 2, col, ha="left", va="center", fontsize=9.5, family="monospace", color=INK)
+        rows[col] = top - rh / 2
+    ax.add_patch(plt.Rectangle((x, y - (len(columns) + 1) * rh), w, (len(columns) + 1) * rh, fill=False, edgecolor=head, lw=1.6))
+    return {"rows": rows, "left": x, "right": x + w}
+
+
+def relation(ax, one, many, y_one, y_many, label=""):
+    """A one-to-many line in crow's-foot notation from the box `one` (two bars) to the box `many` (crow's foot).
+    The boxes stand side by side; the line runs between their facing edges."""
+    if one["right"] < many["left"]:
+        x0, x1, d = one["right"], many["left"], 1
+    else:
+        x0, x1, d = one["left"], many["right"], -1
+    xm = (x0 + x1) / 2
+    ax.plot([x0, xm, xm, x1], [y_one, y_one, y_many, y_many], color=INK, lw=1.2, solid_capstyle="butt")
+    for k in (0.12, 0.2):                                                           # "exactly one": two bars
+        ax.plot([x0 + d * k] * 2, [y_one - 0.1, y_one + 0.1], color=INK, lw=1.2)
+    for dy in (-0.13, 0, 0.13):                                                      # "many": the crow's foot
+        ax.plot([x1 - d * 0.22, x1], [y_many, y_many + dy], color=INK, lw=1.2)
+    ax.text(x0 + d * 0.3, y_one - 0.08, "1", ha="center", va="top", fontsize=9, color=MUTED)
+    ax.text(x1 - d * 0.32, y_many - 0.08, "N", ha="center", va="top", fontsize=9, color=MUTED)
+    if label:
+        ax.text(xm, max(y_one, y_many) + 0.16, label, ha="center", va="bottom", fontsize=8.5, style="italic", color=MUTED)
+
+
+STUDENT_COLS = [("PK", "student_id", ""), ("", "name", "")]
+SCORE_COLS = [("PK, FK", "student_id", ""), ("PK, FK", "course_id", ""), ("", "exam_date", ""), ("", "score", "")]
+
+
+def draw_star(ax, y=0.0, x=0.0):
+    students = entity(ax, x + 0.0, y, "star_students", STUDENT_COLS + [("", "programme", "repeated"), ("", "faculty", "repeated"), ("", "start_year", "")])
+    scores = entity(ax, x + 4.8, y, "star_scores  (fact)", SCORE_COLS, head=FACT)
+    courses = entity(ax, x + 9.6, y, "star_courses", [("PK", "course_id", ""), ("", "title", ""), ("", "credits", ""), ("", "department", "repeated")])
+    relation(ax, students, scores, students["rows"]["student_id"], scores["rows"]["student_id"], "takes exams")
+    relation(ax, courses, scores, courses["rows"]["course_id"], scores["rows"]["course_id"], "is examined in")
+    return 12.7
+
+
+def draw_snowflake(ax, y=0.0):
+    faculties = entity(ax, 0.0, y, "snowflake_faculties", [("PK", "faculty_id", ""), ("", "name", "")], head=SPLIT)
+    programmes = entity(ax, 4.6, y, "snowflake_programmes", [("PK", "programme_id", ""), ("", "name", ""), ("FK", "faculty_id", "")], head=SPLIT)
+    students = entity(ax, 9.2, y, "snowflake_students", STUDENT_COLS + [("FK", "programme_id", ""), ("", "start_year", "")])
+    scores = entity(ax, 13.8, y, "snowflake_scores  (fact)", SCORE_COLS, head=FACT)
+    courses = entity(ax, 18.4, y, "snowflake_courses", [("PK", "course_id", ""), ("", "title", ""), ("", "credits", ""), ("FK", "department_id", "")])
+    departments = entity(ax, 23.0, y, "snowflake_departments", [("PK", "department_id", ""), ("", "name", "")], head=SPLIT)
+    relation(ax, faculties, programmes, faculties["rows"]["faculty_id"], programmes["rows"]["faculty_id"], "has")
+    relation(ax, programmes, students, programmes["rows"]["programme_id"], students["rows"]["programme_id"], "enrols")
+    relation(ax, students, scores, students["rows"]["student_id"], scores["rows"]["student_id"], "takes exams")
+    relation(ax, courses, scores, courses["rows"]["course_id"], scores["rows"]["course_id"], "is examined in")
+    relation(ax, departments, courses, departments["rows"]["department_id"], courses["rows"]["department_id"], "teaches")
+    return 26.1
+
+
+def legend(ax, x, y, items):
+    for i, (face, edge, text) in enumerate(items):
+        ax.add_patch(plt.Rectangle((x + i * 4.2, y - 0.14), 0.4, 0.28, facecolor=face, edgecolor=edge, lw=1.2))
+        ax.text(x + i * 4.2 + 0.55, y, text, va="center", fontsize=9, color=INK)
+
+
+def er_star():
+    fig, ax = plt.subplots(figsize=(13, 3.6))
+    width = draw_star(ax)
+    legend(ax, 0.0, -2.75, [(FACT, FACT, "fact table"), (DIM, DIM, "dimension"), (REPEAT, MUTED, "text repeated in every row")])
+    ax.set_xlim(-0.2, width + 0.2); ax.set_ylim(-3.0, 0.5); ax.axis("off")
+    save(fig, "er-star.png")
+
+
+def er_snowflake():
+    fig, ax = plt.subplots(figsize=(24, 3.0))
+    width = draw_snowflake(ax)
+    legend(ax, 0.0, -2.0, [(FACT, FACT, "fact table"), (DIM, DIM, "dimension"), (SPLIT, SPLIT, "level split out of a dimension")])
+    ax.set_xlim(-0.2, width + 0.2); ax.set_ylim(-2.3, 0.5); ax.axis("off")
+    save(fig, "er-snowflake.png")
+
+
+def er_star_vs_snowflake():
+    """Both schemas on one figure, the fact tables aligned, so that the split dimensions stand out."""
+    fig, ax = plt.subplots(figsize=(24, 6.6))
+    ax.text(-0.1, 0.75, "Star schema: 3 tables, the names of programme, faculty and department repeated in the dimensions",
+            fontsize=12, fontweight="bold", color=INK)
+    draw_star(ax, y=0.0, x=9.0)                                    # star_scores (x 13.8) right above snowflake_scores
+    ax.text(-0.1, -3.25, "Snowflake schema: 6 tables, each name stored once in its own table; more joins from the fact table",
+            fontsize=12, fontweight="bold", color=INK)
+    draw_snowflake(ax, y=-3.75)
+    legend(ax, 0.0, -6.55, [(FACT, FACT, "fact table"), (DIM, DIM, "dimension"), (REPEAT, MUTED, "repeated text"),
+                            (SPLIT, SPLIT, "level split out")])
+    ax.set_xlim(-0.2, 26.3); ax.set_ylim(-6.85, 1.2); ax.axis("off")
+    save(fig, "er-star-vs-snowflake.png")
+
+
 if __name__ == "__main__":
-    join_types()
-    reviews_per_year()
+    import sys
+    if sys.argv[1:] == ["er"]:          # only the ER diagrams; they need no data
+        er_star(); er_snowflake(); er_star_vs_snowflake()
+    else:
+        join_types()
+        reviews_per_year()
+        er_star(); er_snowflake(); er_star_vs_snowflake()
