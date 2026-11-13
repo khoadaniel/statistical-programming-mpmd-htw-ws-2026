@@ -51,11 +51,10 @@
 
 [Open notebook](workbooks/05-lecture-plotting-with-pandas.ipynb)
 
-- The generic plot call `data.plot.kind(options)` and what goes on each axis.
-- Histograms and box plots by group, scatter plots with colour, a map from longitude and latitude.
-- Bar charts of counts, stacked bars from a cross table, line charts with a rolling mean.
-- Several panels: `subplots` and `layout`, and a layout that is too small.
-- Styling: title, labels, size, log scale, colours, the Axes after the call, saving a figure.
+- The generic plot call `data.plot.kind(options)`, naming the axes with `x=` and `y=`.
+- Bar charts of counts, stacked bars from a cross table, histograms and box plots by group, scatter plots with colour, a map from longitude and latitude, line charts with a rolling window; each chart type ends with *Your turn*.
+- Several panels: `by=` against `subplots=True`, `layout`, and a layout that is too small.
+- Styling: title, labels, size, log scale and colours in the call, then matplotlib's Figure and Axes, saving a figure.
 - Worked example: where are the expensive listings?
 
 ## Team project until the next session
