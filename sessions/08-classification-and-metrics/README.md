@@ -14,6 +14,10 @@
 - Macro-F1 for several classes: macro, weighted and micro averages, a three-class contract task.
 - Worked example: rule, k-NN and logistic regression compared for the retention team.
 
+**End-to-end: classification.** Breast cancer diagnosis from cell measurements in seven steps from the problem to the report: logistic regression, the same model tuned with a grid search, and gradient boosting, each scored with accuracy, precision, recall and F1 and a confusion matrix; the report gives 95% intervals (Wilson and bootstrap) for each score and for the gain of each step, with a note on TabPFN.
+
+[Open notebook](workbooks/end-to-end-classification.ipynb)
+
 ## 2 · Scores, thresholds and rare classes
 
 [Open notebook](workbooks/02-lecture-scores-thresholds-and-rare-classes.ipynb)

@@ -16,6 +16,10 @@
 - Evaluating and interpreting clusters: separation, bootstrap stability, the adjusted Rand index.
 - Worked example: what kinds of Airbnb offers exist in Berlin? From the data to five named offer types, with Ward, k-means, hot spots on the map and DBSCAN.
 
+**End-to-end: clustering.** Wines grouped by their lab analysis in the steps from the problem to the report: k-means for k = 2 to 8 with the elbow, the silhouette score and the clusters on a 2D map, agglomerative clustering compared, what the three groups mean, stability, 95% intervals of the silhouette score and of the differences, and HDBSCAN.
+
+[Open notebook](workbooks/end-to-end-clustering.ipynb)
+
 ## 2 · Dimensionality reduction and anomaly detection
 
 [Open notebook](workbooks/02-lecture-dimensionality-reduction-and-anomaly-detection.ipynb)
@@ -25,6 +29,14 @@
 - Worked example: PCA of the amenities of the Berlin listings.
 - Model-based anomaly detection with Isolation Forest and local outlier factor, continuing Session 4: detectors on toy data, evaluation with known labels, and implausible Berlin listings compared with a price ratio from a cross-validated model.
 - Clusters and components as features inside a pipeline: Telco churn, scaling before PCA in a classifier, location clusters in the price model.
+
+**End-to-end: dimensionality reduction.** Handwritten digits in fewer numbers: PCA with the number of components chosen by a 90% rule and checked with a digit reader, what each component means, and maps from PCA, t-SNE and UMAP, with 95% intervals.
+
+[Open notebook](workbooks/end-to-end-dimensionality-reduction.ipynb)
+
+**End-to-end: anomaly detection.** Unusual Berlin listings with planted typing errors: Isolation Forest, tuned, against the local outlier factor, with precision, recall and the interval of the difference.
+
+[Open notebook](workbooks/end-to-end-anomaly-detection.ipynb)
 
 ## Team project until the next session
 

@@ -28,8 +28,16 @@
 - The limits of word counts as the motivation for language models.
 - Worked example: checkpoint 1, the validation design and score with bootstrap intervals for the class board.
 
+**End-to-end: text classification.** German EBTI descriptions to their tariff chapter in the seven steps from the problem to the report: TF-IDF and logistic regression, tuned with a grid search, against complement naive Bayes; the words the model learned for each chapter, the confusion matrix and misclassified descriptions; Wilson and bootstrap intervals and the paired interval of the difference; and sentence embeddings as a recent method.
+
+[Open notebook](workbooks/end-to-end-text-classification.ipynb)
+
 ## Team project until the next session
 
 A TF-IDF classifier on the team's own validation design, error analysis, and checkpoint 1 on the class board: split design, model, accuracy and macro-F1 with intervals.
+
+## Setup
+
+- The last section of the end-to-end notebook uses the embedding model `intfloat/multilingual-e5-small` (about 470 MB) only if it is already in your local Hugging Face cache, and prints a message otherwise. Block 2 of [Session 14](../14-llms-and-embeddings/README.md) downloads it.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)
