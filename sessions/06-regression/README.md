@@ -14,7 +14,7 @@
 - Worked example: what drives nightly prices in Berlin?
 - Underfitting and overfitting: polynomial degree, training versus test error, the bias–variance trade-off.
 
-**End-to-end: regression.** Hourly bike rentals in Washington, D.C., in seven steps from the problem to the report: linear regression, the same model tuned with a grid search, and gradient boosting, each scored with MAE, RMSE and R² and a plot of predicted against true rentals; the report gives a bootstrap 95% interval for each MAE and for the gain of each step, with a note on TabPFN.
+**End-to-end: regression.** Hourly bike rentals in Washington, D.C., from the problem to the report: linear regression, the same model tuned with a grid search, and gradient boosting, each scored with MAE, RMSE and R² and a plot of predicted against true rentals; the report gives a bootstrap 95% interval for each R² and for the gain in R² of each step, then uses the chosen model on two new hours, with a note on TabPFN.
 
 [Open notebook](workbooks/end-to-end-regression.ipynb)
 
