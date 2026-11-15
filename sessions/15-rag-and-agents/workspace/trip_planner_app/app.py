@@ -14,8 +14,9 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
-# The key: a .env in this folder, or else the .env of the notebooks one folder up.
+# The key: a .env in this folder, or else the .env of the notebooks (../../workbooks/.env).
 load_dotenv(find_dotenv())
+load_dotenv(Path(__file__).resolve().parents[2] / "workbooks" / ".env")
 
 from langgraph.types import Command  # noqa: E402
 

@@ -80,7 +80,7 @@ The page has four numbered panels:
 The folder is its own uv project, with its own `pyproject.toml` and `uv.lock`. In this folder:
 
 ```bash
-cp .env.example .env        # then paste your key; or use the .env of the notebooks one folder up
+cp .env.example .env        # then paste your key; or let it use the .env of the notebooks in `../../workbooks/`
 uv run app.py
 ```
 
@@ -98,6 +98,7 @@ Try *"Three of us want to get out of Berlin this weekend. Ideas?"*: the budget a
 | `app.py` | FastAPI server: runs the graph with `graph.stream(..., stream_mode=["tasks", "updates"], subgraphs=True)` and sends one JSON event per line to the page |
 | `index.html` | the page, in plain HTML, CSS and JavaScript |
 | `recorded_run.json` | the recorded run for the replay button |
+| `mcp_demo/` | the same tools as a local MCP server, with skill discovery and an agent that uses it: see [mcp_demo/README.md](mcp_demo/README.md) |
 | `pyproject.toml`, `uv.lock` | the packages of this app |
 
 The prices in the travel guide are example values written for the course, not real offers. The weather comes from Open-Meteo (CC BY 4.0).
