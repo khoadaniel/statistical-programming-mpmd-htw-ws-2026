@@ -76,6 +76,12 @@
 
 - Code graders, pass@k and pass^k, and an LLM judge checked against hand labels.
 
+## 8 · Practice: an agent as a tool
+
+[Open notebook](workbooks/08-practice-agent-as-a-tool.ipynb)
+
+- A trip planner agent calls a city guide agent that is wrapped in a tool with `@tool`, waits for its answer and continues: control goes out and comes back.
+
 ## Team project until the next session
 
 Optional language-model component (for example a classification assistant with retrieval), with its evaluation.
