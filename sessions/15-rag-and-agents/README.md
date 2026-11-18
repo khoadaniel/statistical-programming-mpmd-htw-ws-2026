@@ -88,6 +88,6 @@ Optional language-model component (for example a classification assistant with r
   2. In `workbooks/`, copy `.env.example` to `.env` and paste the key after `ANTHROPIC_API_KEY=`. Git ignores `.env`; never type the key into a notebook.
   3. In the Console, set a monthly spending limit under **Settings > Billing**.
 - Cost of notebooks 03 and 04: Haiku 5.5 costs 0.10 USD per million input tokens and 0.50 USD per million output tokens ([pricing](https://platform.claude.com/docs/en/about-claude/pricing), 3 November 2026). A full run of notebook 03 costs a few cents, and notebook 04 well under one euro. Cells that call Claude are saved without output and show a result only when you run them. The setup section of notebook 03 explains the details.
-- [`workspace/`](workspace/README.md) holds the same assistant as tested software (package `bti_assistant`): `cd workspace && uv run pytest -q`.
+- [`workspace/bti_assistant/`](workspace/bti_assistant/README.md) holds the same assistant as tested software (package `bti_assistant`): `cd workspace/bti_assistant && uv run pytest -q`.
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

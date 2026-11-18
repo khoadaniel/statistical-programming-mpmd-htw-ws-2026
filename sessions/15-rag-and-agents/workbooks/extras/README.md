@@ -28,7 +28,7 @@ All sources are permissive; none is NC or ND. Text and code curated from them in
 ## Course material, data and models
 
 - Block notebooks [01-lecture-retrieval-augmented-generation-and-evaluation.ipynb](../01-lecture-retrieval-augmented-generation-and-evaluation.ipynb) and [02-lecture-agents-and-guardrails.ipynb](../02-lecture-agents-and-guardrails.ipynb): course team, CC BY 4.0.
-- [Workspace](../../workspace/README.md) (package `bti_assistant` with tests, exercises and solutions): course team; code MIT, text CC BY 4.0.
+- [Workspace](../../workspace/bti_assistant/README.md) (package `bti_assistant` with tests, exercises and solutions): course team; code MIT, text CC BY 4.0.
 - **Case-study data.** European Commission, *European Binding Tariff Information (EBTI)* database, full export; reuse with acknowledgement under Commission Decision 2011/833/EU. Nomenclature texts: European Commission, TARIC monthly extraction of 1 October 2026 (`Nomenclature EN.xlsx`), same reuse conditions. Prepared by the lecturer and distributed as `ebti-v1.zip` on the course drive (unzipped into `case-study/data/ebti/`; see [case-study/README.md](../../../../case-study/README.md)).
 - **Models used at run time** (downloaded from the Hugging Face Hub, not stored in the repository): `intfloat/multilingual-e5-small` (MIT), `cross-encoder/ms-marco-MiniLM-L-6-v2` (Apache-2.0), `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli` (MIT).
 - FAISS, sqlite-vec, pgvector, LangChain, smolagents, NeMo Guardrails and Guardrails AI are referenced only as links.
