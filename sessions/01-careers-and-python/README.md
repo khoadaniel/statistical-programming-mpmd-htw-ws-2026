@@ -63,6 +63,13 @@
 
 - The `merge` call for every pair of Airbnb tables: which key, and why.
 
+## Practice · From pandas to scikit-learn
+
+[Open notebook](workbooks/08-practice-pandas-to-linear-regression.ipynb)
+
+- Read the Berlin listings, clean them with Boolean masks, split them into training and test listings.
+- Fit a linear regression, `price = a * guests + b`, and measure it with R², the average error in euros and a 95 % interval.
+
 ## Team project until the next session
 
 Teams are formed and read the [final project brief](../17-18-final-presentations/final-project.md).

@@ -2,7 +2,6 @@
 
 import os
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
@@ -13,7 +12,8 @@ from price_model.models import LinearPriceModel
 from price_model.schemas import ListingFeatures, ModelCoefficients, PricePrediction
 
 
-@asynccontextmanager
+# An async generator function: FastAPI runs the code before `yield` at startup and the code after
+# it at shutdown. (Older tutorials add @asynccontextmanager here; current FastAPI no longer needs it.)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Run code at startup (before the first request) and at shutdown (after the yield).
 
