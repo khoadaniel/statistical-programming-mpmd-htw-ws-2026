@@ -26,7 +26,7 @@ Extras 02–05 download the 20 Newsgroups dataset (about 14 MB) on first use; ex
 |---|---|---|---|---|
 | [data/county_and_state.csv](data/county_and_state.csv), [data/county_and_population.csv](data/county_and_population.csv), [data/log.txt](data/log.txt) | [DS-100/course-notes, `content/regex/data/`](https://github.com/DS-100/course-notes/tree/main/content/regex/data) | [BSD-3-Clause](https://github.com/DS-100/course-notes/blob/main/LICENSE) | 2026-10-01 | Unchanged; used by extra 01 |
 
-**Case-study data** (read by the block notebooks from `case-study/data/ebti/`): European Commission, *European Binding Tariff Information (EBTI)* database, full export, reuse with acknowledgement under Commission Decision 2011/833/EU; nomenclature texts: European Commission, TARIC monthly extraction of 1 October 2026 (`Nomenclature EN.xlsx`), same reuse conditions. Prepared by the lecturer and downloaded as `ebti-v1.zip` from the course drive; see [case-study/README.md](../../../../case-study/README.md).
+**Case-study data** (read by the block notebooks from `case-study/final-challenge/data/`): European Commission, *European Binding Tariff Information (EBTI)* database, full export, reuse with acknowledgement under Commission Decision 2011/833/EU; nomenclature texts: European Commission, TARIC monthly extraction of 1 October 2026 (`Nomenclature EN.xlsx`), same reuse conditions. Prepared by the lecturer and stored in the repository (Git LFS); see [case-study/README.md](../../../../case-study/README.md).
 
 ## Figures
 

@@ -32,7 +32,7 @@ FastAPI documentation (MIT), HTTPX documentation, MDN Web Docs, Made With ML (MI
 | Data | Used in | Source | Licence |
 |---|---|---|---|
 | Daily Berlin weather (temperature, precipitation, sunshine), requested live | `weather.py`, Block 1, exercises 1.1 and 1.7 (printed and mocked responses) | [Open-Meteo](https://open-meteo.com/) archive and forecast APIs | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); free API for non-commercial use (fewer than 10,000 calls per day) |
-| Stored daily weather (`case-study/data/airbnb/weather_daily.parquet`) | Block 1 (comparison with the live download, offline fallback) | Open-Meteo, fetched by the lecturer's preparation script; part of `airbnb-v1.zip` on the course drive | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Stored daily weather (`case-study/airbnb/data/weather_daily.parquet`) | Block 1 (comparison with the live download, offline fallback) | Open-Meteo, fetched by the lecturer's preparation script; stored in the repository (Git LFS) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Live departures at S+U Alexanderplatz | Block 1, section "Requesting data with httpx" (nested JSON) | [v6.vbb.transport.rest](https://v6.vbb.transport.rest/), community-run, data of VBB | Not stored; requested live only |
 | Customs decisions and nomenclature texts | Blocks 1 and 2, exercises, workspace | European Commission, *European Binding Tariff Information (EBTI)* database, full export; reuse with acknowledgement under Commission Decision 2011/833/EU. Nomenclature texts: European Commission, TARIC monthly extraction of 1 October 2026 (`Nomenclature EN.xlsx`), same reuse conditions | Decision 2011/833/EU |
 

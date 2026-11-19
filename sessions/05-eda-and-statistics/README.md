@@ -44,7 +44,7 @@ Exploratory findings: decisions per heading, language, member state and year, an
 
 ## Setup
 
-- Airbnb data, once: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
+- Airbnb data, once: get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)).
 - Dashboard (block 2), in a terminal from the repository root: `uv run streamlit run sessions/05-eda-and-statistics/workbooks/dashboard_app.py`.
 - Some extras need packages outside the course environment; see the extras page.
 

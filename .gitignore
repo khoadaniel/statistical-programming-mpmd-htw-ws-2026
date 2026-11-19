@@ -35,14 +35,17 @@ Thumbs.db
 .idea/
 *.swp
 
-# Course data: download it into case-study/data/
-case-study/data/*
-!case-study/data/README.md
-!case-study/data/.gitkeep
+# Course data is in case-study/airbnb/data/ and case-study/final-challenge/data/ (Git LFS, see .gitattributes).
+# Files generated from it stay out of Git:
+case-study/airbnb/data/pgdata/
+case-study/airbnb/data/*.sqlite
+case-study/data/
 submission*.csv
 
 # Local folders
 .claude/
+
+# Lecturer only: raw downloads, held-out evaluation sets, preparation outputs
 case-study/lecturer/
 internal/
 teaching-notes/

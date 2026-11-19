@@ -2,7 +2,7 @@
 
     uv run python sessions/16-deployment-and-monitoring/figures/make_figures.py
 
-Uses the EBTI case-study data (case-study/data/ebti/), with the validation design and the simulated release
+Uses the EBTI case-study data (case-study/final-challenge/data/), with the validation design and the simulated release
 date of block notebook 02: the training decisions (decisions.parquet without the validation fold)
 that started before 2026 are the reference, the training decisions of 2026 the current data (the requests
 after a simulated release at the start of 2026) and their labels.
@@ -20,7 +20,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 
 OUT = Path(__file__).resolve().parent
-DATA = Path("case-study/data/ebti")
+DATA = Path("case-study/final-challenge/data")
 RELEASE = pd.Timestamp("2026-01-01")
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"

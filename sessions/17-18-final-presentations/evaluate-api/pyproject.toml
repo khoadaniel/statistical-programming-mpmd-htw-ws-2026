@@ -1,0 +1,13 @@
+[project]
+name = "evaluate-api"
+version = "1.0.0"
+description = "Score a subheading API on labelled decisions and list every wrong id (final project)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=17.0",  # reads a Parquet file; a CSV file needs no extra package
+    "scikit-learn>=1.5",
+]

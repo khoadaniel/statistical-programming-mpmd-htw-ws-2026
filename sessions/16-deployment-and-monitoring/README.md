@@ -9,7 +9,7 @@
 - How web APIs work: requests, responses, status codes, JSON, authentication, pagination, rate limits, retries.
 - Requesting Berlin weather from Open-Meteo with httpx: failing gracefully, a client class with validated records, ten years in yearly requests, nested JSON, and testing with a mock server.
 - From notebook to service: the fitted pipeline saved with joblib and skops, versions, checksums, `uv.lock`, configuration from environment variables.
-- A prediction API with FastAPI and pydantic: validation, start-up loading, generated documentation, tests with `TestClient`, time per request, and checking the final-project interface with `case-study/evaluate_api.py`.
+- A prediction API with FastAPI and pydantic: validation, start-up loading, generated documentation, tests with `TestClient`, time per request, and checking the final-project interface with `sessions/17-18-final-presentations/evaluate-api/`.
 - Containers with Docker: the workspace Dockerfile, layers and the build cache, building and running the image.
 - Continuous delivery with GitHub Actions: workflows, CI on every push, a release on a version tag with a version check.
 - Worked example: the service answers newer validation decisions in five languages.
@@ -29,7 +29,7 @@
 
 ## Team project until the final presentations
 
-API release: the service answers the interface of the [final project](../17-18-final-presentations/final-project.md) (checked with `case-study/evaluate_api.py`), runs with the dashboard under Docker Compose and is released through the CI/CD workflow, with a monitoring plan and a model card. Retrain on all your decisions, including the newest, and update the reported score. Release a version tag (for example `v2.0.0`) through the CD workflow. At the code freeze, the day before Session 17, set the tag `submission` on `main` ([how to submit](../17-18-final-presentations/final-project.md#how-to-submit-the-submission-tag)).
+API release: the service answers the interface of the [final project](../17-18-final-presentations/final-project.md) (checked with `sessions/17-18-final-presentations/evaluate-api/`), runs with the dashboard under Docker Compose and is released through the CI/CD workflow, with a monitoring plan and a model card. Retrain on all your decisions, including the newest, and update the reported score. Release a version tag (for example `v2.0.0`) through the CD workflow. At the code freeze, the day before Session 17, set the tag `submission` on `main` ([how to submit](../17-18-final-presentations/final-project.md#how-to-submit-the-submission-tag)).
 
 ## Setup
 

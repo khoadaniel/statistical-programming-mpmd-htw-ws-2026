@@ -13,7 +13,7 @@ from pprint import pprint
 
 from listingtools.listings import ListingTable
 
-DEFAULT_PATH = "case-study/data/airbnb/listings.parquet"
+DEFAULT_PATH = "case-study/airbnb/data/listings.parquet"
 
 
 def main(argv: list[str] | None = None) -> None:

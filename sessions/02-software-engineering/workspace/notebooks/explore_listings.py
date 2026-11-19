@@ -13,7 +13,7 @@
 # %%
 import pandas as pd
 
-df = pd.read_parquet("case-study/data/airbnb/listings.parquet")
+df = pd.read_parquet("case-study/airbnb/data/listings.parquet")
 print(df.shape, df["host_id"].nunique(), "hosts")
 
 # %%

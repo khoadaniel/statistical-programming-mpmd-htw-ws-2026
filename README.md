@@ -72,7 +72,7 @@ AI assistants are allowed in this course. Use them to explain, not to replace yo
 
 ## Licences and attribution
 
-Course-written material (lecture notebooks, own notebooks, workspaces) is licensed under CC BY 4.0. Third-party notebooks keep their original licences. The page `workbooks/extras/README.md` of each session lists the source, licence and any change of every downloaded notebook. Some sources are licensed for non-commercial use only (CC BY-NC) or may only be shared unchanged (CC BY-NC-ND); this is noted per file. The case-study data come from the European Commission's EBTI database (reuse with acknowledgement of the source) and from Inside Airbnb (CC BY 4.0). Students download them from the course drive (see `case-study/README.md`).
+Course-written material (lecture notebooks, own notebooks, workspaces) is licensed under CC BY 4.0. Third-party notebooks keep their original licences. The page `workbooks/extras/README.md` of each session lists the source, licence and any change of every downloaded notebook. Some sources are licensed for non-commercial use only (CC BY-NC) or may only be shared unchanged (CC BY-NC-ND); this is noted per file. The case-study data come from the European Commission's EBTI database (reuse with acknowledgement of the source) and from Inside Airbnb (CC BY 4.0). The data are stored in the repository with Git LFS (see `case-study/README.md`).
 
 ## Repository layout
 

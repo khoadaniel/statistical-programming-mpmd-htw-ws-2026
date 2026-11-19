@@ -3,7 +3,7 @@
 Run from the repository root:
     uv run python sessions/06-regression/figures/make_figures.py
 
-Uses seeded toy data and the Inside Airbnb Berlin listings in case-study/data/airbnb/.
+Uses seeded toy data and the Inside Airbnb Berlin listings in case-study/airbnb/data/.
 """
 
 from pathlib import Path
@@ -20,7 +20,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures
 
 OUT = Path(__file__).parent
-DATA = Path("case-study/data/airbnb")
+DATA = Path("case-study/airbnb/data")
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#8C8C8C"
 plt.rcParams.update({
     "figure.dpi": 100,

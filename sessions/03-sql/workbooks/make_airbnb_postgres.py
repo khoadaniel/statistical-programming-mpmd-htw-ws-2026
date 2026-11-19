@@ -1,7 +1,7 @@
 """Build the course's PostgreSQL database of the Berlin Airbnb case study.
 
 Session 3 queries the Inside Airbnb Berlin snapshot with SQL. This script starts (or reuses) a local PostgreSQL server whose
-data live in case-study/data/airbnb/pgdata/, creates the database `airbnb` and stores three tables in it:
+data live in case-study/airbnb/data/pgdata/, creates the database `airbnb` and stores three tables in it:
 
     listings   one row per listing (id is the primary key)
     calendar   one row per listing and night of the coming year (listing_id, date, available)
@@ -15,7 +15,7 @@ The server comes from the package pixeltable-pgserver, which ships the PostgreSQ
     uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py
     ... make_airbnb_postgres.py --force      # drop and rebuild the three tables
 
-The output lies in case-study/data/, which is not committed to Git.
+The output lies in case-study/airbnb/data/pgdata/, which is not committed to Git.
 Author: course team, licence CC BY 4.0. Data: Inside Airbnb, Berlin, CC BY 4.0.
 """
 
@@ -31,7 +31,7 @@ import pixeltable_pgserver as pgserver
 import psycopg
 
 ROOT = Path(__file__).resolve().parents[3]
-PARQUET = ROOT / "case-study" / "data" / "airbnb"
+PARQUET = ROOT / "case-study" / "airbnb" / "data"
 PGDATA = PARQUET / "pgdata"
 DATABASE = "airbnb"
 
@@ -99,8 +99,8 @@ def copy_frame(con: psycopg.Connection, table: str, frame: pd.DataFrame) -> None
 def build(uri: str, parquet: Path = PARQUET, force: bool = False) -> None:
     """Create listings, calendar and reviews from the Parquet files, in one transaction."""
     if not (parquet / "listings.parquet").exists():
-        raise SystemExit(f"{parquet / 'listings.parquet'} not found: download airbnb-v1.zip from the course drive "
-                         "and unzip it into case-study/data/ (see case-study/README.md)")
+        raise SystemExit(f"{parquet / 'listings.parquet'} not found: run git lfs pull "
+                         "to fetch the data (see case-study/README.md)")
     with psycopg.connect(uri) as con:                  # one transaction: commit at the end, or nothing at all
         exists = con.execute("SELECT to_regclass('listings') IS NOT NULL").fetchone()[0]
         if exists and not force:

@@ -1,6 +1,6 @@
 """Figures for the appendix of CURRICULUM.md (the final project).
 
-Needs case-study/data/ebti/decisions.parquet (ebti-v1.zip from the course drive, see
+Needs case-study/final-challenge/data/decisions.parquet (Git LFS, see
 case-study/README.md):
 
     uv run python proposal/assets/final-project/make_figures.py
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[3]
-DATA = ROOT / "case-study" / "data" / "ebti"
+DATA = ROOT / "case-study" / "final-challenge" / "data"
 OUT = Path(__file__).resolve().parent
 BLUE, TEAL, PURPLE, GREY, RED = "#3b5b8c", "#2d7d74", "#6a5a8c", "#9aa3ae", "#8c4a5e"
 plt.rcParams.update({"font.size": 11, "axes.spines.top": False, "axes.spines.right": False,

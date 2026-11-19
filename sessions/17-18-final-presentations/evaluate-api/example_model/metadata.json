@@ -1,0 +1,19 @@
+{
+  "created_at": "2026-11-19T13:31:09+00:00",
+  "python": "3.14.7",
+  "scikit_learn": "1.9.1",
+  "classes": [
+    "090121",
+    "330499",
+    "392410",
+    "620342",
+    "640359",
+    "732690",
+    "851713",
+    "950300"
+  ],
+  "version": "0.0.1-example",
+  "note": "Example only: trained on the 8 invented rows of example_validation.csv.",
+  "model_file": "model.joblib",
+  "model_sha256": "2dd2f3b221dee44753fefd6297ec2519c47261cd120262742519359765765f97"
+}

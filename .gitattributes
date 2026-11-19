@@ -1,0 +1,5 @@
+# Git LFS: the course data (see case-study/README.md, "Getting the data")
+case-study/airbnb/data/*.parquet filter=lfs diff=lfs merge=lfs -text
+case-study/final-challenge/data/*.parquet filter=lfs diff=lfs merge=lfs -text
+case-study/final-challenge/data/nomenclature/*.xlsx filter=lfs diff=lfs merge=lfs -text
+case-study/final-challenge/data/nomenclature/*.pdf filter=lfs diff=lfs merge=lfs -text

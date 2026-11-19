@@ -5,8 +5,8 @@ Run from the repository root:
         python sessions/11-unsupervised-learning/figures/make_figures.py
 
 The first four figures use toy data or built-in scikit-learn data; amenities_pca uses the
-Inside Airbnb Berlin listings (case-study/data/airbnb/listings.parquet: download
-airbnb-v1.zip from the course drive and unzip it into case-study/data/; needs pandas and pyarrow).
+Inside Airbnb Berlin listings (case-study/airbnb/data/listings.parquet: download
+run git lfs pull; needs pandas and pyarrow).
 All use a fixed random seed.
 """
 
@@ -147,7 +147,7 @@ def amenities_pca():
     from sklearn.preprocessing import MultiLabelBinarizer
 
     root = Path(__file__).resolve().parents[3]
-    listings = pd.read_parquet(root / "case-study" / "data" / "airbnb" / "listings.parquet")
+    listings = pd.read_parquet(root / "case-study" / "airbnb" / "data" / "listings.parquet")
     mlb = MultiLabelBinarizer()
     A = pd.DataFrame(mlb.fit_transform(listings["amenities"].apply(json.loads)), columns=mlb.classes_)
     share = A.mean()

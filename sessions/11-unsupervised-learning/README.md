@@ -44,7 +44,7 @@ Open points from the interim review.
 
 ## Setup
 
-- The Airbnb data: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). The Telco data are read from GitHub.
+- The Airbnb data: get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)). The Telco data are read from GitHub.
 - The ISLP lab among the extras needs the `ISLP` package. Open the extras with it from the repository root; some other extras download data sets on first run.
 
   ```bash

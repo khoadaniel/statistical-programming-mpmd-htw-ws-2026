@@ -63,7 +63,7 @@ Teams are formed and read the [final project brief](../17-18-final-presentations
 
 ## Setup
 
-- The case-study data: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)); `ebti-v1.zip` is needed from Session 3 on.
+- The case-study data: get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)); the EBTI data are needed from Session 3 on.
 - The job advertisements of exercise 1.1 are handed out by the lecturer; they are not in the repository.
 - To regenerate the figures: `uv run python sessions/01-careers-and-python/figures/make_figures.py`. To refresh the skills heat map with today's job ads, first run `uv run --with trafilatura python sessions/01-careers-and-python/figures/job_ad_skills.py` (about 250 page requests to the Data Berlin board).
 

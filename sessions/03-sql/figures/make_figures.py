@@ -2,7 +2,7 @@
 
 Run from the repository root:
     uv run python sessions/03-sql/figures/make_figures.py
-Data: Inside Airbnb Berlin (case-study/data/airbnb/), snapshot of 26 June 2026, CC BY 4.0.
+Data: Inside Airbnb Berlin (case-study/airbnb/data/), snapshot of 26 June 2026, CC BY 4.0.
 """
 from pathlib import Path
 
@@ -11,7 +11,7 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-DATA = ROOT / "case-study" / "data"
+DATA = ROOT / "case-study"
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
@@ -69,7 +69,7 @@ def join_types():
 
 
 def reviews_per_year():
-    reviews = pd.read_parquet(DATA / "airbnb" / "reviews_monthly.parquet")
+    reviews = pd.read_parquet(DATA / "airbnb" / "data" / "reviews_monthly.parquet")
     n = reviews.groupby(reviews["month"].dt.year)["n_reviews"].sum()
     n = n[(n.index >= 2012) & (n.index <= 2025)]          # 2026 is incomplete
     change = n.diff()

@@ -26,7 +26,7 @@ def test_predict_contract(client):
 
 
 def test_final_project_interface(client):
-    """The interface of the final project (final-project.md), as case-study/evaluate_api.py calls it."""
+    """The interface of the final project (final-project.md), as sessions/17-18-final-presentations/evaluate-api calls it."""
     assert client.get("/health").json()["status"] == "ok"
     for body in [BOOTS, {"description": BOOTS["description"]}]:          # language is optional
         r = client.post("/predict", json=body)

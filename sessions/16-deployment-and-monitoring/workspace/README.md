@@ -40,7 +40,7 @@ uv run pytest -q                          # 35 passed, 1 skipped (skops not inst
 uvx ruff check .
 
 # version 1 on all 103,656 decisions (a few minutes; accuracy 0.789, top-3 0.860 on the newest 20 % of them)
-uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet --version 1.0.0
+uv run python -m tariff_service.train --data ../../../case-study/final-challenge/data/decisions.parquet --version 1.0.0
 
 # start the API (Ctrl+C stops it) and open http://localhost:8000/docs
 uv run uvicorn tariff_service.app:app --reload
@@ -48,8 +48,8 @@ curl -X POST localhost:8000/predict -H "Content-Type: application/json" \
      -d '{"description": "Stiefel, mit Laufsohlen aus Kautschuk, mit Oberteil aus Leder (Rindleder)"}'
 
 # in a second terminal, from the repository root: the check the lecturer runs after the code freeze,
-# here on your own validation decisions (a Parquet file with description and heading)
-uv run python case-study/evaluate_api.py --url http://localhost:8000 --data my_validation.parquet
+# here on your own validation decisions (the file format is described in Appendix B of the final project brief)
+(cd ../../17-18-final-presentations/evaluate-api && uv run evaluate_api.py --label heading --url http://localhost:8000 --data path/to/my_validation.csv)
 ```
 
 The tests never need the case-study data: `tests/conftest.py` trains a model on 16 built-in descriptions.
@@ -88,15 +88,15 @@ The exercises in class are at the end of the two block notebooks
    which service; see the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb)).
 4. **Monitoring (after Block 2).** Implement `oov_rate` (TODO in `drift.py`). Simulate a model released at the start
    of 2026, as in the block notebook: `uv run python -m tariff_service.train --data
-   ../../../case-study/data/ebti/decisions.parquet --before 2026-01-01 --version 1.0.0`. Run the drift report on
+   ../../../case-study/final-challenge/data/decisions.parquet --before 2026-01-01 --version 1.0.0`. Run the drift report on
    the decisions of 2026, which v1 never saw, first on their inputs only, as before the labels arrive:
-   `uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet --since 2026-01-01
+   `uv run python -m tariff_service.monitor --current ../../../case-study/final-challenge/data/decisions.parquet --since 2026-01-01
    --hide-labels`, then without `--hide-labels`, so that their headings are used. Which input drifts? Is the condition of the
    retraining rule met?
 5. **Version 2 and the model card (after Block 2).** Retrain on all decisions, 2026 included
-   (`--data ../../../case-study/data/ebti/decisions.parquet --version 2.0.0`), compare v1 and v2 on validation decisions that neither of them saw in training, as in
+   (`--data ../../../case-study/final-challenge/data/decisions.parquet --version 2.0.0`), compare v1 and v2 on validation decisions that neither of them saw in training, as in
    the block notebook [02-lecture-architecture-monitoring-and-maintenance.ipynb](../workbooks/02-lecture-architecture-monitoring-and-maintenance.ipynb), check the API with
-   `case-study/evaluate_api.py`, update the reported score in your README, and fill in `MODEL_CARD.md` for v2.
+   `sessions/17-18-final-presentations/evaluate-api/`, update the reported score in your README, and fill in `MODEL_CARD.md` for v2.
 
 With the course data, v1 of exercise 4, trained with `--before 2026-01-01` on all decisions before 2026, has a
 time-based validation accuracy of 0.8025 on the newest 20 % of those decisions. (The 0.789 of the first run above

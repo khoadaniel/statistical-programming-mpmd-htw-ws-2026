@@ -66,6 +66,6 @@ Several exercises come from established sources named in their *Source* line.
 
 | Data | Used in | Source | Licence |
 |---|---|---|---|
-| Inside Airbnb, Berlin snapshot of 26 June 2026 (listings), prepared by the lecturer and handed out as `airbnb-v1.zip` | both block notebooks; workspace (`listing-summary`, `explore_listings.py`); exercise 2.3 | [insideairbnb.com](https://insideairbnb.com/get-the-data/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| Inside Airbnb, Berlin snapshot of 26 June 2026 (listings), prepared by the lecturer and handed out with the repository (Git LFS) | both block notebooks; workspace (`listing-summary`, `explore_listings.py`); exercise 2.3 | [insideairbnb.com](https://insideairbnb.com/get-the-data/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
 No data are stored in the repository; the listings in the workspace tests are invented or shortened, and every file the notebooks create (Git demonstration repositories, test files, configuration files) is written to a temporary folder.

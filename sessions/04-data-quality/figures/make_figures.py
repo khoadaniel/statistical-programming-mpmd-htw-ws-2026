@@ -13,7 +13,7 @@ from sklearn.covariance import EmpiricalCovariance, MinCovDet
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-DATA = ROOT / "case-study" / "data"
+DATA = ROOT / "case-study"
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
@@ -31,7 +31,7 @@ def save(fig, name):
 
 
 def load_listings():
-    return pd.read_parquet(DATA / "airbnb" / "listings.parquet")
+    return pd.read_parquet(DATA / "airbnb" / "data" / "listings.parquet")
 
 
 def missingness_pattern():

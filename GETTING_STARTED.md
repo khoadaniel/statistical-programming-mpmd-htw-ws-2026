@@ -215,7 +215,7 @@ The repository contains the VS Code settings for this ([`.vscode/settings.json`]
 
 ## Step 7 · Download the course data
 
-The notebooks read two datasets that are not in the repository. Download `airbnb-v1.zip` and `ebti-v1.zip` from the course drive and unzip them inside `case-study/data/`, as described in [Getting the data](case-study/README.md#getting-the-data), including the command that checks the result.
+The notebooks read two datasets that are not in the repository. Get the data with `git lfs pull`, as described in [Getting the data](case-study/README.md#getting-the-data), including the command that checks the result.
 
 You are ready for Session 1.
 

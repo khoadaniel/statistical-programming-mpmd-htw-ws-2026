@@ -62,7 +62,7 @@ The ISLP labs load their data from the `ISLP` package; extras 10, 11 and 15 load
 
 ## Case-study data
 
-The block notebooks use the Inside Airbnb Berlin listings in `case-study/data/airbnb/` (snapshot of 26 June 2026, CC BY 4.0, collected from public listing pages; personal data removed by the lecturer before handing out `airbnb-v1.zip`, see [case-study/README.md](../../../../case-study/README.md); reported in aggregate, hosts never named). The IBM Telco customer churn sample is downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and is not stored in the repository.
+The block notebooks use the Inside Airbnb Berlin listings in `case-study/airbnb/data/` (snapshot of 26 June 2026, CC BY 4.0, collected from public listing pages; personal data removed by the lecturer before handing out the data, see [case-study/README.md](../../../../case-study/README.md); reported in aggregate, hosts never named). The IBM Telco customer churn sample is downloaded at run time from [IBM/telco-customer-churn-on-icp4d](https://github.com/IBM/telco-customer-churn-on-icp4d) (Apache-2.0) and is not stored in the repository.
 
 ## References cited in the block notebooks
 

@@ -6,8 +6,8 @@ Start from the repository root:
 The app opens at http://localhost:8501. Every widget change reruns this script from top to
 bottom; the data are read once thanks to @st.cache_data.
 
-Data: case-study/data/airbnb/listings.parquet (Inside Airbnb, Berlin snapshot of 26 June 2026,
-CC BY 4.0; download airbnb-v1.zip from the course drive and unzip it into case-study/data/, see
+Data: case-study/airbnb/data/listings.parquet (Inside Airbnb, Berlin snapshot of 26 June 2026,
+CC BY 4.0; get the data with `git lfs pull`, see
 case-study/README.md). Only listings with a price and a minimum stay below 28 nights are shown:
 the price field of medium-term listings is not comparable (Session 4). The data come from public listing pages; the app shows aggregates only.
 
@@ -25,7 +25,7 @@ import plotly.express as px
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[3]          # repository root
-DATA = ROOT / "case-study" / "data" / "airbnb"
+DATA = ROOT / "case-study" / "airbnb" / "data"
 OKABE_ITO = ["#0072B2", "#E69F00", "#009E73", "#D55E00"]
 
 

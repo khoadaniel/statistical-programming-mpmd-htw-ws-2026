@@ -17,7 +17,7 @@ import pandas as pd
 import pytest
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "case-study").is_dir())
-DATA = ROOT / "case-study" / "data" / "airbnb"
+DATA = ROOT / "case-study" / "airbnb" / "data"
 CLEAN = Path(os.environ["AIRBNB_CLEAN_OUT"]) if os.environ.get("AIRBNB_CLEAN_OUT") else None
 
 ROOM_TYPES = {"Entire home/apt", "Private room", "Hotel room", "Shared room"}
@@ -26,7 +26,7 @@ LAT, LON = (52.33, 52.68), (13.08, 13.77)            # bounding box of neighbour
 REGISTRATION = r"\d{2}/[Z3]/[A-Z]{2}/?\d+"           # the pattern the preparation script keeps (any case)
 
 if not (DATA / "listings.parquet").exists():
-    pytest.skip("Airbnb data missing: download airbnb-v1.zip from the course drive into case-study/data/ "
+    pytest.skip("Airbnb data missing: get the data with `git lfs pull` "
                 "(see case-study/README.md)", allow_module_level=True)
 
 

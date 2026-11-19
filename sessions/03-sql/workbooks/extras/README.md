@@ -17,7 +17,7 @@ Keep the original attribution and licence notices when reusing these sources. Th
 
 ## Data
 
-The course database `airbnb` on the local PostgreSQL server is built by [`../make_airbnb_postgres.py`](../make_airbnb_postgres.py) from the Inside Airbnb Berlin snapshot of 26 June 2026 (CC BY 4.0, [insideairbnb.com/get-the-data](https://insideairbnb.com/get-the-data/)); the server keeps its data in `case-study/data/airbnb/pgdata/`. The lecturer prepared these data (personal data removed, 20 % of the listings held back as a test set), and you download them as `airbnb-v1.zip` from the course drive (see [case-study/README.md](../../../../case-study/README.md)). Exercise 2.9 uses the daily Berlin weather from the [Open-Meteo historical weather API](https://open-meteo.com/en/docs/historical-weather-api) (CC BY 4.0), which comes in the same download. Neither is stored in this folder.
+The course database `airbnb` on the local PostgreSQL server is built by [`../make_airbnb_postgres.py`](../make_airbnb_postgres.py) from the Inside Airbnb Berlin snapshot of 26 June 2026 (CC BY 4.0, [insideairbnb.com/get-the-data](https://insideairbnb.com/get-the-data/)); the server keeps its data in `case-study/airbnb/data/pgdata/`. The lecturer prepared these data (personal data removed, 20 % of the listings held back as a test set), and you get them with the repository (Git LFS) (see [case-study/README.md](../../../../case-study/README.md)). Exercise 2.9 uses the daily Berlin weather from the [Open-Meteo historical weather API](https://open-meteo.com/en/docs/historical-weather-api) (CC BY 4.0), which comes in the same download. Neither is stored in this folder.
 
 ## Figures
 

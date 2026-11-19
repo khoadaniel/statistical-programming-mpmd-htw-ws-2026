@@ -27,12 +27,12 @@
 
 ## Team project until the next session
 
-Download `ebti-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)). Write a loading script that stores the decisions from `case-study/data/ebti/decisions.parquet` in a PostgreSQL database of the team (for example a database `ebti` on the local server), then count them in SQL per start year (`start_date`), language and member state (`issuing_country`).
+Get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)). Write a loading script that stores the decisions from `case-study/final-challenge/data/decisions.parquet` in a PostgreSQL database of the team (for example a database `ebti` on the local server), then count them in SQL per start year (`start_date`), language and member state (`issuing_country`).
 
 ## Setup
 
-- Download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
-- Build the course database once: `uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py` starts a local PostgreSQL server (data in `case-study/data/airbnb/pgdata/`, not committed) and loads the tables into the database `airbnb`. The notebooks run this step themselves; `--force` rebuilds the tables, for example after exercise 2.9.
+- Get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)).
+- Build the course database once: `uv run python sessions/03-sql/workbooks/make_airbnb_postgres.py` starts a local PostgreSQL server (data in `case-study/airbnb/data/pgdata/`, not committed) and loads the tables into the database `airbnb`. The notebooks run this step themselves; `--force` rebuilds the tables, for example after exercise 2.9.
 - Optional: a database client such as [DBeaver](https://dbeaver.io/) or [pgAdmin](https://www.pgadmin.org/) to look at the tables while the server runs.
 
 [SQL playground](playground/README.md): an empty PostgreSQL server with three small tables (students, courses, scores) to try queries on your own. A second playground compares a [star and a snowflake schema](playground/star-vs-snowflake-playground.ipynb) of the same data.

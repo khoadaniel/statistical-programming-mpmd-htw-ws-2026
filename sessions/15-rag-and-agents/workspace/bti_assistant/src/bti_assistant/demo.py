@@ -20,7 +20,7 @@ from .rag import vote_headings
 from .retrieval import VectorRetriever
 from .store import NumpyVectorStore, SQLiteVectorStore
 
-DEFAULT_DATA = Path(__file__).resolve().parents[6] / "case-study" / "data" / "ebti"
+DEFAULT_DATA = Path(__file__).resolve().parents[6] / "case-study" / "final-challenge" / "data"
 
 
 def load_collection(data_dir: Path, n: int = 5000, seed: int = 0) -> dict[str, tuple[str, str]]:

@@ -1,9 +1,9 @@
-"""Draw the figures of the two dataset introductions (case-study/airbnb/ and case-study/ebti/).
+"""Draw the figures of the two dataset introductions (case-study/airbnb/ and case-study/final-challenge/).
 
     uv run python case-study/make_dataset_figures.py
 
-Reads the student data in case-study/data/ (the course-drive download) and writes PNG files to
-case-study/airbnb/figures/ and case-study/ebti/figures/.
+Reads the student data in case-study/airbnb/data/ and case-study/final-challenge/data/ and writes PNG files to
+case-study/airbnb/figures/ and case-study/final-challenge/figures/.
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ import pandas as pd
 from matplotlib.ticker import FuncFormatter
 
 HERE = Path(__file__).resolve().parent
-DATA = HERE / "data"
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 INK, INK_2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
@@ -42,7 +41,7 @@ def save(fig: plt.Figure, path: Path) -> None:
 # ---------------------------------------------------------------- Airbnb
 
 def airbnb() -> None:
-    a = DATA / "airbnb"
+    a = HERE / "airbnb" / "data"
     listings = pd.read_parquet(a / "listings.parquet")
     reviews = pd.read_parquet(a / "reviews_monthly.parquet")
     out = HERE / "airbnb" / "figures"
@@ -123,9 +122,9 @@ def airbnb() -> None:
 # ---------------------------------------------------------------- EBTI
 
 def ebti() -> None:
-    e = DATA / "ebti"
+    e = HERE / "final-challenge" / "data"
     labelled = pd.read_parquet(e / "decisions.parquet")
-    out = HERE / "ebti" / "figures"
+    out = HERE / "final-challenge" / "figures"
 
     # 1 · languages
     names = {"de": "German", "fr": "French", "nl": "Dutch", "es": "Spanish", "cs": "Czech", "pl": "Polish",

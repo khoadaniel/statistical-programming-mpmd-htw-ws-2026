@@ -38,7 +38,7 @@ Class imbalance is taught in [Session 8](../../../08-classification-and-metrics/
 ## Data
 
 - **Inside Airbnb (2026).** *Berlin, Germany*: listings, monthly review counts and calendar, snapshot of 26 June 2026, CC BY 4.0, prepared by the lecturer (see `case-study/README.md`; 20 % of listings held back as a test set; host names and other personal data removed). https://insideairbnb.com/get-the-data/ · *Data assumptions*: https://insideairbnb.com/data-assumptions/
-- **Open-Meteo.** Historical weather API, daily Berlin weather since 2016, CC BY 4.0, fetched by the lecturer and shipped in `airbnb-v1.zip`. https://open-meteo.com
+- **Open-Meteo.** Historical weather API, daily Berlin weather since 2016, CC BY 4.0, fetched by the lecturer and stored in the repository (Git LFS). https://open-meteo.com
 
 ## References cited in the block notebook
 

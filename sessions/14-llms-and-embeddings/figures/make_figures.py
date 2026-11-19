@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).resolve().parent
-DATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "ebti" / "decisions.parquet"
+DATA = Path(__file__).resolve().parents[3] / "case-study" / "final-challenge" / "data" / "decisions.parquet"
 plt.rcParams.update({"font.size": 10, "axes.spines.top": False, "axes.spines.right": False})
 PALETTE = ["#2471a3", "#c0392b", "#27ae60", "#8e44ad", "#d68910", "#17a589"]
 

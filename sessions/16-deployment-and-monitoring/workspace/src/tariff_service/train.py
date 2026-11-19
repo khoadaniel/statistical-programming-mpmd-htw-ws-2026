@@ -1,9 +1,9 @@
 """Train version N of the heading model and write it to models/ with its metadata.
 
-    uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet --version 1.0.0
-    uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet \\
+    uv run python -m tariff_service.train --data ../../../case-study/final-challenge/data/decisions.parquet --version 1.0.0
+    uv run python -m tariff_service.train --data ../../../case-study/final-challenge/data/decisions.parquet \\
         --before 2026-01-01 --version 1.0.0               # simulate a model released at the start of 2026
-    uv run python -m tariff_service.train --data ../../../case-study/data/ebti/decisions.parquet \\
+    uv run python -m tariff_service.train --data ../../../case-study/final-challenge/data/decisions.parquet \\
         --version 2.0.0                                   # retraining with all decisions, 2026 included
     uv run python -m tariff_service.train --fixture                # tiny model for tests and CI smoke tests
 

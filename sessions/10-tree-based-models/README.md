@@ -37,7 +37,7 @@ Interim review: data, validation plan, baselines, plan for Sessions 13–16. Ses
   | Linux | `sudo apt install libgomp1` (Ubuntu, Debian) or `sudo dnf install libgomp` (Fedora) | Usually installed already. |
 
   Then run `uv run check_setup` in the repository folder: the lines for `xgboost` and `lightgbm` must show ✅.
-- The notebooks read the Telco data from GitHub (internet needed) and the Airbnb data from `case-study/data/airbnb/`: download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` (see [case-study/README.md](../../case-study/README.md)).
+- The notebooks read the Telco data from GitHub (internet needed) and the Airbnb data from `case-study/airbnb/data/`: get the data with `git lfs pull` (see [case-study/README.md](../../case-study/README.md)).
 - Some extras need more packages: extra 11 `hyperopt`, extra 09 `ISLP`, extra 18 `econml` and `graphviz` (see the extras README).
 
 [Extras and downloaded notebook provenance](workbooks/extras/README.md)

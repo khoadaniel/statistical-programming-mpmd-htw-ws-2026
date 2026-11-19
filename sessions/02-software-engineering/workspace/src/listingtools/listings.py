@@ -32,7 +32,7 @@ class ListingTable:
         data: the listings as a pandas DataFrame, one row per listing.
 
     Example:
-        >>> table = ListingTable.from_parquet("case-study/data/airbnb/listings.parquet")
+        >>> table = ListingTable.from_parquet("case-study/airbnb/data/listings.parquet")
         >>> len(table)
         10221
     """

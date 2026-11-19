@@ -102,7 +102,7 @@ The market analysis asks which skills employers in Berlin and Europe expect from
 | Python | 48 % | S1–S2 |
 | SQL | 33 % | S3 |
 | Communication | 30 % | S5, S17–S18 |
-| Stakeholder management | 30 % | S5, project charter |
+| Stakeholder management | 30 % | S5 |
 | Agentic AI | 28 % | S15 |
 | Machine learning | 28 % | S6–S11 |
 | AWS / Google Cloud / Azure | 20 % / 14 % / 11 % | S16 |
@@ -166,7 +166,7 @@ The curriculum uses one running case study so that every method is practised on 
 - **Reference scores (accuracy, one possible validation split of the students' data, stratified by heading and language: 88,848 decisions for training, 14,808 for validation).** Most frequent heading 4.2 %; word TF-IDF with a linear model 85.9 % on a 50,000-decision sample and 88.3 % on the full training set; character TF-IDF 89.0 %. The range leaves room for every method of the course to show a measurable effect.
 - **A built-in leakage example.** The justification names the heading in about two thirds of the decisions but exists only after classification. It is the course's example of data leakage: a feature that is not available at prediction time.
 - **A built-in drift example.** German descriptions make up 64 % of the decisions that started in 2024 but 57 % of those that started in 2026, while French rises from 15 % to 19 %; the HS revision of 2022 changed headings. Session 16 uses these to teach monitoring and retraining.
-- **Terms.** Reuse is permitted with acknowledgement of the source (Commission Decision 2011/833/EU); the holders of the decisions are not published. The lecturer prepares the data once, and students download them from the course drive.
+- **Terms.** Reuse is permitted with acknowledgement of the source (Commission Decision 2011/833/EU); the holders of the decisions are not published. The lecturer prepares the data once, and students get them with the repository (Git LFS).
 
 **Datasets per part of the course.** A pilot of all sessions on EBTI alone showed that every part outside text and language models then relies on contrived questions. Sessions 1–12 therefore use the Berlin listings of Inside Airbnb (CC BY 4.0), where questions such as "what drives nightly prices?" are practical and familiar to the students, together with Berlin weather from the Open-Meteo API. EBTI is used in Sessions 13–16, where predicting the heading from a description is a natural text task, and it is the task of the final project for all teams. Churn prediction, named in the module description, is taught on the IBM Telco sample data (7,043 customers).
 
@@ -178,7 +178,7 @@ The current module page lists a quiz (30 %), a take-home coding assignment (40 %
 - **One project, assessed on its method, not its score.** All teams work on the same task, which makes the projects comparable and lets students discuss their solutions with each other. Decisions can be looked up in the public EBTI database, so a high score could be obtained without the methods of the course. The score is therefore not converted into marks. The service must be reproducible from the team's repository, and its independent score is compared with the score the team reported. Each grade rests on how the student frames, handles, solves and explains their part of the problem.
 - **What the market values.** Project experience, judgement about results and communication are the skills employers name most often (Section 3); a presented project with individual questions assesses all three.
 - **Individual grading.** A grade cannot be given on the basis of group work. Each member is responsible for one area of the project and is graded only on their own work: their presented part and their answers to individual questions, and a paper they write alone about their part, its theoretical foundations and the lessons learned from the group work, read together with the code they wrote. Each criterion names the evidence it is judged on, and Git statistics are never counted into points, because commit and line counts are easy to inflate and say little about the work ([Beckman et al., 2021](https://arxiv.org/abs/2001.01988)). It combines the formats recommended for grading group work: an individual presentation, a paper on the individual part and the lessons learned, and questions in the style of a job interview.
-- **Risk of a single component.** A single component concentrates the risk. It is mitigated by ungraded check-ins with feedback (charter, interim review in Session 10, checkpoints in Sessions 13 and 14); sharing intermediate results is voluntary but recommended.
+- **Risk of a single component.** A single component concentrates the risk. It is mitigated by ungraded check-ins with feedback (interim review in Session 10, checkpoints in Sessions 13 and 14); sharing intermediate results is voluntary but recommended.
 
 The change requires approval and must be announced at the start of the semester (RStPO §§ 9–14).
 

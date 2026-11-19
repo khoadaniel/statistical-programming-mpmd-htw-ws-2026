@@ -26,7 +26,7 @@ Teaching notebooks: [block 1, classes, errors and tests](../workbooks/01-lecture
 
 ## Run it
 
-The summary of the real listings needs the case-study data (download `airbnb-v1.zip` from the course drive and unzip it into `case-study/data/` of the repository, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
+The summary of the real listings needs the case-study data (get the data with `git lfs pull`, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
 
 ```bash
 cd sessions/02-software-engineering/workspace
@@ -42,7 +42,7 @@ In a notebook or the Python console of this environment the classes are imported
 ```python
 from listingtools import ListingRecord, ListingTable
 
-table = ListingTable.from_parquet("case-study/data/airbnb/listings.parquet")
+table = ListingTable.from_parquet("case-study/airbnb/data/listings.parquet")
 table.by_district()
 table.price_by_room_type()
 ```

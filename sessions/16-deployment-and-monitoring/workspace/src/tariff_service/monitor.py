@@ -1,8 +1,8 @@
 """Drift report: compare a batch of new decisions with the reference stored in the model metadata.
 
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet \\
+    uv run python -m tariff_service.monitor --current ../../../case-study/final-challenge/data/decisions.parquet \\
         --since 2026-01-01 --hide-labels                  # inputs only, as before the labels arrive
-    uv run python -m tariff_service.monitor --current ../../../case-study/data/ebti/decisions.parquet \\
+    uv run python -m tariff_service.monitor --current ../../../case-study/final-challenge/data/decisions.parquet \\
         --since 2026-01-01                                # with the labels of 2026
 
 Input drift (description length, language and country shares) and prediction drift (predicted chapter

@@ -10,4 +10,4 @@
 
 ## Setup
 
-The Airbnb data must be unzipped into `case-study/data/airbnb/` ([getting the data](../../case-study/README.md#getting-the-data)).
+The Airbnb data must be unzipped into `case-study/airbnb/data/` ([getting the data](../../case-study/README.md#getting-the-data)).

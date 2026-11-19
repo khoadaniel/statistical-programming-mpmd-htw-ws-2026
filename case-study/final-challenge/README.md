@@ -1,6 +1,6 @@
 # EBTI: binding tariff decisions of the EU customs
 
-The dataset of Sessions 13–16 and of the final project: about 120,000 decisions in which an EU customs authority states how a product is classified in the customs tariff. The task is to predict the four-digit **heading** of a product from its description.
+The dataset of Sessions 13–16 and of the final project: about 120,000 decisions in which an EU customs authority states how a product is classified in the customs tariff. The task is to predict the six-digit **subheading** (HS6) of a product from its description.
 
 ## Where the data come from
 

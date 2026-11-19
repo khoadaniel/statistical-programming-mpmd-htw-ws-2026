@@ -3,7 +3,7 @@
 Run from the repository root:
     uv run python sessions/05-eda-and-statistics/figures/make_figures.py
 
-Uses the Inside Airbnb Berlin data in case-study/data/airbnb/ and small built-in tables.
+Uses the Inside Airbnb Berlin data in case-study/airbnb/data/ and small built-in tables.
 Deterministic: every random step is seeded.
 """
 
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 OUT = Path(__file__).parent
-DATA = Path("case-study/data/airbnb")
+DATA = Path("case-study/airbnb/data")
 
 # Okabe-Ito colours (colour-blind safe); grey for context
 BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#8C8C8C"

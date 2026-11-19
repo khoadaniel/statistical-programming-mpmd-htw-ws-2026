@@ -252,7 +252,7 @@ No prior knowledge of databases is assumed. The course teaches the SQL dialect o
 
 *Exercises and debrief*
 
-**Team project until the next teaching day.** Download the prepared customs decisions from the course drive, load them into a PostgreSQL database of the team and count them per year, language and member state in SQL.
+**Team project until the next teaching day.** Get the prepared customs decisions from the repository (`git lfs pull`), load them into a PostgreSQL database of the team and count them per year, language and member state in SQL.
 
 #### 📍 Session 4 · Data quality and preparation: validation, missing values, outliers and transformations
 
@@ -285,7 +285,7 @@ No prior knowledge of databases is assumed. The course teaches the SQL dialect o
 
 *Practice:* Find outliers in price and minimum stay. Case study: produce the cleaned table of Berlin listings with a log of every cleaning decision
 
-**Team project until the next teaching day.** Data quality report of the decisions and a short project charter (the team's plan: use of the suggestions, metric and baseline, validation design, roles).
+**Team project until the next teaching day.** Data quality report of the decisions.
 
 ### Analytics (Session 5)
 
@@ -827,7 +827,7 @@ The last row is the course's main leakage example (Session 13). Customs writes t
 
 ![Bar chart of the 103,656 decisions students receive, by start year: 7,850 in 2023 (from October), 33,223 in 2024, 34,839 in 2025 and 27,744 in 2026 (to 1 October)](assets/final-project/decisions-per-year.png)
 
-The languages and the long tail of headings (1,015 headings, 377 of them with fewer than ten decisions, which is why the course reports macro-F1 next to accuracy) are shown with charts in the [introduction to the EBTI data](../case-study/ebti/README.md#a-first-look).
+The languages and the long tail of headings (1,015 headings, 377 of them with fewer than ten decisions, which is why the course reports macro-F1 next to accuracy) are shown with charts in the [introduction to the EBTI data](../case-study/final-challenge/README.md#a-first-look).
 
 ### Testing for drift in the inputs
 
@@ -891,7 +891,7 @@ The project uses almost every part of the course on one realistic problem:
 Further reasons for the choice:
 
 - **A real task.** Customs authorities classify goods every day, and errors have legal and financial consequences.
-- **Public and reusable.** The decisions are published by the European Commission and may be reused with acknowledgement of the source (Commission Decision 2011/833/EU). Students download a prepared copy from the course drive.
+- **Public and reusable.** The decisions are published by the European Commission and may be reused with acknowledgement of the source (Commission Decision 2011/833/EU). Students get a prepared copy with the repository (Git LFS).
 - **A fair, honest test.** The lecturer's evaluation set shows how well a model works on new data, and how well each team estimated this itself. Because the score is not converted into marks, a higher score reached by other means brings no advantage.
 - **Leakage and drift are built in.** Both are real features of the data, not constructed exercises.
 - **One task for all teams.** Students can compare and discuss approaches, and the comparison of reported and independent scores in Session 18 shows which ideas worked.

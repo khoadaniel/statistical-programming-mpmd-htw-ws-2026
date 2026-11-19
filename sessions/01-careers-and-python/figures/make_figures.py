@@ -1,7 +1,6 @@
 """Figures for the Session 1 lecture notebooks.
 
-Run from the repository root. The listing and language figures need the case-study data: download `airbnb-v1.zip` and
-`ebti-v1.zip` from the course drive and unzip them into `case-study/data/` (see case-study/README.md). The skills figure
+Run from the repository root. The listing and language figures need the case-study data: get the data with `git lfs pull` (see case-study/README.md). The skills figure
 reads job_ad_skills.csv, written by job_ad_skills.py:
 
     uv run python sessions/01-careers-and-python/figures/make_figures.py
@@ -16,8 +15,8 @@ import pandas as pd
 plt.switch_backend("Agg")  # write files only, no window
 
 OUT = Path(__file__).resolve().parent
-DATA = Path("case-study/data/airbnb")
-EBTI = Path("case-study/data/ebti")
+DATA = Path("case-study/airbnb/data")
+EBTI = Path("case-study/final-challenge/data")
 ROOM_TYPES = ["Entire home/apt", "Private room"]  # the two room types with enough listings
 COLOUR = "#2d7d74"
 

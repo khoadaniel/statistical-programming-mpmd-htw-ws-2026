@@ -21,7 +21,7 @@ import pixeltable_pgserver as pgserver
 import psycopg
 from psycopg.types.numeric import FloatLoader
 
-PGDATA = Path(__file__).resolve().parents[3] / "case-study" / "data" / "airbnb" / "pgdata"
+PGDATA = Path(__file__).resolve().parents[3] / "case-study" / "airbnb" / "data" / "pgdata"
 
 QUERY = """
 SELECT room_type, COUNT(*) AS n_listings, ROUND(AVG(price), 1) AS avg_price
