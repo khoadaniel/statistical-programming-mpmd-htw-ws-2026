@@ -57,6 +57,12 @@
 - Styling: title, labels, size, log scale and colours in the call.
 - Worked example: where are the expensive listings?
 
+## 7 · Merging the Airbnb tables
+
+[Open notebook](workbooks/07-lecture-merging-airbnb-tables.ipynb)
+
+- The `merge` call for every pair of Airbnb tables: which key, and why.
+
 ## Team project until the next session
 
 Teams are formed and read the [final project brief](../17-18-final-presentations/final-project.md).

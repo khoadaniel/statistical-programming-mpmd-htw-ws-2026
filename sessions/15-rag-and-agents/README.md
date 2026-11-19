@@ -66,7 +66,8 @@
 
 [Open notebook](workbooks/06-practice-mcp-server-and-agent.ipynb)
 
-- Build an MCP server with FastMCP, run it over stdio and HTTP, connect a LangChain agent, and spot tool poisoning.
+- A calculator MCP server with FastMCP: start it over Streamable HTTP, discover and call its tools from a client, connect a LangChain agent, and spot tool poisoning.
+- [MCP calculator](workspace/mcp_calculator/README.md): the same server and client as two programs, run with uv in two terminals.
 - [MCP demo](workspace/trip_planner_app/mcp_demo/README.md): the trip planner's tools as a local MCP server, with tool and skill discovery and an agent that finds its tools there.
 
 ## 7 · Practice: evaluating an agent
@@ -74,6 +75,12 @@
 [Open notebook](workbooks/07-practice-evaluating-an-agent.ipynb)
 
 - Code graders, pass@k and pass^k, and an LLM judge checked against hand labels.
+
+## 8 · Practice: an agent as a tool
+
+[Open notebook](workbooks/08-practice-agent-as-a-tool.ipynb)
+
+- A trip planner agent calls a city guide agent that is wrapped in a tool with `@tool`, waits for its answer and continues: control goes out and comes back.
 
 ## Team project until the next session
 
