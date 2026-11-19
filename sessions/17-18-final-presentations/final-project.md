@@ -38,8 +38,7 @@ After the submission deadline the lecturer runs every API on an **independent ev
 
 | When | What |
 |---|---|
-| Fri 12 Feb 2027 | **Presentation day 1** · Session 17: the first teams present |
-| Fri 12 Feb 2027 | **Presentation day 2** · Session 18: the other teams present, then the course conclusion |
+| Fri 12 Feb 2027 | **Presentation day** · every team presents |
 | Fri 12 Feb 2027, 23:59 | **Submission deadline** · the paper of every member and the code of the team |
 | Fri 26 Feb 2027, 15:30–18:00 | **Second examination period** · presentation slot, in the same format as the first, so that both periods are comparable |
 | Fri 26 Feb 2027, 23:59 | **Submission deadline, second examination period** · the written report and the code (tag `submission`), on the same day at the latest |
