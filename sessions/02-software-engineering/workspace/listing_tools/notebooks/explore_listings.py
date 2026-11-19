@@ -8,7 +8,7 @@
 # analysis turned into a module with a class. Compare the two files side by side.
 #
 # Run from the repository root:
-#     uv run python sessions/02-software-engineering/workspace/notebooks/explore_listings.py
+#     uv run python sessions/02-software-engineering/workspace/listing_tools/notebooks/explore_listings.py
 
 # %%
 import pandas as pd

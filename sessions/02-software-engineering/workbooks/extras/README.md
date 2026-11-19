@@ -46,7 +46,7 @@ Keep the original attribution and licence notices when reusing these sources.
 |---|---|---|
 | [01-lecture-classes-errors-and-tests.ipynb](../01-lecture-classes-errors-and-tests.ipynb) | Block 1: classes and objects, composition, inheritance, dataclasses, type hints, docstrings, exceptions, pytest, worked example, exercises | CC BY 4.0; curated sections CC BY 3.0 (Turing) with attribution |
 | [02-lecture-notebook-to-application-git-and-ci.ipynb](../02-lecture-notebook-to-application-git-and-ci.ipynb) | Block 2: notebook and application, modules and packages, Git, pull requests, GitHub Actions, ruff, worked example, exercises | CC BY 4.0; curated sections CC BY 3.0 (Turing) with attribution |
-| [workspace/](../../workspace/README.md) | Project `listingtools` (validated listing records, `ListingTable` with a command-line summary, title features, tests, CI, solutions) | CC BY 4.0 (text), MIT (code) |
+| [workspace/listing_tools/](../../workspace/listing_tools/README.md) | Project `listingtools` (validated listing records, `ListingTable` with a command-line summary, title features, tests, CI, solutions) | CC BY 4.0 (text), MIT (code) |
 
 Several exercises come from established sources named in their *Source* line.
 

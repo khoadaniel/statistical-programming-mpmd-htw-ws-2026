@@ -16,7 +16,7 @@ The till, the program at the checkout, does not know these rules yet. Lina, the 
 Open a terminal in this folder and ask the till to serve Lina:
 
 ```bash
-cd sessions/02-software-engineering/supermarket-challenge
+cd sessions/02-software-engineering/workspace/supermarket_challenge
 uv run htw-checkout lina
 ```
 
@@ -93,7 +93,7 @@ flowchart LR
     class Fresh task
 ```
 
-**is a** means inheritance: a fresh product *is a* food product. **has a** means composition: a checkout *has a* cart. The [practice notebook](../workbooks/03-practice-python-classes.ipynb) builds smaller versions of these classes step by step.
+**is a** means inheritance: a fresh product *is a* food product. **has a** means composition: a checkout *has a* cart. The [practice notebook](../../workbooks/03-practice-python-classes.ipynb) builds smaller versions of these classes step by step.
 
 **Before you start**, open `products.py` and find `BottledDrink`. Its `gross_price()` calls `super().gross_price()`: what does that call return, and what does `BottledDrink` add to it? You write the same pattern in Task 1.
 
@@ -219,7 +219,7 @@ Before you finish, run `uv run ruff check . && uv run ruff format .`.
 
 ## Appendix · Running it from somewhere else
 
-This folder is its own uv project, with its own `pyproject.toml` and `.venv`; the course repository has another one at the top. `uv run` uses the nearest `pyproject.toml` above the current folder, so run the commands from this folder. From the repository root, add `--directory sessions/02-software-engineering/supermarket-challenge` after `uv run`.
+This folder is its own uv project, with its own `pyproject.toml` and `.venv`; the course repository has another one at the top. `uv run` uses the nearest `pyproject.toml` above the current folder, so run the commands from this folder. From the repository root, add `--directory sessions/02-software-engineering/workspace/supermarket_challenge` after `uv run`.
 
 The warning `VIRTUAL_ENV=... does not match the project environment path .venv` means the course environment is active in this terminal. uv ignores it and the commands still work; type `deactivate` once to remove the warning. In VS Code, choose `.venv/bin/python` of this folder as the interpreter (*Python: Select Interpreter*).
 

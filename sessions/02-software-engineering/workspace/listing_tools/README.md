@@ -1,9 +1,9 @@
-# Workspace · Session 2: software engineering for data work
+# Listing tools · Session 2: software engineering for data work
 
 One small project that grows through the two blocks of Session 2. In block 1 you build a validated record of one Berlin Airbnb listing. In block 2 the listing analysis of the Session 1 case study moves from notebook cells into a package with a class, `ListingTable`. You also add a module of simple features of listing titles, through a reviewed pull request with continuous integration. The data are the Berlin listings of Inside Airbnb, the course dataset of Sessions 1–12.
 
 ```
-workspace/
+listing_tools/
 ├── pyproject.toml             project description, dependencies (pandas, pyarrow), dev tools (pytest, ruff)
 ├── uv.lock                    exact versions; CI installs from it
 ├── .python-version            Python version used by uv and CI
@@ -22,19 +22,19 @@ workspace/
 └── solutions/                 reference solutions, for self-checking only
 ```
 
-Teaching notebooks: [block 1, classes, errors and tests](../workbooks/01-lecture-classes-errors-and-tests.ipynb) (exercise 1.6 = workspace exercises 1–2) · [block 2, from notebook to application, Git and CI](../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb) (exercises 2.2–2.6 = workspace exercises 3–9). The exercises below are also listed there, with their hand-outs.
+Teaching notebooks: [block 1, classes, errors and tests](../../workbooks/01-lecture-classes-errors-and-tests.ipynb) (exercise 1.6 = workspace exercises 1–2) · [block 2, from notebook to application, Git and CI](../../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb) (exercises 2.2–2.6 = workspace exercises 3–9). The exercises below are also listed there, with their hand-outs.
 
 ## Run it
 
-The summary of the real listings needs the case-study data (get the data with `git lfs pull`, see [case-study/README.md](../../../case-study/README.md)); the tests do not.
+The summary of the real listings needs the case-study data (get the data with `git lfs pull`, see [case-study/README.md](../../../../case-study/README.md)); the tests do not.
 
 ```bash
-cd sessions/02-software-engineering/workspace
+cd sessions/02-software-engineering/workspace/listing_tools
 uv run pytest -q                      # 70 passed, 22 skipped (the skipped ones are your exercises)
 uv run ruff check . && uv run ruff format --check .
 
 # from the repository root: print the summary of the 10,221 Berlin listings
-uv run --project sessions/02-software-engineering/workspace listing-summary
+uv run --project sessions/02-software-engineering/workspace/listing_tools listing-summary
 ```
 
 In a notebook or the Python console of this environment the classes are imported like any library:

@@ -2,7 +2,7 @@
 
 When a project grows from one file into several, each file has to import the others. This guide shows one way to write those imports that works everywhere: in the package, in tests, in scripts, and with every way of starting the program. It uses **uv**, the tool the course uses to create projects and run code.
 
-The guide continues Steps 4 and 5 of the section [Scripts, modules, packages and project structure](../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb) in block 2: packages, dotted names and `python -m`.
+The guide continues Steps 4 and 5 of the section [Scripts, modules, packages and project structure](../../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb) in block 2: packages, dotted names and `python -m`.
 
 ## Creating the project: `uv init`
 
@@ -26,7 +26,7 @@ This folder was created that way and then filled with the example below. Its [py
 A small gradebook: each row is one student's score in one subject.
 
 ```
-python-module-guide/             the project folder: open the terminal here
+gradebook_module_guide/          the project folder: open the terminal here
 ├── pyproject.toml               the project's name, its dependencies and its entry point
 ├── src/gradebook/               the app: everything that is installed and given to users
 │   ├── __init__.py              runs on `import gradebook`; re-exports the main names
@@ -57,7 +57,7 @@ Some terms used below:
 
 1. **The app lives in `src/<package>/`.** Here: `src/gradebook/`. This is the layout that `uv init --package` creates.
 2. **Every import of your own code starts with the package name.** In every file, at every folder depth, in tests and in scripts: `from gradebook.scores import average_score`.
-3. **Open the terminal in the project folder and start everything with `uv run`.** Here: `cd sessions/02-software-engineering/python-module-guide`, then `uv run ...`.
+3. **Open the terminal in the project folder and start everything with `uv run`.** Here: `cd sessions/02-software-engineering/workspace/gradebook_module_guide`, then `uv run ...`.
 
 The rest of this guide explains why these three rules work and what happens when one of them is broken.
 
@@ -311,11 +311,11 @@ uv run gradebook                                  # FileNotFoundError: 'data/stu
 The fix for both: `cd` into the project folder first, then run.
 
 ```bash
-cd sessions/02-software-engineering/python-module-guide
+cd sessions/02-software-engineering/workspace/gradebook_module_guide
 uv run gradebook
 ```
 
-`uv run --directory sessions/02-software-engineering/python-module-guide gradebook` does the same without `cd`: it changes into that folder first. (`--project` only chooses the project; the current folder stays the same, so the data file is still not found.)
+`uv run --directory sessions/02-software-engineering/workspace/gradebook_module_guide gradebook` does the same without `cd`: it changes into that folder first. (`--project` only chooses the project; the current folder stays the same, so the data file is still not found.)
 
 In VS Code, check the folder shown in the terminal prompt before you run anything. If uv prints the warning `VIRTUAL_ENV=... does not match the project environment path .venv`, another environment (here the course environment) is active in the terminal. uv ignores it and uses the project's own `.venv`, which is what you want; `deactivate` removes the warning.
 

@@ -1,9 +1,9 @@
-# CLI workspace · Session 2: from a script to a command
+# StayCost CLI · Session 2: from a script to a command
 
-The smallest complete command-line program, to try out what block 2 explains in the section [Scripts, modules, packages and project structure](../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb): it computes the cost of a stay in a Berlin listing. It has no dependencies and no data, so every command below works right after cloning.
+The smallest complete command-line program, to try out what block 2 explains in the section [Scripts, modules, packages and project structure](../../workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb): it computes the cost of a stay in a Berlin listing. It has no dependencies and no data, so every command below works right after cloning.
 
 ```
-cli-workspace/
+staycost_cli/
 ├── pyproject.toml          [project.scripts] staycost = "staycost.cli:main"  -> the terminal command `staycost`
 ├── src/staycost/           the package: a folder of modules with one import name
 │   ├── __init__.py         runs on `import staycost`; re-exports stay_cost
@@ -16,7 +16,7 @@ cli-workspace/
 
 ## Try it
 
-Run everything from this folder: `cd sessions/02-software-engineering/cli-workspace`. The first `uv run` creates `.venv` and installs the package into it.
+Run everything from this folder: `cd sessions/02-software-engineering/workspace/staycost_cli`. The first `uv run` creates `.venv` and installs the package into it.
 
 **1 · `__name__` depends on how a file is loaded**
 

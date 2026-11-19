@@ -2,8 +2,8 @@
 
 Run from the repository root (the default path is relative to it):
 
-    uv run --project sessions/02-software-engineering/workspace listing-summary
-    uv run --project sessions/02-software-engineering/workspace listing-summary other.parquet
+    uv run --project sessions/02-software-engineering/workspace/listing_tools listing-summary
+    uv run --project sessions/02-software-engineering/workspace/listing_tools listing-summary other.parquet
 """
 
 from __future__ import annotations

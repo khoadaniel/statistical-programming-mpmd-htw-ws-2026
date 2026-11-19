@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.ruff_cache/
+# The trained model is produced by `make train`; only the folder is kept in Git.
+checkpoints/*
+!checkpoints/.gitkeep

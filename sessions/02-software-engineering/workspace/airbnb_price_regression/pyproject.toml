@@ -1,0 +1,30 @@
+[project]
+name = "price-model"
+version = "0.1.0"
+description = "Linear regression that predicts an Airbnb nightly price from the number of guests, with training and a FastAPI service (Session 2 workspace)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi[standard]>=0.165.0",
+    "joblib>=1.6.0",
+    "numpy>=2.5.5",
+    "pandas>=3.1.1",
+    "pyarrow>=26.0.1",
+    "pydantic>=2.14.4",
+    "scikit-learn>=1.9.1",
+]
+
+# Build the package from src/ with uv's own build backend (same as the other Session 2 projects).
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+# The terminal command `train-price-model` calls main() in price_model/training/train.py.
+[project.scripts]
+train-price-model = "price_model.training.train:main"
+
+[dependency-groups]
+dev = ["ruff>=0.17"]
+
+[tool.ruff]
+line-length = 100
