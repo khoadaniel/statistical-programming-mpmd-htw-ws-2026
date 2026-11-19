@@ -18,7 +18,7 @@ flowchart LR
 
 > Build a **REST API** that returns the six-digit subheading of a product description, **report how well it works**, and show that your report can be trusted.
 
-After the code freeze the lecturer runs every API on an **independent evaluation set** that no team sees. A reported score close to the independent one means your validation design worked; a large gap means it overestimated the model, and you explain why.
+After the submission deadline the lecturer runs every API on an **independent evaluation set** that no team sees. A reported score close to the independent one means your validation design worked; a large gap means it overestimated the model, and you explain why.
 
 ## Rules
 
@@ -33,6 +33,19 @@ After the code freeze the lecturer runs every API on an **independent evaluation
 ## The dataset
 
 103,656 labelled decisions (`decisions.parquet`) and the EU goods nomenclature, in `case-study/final-challenge/data/`. Read [Getting the data](../../case-study/README.md#getting-the-data) and [the introduction to the EBTI data](../../case-study/final-challenge/README.md). The label is `subheading`; `heading` (its first four digits) and `chapter` are also in the file, but not available for a new request. There is **no ready-made split**: how you divide the decisions is your first design decision.
+
+## Timeline
+
+| When | What |
+|---|---|
+| Fri 12 Feb 2027 | **Presentation day 1** · Session 17: the first teams present |
+| Fri 12 Feb 2027 | **Presentation day 2** · Session 18: the other teams present, then the course conclusion |
+| Fri 12 Feb 2027, 23:59 | **Submission deadline** · the paper of every member and the code of the team |
+| Fri 26 Feb 2027, 15:30–18:00 | **Second examination period** · presentation slot, in the same format as the first, so that both periods are comparable |
+| Fri 26 Feb 2027, 23:59 | **Submission deadline, second examination period** · the written report and the code (tag `submission`), on the same day at the latest |
+
+- **The code** is counted by the Git tag `submission` ([how to submit](#how-to-submit-the-submission-tag)): the commit the tag points to at the deadline is the one that is evaluated and graded.
+- **The paper** is at most 10 pages, not counting the appendix (use of AI tools and references). It is submitted as a **PDF** by e-mail to ledan@htw-berlin.de, with the HTW declaration on the use of AI tools attached, by the deadline.
 
 ## What you deliver
 
@@ -81,7 +94,7 @@ uv run evaluate_api.py --url http://localhost:8000 --data path/to/my_validation.
 
 A reader who runs these three steps, and nothing else, must end with a working service: this is what the reproducibility mark checks. The training command stays in the README so that anyone can rebuild the checkpoint.
 
-**Submission:** a Git tag named `submission` on `main`, pushed before the code freeze, the day before Session 17 ([how](#how-to-submit-the-submission-tag)). Only the tagged commit is evaluated and graded.
+**Submission:** a Git tag named `submission` on `main`, pushed by the submission deadline in the [timeline](#timeline) ([how](#how-to-submit-the-submission-tag)). Only the tagged commit is evaluated and graded.
 
 **Feedback along the way:** nothing is graded before the presentation. Present intermediate results in class or write to the lecturer for advice.
 
@@ -231,7 +244,7 @@ Keep the checkpoint small: GitHub gives each account a limited LFS storage and d
 
 ### How to submit: the `submission` tag
 
-A tag is a fixed name for one commit ([Session 2](../02-software-engineering/workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb)). The lecturer announces the exact time of the code freeze.
+A tag is a fixed name for one commit ([Session 2](../02-software-engineering/workbooks/02-lecture-notebook-to-application-git-and-ci.ipynb)). The deadline is in the [timeline](#timeline); the commit that `submission` points to at that time is the one that counts.
 
 1. Merge everything into `main`; CI is green.
 2. Clone the repository into a new folder (`git lfs pull` brings the checkpoint), follow the README to the running service, and run the check of appendix B.
@@ -246,4 +259,4 @@ A tag is a fixed name for one commit ([Session 2](../02-software-engineering/wor
 
 4. Check on GitHub (*Code → Tags*) that `submission` points to the right commit.
 
-Wrong commit before the freeze? `git tag -d submission`, `git push origin --delete submission`, then step 3. After the freeze the tag must not change; no tag means no submission.
+Wrong commit before the deadline? `git tag -d submission`, `git push origin --delete submission`, then step 3. After the deadline the tag must not change; no tag means no submission.

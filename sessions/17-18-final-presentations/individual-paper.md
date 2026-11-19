@@ -2,6 +2,10 @@
 
 Every member writes their own paper, alone. Copy this template and replace every *italic instruction* with your text. Keep the headings. Write plainly: short sentences, past tense for what you did, numbers with their uncertainty.
 
+**Length:** at most 10 pages, not counting the appendix (use of AI tools and references).
+
+**Format:** submit the paper as a PDF.
+
 The paper tells the project as a whole, from the problem to the results, as you understand it, and states your own contribution. The criteria are in the [final project brief](final-project.md#presentation-and-assessment).
 
 ---

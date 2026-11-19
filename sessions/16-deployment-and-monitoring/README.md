@@ -29,7 +29,7 @@
 
 ## Team project until the final presentations
 
-API release: the service answers the interface of the [final project](../17-18-final-presentations/final-project.md) (checked with `sessions/17-18-final-presentations/evaluate-api/`), runs with the dashboard under Docker Compose and is released through the CI/CD workflow, with a monitoring plan and a model card. Retrain on all your decisions, including the newest, and update the reported score. Release a version tag (for example `v2.0.0`) through the CD workflow. At the code freeze, the day before Session 17, set the tag `submission` on `main` ([how to submit](../17-18-final-presentations/final-project.md#how-to-submit-the-submission-tag)).
+API release: the service answers the interface of the [final project](../17-18-final-presentations/final-project.md) (checked with `sessions/17-18-final-presentations/evaluate-api/`), runs with the dashboard under Docker Compose and is released through the CI/CD workflow, with a monitoring plan and a model card. Retrain on all your decisions, including the newest, and update the reported score. Release a version tag (for example `v2.0.0`) through the CD workflow. By the submission deadline set the tag `submission` on `main` ([how to submit](../17-18-final-presentations/final-project.md#how-to-submit-the-submission-tag)).
 
 ## Setup
 

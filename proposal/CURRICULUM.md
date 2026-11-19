@@ -15,7 +15,7 @@ The analysis behind these decisions (curriculum, labour market, comparable cours
 | Recommended semester | Semester 2 (elective slot 2.4), alongside 2.2 Data Mining; semester 3 remains possible |
 | Structure | Foundations (2 sessions), working with data (2), analytics (1), machine learning (11), final presentations (2) |
 | Datasets | Inside Airbnb Berlin with the Open-Meteo weather API, IBM Telco customer churn, and EU customs decisions (EBTI); their use by session is listed in [Section 4](#4-datasets-and-evaluation) |
-| Evaluation | Teams receive 103,656 labelled customs decisions and design their own validation; every team's API is scored on held-back decisions after the code freeze ([Section 4](#4-datasets-and-evaluation)) |
+| Evaluation | Teams receive 103,656 labelled customs decisions and design their own validation; every team's API is scored on held-back decisions after the submission deadline ([Section 4](#4-datasets-and-evaluation)) |
 | Assessment | One final project for all teams on the same task, worked on in teams and graded individually once after the presentation; the grading rule is in the [project brief](../sessions/17-18-final-presentations/final-project.md#presentation-and-assessment) |
 
 ## Contents
@@ -695,7 +695,7 @@ No prior knowledge of databases is assumed. The course teaches the SQL dialect o
 
 *Exercises and debrief*
 
-**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: a tested REST API that returns the heading for a description, monitoring plan and model card. The lecturer checks the interface; teams retrain on all their decisions, the newest included, and update their reported score. Code freeze: the tag `submission` on `main` the day before Session 17.
+**Team project until the final presentations.** Service and dashboard run together with Docker Compose and are released through the CI/CD workflow. Release: a tested REST API that returns the heading for a description, monitoring plan and model card. The lecturer checks the interface; teams retrain on all their decisions, the newest included, and update their reported score. Submission: the tag `submission` on `main` and the paper, by the deadline in the [timeline](../sessions/17-18-final-presentations/final-project.md#timeline).
 
 ### Final presentations (Sessions 17–18)
 
@@ -755,7 +755,7 @@ The course works with the following public datasets. Each session uses the one t
 
 ### Evaluation
 
-Each team designs its own validation and reports the accuracy and macro-F1 of its final design. After the code freeze the lecturer sends the held-back decisions to every team's API, and Session 18 compares the independent score with the reported one. At two voluntary checkpoints (Sessions 13 and 14) teams can post their validation design and score on a class board. The procedure is specified in the [project brief](../sessions/17-18-final-presentations/final-project.md#how-the-evaluation-works); reference values from one possible validation design are in [case-study/README.md](../case-study/README.md#reference-values).
+Each team designs its own validation and reports the accuracy and macro-F1 of its final design. After the submission deadline the lecturer sends the held-back decisions to every team's API, and Session 18 compares the independent score with the reported one. At two voluntary checkpoints (Sessions 13 and 14) teams can post their validation design and score on a class board. The procedure is specified in the [project brief](../sessions/17-18-final-presentations/final-project.md#how-the-evaluation-works); reference values from one possible validation design are in [case-study/README.md](../case-study/README.md#reference-values).
 
 ## 5. Final project
 
