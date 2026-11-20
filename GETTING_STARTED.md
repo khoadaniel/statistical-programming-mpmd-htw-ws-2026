@@ -38,7 +38,7 @@ Download and install VS Code from **https://code.visualstudio.com/download**, th
 
 ## Step 2 · Install Git
 
-Git downloads and updates the course material.
+Git downloads and updates the course material. **Git LFS** is a small add-on that downloads the large data files of the course; install it together with Git.
 
 <details open>
 <summary><b>macOS</b></summary>
@@ -46,32 +46,35 @@ Git downloads and updates the course material.
 Install the package manager Homebrew from **https://brew.sh**: copy the command shown on that page into Terminal and press Enter (it asks for your password and takes a few minutes). At the end, Homebrew prints two or three commands under "Next steps" that add `brew` to your terminal; run them. Then install Git:
 
 ```bash
-brew install git
+brew install git git-lfs
 ```
 </details>
 
 <details>
 <summary><b>Windows</b></summary>
 
-Download Git from **https://git-scm.com/downloads/win** and run the installer; the default options are fine.
+Download Git from **https://git-scm.com/downloads/win** and run the installer; the default options are fine. Git LFS is included in this installer.
 </details>
 
 <details>
 <summary><b>Linux</b></summary>
 
 ```bash
-sudo apt install git curl     # Ubuntu, Debian
-sudo dnf install git curl     # Fedora
+sudo apt install git git-lfs curl     # Ubuntu, Debian
+sudo dnf install git git-lfs curl     # Fedora
 ```
 
 `curl` downloads the uv installer in step 3; many Linux systems do not include it.
 </details>
 
-Check that Git works (close and reopen the terminal first):
+Check that Git works (close and reopen the terminal first), then switch Git LFS on. `git lfs install` is needed **once per computer**, and **before** you download the repository in step 4, so that the data files arrive as real files:
 
 ```bash
 git --version
+git lfs install
 ```
+
+`git lfs install` prints `Git LFS initialized.` If it says `'lfs' is not a git command`, Git LFS is not installed: repeat the install command above.
 
 ### Create a GitHub account and tell Git who you are
 
@@ -213,9 +216,11 @@ Choose the entry named **statistical-programming** whose path is **`.venv/bin/py
 
 The repository contains the VS Code settings for this ([`.vscode/settings.json`](.vscode/settings.json), [`.vscode/extensions.json`](.vscode/extensions.json)). Terminals opened inside VS Code use the `.venv` automatically, so `python` and `pytest` there are the course versions.
 
-## Step 7 · Download the course data
+## Step 7 · Check the course data
 
-The notebooks read two datasets that are not in the repository. Get the data with `git lfs pull`, as described in [Getting the data](case-study/README.md#getting-the-data), including the command that checks the result.
+The notebooks read two datasets that are stored with Git LFS. Because you ran `git lfs install` before `git clone`, the data came with the repository: there is nothing more to download. Check the result as described in [Getting the data](case-study/README.md#getting-the-data).
+
+If a data file contains only three lines of text (it starts with `version https://git-lfs.github.com`), Git LFS was not switched on when you downloaded. Run `git lfs install`, then `git lfs pull`.
 
 You are ready for Session 1.
 
@@ -252,6 +257,8 @@ Run `uv run check_setup` first: most problems show up there, each with a line st
 | Windows: `DLL load failed` or `[WinError 126]` when importing a package such as `torch` | The Microsoft Visual C++ runtime that some packages need is missing. | Download and run the [Microsoft Visual C++ Redistributable (X64)](https://aka.ms/vc14/vc_redist.x64.exe), then restart VS Code. |
 | Windows: "running scripts is disabled on this system" in the VS Code terminal | PowerShell blocks scripts by default. | In PowerShell run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, confirm with `Y`, open a new terminal. |
 | `git push` asks for a username and password, or says `Password authentication is not supported` | Git is not logged in to GitHub, and GitHub does not accept your account password for Git. | Press Ctrl+C, then follow [Log in to GitHub from your laptop](#log-in-to-github-from-your-laptop) and push again. |
+| `git pull` says `untracked working tree files would be overwritten` and lists files in `case-study/…/data/` | You already have copies of the data files, for example from a drive or an older download, and the repository now brings the same files. | Run `git lfs install` once. Delete the files that the message lists (or move them to your Desktop), then run `git pull` again: the repository brings them back. |
+| A data file such as `listings.parquet` contains only three lines of text, or a notebook says the file is not a Parquet file | Git LFS was not switched on when you pulled, so Git left a placeholder instead of the data. | Run `git lfs install`, then `git lfs pull`. |
 | `git pull` says your local changes would be overwritten | You edited a file of the course material. | Save your work under a new name (for example `my-notes.ipynb`), then run `git restore <file>` for the course file and pull again. |
 | Anything else | | Post in the course forum: the full error message and the complete output of `uv run check_setup`. |
 

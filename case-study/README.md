@@ -28,14 +28,18 @@ The data folders are part of the repository. You do not change them.
 
 ## Getting the data
 
-The data are stored with [Git LFS](https://git-lfs.com), which keeps large files out of the normal Git history. Install it once and fetch the files:
+The data are stored with [Git LFS](https://git-lfs.com), which keeps large files out of the normal Git history. Git LFS is a small add-on to Git: macOS (`brew install git-lfs`) and Linux (`sudo apt install git-lfs`) need it installed, the Windows installer of Git includes it ([Getting started, step 2](../GETTING_STARTED.md#step-2--install-git)). Switch it on **once per computer**, before you clone or pull:
 
 ```bash
 git lfs install      # once per computer
-git lfs pull         # downloads the data into the two data folders (about 60 MB)
+git pull             # with Git LFS switched on, this downloads the data too (about 60 MB)
 ```
 
-If you cloned the repository with Git LFS installed, the data are already there. **Read `PROVENANCE.md` first.** Each data folder contains one: it explains what each file contains (what one row is, the columns, how the files link), where the files come from, what was changed, the licence and the data version. If the lecturer corrects a dataset, a higher version is pushed to the repository: run `git pull` and check the version at the top of `PROVENANCE.md`.
+If a data file contains only three lines of text, Git LFS was not switched on when you pulled. Run `git lfs pull`: it replaces each placeholder with the real file.
+
+**Already have the data from another source?** If `git pull` stops with `untracked working tree files would be overwritten`, your copies sit at the same paths as the files in the repository. Delete the files that the message lists, or move them out of the folder, and pull again: the repository brings them back.
+
+If you cloned the repository with Git LFS switched on, the data are already there. **Read `PROVENANCE.md` first.** Each data folder contains one: it explains what each file contains (what one row is, the columns, how the files link), where the files come from, what was changed, the licence and the data version. If the lecturer corrects a dataset, a higher version is pushed to the repository: run `git pull` and check the version at the top of `PROVENANCE.md`.
 
 **Check the result** from the repository folder (works on macOS, Linux and Windows):
 
