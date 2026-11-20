@@ -3,6 +3,10 @@
   // for terminals, scripts and as the kernel of every notebook.
   "python.terminal.activateEnvironment": true,
 
+  // Pylance: no type checking. Teaching code with pandas, NumPy and matplotlib has few type hints,
+  // so strict mode would underline almost every line of the notebooks.
+  "python.analysis.typeCheckingMode": "off",
+
   // Notebooks: start each notebook in its own folder, so relative paths such as data/ work.
   "jupyter.notebookFileRoot": "${fileDirname}",
   "notebook.output.textLineLimit": 60,
